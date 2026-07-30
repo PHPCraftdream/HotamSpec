@@ -235,3 +235,19 @@ The atomic requirements about how rules are enforced — atomicity of claims, at
 - 2026-07-13 — why: External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…→External product review (2026-07-10) proposed four freshness fields (last_reviewed_at/review_after/evidence/source_refs) plus recording each node's c…
 - 2026-07-16 — evidence: []→[cd D:/ai_dev/prat/HotamSpec && go test ./internal/proposal/... -run TestApply_Requirement_UpdateAppendsHistory -v : PASS (task #226 recursion, 2026-…; source_refs: [internal/ontology/requirement.go, internal/proposal/mutate.go, internal/invariants/lifecycle_checks.go]→[internal/ontology/requirement.go, internal/proposal/mutate.go, internal/proposal/proposal_test.go]; implemented_by: []→[internal/ontology/requirement.go:HistoryEntry]; verified_by: []→[internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory]
 - 2026-07-16 — semantic conflict acknowledged — human decision recorded: task #226 recursion: claim text unchanged (byte-identical to current SETTLED graph value); confront hit is a false positive against unrelated requirements sharing opposite-marker tokens in long prose (R-domain-overview-projection etc); only implemented_by/verified_by are added — no semantic claim change
+
+## `R-requirement-generation-mechanized-by-registry` (ENFORCED)
+
+**Claim.** Every SETTLED Requirement in a self-hosting domain shall be authored as a named Go declaration in internal/selfspec (not merely a JSON graph node), mechanically verified byte-identical to the projected graph via `hotam sync-self`.
+
+**Why.** The surviving, already-true half of R-generations-inherit-doc-test-code's original bundled claim, split out atomically (R-requirement-claim-is-atomic) rather than left bundled with the EntityType-generation debt half the parent requirement also carried. Task #345 (RAC-A) introduced internal/selfspec.Requirements, a Go registry of ontology.Requirement values; task #349 (RAC-B2) added `hotam sync-self`, which projects that registry onto domains/hotam-spec-self/graph.json; task #351 (RAC-B4) promoted check_self_requirements_match_registry from a shadow-only advisory to a real All-registered gate, so a hand-edit or registry/graph disagreement is mechanically detectable inside `hotam all-violations` itself, not merely a test-only guard. Together these mean EVERY SETTLED requirement on this domain now DOES yield a named Go declaration, not merely a JSON node -- the requirement-generation half of the original bundled claim, now standing on its own as a fully mechanized, ENFORCED anchor rather than sharing a Claim with an unrelated, still-debt-carrying EntityType concern.
+
+**Enforced by:** `check_self_requirements_match_registry`, `TestMergeIntoGraph_ByteIdenticalRoundTrip`, `TestMergeIntoGraph_AllRequirementsRegistered`
+
+**Sources.** internal/selfspec/selfspec.go, internal/selfspec/merge.go, cmd/hotam/sync_self.go, internal/invariants/selfspec_shadow.go
+
+**Change history.**
+
+- 2026-07-30 — created via sync-self
+- 2026-07-30 — semantic conflict acknowledged — human decision recorded: task #395 (W1.3): confront-gate lexical false positive on shared modal words 'never'/'always' with R-domain-overview-projection (language-fidelity claim, unrelated axis) and R-shared-projections-mode-independent (rendering-determinism claim, unrelated axis) -- both share only the token 'projection' with this requirement's unrelated code-generation-direction prohibition; resolver-reviewed, same resolution path as task #388 (3404be0)
+- 2026-07-30 — field SourceRefs: [internal/selfspec/registry.go internal/selfspec/merge.go cmd/hotam/sync_self.go internal/invariants/selfspec_shadow.go] -> [internal/selfspec/selfspec.go internal/selfspec/merge.go cmd/hotam/sync_self.go internal/invariants/selfspec_shadow.go]

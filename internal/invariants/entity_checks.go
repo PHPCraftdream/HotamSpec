@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
@@ -34,6 +35,94 @@ var _ = All.MustRegister("check_entity_type_lifecycle_wellformed", Invariant{
 		"means every EntityType inherits all four conditions without parallel machinery. " +
 		"References: R-statemachine-wellformedness, M12.",
 	Check: checkEntityTypeLifecycleWellformed,
+})
+
+// checkEntityTypeModelSymbolResolves is the existence/staleness check for
+// EntityType.ModelSymbol -- the graph-level link (Deliverable A,
+// docs/PLAN-code-authority-completion.md §W1.3) from a graph EntityType node
+// to the Go type in the domain's authored spec/model/ tree that realizes it.
+// Mirrors checkImplementedBySymbolResolvable (authored_links.go) exactly,
+// adapted for a single optional string field instead of a slice: every
+// EntityType with a non-empty ModelSymbol must parse as "file:Symbol" (via
+// gate.ParseFileColonSymbol) and the named symbol must really be declared
+// (function, method, or type) in the named file under the domain's spec
+// root (gate.SpecRootForGraph). Empty ModelSymbol is a silent no-op -- the
+// overwhelming majority case today, since ModelSymbol is a purely additive,
+// optional field with zero live EntityTypes setting it yet.
+//
+// Per R-entity-checks-by-iteration, this iterates g.EntityTypes generically
+// exactly like every sibling check_entity_* check in this file -- no
+// per-type special-casing, so the check_entity_* family continues to cover
+// every declared EntityType with no new check_* code required per
+// additional type.
+func checkEntityTypeModelSymbolResolves(g *ontology.Graph) []Violation {
+	var out []Violation
+	specRoot := gate.SpecRootForGraph(g)
+	for _, et := range g.EntityTypes {
+		raw := strings.TrimSpace(et.ModelSymbol)
+		if raw == "" {
+			continue
+		}
+		file, symbol, ok := gate.ParseFileColonSymbol(raw)
+		if !ok {
+			out = append(out, Violation{
+				Check: "check_entity_type_model_symbol_resolves",
+				ID:    et.Slug,
+				Message: fmt.Sprintf(
+					"model_symbol %q is not shaped like file:Symbol (expected e.g. \"spec/model/risk.go:Risk\")",
+					raw),
+			})
+			continue
+		}
+		if scopeOK, reason := gate.EntryWithinSpecScope(specRoot, file, g.SelfHosting); !scopeOK {
+			out = append(out, Violation{
+				Check: "check_entity_type_model_symbol_resolves",
+				ID:    et.Slug,
+				Message: fmt.Sprintf(
+					"model_symbol %q: %s -- references must stay inside the domain's own authored scope",
+					raw, reason),
+			})
+			continue
+		}
+		result, err := gate.ResolveSpecSymbol(specRoot, file, symbol)
+		if err != nil {
+			out = append(out, Violation{
+				Check: "check_entity_type_model_symbol_resolves",
+				ID:    et.Slug,
+				Message: fmt.Sprintf(
+					"model_symbol %q could not be resolved: %v",
+					raw, err),
+			})
+			continue
+		}
+		if !result.Found() {
+			out = append(out, Violation{
+				Check: "check_entity_type_model_symbol_resolves",
+				ID:    et.Slug,
+				Message: fmt.Sprintf(
+					"model_symbol %q: symbol %q not found in %q (function, method, or type declaration expected) -- stale or never-written reference",
+					raw, symbol, file),
+			})
+		}
+	}
+	return out
+}
+
+var _ = All.MustRegister("check_entity_type_model_symbol_resolves", Invariant{
+	Name:  "check_entity_type_model_symbol_resolves",
+	Canon: methodology.Entity,
+	Claim: "every non-empty EntityType.model_symbol resolves to a real function, method, or type declaration in the named authored spec/ file.",
+	Rule: "for every EntityType.model_symbol (optional, empty is a no-op), the value MUST be shaped \"file:Symbol\" and the symbol MUST be a " +
+		"real declaration -- a top-level function, a method, or a type -- found by parsing exactly the named file under the domain's spec root " +
+		"(gate.SpecRootForGraph(g), the same resolution check_implemented_by_symbol_resolvable uses for Requirement.ImplementedBy). Iterates " +
+		"g.EntityTypes generically (R-entity-checks-by-iteration): no per-type special-casing.",
+	Why: "model_symbol claims \"this EntityType is realized HERE, by this Go type\"; if the named symbol does not exist the claim is " +
+		"unverifiable -- either a typo, a symbol renamed/deleted after the reference was written (staleness), or a reference that was never " +
+		"real. This is the EntityType-side counterpart of check_implemented_by_symbol_resolvable, reusing the identical gate.ParseFileColonSymbol/ " +
+		"gate.SpecRootForGraph/gate.ResolveSpecSymbol machinery. ONE-DIRECTIONAL by design (R-entity-type-realized-by-go-symbol-never-generated): " +
+		"this check only verifies the named Go symbol exists, it never generates it -- Go code stays the authored, hand-written source; " +
+		"EntityType is a graph-level reference to it, never a code-generation target.",
+	Check: checkEntityTypeModelSymbolResolves,
 })
 
 func checkTransitionGuardAssumptionResolves(g *ontology.Graph) []Violation {

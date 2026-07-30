@@ -1,5 +1,5 @@
 {
-  "sha256": "f782dbe1c90b10ba402f95fa215b961e8ae97b1f496b9336c7ed0ca4ec5f474a",
-  "updated_at": "2026-07-30T07:44:59Z",
-  "note": ""
+  "sha256": "12767ae827bb00fba993abbba91b74c39c383e95a38e04d84648a4bbfd035218",
+  "updated_at": "2026-07-30T14:02:52Z",
+  "note": "sync-self: 1 changed, 0 added; diff-hash fa2b63f800d9; reason: task #395 W1.3: fix SourceRefs typo (internal/selfspec/registry.go -\u003e selfspec.go, the real file declaring the Requirements registry var)"
 }

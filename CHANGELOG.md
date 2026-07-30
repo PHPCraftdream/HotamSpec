@@ -17,6 +17,70 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`ontology.EntityType` gains `ModelSymbol`, a one-directional link from a graph EntityType node to the Go
+  type in a domain's authored `spec/model/` that realizes it; `R-generations-inherit-doc-test-code`'s
+  EntityType-generation half is REJECTED and replaced by two atomic successors (task #395, W1.3).** Two
+  previously-unconnected object catalogs — `ontology.EntityType` (graph node, rendered to ENTITIES.md) and a
+  domain's authored Go type (rendered to MODELS.md) — had no formal link, so an AI reader could not tell
+  whether a large-entity-type/dozens-of-Go-objects mismatch was an error or a normal abstraction-level split.
+  Separately, the live SETTLED requirement `R-generations-inherit-doc-test-code` claimed the methodology
+  MUST generate a Go struct, lifecycle methods, and transition tests FROM every EntityType — its own `Why`
+  text already admitted this was "honest REMAINING debt" and pointed in the WRONG direction relative to this
+  whole wave's goal (Go code is the source of truth; graph nodes are projections of it, never generation
+  targets — `docs/AUTHORED-SPEC-CONTRACT.md` §9 already rejected `gen-code`).
+  - **Deliverable A — the `model_symbol` link.** `EntityType.ModelSymbol string` (`internal/ontology/entity.go`,
+    `json:"model_symbol,omitempty"`) is an OPTIONAL `"file:Symbol"`-shaped reference, the same shape/parser as
+    `Requirement.ImplementedBy` (`gate.ParseFileColonSymbol`) — chosen over a `Relation`/`realized_by` edge
+    because `Relation`/`RelationKinds` (`refines`/`depends_on`/`replaces`) is reserved for requirement-to-
+    requirement links, semantically wrong for "this graph node is embodied by a Go symbol." Empty means "no
+    Go type yet, or no 1:1 Go counterpart" — a calm, expected default; ONE-DIRECTIONAL by design (EntityType
+    names its own Go symbol, no MODELS.md back-reference is added — that would be scope creep). Threaded
+    through `internal/proposal/types.go`'s `ProposedEntityType` (new `ModelSymbol` field) and
+    `internal/proposal/mutate.go`'s `mutate()` on the CREATE path; the UPDATE path (fields-only append) now
+    also rejects a non-empty `model_symbol`, mirroring its existing states/transitions/description/why shape
+    guard (`errEntityTypeUpdateShape`). New invariant `check_entity_type_model_symbol_resolves`
+    (`internal/invariants/entity_checks.go`) mirrors `checkImplementedBySymbolResolvable` exactly (same
+    `gate.ParseFileColonSymbol`/`gate.SpecRootForGraph`/`gate.ResolveSpecSymbol` resolution), iterating
+    `g.EntityTypes` generically per `R-entity-checks-by-iteration` — a malformed `file:symbol` shape or an
+    unresolvable symbol is a `Violation`; empty `ModelSymbol` is a silent no-op (the overwhelming majority
+    case today — zero live EntityTypes set this field yet). `internal/generator/entities.go`'s `BuildEntities`
+    renders a `**Model:** \`file:Symbol\`` line near the type's own heading when `ModelSymbol` is set, and
+    renders nothing when it is not.
+  - **Deliverable B — reject-and-replace.** `R-generations-inherit-doc-test-code` is now `Status: "REJECTED"`
+    in place (`internal/selfspec/requirements_authoredspec.go`), mirroring `R-active-loop-playbooks`'s exact
+    REJECTED shape field-by-field, replaced by two atomic successors per `R-requirement-claim-is-atomic`:
+    `R-requirement-generation-mechanized-by-registry` (the surviving, already-true half — every SETTLED
+    requirement in a self-hosting domain is authored as a named Go declaration in `internal/selfspec`,
+    mechanically verified byte-identical via `hotam sync-self`; `Enforcement: "ENFORCED"`, citing
+    `check_self_requirements_match_registry`/`TestMergeIntoGraph_ByteIdenticalRoundTrip`/
+    `TestMergeIntoGraph_AllRequirementsRegistered`) and `R-entity-type-realized-by-go-symbol-never-generated`
+    (the REVERSED-direction claim — an EntityType may declare `model_symbol` naming the Go type that
+    realizes it, the Go type is the PRIMARY source, and the methodology shall NEVER generate a Go struct/
+    lifecycle-methods/transition-tests FROM an EntityType; `Enforcement: "ENFORCED"` on the strength of the
+    checkable reference-resolution half (`check_entity_type_model_symbol_resolves`), the same honesty-
+    boundary precedent `R-authored-spec-projections-are-derived`'s and `R-structural-floor-vs-mirror-audit`'s
+    own "shall NEVER..." prohibition clauses already set — ENFORCED via a real carrier for the checkable
+    half, with no enforcer directly proving the negative-existence half itself). Landed via `hotam sync-self`
+    (two runs: the substantive change, then a `SourceRefs` typo fix caught by re-reading the rendered diff);
+    hit the same confront-gate lexical false-positive task #388 documented (shared modal words "never"/
+    "always" against `R-domain-overview-projection` and `R-shared-projections-mode-independent`, both
+    unrelated in substance, sharing only the token "projection"), resolved the same way via `--decision-ref`.
+  - `internal/invariants/registry_complete_test.go`'s registered-invariant count moves 116 → 117 (the new
+    `check_entity_type_model_symbol_resolves`); `internal/selfspec/merge_test.go`'s `wantRequirementCount`
+    moves 303 → 305 (the rejected parent's SETTLED→REJECTED status flip does not change node count; the two
+    new SETTLED successors do, +2).
+  - New tests: `internal/invariants/entity_checks_test.go` (empty no-op, malformed shape, resolving symbol
+    clean, non-resolving symbol violation, break→fix mutation round-trip),
+    `internal/proposal/proposal_test.go` (`TestApply_EntityType_ModelSymbolRoundTrip`,
+    `TestApply_EntityType_UpdateWithNonEmptyModelSymbolFails`), `internal/generator/entities_test.go`
+    (`TestBuildEntities_RendersModelSymbolWhenSet`, `TestBuildEntities_OmitsModelLineWhenUnset`). Regenerated
+    `docs/gen/` for hotam-spec-self (102 docs via `hotam sync-self`'s own regen step) and hotam-dev (its
+    `CLAUDE.md` picks up hotam-spec-self's changed requirement/debt counts via the cross-domain pulse).
+  - Verified: `go build`/`go vet`/`gofmt` clean (excl. pre-existing untracked `.scratch` draft), targeted
+    tests (`internal/ontology`, `internal/invariants`, `internal/proposal`, `internal/generator`,
+    `internal/selfspec`, `cmd/hotam`) all pass, `all-violations` 0 on both `domains/hotam-spec-self` and
+    `domains/hotam-dev`.
+
 - **`ModelObject` gains `ModelKind` — a semantic `object`/`value`/`port`/`mock`/`policy` classification, and
   mocks (unexported `_test.go` structs satisfying a port's method set) become visible in MODELS.md for the
   first time (task #394, W1.2).** The plan's own words: "Классификация object / value / port / mock / policy

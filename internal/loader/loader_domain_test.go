@@ -93,7 +93,12 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// 302 + 1: R-opt-in-trigger-owns-its-own-obligations -- landed task
 		// #388 (W0.1) via `hotam sync-self`, the self-hosting anchor for
 		// check_claim_authority_ratchet's orphan-enforcer gate.
-		{"requirements", len(g.Requirements), 303},
+		// 303 + 2: task #395 (W1.3) via `hotam sync-self` rejected
+		// R-generations-inherit-doc-test-code in place (status flip, no node
+		// count change) and added its two atomic successors,
+		// R-requirement-generation-mechanized-by-registry and
+		// R-entity-type-realized-by-go-symbol-never-generated.
+		{"requirements", len(g.Requirements), 305},
 		// 8 + 1: task #347 (RAC-C part 3) landed C-d20cf537
 		// (reviewability-vs-code-authority, DETECTED, unresolved by design --
 		// the resolver-trust-shift RAC-B3/B4's self-hosting authority flip

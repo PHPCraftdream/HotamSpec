@@ -257,6 +257,12 @@ type ProposedEntityType struct {
 	Transitions []EntityTypeTransition `json:"transitions"`
 	Cyclic      bool                   `json:"cyclic"`
 	Fields      []EntityTypeField      `json:"fields"`
+	// ModelSymbol mirrors ontology.EntityType.ModelSymbol -- an OPTIONAL
+	// "file:Symbol"-shaped reference naming the Go type in the domain's
+	// authored spec/model/ tree that this EntityType corresponds to. See
+	// that field's doc comment for the full one-directional, never-a-
+	// generation-target contract.
+	ModelSymbol string `json:"model_symbol,omitempty"`
 }
 
 func (p ProposedEntityType) Kind() string         { return KindEntityType }

@@ -72,19 +72,19 @@ func errFieldAlreadyExists(slug, fieldName string) error {
 
 // errEntityTypeUpdateShape is returned by ProposedEntityType.mutate's UPDATE
 // path when the incoming proposal (targeting an already-existing slug) also
-// carries a non-empty states/transitions/description/why -- fields that only
-// make sense for CREATE. This is a deliberate first-iteration scope limit
-// (see ProposedEntityType.mutate doc comment), not a bug: UPDATE currently
-// supports ONLY appending new fields, not editing lifecycle/description/why
-// of an already-landed EntityType.
+// carries a non-empty states/transitions/description/why/model_symbol --
+// fields that only make sense for CREATE. This is a deliberate first-
+// iteration scope limit (see ProposedEntityType.mutate doc comment), not a
+// bug: UPDATE currently supports ONLY appending new fields, not editing
+// lifecycle/description/why/model_symbol of an already-landed EntityType.
 func errEntityTypeUpdateShape(slug string) error {
 	return fmt.Errorf(
 		"EntityType %q already exists, so this proposal is an UPDATE -- but "+
 			"UPDATE currently supports ONLY appending new 'fields'. "+
-			"'states'/'transitions'/'description'/'why' must be empty on an "+
-			"UPDATE proposal (this is a first-iteration scope limit, not a "+
-			"bug); drop them, or omit 'fields' entirely if you meant to "+
-			"re-create %q (which will fail as a duplicate).", slug, slug)
+			"'states'/'transitions'/'description'/'why'/'model_symbol' must be "+
+			"empty on an UPDATE proposal (this is a first-iteration scope "+
+			"limit, not a bug); drop them, or omit 'fields' entirely if you "+
+			"meant to re-create %q (which will fail as a duplicate).", slug, slug)
 }
 
 // errStepAlreadyExists is returned by ProposedProcess.mutate's UPDATE path

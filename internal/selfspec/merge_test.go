@@ -30,7 +30,14 @@ const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 // (W0.1) via `hotam sync-self`, the self-hosting anchor for
 // check_claim_authority_ratchet's orphan-enforcer gate (255 SETTLED + 42
 // REJECTED + 6 DRAFT = 303).
-const wantRequirementCount = 303
+// 303 + 2: task #395 (W1.3) via `hotam sync-self` rejected
+// R-generations-inherit-doc-test-code in place (SETTLED -> REJECTED, an
+// existing node's status flip -- not a node count change on its own) and
+// added its two atomic successors, R-requirement-generation-mechanized-by-
+// registry and R-entity-type-realized-by-go-symbol-never-generated (254
+// SETTLED + 43 REJECTED + 6 DRAFT = 303, then +2 new SETTLED successors =
+// 256 SETTLED + 43 REJECTED + 6 DRAFT = 305).
+const wantRequirementCount = 305
 
 // TestMergeIntoGraph_ByteIdenticalRoundTrip is the entire point of Phase A
 // (RAC-A, task #345, scaling Phase 0/RAC-0's proof to full coverage): load

@@ -545,7 +545,11 @@ each name a declared state)
 (list of `{"name", "kind", "required", "ref_target"}` objects, default `[]`;
 `kind` is one of `string` | `number` | `enum` | `reference` | `state`;
 `ref_target` names the target EntityType/Stakeholder when `kind` is
-`reference`)
+`reference`), `model_symbol` (default `""`; an optional `"file:Symbol"`-shaped
+reference, same shape as a Requirement's `implemented_by` entries, naming the
+Go type in the domain's authored `spec/model/` tree that this EntityType
+corresponds to — empty means no Go type yet, or no 1:1 Go counterpart;
+one-directional only, this never generates the named Go symbol)
 
 ```json
 {
@@ -580,10 +584,11 @@ and it cannot change `states`/`transitions`/`description`/`why`.
 objects to APPEND — a `name` that already exists on the target EntityType is
 rejected, not silently redefined)
 **Must be empty/omitted on UPDATE:** `states`, `transitions`, `description`,
-`why` — any of these non-empty on a proposal whose `slug` already exists is
-rejected (`... UPDATE currently supports ONLY appending new 'fields' ...`).
-This is a scope limit, not a bug: editing an already-landed EntityType's
-lifecycle/description/why is not yet supported by any proposal kind.
+`why`, `model_symbol` — any of these non-empty on a proposal whose `slug`
+already exists is rejected (`... UPDATE currently supports ONLY appending new
+'fields' ...`). This is a scope limit, not a bug: editing an already-landed
+EntityType's lifecycle/description/why/model_symbol is not yet supported by
+any proposal kind.
 
 A successful UPDATE appends one `HistoryEntry` to the EntityType (mirroring
 `ProposedRequirement`'s History-on-mutation pattern) recording the field

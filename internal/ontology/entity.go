@@ -23,6 +23,24 @@ type EntityType struct {
 	Why         string         `json:"why"`
 	DeclOrder   int            `json:"decl_order"`
 	History     []HistoryEntry `json:"history"`
+	// ModelSymbol is an OPTIONAL "file:Symbol"-shaped reference (the same
+	// shape/parser as Requirement.ImplementedBy, gate.ParseFileColonSymbol)
+	// naming the Go type in the domain's authored spec/model/ tree that this
+	// EntityType corresponds to. Empty means "no Go type yet, or this
+	// EntityType has no 1:1 Go counterpart" -- a calm, expected, honest-no-op
+	// default, mirroring every other optional link field in this codebase
+	// (BlockedOn/ImplementedBy/VerifiedBy on Requirement).
+	//
+	// ONE-DIRECTIONAL by design: EntityType names its own Go symbol, but the
+	// Go side carries no back-reference to the EntityType (no MODELS.md
+	// annotation pointing here). This field is a graph-level reference to
+	// code that is already authored elsewhere; it is NEVER a generation
+	// target and NEVER generates the named Go symbol -- the methodology's
+	// authority for Go code stays exactly where R-authored-spec-projections-
+	// are-derived and docs/AUTHORED-SPEC-CONTRACT.md §9 already put it: Go
+	// code is authored by hand, graph nodes are projections of it, never the
+	// other way around. See R-entity-type-realized-by-go-symbol-never-generated.
+	ModelSymbol string `json:"model_symbol,omitempty"`
 }
 
 type EntityInstance struct {

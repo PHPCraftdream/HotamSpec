@@ -1,6 +1,8 @@
 package invariants
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -22,6 +24,92 @@ func TestCheckEntityTypeLifecycleWellformed_FiresOnMalformedLifecycle(t *testing
 	vs := runCheck(t, "check_entity_type_lifecycle_wellformed", g)
 	if !hasViolationFor(vs, "thing") {
 		t.Fatalf("expected violation on thing for malformed lifecycle, got %v", vs)
+	}
+}
+
+// --- check_entity_type_model_symbol_resolves --------------------------------
+
+func TestCheckEntityTypeModelSymbolResolves_NoOpWhenEmpty(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{EntityTypes: []ontology.EntityType{entityType("thing")}}
+	if vs := runCheck(t, "check_entity_type_model_symbol_resolves", g); len(vs) != 0 {
+		t.Fatalf("expected no violations for empty model_symbol (field optional), got %v", vs)
+	}
+}
+
+func TestCheckEntityTypeModelSymbolResolves_OK(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	et := entityType("thing")
+	et.ModelSymbol = "spec/model/risk.go:Risk"
+	g := &ontology.Graph{DomainDir: domainDir, EntityTypes: []ontology.EntityType{et}}
+	if vs := runCheck(t, "check_entity_type_model_symbol_resolves", g); len(vs) != 0 {
+		t.Fatalf("expected no violations for resolving model_symbol, got %v", vs)
+	}
+}
+
+func TestCheckEntityTypeModelSymbolResolves_FiresOnMalformedEntry(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	et := entityType("thing")
+	et.ModelSymbol = "not-shaped-like-file-colon-symbol"
+	g := &ontology.Graph{DomainDir: domainDir, EntityTypes: []ontology.EntityType{et}}
+	vs := runCheck(t, "check_entity_type_model_symbol_resolves", g)
+	if !hasViolationFor(vs, "thing") {
+		t.Fatalf("expected violation for malformed model_symbol entry, got %v", vs)
+	}
+}
+
+func TestCheckEntityTypeModelSymbolResolves_FiresOnNonResolvingSymbol(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	et := entityType("thing")
+	et.ModelSymbol = "spec/model/risk.go:NoSuchType"
+	g := &ontology.Graph{DomainDir: domainDir, EntityTypes: []ontology.EntityType{et}}
+	vs := runCheck(t, "check_entity_type_model_symbol_resolves", g)
+	if !hasViolationFor(vs, "thing") {
+		t.Fatalf("expected violation for non-resolving model_symbol, got %v", vs)
+	}
+}
+
+// TestCheckEntityTypeModelSymbolResolves_MUTATION_StalenessRoundTrip is the
+// break->fix mutation proof mirroring
+// TestCheckImplementedBySymbolResolvable_MUTATION_StalenessRoundTrip: a
+// model_symbol pointing at a symbol that exists passes; deleting the symbol
+// (simulating a rename that orphans the reference) makes the check fire;
+// restoring the symbol makes it pass again.
+func TestCheckEntityTypeModelSymbolResolves_MUTATION_StalenessRoundTrip(t *testing.T) {
+	t.Parallel()
+	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
+	path := filepath.Join(domainDir, "spec", "model", "risk.go")
+	et := entityType("thing")
+	et.ModelSymbol = "spec/model/risk.go:Risk"
+	g := &ontology.Graph{DomainDir: domainDir, EntityTypes: []ontology.EntityType{et}}
+
+	if vs := runCheck(t, "check_entity_type_model_symbol_resolves", g); len(vs) != 0 {
+		t.Fatalf("expected no violations while Risk is present, got %v", vs)
+	}
+
+	orphaned := `package model
+
+func NewRisk(owner string) (int, error) {
+	return 0, nil
+}
+`
+	if err := os.WriteFile(path, []byte(orphaned), 0o644); err != nil {
+		t.Fatalf("WriteFile mutation: %v", err)
+	}
+	vs := runCheck(t, "check_entity_type_model_symbol_resolves", g)
+	if !hasViolationFor(vs, "thing") {
+		t.Fatalf("BROKEN: mutation did not produce the expected staleness violation -- "+
+			"checkEntityTypeModelSymbolResolves would not catch an orphaned model_symbol: %v", vs)
+	}
+
+	if err := os.WriteFile(path, []byte(authoredRiskModelSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile restore: %v", err)
+	}
+	if vs := runCheck(t, "check_entity_type_model_symbol_resolves", g); len(vs) != 0 {
+		t.Fatalf("expected no violations again after restoring Risk, got %v", vs)
 	}
 }
 

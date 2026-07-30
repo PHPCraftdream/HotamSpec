@@ -267,6 +267,10 @@ func BuildEntities(g *ontology.Graph, domainName string) string {
 			lines = append(lines, et.Description)
 			lines = append(lines, "")
 		}
+		if et.ModelSymbol != "" {
+			lines = append(lines, "**Model:** `"+et.ModelSymbol+"`")
+			lines = append(lines, "")
+		}
 
 		lines = append(lines, "### Lifecycle")
 		lines = append(lines, "")

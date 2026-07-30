@@ -1,6 +1,8 @@
 package proposal
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -1382,6 +1384,72 @@ func TestApply_EntityType(t *testing.T) {
 	if !found {
 		t.Errorf("entity type feature-flag not added")
 	}
+}
+
+// TestApply_EntityType_ModelSymbolRoundTrip proves ProposedEntityType.ModelSymbol
+// (task #395, W1.3, Deliverable A) round-trips through Apply onto the landed
+// ontology.EntityType.ModelSymbol unchanged, on the CREATE path. The domain
+// directory carries a real spec/model/release.go fixture declaring Release
+// so check_entity_type_model_symbol_resolves (run as part of Apply's
+// post-mutate invariant sweep) actually resolves the reference, proving this
+// is a genuine end-to-end round-trip, not merely a string copy.
+func TestApply_EntityType_ModelSymbolRoundTrip(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, baseGraph())
+	modelDir := filepath.Join(filepath.Dir(path), "spec", "model")
+	if err := os.MkdirAll(modelDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	releaseSrc := "package model\n\ntype Release struct {\n\tName string\n}\n"
+	if err := os.WriteFile(filepath.Join(modelDir, "release.go"), []byte(releaseSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+	p := ProposedEntityType{
+		Slug:        "release",
+		Description: "a shippable unit of work",
+		Why:         "needed to track releases",
+		ModelSymbol: "spec/model/release.go:Release",
+		States: []EntityTypeState{
+			{Name: "INIT", Kind: ontology.StateKindInitial},
+			{Name: "SHIPPED", Kind: ontology.StateKindTerminal},
+		},
+		Transitions: []EntityTypeTransition{
+			{Src: "INIT", Dst: "SHIPPED", Event: "ship"},
+		},
+	}
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	found := false
+	for _, et := range g.EntityTypes {
+		if et.Slug == "release" {
+			found = true
+			if et.ModelSymbol != "spec/model/release.go:Release" {
+				t.Errorf("ModelSymbol = %q, want %q", et.ModelSymbol, "spec/model/release.go:Release")
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("entity type release not added")
+	}
+}
+
+// TestApply_EntityType_UpdateWithNonEmptyModelSymbolFails proves the UPDATE
+// path's shape guard (errEntityTypeUpdateShape) rejects a non-empty
+// model_symbol on an UPDATE proposal, mirroring the existing
+// states/transitions/description/why guards this same gate already enforces.
+func TestApply_EntityType_UpdateWithNonEmptyModelSymbolFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityTypeBaseGraph())
+	p := ProposedEntityType{
+		Slug:        "feature-flag",
+		ModelSymbol: "spec/model/feature_flag.go:FeatureFlag",
+		Fields: []EntityTypeField{
+			{Name: "linked_release", Kind: "reference", RefTarget: "release"},
+		},
+	}
+	assertApplyFails(t, path, p, "UPDATE currently supports ONLY appending new 'fields'")
 }
 
 func TestApply_EntityType_NoInitialStateFails(t *testing.T) {

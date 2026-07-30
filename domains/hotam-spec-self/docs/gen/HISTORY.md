@@ -17,6 +17,11 @@ substrate (R-history-from-rejected-markers).
 
 ## REJECTED requirements (what we tried and discarded)
 
+### `R-generations-inherit-doc-test-code` — Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise).
+
+- **owner:** `framework-author`
+- **why:** REJECTED -- REPLACES by R-requirement-generation-mechanized-by-registry + R-entity-type-realized-by-go-symbol-never-generated per atomicity discipline (R-requirement-claim-is-atomic): the original claim mixed a Requirement-generation concern (already independently ENFORCED via the self-hosting registry, see R-requirement-generation-mechanized-by-registry) with an EntityType-generation concern that pointed in the WRONG direction relative to this framework's own "Go code is the source of truth" law (docs/AUTHORED-SPEC-CONTRACT.md §9 already rejected gen-code; generating Go structs/lifecycle-methods/transition-tests FROM an EntityType is backwards, see R-entity-type-realized-by-go-symbol-never-generated's reversed claim).
+
 ### `R-content-free-framework` — spec/src/hotam_spec/ shall contain ZERO business content — no example requirements, no example axes, no seed graph.
 
 - **owner:** `framework-author`

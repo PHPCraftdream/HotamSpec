@@ -6700,6 +6700,49 @@
       "decl_order": 129
     },
     {
+      "id": "R-entity-type-realized-by-go-symbol-never-generated",
+      "claim": "An EntityType MAY declare model_symbol naming the Go type in the domain's authored spec/model/ that realizes it; the Go type is the PRIMARY source, EntityType is a graph-level reference/projection of it. The methodology shall NEVER generate a Go struct, lifecycle methods, or transition tests FROM an EntityType -- the direction is Go-code-to-graph, never graph-to-Go-code (docs/AUTHORED-SPEC-CONTRACT.md §9).",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "The reversed-direction successor to R-generations-inherit-doc-test-code's EntityType-half, which pointed the wrong way relative to this framework's own \"Go code is the source of truth\" law: docs/AUTHORED-SPEC-CONTRACT.md §9 already rejected gen-code (generating Go FROM spec), so a requirement demanding an EntityType-to-Go generator was asking for exactly the direction the framework had already rejected elsewhere. Task #395 (W1.3) resolves the underlying honest debt not by building the rejected generator, but by adding the missing LINK in the correct direction: EntityType.ModelSymbol (internal/ontology/entity.go), an optional \"file:Symbol\" reference naming the Go type that already realizes this EntityType, checked by check_entity_type_model_symbol_resolves (internal/invariants/entity_checks.go) -- the same gate.ParseFileColonSymbol/SpecRootForGraph/ResolveSpecSymbol machinery check_implemented_by_symbol_resolvable already uses for Requirement.ImplementedBy. This mechanically closes the CHECKABLE half of this claim (a declared model_symbol really resolves to a real Go declaration). The \"shall NEVER generate FROM EntityType\" half is a negative/prohibition claim with no natural mechanical enforcer of its own -- the same honesty-boundary shape R-authored-spec-projections-are-derived's \"shall NEVER be hand-written\" prohibition and R-structural-floor-vs-mirror-audit's \"shall NEVER be blurred\" prohibition already carry: both are Enforcement=ENFORCED via a real carrier for their checkable half (implemented_by+verified_by pointing at the generator/boundary-proof code) with no enforcer directly proving the negative itself, because a negative existence claim (\"no such generator will ever be written\") is not something a check_* can affirmatively prove -- it can only fail to find evidence the prohibition was violated, which check_entity_type_model_symbol_resolves does not even attempt (it verifies a REFERENCE resolves, not that no generator exists). Following that precedent, this requirement sets Enforcement=ENFORCED on the strength of the checkable reference-resolution half, with EnforcedBy naming the one real gate that closes it.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-generations-inherit-doc-test-code"
+        }
+      ],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_entity_type_model_symbol_resolves"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-30",
+      "settled_at": "2026-07-30",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "docs/PLAN-code-authority-completion.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md"
+      ],
+      "history": [
+        {
+          "at": "2026-07-30",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-30",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #395 (W1.3): confront-gate lexical false positive on shared modal words 'never'/'always' with R-domain-overview-projection (language-fidelity claim, unrelated axis) and R-shared-projections-mode-independent (rendering-determinism claim, unrelated axis) -- both share only the token 'projection' with this requirement's unrelated code-generation-direction prohibition; resolver-reviewed, same resolution path as task #388 (3404be0)",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
+    },
+    {
       "id": "R-entity-typed-anchors",
       "claim": "check_typed_anchors shall validate the ENT- prefix for EntityInstance nodes.",
       "owner": "framework-author",
@@ -7064,17 +7107,17 @@
       "id": "R-generations-inherit-doc-test-code",
       "claim": "Every artifact the methodology generates MUST recursively inherit the doc-test-code form: EVERY EntityType MUST yield a Go struct, its lifecycle methods, and transition tests; EVERY SETTLED requirement MUST yield a named Go test case (a real assertion when formalizable, an honest skip carrying the rule text otherwise).",
       "owner": "framework-author",
-      "status": "SETTLED",
-      "why": "Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code. PARTIAL PROGRESS (task #347, RAC-C part 4): the Requirement-half of this claim now has a real mechanism -- internal/selfspec.Requirements is a Go registry of ontology.Requirement values (RAC-A, task #345) that `hotam sync-self` (RAC-B2, task #349) projects onto domains/hotam-spec-self/graph.json, mechanically verified byte-identical (embed_test.go/merge_test.go/sync_test.go) and checked live by check_self_requirements_match_registry (RAC-B4, task #351) -- so EVERY SETTLED requirement on this domain now DOES yield a named Go declaration, not merely a JSON node, satisfying the requirement-generation half of the claim for the domain that defines it. The EntityType-half remains UNMET: EntityType is still NOT typed in Go anywhere in this codebase -- no EntityType struct, no generated lifecycle methods, no generated transition tests exist for any EntityType node (see internal/ontology/entity.go's EntityType, which stays a plain data value, never a code-generation target). This is honest REMAINING debt, not claimed solved by the Requirement-half's progress -- Enforcement stays PROSE until an EntityType-to-Go generator exists.",
+      "status": "REJECTED",
+      "why": "REJECTED -- REPLACES by R-requirement-generation-mechanized-by-registry + R-entity-type-realized-by-go-symbol-never-generated per atomicity discipline (R-requirement-claim-is-atomic): the original claim mixed a Requirement-generation concern (already independently ENFORCED via the self-hosting registry, see R-requirement-generation-mechanized-by-registry) with an EntityType-generation concern that pointed in the WRONG direction relative to this framework's own \"Go code is the source of truth\" law (docs/AUTHORED-SPEC-CONTRACT.md §9 already rejected gen-code; generating Go structs/lifecycle-methods/transition-tests FROM an EntityType is backwards, see R-entity-type-realized-by-go-symbol-never-generated's reversed claim).",
       "assumptions": null,
-      "relations": null,
+      "relations": [],
       "enforcement": "PROSE",
-      "enforced_by": null,
+      "enforced_by": [],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
       "created_at": "2026-07-15",
-      "settled_at": "2026-07-15",
+      "settled_at": "",
       "last_reviewed_at": "2026-07-15",
       "review_after": "2026-11-15",
       "evidence": [
@@ -7094,6 +7137,11 @@
         {
           "at": "2026-07-24",
           "summary": "field Why: Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code. -> Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code. PARTIAL PROGRESS (task #347, RAC-C part 4): the Requirement-half of this claim now has a real mechanism -- internal/selfspec.Requirements is a Go registry of ontology.Requirement values (RAC-A, task #345) that `hotam sync-self` (RAC-B2, task #349) projects onto domains/hotam-spec-self/graph.json, mechanically verified byte-identical (embed_test.go/merge_test.go/sync_test.go) and checked live by check_self_requirements_match_registry (RAC-B4, task #351) -- so EVERY SETTLED requirement on this domain now DOES yield a named Go declaration, not merely a JSON node, satisfying the requirement-generation half of the claim for the domain that defines it. The EntityType-half remains UNMET: EntityType is still NOT typed in Go anywhere in this codebase -- no EntityType struct, no generated lifecycle methods, no generated transition tests exist for any EntityType node (see internal/ontology/entity.go's EntityType, which stays a plain data value, never a code-generation target). This is honest REMAINING debt, not claimed solved by the Requirement-half's progress -- Enforcement stays PROSE until an EntityType-to-Go generator exists.",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-30",
+          "summary": "field Status: SETTLED -> REJECTED; field Why: Dogfooding gen-code (PLAN-gen-code.md stage 0): the methodology must apply its own doc-test-code discipline recursively to everything it generates, not only to hand-written code. PARTIAL PROGRESS (task #347, RAC-C part 4): the Requirement-half of this claim now has a real mechanism -- internal/selfspec.Requirements is a Go registry of ontology.Requirement values (RAC-A, task #345) that `hotam sync-self` (RAC-B2, task #349) projects onto domains/hotam-spec-self/graph.json, mechanically verified byte-identical (embed_test.go/merge_test.go/sync_test.go) and checked live by check_self_requirements_match_registry (RAC-B4, task #351) -- so EVERY SETTLED requirement on this domain now DOES yield a named Go declaration, not merely a JSON node, satisfying the requirement-generation half of the claim for the domain that defines it. The EntityType-half remains UNMET: EntityType is still NOT typed in Go anywhere in this codebase -- no EntityType struct, no generated lifecycle methods, no generated transition tests exist for any EntityType node (see internal/ontology/entity.go's EntityType, which stays a plain data value, never a code-generation target). This is honest REMAINING debt, not claimed solved by the Requirement-half's progress -- Enforcement stays PROSE until an EntityType-to-Go generator exists. -> REJECTED -- REPLACES by R-requirement-generation-mechanized-by-registry + R-entity-type-realized-by-go-symbol-never-generated per atomicity discipline (R-requirement-claim-is-atomic): the original claim mixed a Requirement-generation concern (already independently ENFORCED via the self-hosting registry, see R-requirement-generation-mechanized-by-registry) with an EntityType-generation concern that pointed in the WRONG direction relative to this framework's own \"Go code is the source of truth\" law (docs/AUTHORED-SPEC-CONTRACT.md §9 already rejected gen-code; generating Go structs/lifecycle-methods/transition-tests FROM an EntityType is backwards, see R-entity-type-realized-by-go-symbol-never-generated's reversed claim).; field Relations: [] -> []; field EnforcedBy: [] -> []; field SettledAt: 2026-07-15 -> ",
           "decided_by": ""
         }
       ],
@@ -10818,6 +10866,58 @@
       "verified_by": [
         "internal/proposal/proposal_test.go:TestApply_Requirement_UpdateAppendsHistory"
       ]
+    },
+    {
+      "id": "R-requirement-generation-mechanized-by-registry",
+      "claim": "Every SETTLED Requirement in a self-hosting domain shall be authored as a named Go declaration in internal/selfspec (not merely a JSON graph node), mechanically verified byte-identical to the projected graph via `hotam sync-self`.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "The surviving, already-true half of R-generations-inherit-doc-test-code's original bundled claim, split out atomically (R-requirement-claim-is-atomic) rather than left bundled with the EntityType-generation debt half the parent requirement also carried. Task #345 (RAC-A) introduced internal/selfspec.Requirements, a Go registry of ontology.Requirement values; task #349 (RAC-B2) added `hotam sync-self`, which projects that registry onto domains/hotam-spec-self/graph.json; task #351 (RAC-B4) promoted check_self_requirements_match_registry from a shadow-only advisory to a real All-registered gate, so a hand-edit or registry/graph disagreement is mechanically detectable inside `hotam all-violations` itself, not merely a test-only guard. Together these mean EVERY SETTLED requirement on this domain now DOES yield a named Go declaration, not merely a JSON node -- the requirement-generation half of the original bundled claim, now standing on its own as a fully mechanized, ENFORCED anchor rather than sharing a Claim with an unrelated, still-debt-carrying EntityType concern.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "replaces",
+          "target": "R-generations-inherit-doc-test-code"
+        }
+      ],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_self_requirements_match_registry",
+        "TestMergeIntoGraph_ByteIdenticalRoundTrip",
+        "TestMergeIntoGraph_AllRequirementsRegistered"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-30",
+      "settled_at": "2026-07-30",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "internal/selfspec/selfspec.go",
+        "internal/selfspec/merge.go",
+        "cmd/hotam/sync_self.go",
+        "internal/invariants/selfspec_shadow.go"
+      ],
+      "history": [
+        {
+          "at": "2026-07-30",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-30",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #395 (W1.3): confront-gate lexical false positive on shared modal words 'never'/'always' with R-domain-overview-projection (language-fidelity claim, unrelated axis) and R-shared-projections-mode-independent (rendering-determinism claim, unrelated axis) -- both share only the token 'projection' with this requirement's unrelated code-generation-direction prohibition; resolver-reviewed, same resolution path as task #388 (3404be0)",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-07-30",
+          "summary": "field SourceRefs: [internal/selfspec/registry.go internal/selfspec/merge.go cmd/hotam/sync_self.go internal/invariants/selfspec_shadow.go] -> [internal/selfspec/selfspec.go internal/selfspec/merge.go cmd/hotam/sync_self.go internal/invariants/selfspec_shadow.go]",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
     },
     {
       "id": "R-requirement-update-signoff-typed",

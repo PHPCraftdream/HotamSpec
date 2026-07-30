@@ -824,21 +824,24 @@ func (p ProposedReviewMark) mutate(g *ontology.Graph, today string) error {
 // UPDATE (p.Slug already names an EntityType in g): p.Fields are APPENDED to
 // the existing EntityType.Fields -- never replacing or redefining an
 // existing field (errFieldAlreadyExists if a name collides). States,
-// Transitions, Description and Why must all be empty on an UPDATE
-// (errEntityTypeUpdateShape otherwise) -- this first iteration intentionally
-// does not support editing lifecycle/description/why of an already-landed
-// EntityType, only adding new fields to it (e.g. a new reference field
-// pointing at another EntityType). A HistoryEntry is appended recording the
-// appended field names, mirroring the History-on-mutation pattern
-// ProposedRequirement/ProposedReviewMark already use.
+// Transitions, Description, Why, and ModelSymbol must all be empty on an
+// UPDATE (errEntityTypeUpdateShape otherwise) -- this first iteration
+// intentionally does not support editing lifecycle/description/why/
+// model_symbol of an already-landed EntityType, only adding new fields to it
+// (e.g. a new reference field pointing at another EntityType). A
+// HistoryEntry is appended recording the appended field names, mirroring the
+// History-on-mutation pattern ProposedRequirement/ProposedReviewMark already
+// use.
 //
 // CREATE (p.Slug not yet in g): unchanged from before this UPDATE path
-// existed -- byte-identical behavior.
+// existed -- byte-identical behavior, now additionally carrying ModelSymbol
+// straight through onto the landed ontology.EntityType.
 func (p ProposedEntityType) mutate(g *ontology.Graph, today string) error {
 	slug := strings.TrimSpace(p.Slug)
 	if idx := findEntityTypeIndex(g, slug); idx >= 0 {
 		if len(p.States) != 0 || len(p.Transitions) != 0 ||
-			strings.TrimSpace(p.Description) != "" || strings.TrimSpace(p.Why) != "" {
+			strings.TrimSpace(p.Description) != "" || strings.TrimSpace(p.Why) != "" ||
+			strings.TrimSpace(p.ModelSymbol) != "" {
 			return errEntityTypeUpdateShape(slug)
 		}
 		existing := g.EntityTypes[idx]
@@ -897,8 +900,9 @@ func (p ProposedEntityType) mutate(g *ontology.Graph, today string) error {
 			Transitions: transitions,
 			Cyclic:      p.Cyclic,
 		},
-		Fields: fields,
-		Why:    p.Why,
+		Fields:      fields,
+		Why:         p.Why,
+		ModelSymbol: p.ModelSymbol,
 	})
 	return nil
 }

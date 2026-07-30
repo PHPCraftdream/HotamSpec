@@ -173,7 +173,14 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// a domain has been observed with claim_authority:"scenario" (pinned in
 	// graph.lock's ClaimAuthorityScenarioObserved), silently withdrawing that
 	// opt-in is a regression violation.
-	const expected = 116
+	// Task #395 (W1.3: linking EntityType to a Go symbol) added a 117th,
+	// check_entity_type_model_symbol_resolves (entity_checks.go): the
+	// EntityType-side counterpart of check_implemented_by_symbol_resolvable
+	// -- every non-empty EntityType.ModelSymbol ("file:Symbol") must resolve
+	// to a real Go declaration in the domain's authored spec/model/ tree,
+	// reusing the identical gate.ParseFileColonSymbol/SpecRootForGraph/
+	// ResolveSpecSymbol machinery.
+	const expected = 117
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}
