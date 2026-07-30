@@ -7,8 +7,8 @@
 // -- without opening every file under spec/model by hand.
 //
 // LAYERING (W2.4): the AST model SCAN itself (which files to parse, how to
-// extract objects/fields/methods, the vendored-recorder exclusion) moved to
-// internal/gate/model_scan.go -- see that file's own LAYERING doc comment
+// extract objects/fields/methods, the vendored/generated-file exclusion)
+// moved to internal/gate/model_scan.go -- see that file's own LAYERING doc comment
 // for the full reasoning (same W2.3 spec_build.go precedent: the scan is
 // shared with internal/invariants' new check_model_complete gate, W2.4, and
 // internal/invariants must never import internal/generator). This file now
@@ -47,15 +47,17 @@ type modelMethod = gate.ModelMethod
 type modelError = gate.ModelError
 type modelFile = gate.ModelFile
 
-// isVendoredRecorderFile re-exports gate.IsVendoredRecorderFile under the
+// isVendoredRecorderFile re-exports gate.IsGeneratedOrVendoredFile under the
 // lowercase name internal/generator/models_vendor_exclusion_test.go already
 // calls it by (that test is package generator, so it reaches unexported
 // names directly -- the rename keeps the test unchanged). The canonical,
-// shared implementation lives in gate (single choke point both
-// generator and invariants funnel through); this wrapper is a zero-cost
+// shared implementation lives in gate (single choke point both generator
+// and invariants funnel through, now recognizing every known
+// vendored/generated banner -- recorder, ontology mirror, registrydump
+// scaffold -- not only the recorder); this wrapper is a zero-cost
 // re-export, not a second copy.
 func isVendoredRecorderFile(path string) bool {
-	return gate.IsVendoredRecorderFile(path)
+	return gate.IsGeneratedOrVendoredFile(path)
 }
 
 // BuildModels renders docs/gen/MODELS.md: an object model overview --

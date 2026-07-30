@@ -49,7 +49,9 @@ import (
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	ontologyvendor "github.com/PHPCraftdream/HotamSpec/internal/ontology/vendor"
 	recordervendor "github.com/PHPCraftdream/HotamSpec/internal/recorder/vendor"
+	registrydumpvendor "github.com/PHPCraftdream/HotamSpec/internal/registrydump/vendor"
 )
 
 // ModelObject is one rendered type declaration: its name, kind (struct/
@@ -112,10 +114,12 @@ type ModelFile struct {
 // Single shared entry point for both generators (rendering) and the
 // model-level discipline gate (check_model_complete): everything that needs
 // to know "what objects/fields/methods does this domain's authored spec/
-// declare, EXCLUDING the vendored recorder" funnels through here, so
-// MODELS.md/COVERAGE.md and the check_model_complete violation set can
-// never disagree about which files count as "this domain's own models"
-// (the same isVendoredRecorderFile choke point every path funnels through).
+// declare, EXCLUDING every known vendored/generated file" funnels through
+// here, so MODELS.md/COVERAGE.md and the check_model_complete violation set
+// can never disagree about which files count as "this domain's own models"
+// (the same IsGeneratedOrVendoredFile choke point every path funnels
+// through -- see that function's doc comment for the full registry of
+// recognized banners).
 func ScanAuthoredModels(g *ontology.Graph) ([]ModelFile, error) {
 	if g.SelfHosting {
 		return scanSelfHostingModelFiles(g)
@@ -207,13 +211,12 @@ func scanSelfHostingModelFiles(g *ontology.Graph) ([]ModelFile, error) {
 // skipping any file that fails to parse or no longer exists rather than
 // failing the whole scan (a stale implemented_by reference is already
 // reported as ORPHANED by TRACEABILITY.md; the scan simply omits it) --
-// and skipping any file that is a VENDORED copy of the hotamspec scenario
-// recorder (IsVendoredRecorderFile), since that file is engine machinery
-// copied into the domain's spec/ tree for a Go module boundary reason
-// (PLAN-scenario-generated-spec.md §2 D1's vendoring contract,
-// internal/recorder/vendor's own doc comment), never a domain-authored
-// model -- see IsVendoredRecorderFile's doc comment for why this is the
-// single, shared choke point BOTH scanDomainModelFiles and
+// and skipping any file stamped with a known generated/vendored do-not-edit
+// banner (IsGeneratedOrVendoredFile), since such a file is engine machinery
+// copied or templated into the domain's spec/ tree for a Go module boundary
+// reason (PLAN-scenario-generated-spec.md §2 D1's vendoring contract), never
+// a domain-authored model -- see IsGeneratedOrVendoredFile's doc comment for
+// why this is the single, shared choke point BOTH scanDomainModelFiles and
 // scanSelfHostingModelFiles funnel through, so every caller of
 // ScanAuthoredModels never disagrees about which files count as "this
 // domain's own models".
@@ -232,7 +235,7 @@ func parseModelFiles(paths []string, root string) ([]ModelFile, error) {
 	var files []ModelFile
 	fset := token.NewFileSet()
 	for _, p := range uniquePaths {
-		if IsVendoredRecorderFile(p) {
+		if IsGeneratedOrVendoredFile(p) {
 			continue
 		}
 		astFile, err := parser.ParseFile(fset, p, nil, parser.ParseComments)
@@ -251,46 +254,83 @@ func parseModelFiles(paths []string, root string) ([]ModelFile, error) {
 	return files, nil
 }
 
-// vendoredRecorderBannerFirstLine is the exact first line of
-// internal/recorder/vendor's do-not-edit banner (recordervendor.Banner),
-// extracted once so IsVendoredRecorderFile never has to re-split the whole
-// banner string per call. Derived from recordervendor.Banner itself (never
-// a hand-copied literal) so a future wording change to that banner cannot
-// silently desync this detector from the marker it is meant to recognize.
-var vendoredRecorderBannerFirstLine = strings.SplitN(recordervendor.Banner, "\n", 2)[0]
-
-// IsVendoredRecorderFile reports whether the Go source file at path is a
-// VENDORED copy of the hotamspec scenario recorder
-// (internal/recorder/canon/hotamspec.go, copied byte-for-byte into a
-// consumer domain's spec/ tree by `hotam vendor-recorder` --
-// internal/recorder/vendor's own doc comment) rather than a domain-authored
-// model -- every caller of ScanAuthoredModels must never count the
-// recorder's own types (Scenario, Artifact, Step, StepKind, ...) as domain
-// object-model surface (zero-trust review finding: a pilot's COVERAGE.md
-// drifted from "3 files / 6 objects / 11 fields / 16 methods" to
-// "4 / 14 / 32 / 24" purely because the vendored recorder got swept into the
-// same spec/ walk as the domain's real model/ files).
+// knownGeneratedBannerFirstLines is the registry every
+// IsGeneratedOrVendoredFile check runs against: the exact first line of
+// EVERY known do-not-edit banner this engine stamps onto a file it writes
+// into a consumer domain's spec/ tree, one entry per distinct banner
+// producer. Each entry is DERIVED from that producer's own exported Banner
+// constant (never a hand-copied literal), so a future wording change to any
+// one of those banners cannot silently desync this registry from the marker
+// it is meant to recognize -- the same non-duplication discipline the
+// original single-purpose vendoredRecorderBannerFirstLine (now folded into
+// this slice) already followed, generalized to N producers instead of one.
 //
-// Detection is by the vendored copy's OWN do-not-edit banner -- its first
-// line must equal vendoredRecorderBannerFirstLine EXACTLY -- rather than by
-// package name ("hotamspec") or directory name ("spec/hotamspec/"): a
+// Adding a FOURTH generated/vendored file kind later (a future `hotam
+// vendor-*`/`hotam scaffold-*` command) is a one-line addition here --
+// append that producer's own Banner first line -- never a new, parallel
+// isVendoredXFile function: this is the single unified choke point every
+// generated/vendored marker funnels through, so ScanAuthoredModels'
+// definition of "domain-authored" never has to be re-taught per producer at
+// each of MODELS.md/COVERAGE.md/check_model_complete separately.
+//
+// Current producers (task #391, W0.4 -- zero-trust finding: only the
+// recorder had this exclusion; the ontology-vendor mirror
+// (spec/hotamontology/, `hotam vendor-ontology`, task #365) and the
+// registrydump scaffold (spec/registrydump/, `hotam scaffold-registrydump`,
+// task #367) had none, so their own exported types -- Relation, Requirement,
+// Registry -- would leak into MODELS.md/COVERAGE.md/check_model_complete as
+// soon as a consumer domain adopted requirements_authority:"code"):
+//
+//   - internal/recorder/vendor.Banner       -- `hotam vendor-recorder`   (spec/hotamspec/)
+//   - internal/ontology/vendor.Banner       -- `hotam vendor-ontology`   (spec/hotamontology/)
+//   - internal/registrydump/vendor.Banner   -- `hotam scaffold-registrydump` (spec/registrydump/)
+var knownGeneratedBannerFirstLines = []string{
+	strings.SplitN(recordervendor.Banner, "\n", 2)[0],
+	strings.SplitN(ontologyvendor.Banner, "\n", 2)[0],
+	strings.SplitN(registrydumpvendor.Banner, "\n", 2)[0],
+}
+
+// IsGeneratedOrVendoredFile reports whether the Go source file at path
+// carries one of knownGeneratedBannerFirstLines as its literal first line --
+// i.e. it is a VENDORED or GENERATED copy this engine itself wrote into a
+// consumer domain's spec/ tree (the recorder, the ontology mirror, or the
+// registrydump scaffold) rather than a domain-authored model. Every caller
+// of ScanAuthoredModels must never count such a file's own exported types
+// (Scenario/Artifact/Step/StepKind from the recorder; Relation/Requirement/
+// Registry from the ontology mirror; the registrydump scaffold's generated
+// main) as domain object-model surface -- the original zero-trust review
+// finding that motivated this check was a pilot's COVERAGE.md drifting from
+// "3 files / 6 objects / 11 fields / 16 methods" to "4 / 14 / 32 / 24"
+// purely because ONE vendored file (the recorder) got swept into the same
+// spec/ walk as the domain's real model/ files; task #391 generalized the
+// fix to every known banner producer, not just that first one.
+//
+// Detection is by each candidate file's OWN do-not-edit banner -- its first
+// line must equal one entry of knownGeneratedBannerFirstLines EXACTLY --
+// rather than by package name ("hotamspec"/"hotamontology") or directory
+// name ("spec/hotamspec/"/"spec/hotamontology/"/"spec/registrydump/"): a
 // package/directory name is a convention a domain could rename, but the
-// banner is the file's own generated-marker, stamped by
-// internal/recorder/vendor.Source on every `hotam vendor-recorder` run
-// (recordervendor.Banner's own doc comment: "this file is a VENDORED,
-// byte-for-byte copy ... DO NOT EDIT"), so it survives a directory rename
-// and cannot drift out of sync with what the vendoring tool itself writes.
-// Only the FIRST LINE is checked (not a full-banner match) so this stays
-// robust to whitespace/line-ending normalization elsewhere in the pipeline
-// without weakening the signal -- no ordinary domain-authored file begins
-// with this exact comment line by accident.
+// banner is the file's own generated-marker, stamped by the corresponding
+// producer on every run of its own `hotam vendor-*`/`hotam scaffold-*`
+// command, so it survives a directory rename and cannot drift out of sync
+// with what the writing tool itself writes. Only the FIRST LINE of each
+// banner is checked (not a full-banner match) so this stays robust to
+// whitespace/line-ending normalization elsewhere in the pipeline without
+// weakening the signal -- no ordinary domain-authored file begins with any
+// of these exact comment lines by accident (each first line names its own
+// specific `hotam ...` command). A genuinely domain-authored file whose NAME
+// merely resembles a vendored one (e.g. an authored spec/model/registry.go
+// declaring the domain's own Registry type) is unaffected: its first line is
+// whatever the author wrote, not one of these banners, so it is scanned
+// normally.
 //
 // A file that cannot be opened, or whose first line cannot be read, is
-// treated as NOT vendored (false) -- consistent with parseModelFiles' own
-// existing policy of skipping unreadable/unparsable files silently rather
-// than failing the whole scan; a real read failure surfaces moments later
-// anyway when parser.ParseFile is attempted on the same path.
-func IsVendoredRecorderFile(path string) bool {
+// treated as NOT generated/vendored (false) -- consistent with
+// parseModelFiles' own existing policy of skipping unreadable/unparsable
+// files silently rather than failing the whole scan; a real read failure
+// surfaces moments later anyway when parser.ParseFile is attempted on the
+// same path.
+func IsGeneratedOrVendoredFile(path string) bool {
 	f, err := os.Open(path)
 	if err != nil {
 		return false
@@ -301,7 +341,13 @@ func IsVendoredRecorderFile(path string) bool {
 	if !scanner.Scan() {
 		return false
 	}
-	return scanner.Text() == vendoredRecorderBannerFirstLine
+	firstLine := scanner.Text()
+	for _, known := range knownGeneratedBannerFirstLines {
+		if firstLine == known {
+			return true
+		}
+	}
+	return false
 }
 
 // extractModelFile walks one parsed *ast.File's top-level declarations into

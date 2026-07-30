@@ -14,6 +14,11 @@ vendor/
 # internal/ontology/vendor/ (task #365) is the same shape: this project's own
 # package, not a third-party Go vendor/ directory -- exempt it too.
 !internal/ontology/vendor/
+# internal/registrydump/vendor/ (task #391, W0.4) is the same shape again:
+# this project's own leaf package (the registrydump scaffold's do-not-edit
+# banner, shared between cmd/hotam's writer and internal/gate's unified
+# generated-file detector) -- exempt it too.
+!internal/registrydump/vendor/
 .idea/
 .vscode/
 *.swp

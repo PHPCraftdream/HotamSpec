@@ -190,6 +190,79 @@ History predating this file is not backfilled — see `git log` and
   fixture helpers are untouched, left for a follow-up wave if this pilot proves durable.
 
 ### Fixed
+- **`gate.ScanAuthoredModels` (`internal/gate/model_scan.go`), the single scan `MODELS.md`,
+  `COVERAGE.md`, and `check_model_complete` all funnel through, only excluded ONE of three known
+  vendored/generated file kinds from a domain's authored-model inventory — the vendored scenario
+  recorder (`spec/hotamspec/`, `hotam vendor-recorder`) — leaving the vendored ontology mirror
+  (`spec/hotamontology/`, `hotam vendor-ontology`, task #365) and the generated registrydump
+  scaffold (`spec/registrydump/`, `hotam scaffold-registrydump`, task #367) completely unguarded
+  (task #391, W0.4).** As soon as a consumer domain adopted `requirements_authority: "code"`
+  (`R-domain-founded-in-wave-order` step 6), the vendored ontology mirror's own exported types —
+  `Relation`, `Requirement`, `Registry` (`internal/ontology/canon/requirement.go`, `registry.go`)
+  — and anything the registrydump scaffold declares would be swept into the same `spec/` walk as
+  the domain's real `spec/model/*.go` files and counted AS IF they were authored domain object
+  model surface in `MODELS.md`, `COVERAGE.md`'s layer counts, and `check_model_complete`'s
+  completeness gate — exactly the "engine/framework boilerplate leaked into the business folder"
+  defect class task #367 (the `life` domain, task #364: "empty domain = zero files") already
+  caught once this same session, now confirmed live for the ontology-vendor and registrydump-
+  scaffold paths by direct code reading.
+  - **Fix**: retired the single-purpose `vendoredRecorderBannerFirstLine string` /
+    `IsVendoredRecorderFile(path string) bool` pair and replaced them with a UNIFIED registry:
+    `knownGeneratedBannerFirstLines []string` (one entry per known banner producer, each derived
+    from that producer's own exported `Banner` constant — never a hand-copied literal) and
+    `IsGeneratedOrVendoredFile(path string) bool`, which reports true iff a candidate file's first
+    line exactly matches ANY registered banner first line. `parseModelFiles` (both
+    `scanDomainModelFiles`'s ordinary-domain path and `scanSelfHostingModelFiles`'s self-hosting
+    path) now calls this single choke point instead of the old recorder-only check. Adding a
+    fourth vendored/generated kind later is a one-line append to the registry, not a new parallel
+    `isVendoredXFile` function.
+  - **New leaf package for the third banner**: the registrydump scaffold's do-not-edit banner
+    previously lived as a private `const registrydumpBanner` inside `cmd/hotam/scaffold_registrydump.go`
+    (`package main`) — unreachable from `internal/gate` without an import cycle (`cmd/hotam` already
+    imports `internal/gate`, e.g. `cmd/hotam/main.go`, `sync_domain.go`). Extracted the literal into
+    a new leaf package, `internal/registrydump/vendor` (`Banner` constant only — no canonical source
+    to embed, since `spec/registrydump/main.go` is a per-domain TEMPLATED program, not a
+    byte-for-byte vendored copy), mirroring the existing `internal/recorder/vendor` /
+    `internal/ontology/vendor` leaf-package shape exactly. `cmd/hotam/scaffold_registrydump.go`'s
+    `registrydumpBanner` is now a thin re-export (`const registrydumpBanner = registrydumpvendor.Banner`)
+    so its own writer (`registrydumpSource`) is unchanged; `internal/gate/model_scan.go` imports the
+    same package directly, so both the writer and the unified detector read the exact one banner
+    literal — no risk of the two silently diverging.
+  - **`internal/generator/models.go`'s `isVendoredRecorderFile` wrapper** (kept for its existing
+    test, `models_vendor_exclusion_test.go`, which reaches it by its lowercase in-package name) now
+    forwards to `gate.IsGeneratedOrVendoredFile`, so `BuildModels`/`ScanModelLayerCounts` inherit the
+    same three-banner exclusion with zero call-site changes.
+  - **`internal/invariants/model_complete.go`'s `checkModelComplete`** needed NO code change — it
+    already calls `gate.ScanAuthoredModels` directly (the shared scan), so the fix closes the gap
+    for `check_model_complete` automatically, at the one shared source.
+  - **Non-goal proven, not assumed**: the fix must exclude by BANNER CONTENT only, never by
+    file/directory name or path convention — a genuinely domain-authored file whose name merely
+    echoes a vendored file's own name (e.g. an authored `spec/model/registry.go` declaring the
+    domain's OWN `Registry` type) must still be scanned normally. The new regression fixture
+    (below) deliberately names its real domain model file `spec/model/registry.go` to prove this
+    directly, rather than leaving it as an unverified claim in a doc comment.
+  - **Regression coverage**: a new fixture, `cmd/hotam/model_scan_vendor_exclusion_test.go`, builds
+    a domain that has gone through BOTH real `vendorOntology` (task #365's own writer) AND real
+    `scaffoldRegistrydump` (task #367's own writer) — not hand-approximated banners — plus a real
+    domain-authored `spec/model/registry.go`. `TestScanAuthoredModels_ExcludesVendorOntologyAndRegistrydumpScaffold`
+    proves `gate.ScanAuthoredModels` returns exactly one file (the real model) with exactly one
+    object (`Widget`), and that rendered `MODELS.md` contains `Widget` but none of `Relation`,
+    `hotamontology`, `registrydump`, `spec.Requirements`. `TestIsGeneratedOrVendoredFile_RecognizesAllThreeKnownBanners`
+    unit-tests the detector directly against all three real vendored/generated paths plus the
+    same-named real domain file, table-driven. The pre-existing recorder-only regression test
+    (`internal/generator/models_vendor_exclusion_test.go`,
+    `TestScanDomainModelFiles_ExcludesVendoredRecorder` / `TestIsVendoredRecorderFile_DetectsRealVendoredCopy`)
+    is unchanged and still green — the unification is a strict superset, not a behavior change for
+    the recorder path.
+  - **Verified the regression would have failed before the fix**: before this task, `parseModelFiles`
+    only ever called the recorder-only check, so the new fixture's vendored `spec/hotamontology/`
+    and `spec/registrydump/` files would have been parsed as ordinary Go source and their exported
+    types (`Relation`, `Requirement`, `Registry`, the registrydump `main` package) counted as domain
+    model objects — confirmed by reading `parseModelFiles`' pre-fix loop body directly (it called
+    `IsVendoredRecorderFile(p)` and nothing else).
+  - **Full verification**: `go build ./...`, `go vet ./...`, `gofmt -l .` clean; full
+    `go test ./... -timeout 45m -count=1` green, 0 FAIL; `go run ./cmd/hotam all-violations --domain
+    domains/hotam-spec-self` and `--domain domains/hotam-dev` both `0 violations — graph clean`.
 - **`internal/ontology/canon/requirement.go`'s vendored `hotamontology.Requirement` mirror was
   missing the `Why` field entirely, silently losing a domain's hand-authored requirement rationale
   the first time it synced under `requirements_authority: "code"` (task #390, W0.3).** The vendored
