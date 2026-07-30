@@ -626,6 +626,65 @@ func (p ProposedReviewMark) validate() error {
 	return nil
 }
 
+// ProposedGoal.validate is a SHAPE-only check (no graph access, per this
+// file's established validate()/mutate() split): id/owner/target_state.kind
+// are required; target_state.kind, when non-empty, must be a known
+// ontology.TargetKinds member (validate() can check this without graph
+// access -- TARGET_KINDS is a fixed constant set, not domain-declared data,
+// unlike owner's Operator-id resolution which mutate() defers to, mirroring
+// ProposedConflict.validate's own split between fixed-vocabulary checks here
+// and graph-aware referential checks in mutate()).
+func (p ProposedGoal) validate() error {
+	id := strings.TrimSpace(p.ID)
+	if id == "" {
+		return validationError("'id' is required for a Goal proposal.")
+	}
+	if !strings.HasPrefix(id, "GOAL-") {
+		return validationError("'id' must start with 'GOAL-'; got %q.", id)
+	}
+	if strings.TrimSpace(p.Owner) == "" {
+		return validationError("'owner' is required and must be non-empty.")
+	}
+	kind := strings.TrimSpace(p.TargetState.Kind)
+	if kind == "" {
+		return validationError("'target_state.kind' is required and must be non-empty.")
+	}
+	if _, ok := ontology.TargetKinds[kind]; !ok {
+		return validationError("'target_state.kind' must be a valid target kind; got %q.", kind)
+	}
+	if strings.TrimSpace(p.TargetState.Target) == "" {
+		return validationError("'target_state.target' is required and must be non-empty.")
+	}
+	return nil
+}
+
+// ProposedEntityInstance.validate is a SHAPE-only check (no graph access):
+// id/entity_type/state are required, and id must carry the 'ENT-' typed-anchor
+// prefix (R-anchor-everything) -- the SAME prefix family
+// check_typed_anchors_entity/check_entity_instance_id_prefix enforce
+// post-land, checked here too so a malformed id is rejected before it ever
+// reaches mutate()/the invariant sweep, mirroring how ProposedAssumption.validate
+// checks the 'A-' prefix and ProposedProcess.validate checks the 'PR-' prefix
+// up front. Whether entity_type actually resolves to a declared EntityType,
+// and whether state is valid in that EntityType's lifecycle, requires graph
+// access and is deferred to mutate() (see ProposedEntityInstance.mutate).
+func (p ProposedEntityInstance) validate() error {
+	id := strings.TrimSpace(p.ID)
+	if id == "" {
+		return validationError("'id' is required for an EntityInstance proposal.")
+	}
+	if !strings.HasPrefix(id, "ENT-") {
+		return validationError("'id' must start with 'ENT-'; got %q.", id)
+	}
+	if strings.TrimSpace(p.EntityType) == "" {
+		return validationError("'entity_type' is required and must be non-empty.")
+	}
+	if strings.TrimSpace(p.State) == "" {
+		return validationError("'state' is required and must be non-empty.")
+	}
+	return nil
+}
+
 // Validate runs a proposal's own kind-specific validation (the same check
 // internal/proposal.Apply runs internally before mutating a graph), exposed
 // so callers can validate a proposal BEFORE writing it to disk (e.g. `hotam

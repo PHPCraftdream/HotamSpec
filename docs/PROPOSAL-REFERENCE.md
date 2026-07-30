@@ -685,3 +685,83 @@ was updated.
   "drives_entities": ["feature-flag"]
 }
 ```
+
+## Goal
+
+Adds a new §Goal node (the first-class target-state type, M19: a moving
+target that yields a Gap driving a Process — `internal/ontology/process.go`).
+Resolved (task #392/W0.5) onto the ordinary Proposed* JSON path, symmetric to
+Conflict/Assumption/EntityType above: Goal is a typed graph node with its own
+semantics, not a structural domain-model object, so it does NOT move to
+Go-code authorship the way Requirement/Rejection do under
+`requirements_authority: code` / self-hosting — those locks never touch Goal.
+
+CREATE-only: there is no UPDATE mode (unlike EntityType/Process). A `id` that
+already names a Goal in the graph is rejected as a duplicate re-declaration,
+not merged.
+
+`lifecycle` is NOT author-supplied: every landed Goal is stamped with the
+single shared `ontology.GoalLifecycle`'s INITIAL state (`ACTIVE`) — there is
+no field to override it.
+
+**Required:** `id` (must start with `GOAL-`), `owner` (must resolve to a
+declared Operator id — the acting facet that pursues the goal, M19),
+`target_state` (object `{"kind", "predicate", "target"}` — `kind` must be one
+of `GRAPH_PROPERTY` | `BUSINESS_STATE` | `ENTITY_STATE`; `target` is required
+and non-empty; `predicate` is a free-text description of the condition)
+**Optional:** `why` (default `""`)
+
+```json
+{
+  "kind": "Goal",
+  "id": "GOAL-burn-down-zero",
+  "owner": "OP-director",
+  "target_state": {
+    "kind": "GRAPH_PROPERTY",
+    "predicate": "count(r for r in g.requirements if r.status==SETTLED and r.enforcement!=ENFORCED) == 0",
+    "target": "enforcement-gradient"
+  },
+  "why": "burn-down meter as an ACTIVE goal owned by the director: every SETTLED requirement should reach ENFORCED"
+}
+```
+
+## EntityInstance
+
+Adds a concrete instance of an already-declared EntityType (§Entity's
+EntityType + EntityField + EntityInstance triad — `internal/ontology/entity.go`).
+Resolved (task #392/W0.5) onto the ordinary Proposed* JSON path, symmetric to
+`EntityType` above: an EntityInstance is a graph node with its own
+referential-integrity semantics (`entity_type`/`state`/`field_values`
+resolution against the rest of the graph), not a structural domain-model
+object, so it stays off the Go-code-authority path.
+
+CREATE-only: there is no UPDATE mode. A `id` that already names an
+EntityInstance in the graph is rejected as a duplicate re-declaration, not
+merged.
+
+`field_values` uses the same array-of-2-element-arrays wire shape
+`ontology.EntityInstance.FieldValues` already uses on `graph.json` (a list of
+`["name", "value"]` pairs), not a JSON object.
+
+**Required:** `id` (must start with `ENT-`; note the STRICTER
+`check_entity_instance_id_prefix` invariant additionally requires the exact
+form `ENT-<entity_type>-...` once landed), `entity_type` (must resolve to a
+declared EntityType slug in the target domain's graph), `state` (must be a
+valid state name in that EntityType's lifecycle)
+**Optional:** `field_values` (list of `["name", "value"]` pairs, default
+`[]`; a `reference`-kind field's value must resolve per its `ref_target`, and
+every `required` field must be present — both checked by the
+`check_entity_instance_*` invariant family after landing, not by this
+proposal's own validation)
+
+```json
+{
+  "kind": "EntityInstance",
+  "id": "ENT-feature-flag-1",
+  "entity_type": "feature-flag",
+  "state": "INIT",
+  "field_values": [
+    ["owner", "sa"]
+  ]
+}
+```

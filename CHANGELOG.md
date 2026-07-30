@@ -17,6 +17,42 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`ProposedGoal` and `ProposedEntityInstance` proposal kinds resolve the "no sanctioned write path"
+  gap for the `Goal` and `EntityInstance` graph node types (task #392, W0.5).** Neither type had a
+  Go-authored path (`internal/ontology/canon/` vendors only `Requirement`+`Registry`) nor a JSON-proposal
+  path (`internal/proposal/types.go` had 15 kinds, none covering `Goal`/`EntityInstance`) — the only way
+  to create either was a direct hand-edit of `graph.json`, forbidden by `R-no-hand-edit-graph`. This left
+  the 4 `check_entity_instance_*` invariants (`internal/invariants/entity_checks.go`) with nothing to
+  validate, and the one live `GOAL-burn-down-zero` node in `domains/hotam-spec-self/graph.json` with no
+  reproducible creation path. Resolved onto the ordinary JSON-proposal path (not Go-code authority): both
+  are typed graph nodes with their own referential-integrity semantics, not structural domain-model
+  objects — the same rationale that already keeps `Conflict`/`Assumption`/`EntityType` off the
+  Go-authored path.
+  - `internal/proposal/types.go` gained `ProposedGoal` (`id`/`owner`/`target_state`/`why`) and
+    `ProposedEntityInstance` (`id`/`entity_type`/`state`/`field_values`), plus `KindGoal` (`"Goal"`) and
+    `KindEntityInstance` (`"EntityInstance"`). Both are CREATE-only (no UPDATE mode), mirroring
+    `ProposedConflict`/`ProposedAssumption`/`ProposedStakeholder`'s shape rather than
+    `ProposedEntityType`/`ProposedProcess`'s CREATE+UPDATE split.
+  - `internal/proposal/validate.go` / `mutate.go`: `ProposedGoal.mutate` rejects a duplicate `id`, requires
+    `owner` to resolve to a declared Operator id (mirrors `check_goal_owner_is_operator`), and stamps
+    `Lifecycle` to `ontology.GoalLifecycle`'s INITIAL state (`ACTIVE`) — never author-supplied, mirroring
+    `ProposedProcess`'s `Lifecycle` handling. `ProposedEntityInstance.mutate` rejects a duplicate `id`,
+    requires `entity_type` to resolve to a declared `EntityType` slug, and requires `state` to be valid in
+    that `EntityType`'s lifecycle (mirrors `check_entity_instance_state_in_lifecycle`).
+  - `cmd/hotam/apply_proposal.go`'s `parseProposal` kind-dispatch switch gained both kinds, so
+    `hotam apply-proposal`/`hotam land` (single-file and `--batch`) accept them.
+  - `docs/PROPOSAL-REFERENCE.md` gained `## Goal` and `## EntityInstance` sections (required/optional
+    field lists + worked JSON examples), and `cmd/hotam/proposal_reference_test.go`'s
+    `proposalKindsSample` now includes both, keeping the doc mechanically in sync with the structs
+    (`TestProposalReferenceExamples_AllParse`, `TestProposalReferenceRequiredOptionalFields_InSync`).
+  - New unit tests in `internal/proposal/proposal_test.go` (CREATE success, duplicate-id rejection,
+    missing-required-field rejection, unresolvable-owner/entity_type rejection, invalid-state rejection,
+    and a `TestApply_EntityInstance_ThenInvariantsSatisfied` proof that a landed `EntityInstance` passes
+    the real `internal/invariants.AllViolations` sweep) plus `internal/proposal/types_json_test.go`
+    snake-case field round-trip tests for both kinds.
+  - The `self_hosting`/`requirements_authority` Requirement/Rejection lock in `applyToGraph`
+    (`internal/proposal/apply.go`) is untouched — it does not gate `Goal`/`EntityInstance` at all, on
+    `hotam-spec-self` or any other domain.
 - **New manifest.json opt-in key `claim_authority: "scenario"` gives `check_claim_matches_scenario`
   its own opt-in trigger, fixing a live regression against two real consumer domains (task #388,
   W0.1).** `check_claim_matches_scenario` (task #369) activated for ANY domain with

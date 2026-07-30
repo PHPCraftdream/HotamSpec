@@ -1070,3 +1070,115 @@ func (p ProposedProcess) mutate(g *ontology.Graph, today string) error {
 	})
 	return nil
 }
+
+// mutate implements CREATE-only for a new Goal (task #392/W0.5's resolved
+// JSON-proposal path for §Goal). p.ID must not already name a Goal in g
+// (errDuplicate otherwise -- there is no UPDATE mode, see ProposedGoal's doc
+// comment in types.go). p.Owner must resolve to a declared Operator id --
+// checked HERE (not in validate()), mirroring ProposedConflict.mutate's
+// member/resolver referential-integrity checks and ProposedProcess.mutate's
+// drives_entities check: validate() has no graph access, so it cannot know
+// which Operator ids are declared in the target domain. This mirrors
+// check_goal_owner_is_operator (internal/invariants/scope_process.go) so a
+// bad owner is rejected here with a clear message instead of landing and
+// only being caught later by the invariant sweep applyToGraph runs after
+// mutate.
+//
+// Lifecycle is stamped to ontology.GoalLifecycle's initial state (ACTIVE) --
+// see ProposedGoal's doc comment for why no author-supplied lifecycle is
+// accepted.
+func (p ProposedGoal) mutate(g *ontology.Graph, today string) error {
+	id := strings.TrimSpace(p.ID)
+	if _, ok := ontology.GoalIDs(g)[id]; ok {
+		return errDuplicate("Goal", id)
+	}
+	if _, ok := ontology.OperatorIDs(g)[strings.TrimSpace(p.Owner)]; !ok {
+		return errNotDeclared("owner Operator", p.Owner)
+	}
+	g.Goals = append(g.Goals, ontology.Goal{
+		ID:    id,
+		Owner: strings.TrimSpace(p.Owner),
+		TargetState: ontology.TargetState{
+			Kind:      strings.TrimSpace(p.TargetState.Kind),
+			Predicate: p.TargetState.Predicate,
+			Target:    p.TargetState.Target,
+		},
+		Lifecycle: goalLifecycleInitialState(),
+		Why:       p.Why,
+	})
+	return nil
+}
+
+// goalLifecycleInitialState returns the Name of ontology.GoalLifecycle's
+// single INITIAL state (ACTIVE) -- derived from the lifecycle's own States
+// list rather than hardcoding the literal "ACTIVE" a second time, so a future
+// edit to GoalLifecycle's initial state cannot silently desync CREATE-time
+// stamping from the lifecycle definition itself.
+func goalLifecycleInitialState() string {
+	for _, s := range ontology.GoalLifecycle.States {
+		if s.Kind == ontology.StateKindInitial {
+			return s.Name
+		}
+	}
+	return ""
+}
+
+// mutate implements CREATE-only for a new EntityInstance (task #392/W0.5's
+// resolved JSON-proposal path for §Entity's EntityInstance). p.ID must not
+// already name an EntityInstance in g (errDuplicate otherwise -- there is no
+// UPDATE mode, see ProposedEntityInstance's doc comment in types.go).
+//
+// p.EntityType must resolve to a declared EntityType.slug, and p.State must
+// be valid in that EntityType's lifecycle -- both checked HERE (not in
+// validate()), mirroring ProposedProcess.mutate's drives_entities check:
+// validate() has no graph access, so it cannot know which EntityType slugs
+// are declared or what states their lifecycles accept. This mirrors
+// check_entity_instance_state_in_lifecycle
+// (internal/invariants/entity_checks.go) so a bad entity_type/state is
+// rejected here with a clear message instead of landing and only being
+// caught later by the invariant sweep applyToGraph runs after mutate.
+// Required-field completeness (check_entity_instance_required_fields) and
+// reference-field resolution (check_entity_instance_refs_resolve) are left to
+// that post-mutate invariant sweep, exactly like every other
+// invariant-checked shape this package's CREATE paths rely on (e.g.
+// ProposedRequirement's Assumption/Relation dangling-id checks) --
+// duplicating them here would just be the same check run twice.
+func (p ProposedEntityInstance) mutate(g *ontology.Graph, today string) error {
+	id := strings.TrimSpace(p.ID)
+	if _, ok := ontology.EntityIDs(g)[id]; ok {
+		return errDuplicate("EntityInstance", id)
+	}
+	entityType := strings.TrimSpace(p.EntityType)
+	et, ok := entityTypeBySlugLookup(g, entityType)
+	if !ok {
+		return errNotDeclared("entity_type", entityType)
+	}
+	state := strings.TrimSpace(p.State)
+	if _, ok := et.Lifecycle.Matches(state); !ok {
+		return validationError(
+			"state %q is not valid in EntityType %q's lifecycle %q.",
+			state, entityType, et.Lifecycle.Slug)
+	}
+	fieldValues := make([][2]string, len(p.FieldValues))
+	copy(fieldValues, p.FieldValues)
+	g.Entities = append(g.Entities, ontology.EntityInstance{
+		ID:          id,
+		EntityType:  entityType,
+		State:       state,
+		FieldValues: fieldValues,
+	})
+	return nil
+}
+
+// entityTypeBySlugLookup finds the EntityType named slug in g, returning
+// (EntityType, true) on a hit -- a mutate.go-local counterpart to
+// findEntityTypeIndex (which returns an index for in-place g.EntityTypes[idx]
+// updates) for callers that only need to read the matched EntityType's
+// fields, not mutate it in place.
+func entityTypeBySlugLookup(g *ontology.Graph, slug string) (ontology.EntityType, bool) {
+	idx := findEntityTypeIndex(g, slug)
+	if idx < 0 {
+		return ontology.EntityType{}, false
+	}
+	return g.EntityTypes[idx], true
+}

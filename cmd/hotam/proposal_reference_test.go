@@ -74,7 +74,7 @@ func rangeLabel(i int, block []byte) string {
 // --- Required/Optional field-list drift guard (task #150, review-8 R8-g) ---
 
 // proposalKindsSample holds one zero-value instance of every Proposed* type —
-// the same 13 kinds docs/PROPOSAL-REFERENCE.md documents. Each is a
+// the same kinds docs/PROPOSAL-REFERENCE.md documents. Each is a
 // proposal.Proposal so the loop can call Kind() to map it to its doc section.
 var proposalKindsSample = []proposal.Proposal{
 	proposal.ProposedStakeholder{},
@@ -91,6 +91,8 @@ var proposalKindsSample = []proposal.Proposal{
 	proposal.ProposedOperatorBudget{},
 	proposal.ProposedEntityType{},
 	proposal.ProposedProcess{},
+	proposal.ProposedGoal{},
+	proposal.ProposedEntityInstance{},
 }
 
 // TestProposalReferenceRequiredOptionalFields_InSync guards the hand-written

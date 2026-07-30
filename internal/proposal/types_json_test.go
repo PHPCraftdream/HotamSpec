@@ -147,3 +147,30 @@ func TestProposedEntityType_SnakeCaseFields(t *testing.T) {
 		t.Errorf("Fields not fully populated: %+v", p.Fields)
 	}
 }
+
+func TestProposedGoal_SnakeCaseFields(t *testing.T) {
+	t.Parallel()
+	data := []byte(`{
+		"id": "GOAL-x", "owner": "OP-1",
+		"target_state": {"kind":"GRAPH_PROPERTY","predicate":"p","target":"t"},
+		"why": "w"
+	}`)
+	var p ProposedGoal
+	if err := json.Unmarshal(data, &p); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	assertNoZeroFields(t, p)
+}
+
+func TestProposedEntityInstance_SnakeCaseFields(t *testing.T) {
+	t.Parallel()
+	data := []byte(`{
+		"id": "ENT-feature-flag-1", "entity_type": "feature-flag", "state": "INIT",
+		"field_values": [["owner", "sa"]]
+	}`)
+	var p ProposedEntityInstance
+	if err := json.Unmarshal(data, &p); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	assertNoZeroFields(t, p)
+}

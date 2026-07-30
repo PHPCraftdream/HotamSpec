@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/generator"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
@@ -2068,4 +2069,312 @@ func TestApply_Process_UpdateNoStepsNoDrivesEntitiesFails(t *testing.T) {
 	path := writeTempGraph(t, processBaseGraphWithLandedProcess())
 	p := ProposedProcess{ID: "PR-test-loop"}
 	assertApplyFails(t, path, p, "must supply either 'steps'")
+}
+
+// --- ProposedGoal (task #392/W0.5) ---
+
+// findGoal is a proposal_test.go-local helper mirroring findProcess/
+// findEntityType above.
+func findGoal(g *ontology.Graph, id string) (ontology.Goal, bool) {
+	for _, go_ := range g.Goals {
+		if go_.ID == id {
+			return go_, true
+		}
+	}
+	return ontology.Goal{}, false
+}
+
+func validGoalProposal() ProposedGoal {
+	return ProposedGoal{
+		ID:    "GOAL-burn-down-zero",
+		Owner: "OP-1",
+		TargetState: ProposedTargetState{
+			Kind:      ontology.TargetKindGraphProperty,
+			Predicate: "count(r for r in g.requirements if r.status==SETTLED and r.enforcement!=ENFORCED) == 0",
+			Target:    "enforcement-gradient",
+		},
+		Why: "burn-down meter as an ACTIVE goal owned by the director",
+	}
+}
+
+// TestApply_Goal creates a new Goal and checks it lands with expected
+// fields, an ACTIVE lifecycle stamp (never author-supplied), and
+// decl_order/ID intact.
+func TestApply_Goal(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, graphWithOperator())
+	p := validGoalProposal()
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	got, ok := findGoal(g, "GOAL-burn-down-zero")
+	if !ok {
+		t.Fatalf("GOAL-burn-down-zero missing after apply")
+	}
+	if got.Owner != "OP-1" {
+		t.Errorf("Owner = %q, want OP-1", got.Owner)
+	}
+	if got.TargetState.Kind != ontology.TargetKindGraphProperty {
+		t.Errorf("TargetState.Kind = %q, want %q", got.TargetState.Kind, ontology.TargetKindGraphProperty)
+	}
+	if got.TargetState.Target != "enforcement-gradient" {
+		t.Errorf("TargetState.Target = %q, want enforcement-gradient", got.TargetState.Target)
+	}
+	if got.Lifecycle != "ACTIVE" {
+		t.Errorf("Lifecycle = %q, want ACTIVE (the GoalLifecycle initial state, never author-supplied)", got.Lifecycle)
+	}
+	if got.Why == "" {
+		t.Errorf("Why is empty, want the proposal's why to have landed")
+	}
+}
+
+// TestApply_Goal_DuplicateIdFails proves there is no UPDATE mode: a second
+// Goal proposal with the same id as an already-landed one is rejected as a
+// duplicate, and the graph on disk is unchanged.
+func TestApply_Goal_DuplicateIdFails(t *testing.T) {
+	t.Parallel()
+	base := graphWithOperator()
+	path := writeTempGraph(t, base)
+	first := validGoalProposal()
+	if err := Apply(path, today, first); err != nil {
+		t.Fatalf("Apply (first): %v", err)
+	}
+	assertApplyFails(t, path, first, "already exists")
+}
+
+// TestApply_Goal_MissingRequiredFieldsFails covers validate()'s shape checks:
+// a missing id/owner/target_state.kind is rejected before mutate() ever runs.
+func TestApply_Goal_MissingRequiredFieldsFails(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name      string
+		p         ProposedGoal
+		wantError string
+	}{
+		{
+			name:      "missing id",
+			p:         ProposedGoal{Owner: "OP-1", TargetState: ProposedTargetState{Kind: ontology.TargetKindGraphProperty, Target: "x"}},
+			wantError: "'id' is required",
+		},
+		{
+			name:      "id missing GOAL- prefix",
+			p:         ProposedGoal{ID: "not-prefixed", Owner: "OP-1", TargetState: ProposedTargetState{Kind: ontology.TargetKindGraphProperty, Target: "x"}},
+			wantError: "must start with 'GOAL-'",
+		},
+		{
+			name:      "missing owner",
+			p:         ProposedGoal{ID: "GOAL-x", TargetState: ProposedTargetState{Kind: ontology.TargetKindGraphProperty, Target: "x"}},
+			wantError: "'owner' is required",
+		},
+		{
+			name:      "missing target_state.kind",
+			p:         ProposedGoal{ID: "GOAL-x", Owner: "OP-1", TargetState: ProposedTargetState{Target: "x"}},
+			wantError: "'target_state.kind' is required",
+		},
+		{
+			name:      "unknown target_state.kind",
+			p:         ProposedGoal{ID: "GOAL-x", Owner: "OP-1", TargetState: ProposedTargetState{Kind: "BOGUS", Target: "x"}},
+			wantError: "must be a valid target kind",
+		},
+		{
+			name:      "missing target_state.target",
+			p:         ProposedGoal{ID: "GOAL-x", Owner: "OP-1", TargetState: ProposedTargetState{Kind: ontology.TargetKindGraphProperty}},
+			wantError: "'target_state.target' is required",
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			path := writeTempGraph(t, graphWithOperator())
+			assertApplyFails(t, path, tc.p, tc.wantError)
+		})
+	}
+}
+
+// TestApply_Goal_UnknownOwnerFails covers the mutate()-level referential
+// check: owner must resolve to a declared Operator id.
+func TestApply_Goal_UnknownOwnerFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, graphWithOperator())
+	p := validGoalProposal()
+	p.Owner = "OP-ghost"
+	assertApplyFails(t, path, p, "owner Operator")
+}
+
+// --- ProposedEntityInstance (task #392/W0.5) ---
+
+// entityInstanceBaseGraph returns baseGraph() plus one pre-landed EntityType
+// ("feature-flag", one required field "owner" of kind reference targeting
+// stakeholder) so EntityInstance CREATE tests have a real, declared
+// EntityType to resolve against -- mirrors entityTypeBaseGraph()'s shape for
+// ProposedEntityType's own tests.
+func entityInstanceBaseGraph() *ontology.Graph {
+	g := baseGraph()
+	g.EntityTypes = append(g.EntityTypes, ontology.EntityType{
+		Slug:        "feature-flag",
+		Description: "a deployable feature toggle",
+		Lifecycle: ontology.Lifecycle{
+			Slug: "feature-flag-lifecycle",
+			States: []ontology.State{
+				{Name: "INIT", Kind: ontology.StateKindInitial},
+				{Name: "ON", Kind: ontology.StateKindNormal},
+				{Name: "OFF", Kind: ontology.StateKindQuiescent},
+			},
+			Transitions: []ontology.Transition{
+				{Src: "INIT", Dst: "ON", Event: "enable"},
+				{Src: "ON", Dst: "OFF", Event: "disable"},
+			},
+		},
+		Fields: []ontology.EntityField{
+			{Name: "owner", Kind: "reference", Required: true, RefTarget: "stakeholder"},
+		},
+	})
+	return g
+}
+
+func findEntityInstance(g *ontology.Graph, id string) (ontology.EntityInstance, bool) {
+	for _, e := range g.Entities {
+		if e.ID == id {
+			return e, true
+		}
+	}
+	return ontology.EntityInstance{}, false
+}
+
+func validEntityInstanceProposal() ProposedEntityInstance {
+	return ProposedEntityInstance{
+		ID:         "ENT-feature-flag-1",
+		EntityType: "feature-flag",
+		State:      "INIT",
+		FieldValues: [][2]string{
+			{"owner", "sa"},
+		},
+	}
+}
+
+// TestApply_EntityInstance creates a new EntityInstance against a declared
+// EntityType and checks it lands with expected fields.
+func TestApply_EntityInstance(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityInstanceBaseGraph())
+	p := validEntityInstanceProposal()
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	got, ok := findEntityInstance(g, "ENT-feature-flag-1")
+	if !ok {
+		t.Fatalf("ENT-feature-flag-1 missing after apply")
+	}
+	if got.EntityType != "feature-flag" {
+		t.Errorf("EntityType = %q, want feature-flag", got.EntityType)
+	}
+	if got.State != "INIT" {
+		t.Errorf("State = %q, want INIT", got.State)
+	}
+	val, ok := got.FieldValue("owner")
+	if !ok || val != "sa" {
+		t.Errorf("FieldValue(owner) = (%q, %v), want (sa, true)", val, ok)
+	}
+}
+
+// TestApply_EntityInstance_DuplicateIdFails proves there is no UPDATE mode: a
+// second EntityInstance proposal with the same id as an already-landed one is
+// rejected as a duplicate, and the graph on disk is unchanged.
+func TestApply_EntityInstance_DuplicateIdFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityInstanceBaseGraph())
+	first := validEntityInstanceProposal()
+	if err := Apply(path, today, first); err != nil {
+		t.Fatalf("Apply (first): %v", err)
+	}
+	assertApplyFails(t, path, first, "already exists")
+}
+
+// TestApply_EntityInstance_MissingRequiredFieldsFails covers validate()'s
+// shape checks: a missing id/entity_type/state, or an id with the wrong
+// prefix, is rejected before mutate() ever runs.
+func TestApply_EntityInstance_MissingRequiredFieldsFails(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name      string
+		p         ProposedEntityInstance
+		wantError string
+	}{
+		{
+			name:      "missing id",
+			p:         ProposedEntityInstance{EntityType: "feature-flag", State: "INIT"},
+			wantError: "'id' is required",
+		},
+		{
+			name:      "id missing ENT- prefix",
+			p:         ProposedEntityInstance{ID: "not-prefixed", EntityType: "feature-flag", State: "INIT"},
+			wantError: "must start with 'ENT-'",
+		},
+		{
+			name:      "missing entity_type",
+			p:         ProposedEntityInstance{ID: "ENT-x-1", State: "INIT"},
+			wantError: "'entity_type' is required",
+		},
+		{
+			name:      "missing state",
+			p:         ProposedEntityInstance{ID: "ENT-x-1", EntityType: "feature-flag"},
+			wantError: "'state' is required",
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			path := writeTempGraph(t, entityInstanceBaseGraph())
+			assertApplyFails(t, path, tc.p, tc.wantError)
+		})
+	}
+}
+
+// TestApply_EntityInstance_UnknownEntityTypeFails covers the mutate()-level
+// referential check: entity_type must resolve to a declared EntityType slug.
+func TestApply_EntityInstance_UnknownEntityTypeFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityInstanceBaseGraph())
+	p := validEntityInstanceProposal()
+	p.EntityType = "ghost-type"
+	assertApplyFails(t, path, p, "entity_type")
+}
+
+// TestApply_EntityInstance_StateNotInLifecycleFails covers the mutate()-level
+// state-in-lifecycle check: state must resolve to a real state of the target
+// EntityType's lifecycle.
+func TestApply_EntityInstance_StateNotInLifecycleFails(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityInstanceBaseGraph())
+	p := validEntityInstanceProposal()
+	p.State = "BOGUS"
+	assertApplyFails(t, path, p, "is not valid in EntityType")
+}
+
+// TestApply_EntityInstance_ThenInvariantsSatisfied is the e2e proof that a
+// landed EntityInstance gives the check_entity_instance_* invariant family
+// something real to check, and that a VALID instance passes them all --
+// closing the exact gap task #392/W0.5 exists to close (4 validating
+// invariants over a node type that previously had no sanctioned creation
+// path). Runs the real invariant sweep (internal/invariants.AllViolations)
+// against the reloaded graph, the same machinery `hotam all-violations`
+// drives, rather than re-implementing the checks' logic here.
+func TestApply_EntityInstance_ThenInvariantsSatisfied(t *testing.T) {
+	t.Parallel()
+	path := writeTempGraph(t, entityInstanceBaseGraph())
+	p := validEntityInstanceProposal()
+	if err := Apply(path, today, p); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	g := reload(t, path)
+	vs := invariants.AllViolations(g)
+	for _, v := range vs {
+		if v.ID == "ENT-feature-flag-1" {
+			t.Errorf("unexpected violation on the freshly-landed EntityInstance: %s: %s", v.Check, v.Message)
+		}
+	}
 }

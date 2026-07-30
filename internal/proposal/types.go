@@ -22,6 +22,8 @@ const (
 	KindProcess              = "Process"
 	KindGateSignoffBatch     = "GateSignoffBatch"
 	KindAssumptionRewrite    = "AssumptionRewrite"
+	KindGoal                 = "Goal"
+	KindEntityInstance       = "EntityInstance"
 )
 
 type Proposal interface {
@@ -381,3 +383,83 @@ func (p ProposedGateSignoffBatch) TargetAnchor() string {
 	}
 	return strings.Join(ids, ",")
 }
+
+// ProposedTargetState mirrors ontology.TargetState's shape for the wire
+// format (the same wire-shape-decoupling pattern EntityTypeState/
+// ProposedStep already use for ontology.State/ontology.Step).
+type ProposedTargetState struct {
+	Kind      string `json:"kind"`
+	Predicate string `json:"predicate"`
+	Target    string `json:"target"`
+}
+
+// ProposedGoal is a CREATE-only proposal for a Goal node (the §Goal
+// first-class target-state type, M19: a moving target that yields a Gap
+// driving a Process — internal/ontology/process.go). It is the JSON-proposal
+// path resolved for Goal (task #392/W0.5): Goal is a typed node with its own
+// semantics, not a structural domain-model object, so — like Conflict/
+// Assumption/EntityType before it — it stays on the ordinary Proposed* JSON
+// path rather than moving to Go-code authorship (the self-hosting lock in
+// applyToGraph is reserved for Requirement/Rejection only and does not touch
+// Goal at all).
+//
+// There is no UPDATE mode (unlike EntityType/Process): a duplicate ID is
+// always rejected as a re-declaration via errDuplicate, mirroring
+// ProposedConflict/ProposedAssumption/ProposedStakeholder's CREATE-only
+// shape — a first iteration, narrower than EntityType/Process's CREATE+UPDATE
+// split, since there is exactly one worked Goal example in the wild
+// (GOAL-burn-down-zero in domains/hotam-spec-self/graph.json) and no UPDATE
+// use case has yet emerged.
+//
+// Lifecycle is NOT author-supplied, mirroring ProposedProcess's Lifecycle
+// field: every Goal in this codebase uses the single shared
+// ontology.GoalLifecycle (ACTIVE/MET/ABANDONED) -- mutate() always stamps the
+// lifecycle's initial state (ACTIVE) rather than accepting an author-supplied
+// one, so there is no untested second Goal-lifecycle wire shape to choose
+// between.
+type ProposedGoal struct {
+	ID          string              `json:"id"`
+	Owner       string              `json:"owner"`
+	TargetState ProposedTargetState `json:"target_state"`
+	Why         string              `json:"why"`
+}
+
+func (p ProposedGoal) Kind() string         { return KindGoal }
+func (p ProposedGoal) TargetAnchor() string { return p.ID }
+
+// ProposedEntityInstance is a CREATE-only proposal for an EntityInstance
+// node (§Entity's EntityType + EntityField + EntityInstance triad —
+// internal/ontology/entity.go): a concrete instance of an already-declared
+// EntityType. It is the JSON-proposal path resolved for EntityInstance (task
+// #392/W0.5), symmetric to ProposedEntityType (its own EntityType is a
+// structural domain-model object CREATEd by the same ordinary Proposed* JSON
+// path) -- EntityInstance is not Go-authored because it is a graph node with
+// its own referential-integrity semantics (entity_type/state/field_values
+// resolution against the rest of the graph), the same rationale that keeps
+// Conflict/Assumption/EntityType on this path rather than Go-code authority.
+//
+// FieldValues carries the wire array-of-2-element-arrays shape
+// ontology.EntityInstance.FieldValues already uses on graph.json
+// ([][2]string, e.g. [["owner", "sa"], ["linked_release", "ENT-release-1"]])
+// -- no wire-shape decoupling struct is introduced here (unlike
+// EntityTypeField for ontology.EntityField) because [][2]string already
+// round-trips through JSON directly with no intermediate type needed.
+//
+// There is no UPDATE mode: a duplicate ID is always rejected as a
+// re-declaration via errDuplicate, mirroring ProposedGoal's CREATE-only
+// shape above (see its doc comment for the same rationale -- no UPDATE use
+// case has yet emerged for a single-instance-at-a-time proposal kind).
+//
+// There is no Why field: ontology.EntityInstance itself carries no Why (only
+// EntityType does, at the type-declaration level) -- an instance's
+// provenance is not a wire concept this proposal can invent without a place
+// in the landed node to hold it.
+type ProposedEntityInstance struct {
+	ID          string      `json:"id"`
+	EntityType  string      `json:"entity_type"`
+	State       string      `json:"state"`
+	FieldValues [][2]string `json:"field_values"`
+}
+
+func (p ProposedEntityInstance) Kind() string         { return KindEntityInstance }
+func (p ProposedEntityInstance) TargetAnchor() string { return p.ID }
