@@ -28,6 +28,7 @@ func FormatRequirementCard(c RequirementCard) string {
 	b.WriteString(lineIfSet("why", c.Why))
 	fmt.Fprintf(&b, "owner: %s\n", c.Owner)
 	fmt.Fprintf(&b, "enforcement: %s (%s)\n", c.Enforcement, c.Enforceability)
+	b.WriteString(lineIfSet("proof state", c.State))
 	fmt.Fprintf(&b, "enforced_by: %s\n", joinOrDash(c.EnforcedBy))
 	if len(c.ImplementedBy) > 0 {
 		fmt.Fprintf(&b, "implemented_by: %s\n", joinOrDash(c.ImplementedBy))

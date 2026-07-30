@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -130,5 +131,28 @@ func TestCmdReqRelated_SmokeNoPanic(t *testing.T) {
 	domainDir := copySelfDomain(t)
 	if err := cmdReqRelated([]string{"--domain", domainDir, "R-anchor-everything"}); err != nil {
 		t.Fatalf("cmdReqRelated: %v", err)
+	}
+}
+
+// TestCmdReqShow_JSONIncludesStateKey proves the new State field flows through
+// to the actual CLI --json output: cmdReqShow writes a RequirementCard via
+// printJSON (json.MarshalIndent), and the "state" key must appear in the
+// captured stdout. R-anchor-everything has zero verified_by entries, so the
+// state is NO_CARRIER. Not parallel: captureStdout mutates process-global
+// os.Stdout. Flags are placed before the positional because Go's flag package
+// stops parsing at the first non-flag argument (in production, main's
+// reorderFlagsFirst hoists them automatically).
+func TestCmdReqShow_JSONIncludesStateKey(t *testing.T) {
+	domainDir := copySelfDomain(t)
+	stdout := captureStdout(t, func() {
+		if err := cmdReqShow([]string{"--json", "--domain", domainDir, "R-anchor-everything"}); err != nil {
+			t.Fatalf("cmdReqShow: %v", err)
+		}
+	})
+	if !strings.Contains(stdout, `"state":`) {
+		t.Errorf("expected \"state\" key in JSON output, got:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, `"state": "NO_CARRIER"`) {
+		t.Errorf("expected \"state\": \"NO_CARRIER\" in JSON output, got:\n%s", stdout)
 	}
 }

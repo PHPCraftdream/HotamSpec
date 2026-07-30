@@ -124,6 +124,29 @@ func seedMinimalRequirement(t *testing.T, domainDir, domainName, today string) {
 	}
 }
 
+// captureStdout redirects os.Stdout to a pipe for the duration of fn, returning
+// whatever fn wrote to stdout. Same process-global constraint as captureStderr:
+// tests using it MUST NOT call t.Parallel().
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+	orig := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+	os.Stdout = w
+	outC := make(chan string)
+	go func() {
+		var buf strings.Builder
+		_, _ = io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+	fn()
+	w.Close()
+	os.Stdout = orig
+	return <-outC
+}
+
 // captureStderr redirects os.Stderr to a pipe for the duration of fn, returning
 // whatever fn wrote to stderr. It is process-global (os.Stderr is a single
 // *os.File), so tests using it MUST NOT call t.Parallel() — but a non-parallel

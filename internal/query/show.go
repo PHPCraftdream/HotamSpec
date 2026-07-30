@@ -3,7 +3,9 @@ package query
 import (
 	"fmt"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/selfspec"
 )
 
 // RequirementCard is the full agent-facing card for one Requirement: every
@@ -19,6 +21,7 @@ type RequirementCard struct {
 	Status         string                  `json:"status"`
 	Enforcement    string                  `json:"enforcement"`
 	Enforceability string                  `json:"enforceability"`
+	State          string                  `json:"state"`
 	EnforcedBy     []string                `json:"enforced_by"`
 	ImplementedBy  []string                `json:"implemented_by"`
 	VerifiedBy     []string                `json:"verified_by"`
@@ -82,7 +85,10 @@ func ShowRequirement(g *ontology.Graph, id string) (RequirementCard, error) {
 	if !ok {
 		return RequirementCard{}, &ErrNotFound{ID: id}
 	}
-	return requirementToCard(r), nil
+	card := requirementToCard(r)
+	specRoot := gate.SpecRootForGraph(g)
+	card.State = selfspec.RequirementState(r, specRoot, g.SelfHosting)
+	return card, nil
 }
 
 func requirementToCard(r ontology.Requirement) RequirementCard {

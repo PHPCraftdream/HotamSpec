@@ -17,6 +17,51 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`hotam req show` and `hotam brief` now surface a Requirement's COMPUTED proof lifecycle state
+  (NO_CARRIER / UNVERIFIED / FAILING / STALE / PROVEN) as a `proof state:` line in human-readable
+  output and a `state` key in `--json` output (task #398, W2.1).** `selfspec.RequirementState`
+  (task #370, `internal/selfspec/requirement_state.go`) already computed this state by re-running
+  a Requirement's `verified_by` test(s) via `gate.RunVerifiedByTestRecording` -- the SAME real
+  `go test` subprocess execution `check_claim_matches_scenario`/`DeriveClaimsFromScenarios` already
+  use -- but the production read path (`hotam req show`/`hotam brief`) never displayed it. An agent
+  or human looking at a Requirement card could see Status (SETTLED/DRAFT), Enforcement
+  (ENFORCED/PROSE/STRUCTURAL), and the carrier entries themselves, but had no way to tell whether
+  the evidence those carriers point at actually passes RIGHT NOW: no implementation at all
+  (NO_CARRIER), a declared carrier that does not resolve (UNVERIFIED), a failing test (FAILING),
+  stale evidence whose narrated scenario no longer matches the committed Claim (STALE), or current,
+  passing evidence (PROVEN) are now all distinguishable at a glance.
+  - **Wiring.** `RequirementCard` (`internal/query/show.go`) gains a `State string` field
+    (`json:"state"`), populated inside `ShowRequirement` by calling
+    `selfspec.RequirementState(r, gate.SpecRootForGraph(g), g.SelfHosting)` -- mirroring exactly how
+    `internal/selfspec/claim_derive.go`'s own callers already obtain these two values from a
+    `*ontology.Graph`. `FormatRequirementCard` (`internal/query/format.go`) renders it as a
+    `proof state:` line positioned alongside enforcement (after `enforcement:`, before
+    `enforced_by:`). `Brief` (`internal/query/brief.go`) needs no change: its `briefRequirement`
+    composes a `RequirementCard` via `Context` → `ShowRequirement`, so the `State` field and its
+    render line flow through automatically. Conflict/Assumption anchors are entirely unaffected --
+    a Conflict/Assumption has no `verified_by`-driven proof lifecycle, and their formatters
+    (`FormatConflictCard`/`FormatAssumptionCard`) do not reference `State` at all.
+  - **Scope boundary.** Deliberately `hotam req show`/`hotam brief` ONLY, for a SINGLE Requirement
+    at a time -- NOT `hotam req list`/`search`/`context`/`related`. `RequirementState` spawns a
+    real `go test` subprocess per `verified_by` entry; computing it for every listed Requirement in
+    a roster (hotam-spec-self alone has 258+) would be the exact class of severe, silent performance
+    regression this session's own `docs/reviews/2026-07-30-test-suite-speed-analysis.md` flagged.
+    `hotam req show`/`hotam brief` compute FRESH state on every invocation (a live query, not part
+    of `hotam gen-spec`'s generated-doc output) -- they have no byte-idempotency contract to violate,
+    exactly like `hotam status`/`hotam what-now` already do. `docs/gen/TRACEABILITY.md`/`COVERAGE.md`
+    (task #317's execution-independent documents) are untouched.
+  - New tests: `internal/query/state_test.go` (`ShowRequirement` populates State across two distinct
+    real states -- NO_CARRIER for empty VerifiedBy, UNVERIFIED for an unresolvable entry, driven
+    through the REAL `RequirementState` call against real fixture graphs; `FormatRequirementCard`
+    renders the proof state line in the right position; `RequirementCard` JSON includes the `state`
+    key; Brief on Conflict/Assumption anchors renders no spurious state content, Brief on a
+    Requirement anchor does); `cmd/hotam/req_test.go` (`captureStdout` helper + JSON shape test
+    asserting the `state` key round-trips through the actual CLI `--json` output).
+  - Verified: `go build`/`go vet`/`gofmt` clean (excl. pre-existing untracked `.scratch` draft),
+    targeted tests (`internal/query`, `internal/selfspec`, `cmd/hotam`) all pass,
+    `all-violations` 0 on both `domains/hotam-spec-self` and `domains/hotam-dev`, full
+    `go test ./...` green.
+
 - **New check `check_scenario_quality` — a POST-HOC QUALITY gate over a requirement's already-recorded scenario
   artifact, sitting on top of `check_settled_requires_scenario`'s cheap AST-only "has a scenario at all" signal,
   gated behind its own brand-new opt-in trigger (task #397, W1.5).** `hotamspec.NewScenario` presence was
