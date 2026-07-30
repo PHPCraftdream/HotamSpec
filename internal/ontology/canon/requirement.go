@@ -23,16 +23,18 @@
 // SCOPE: Requirement here is a MINIMAL, JSON-tag-identical mirror of ONLY the
 // STRUCTURAL fields of internal/ontology.Requirement (internal/ontology/
 // requirement.go) -- the fields internal/selfspec/merge.go's own doc comment
-// already names "structural" (replaced wholesale from a registry entry) in
+// already names "structural" (replaced wholesale from a registry entry),
+// Why included (task #390, W0.3: Why is authored rationale, the same kind of
+// registry-replaced field as Claim/Owner/Status, NOT an event log entry), in
 // contrast to the "event" fields it passes through untouched from the
 // existing graph node (History, GateSignoffs, LastReviewedAt, ReviewAfter,
 // Evidence -- deliberately NOT mirrored here; a consumer domain authors
-// identity/claim/owner/status/links in Go code, it never authors its own
-// review timestamps or history log entries in code). Why/Enforceability's
-// sibling event-adjacent fields (LastReviewedAt, ReviewAfter, Evidence,
-// History, GateSignoffs) stay engine-side, populated only by the graph
-// itself over time -- exactly the same split MergeIntoGraph already
-// mechanizes for hotam-spec-self's own self-hosting path.
+// identity/claim/owner/status/why/links in Go code, it never authors its own
+// review timestamps or history log entries in code). Those event-adjacent
+// fields (LastReviewedAt, ReviewAfter, Evidence, History, GateSignoffs) stay
+// engine-side, populated only by the graph itself over time -- exactly the
+// same split MergeIntoGraph already mechanizes for hotam-spec-self's own
+// self-hosting path.
 //
 // No methods, no behavior -- pure form, so a consumer domain's separate Go
 // module can import this file directly (copied in, not a go.mod dependency
@@ -59,6 +61,7 @@ type Requirement struct {
 	Claim          string     `json:"claim"`
 	Owner          string     `json:"owner"`
 	Status         string     `json:"status"`
+	Why            string     `json:"why"`
 	Relations      []Relation `json:"relations"`
 	Assumptions    []string   `json:"assumptions"`
 	Enforcement    string     `json:"enforcement"`

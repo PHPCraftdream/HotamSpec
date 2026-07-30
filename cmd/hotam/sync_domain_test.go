@@ -19,6 +19,14 @@ import (
 // the shape R-domain-founded-in-wave-order step 6 (root CLAUDE.md) and
 // internal/selfspec.Requirements' own registry declaration: a package-level
 // var built with hotamontology.New[...]().MustRegister(...) calls.
+//
+// {{WHY}} is substituted with the fixture's chosen Why literal (task #390,
+// W0.3): Why is a REAL field on the vendored hotamontology.Requirement mirror
+// (internal/ontology/canon/requirement.go), so a fixture author can write it
+// here exactly like Claim/Owner/Status — this is the regression surface for
+// the bug the task fixed (Why used to be silently absent from the vendored
+// struct, so no fixture, and no real consumer domain, could ever have
+// expressed it here at all; the field simply did not compile).
 const syncDomainRequirementsGoTemplate = `package spec
 
 import hotamontology "{{MODULE}}/hotamontology"
@@ -31,6 +39,7 @@ func init() {
 		Claim:          "the fixture component shall behave predictably",
 		Owner:          "fixture-owner",
 		Status:         "SETTLED",
+		Why:            "{{WHY}}",
 		Relations:      []hotamontology.Relation{},
 		Assumptions:    []string{},
 		Enforcement:    "PROSE",
@@ -45,6 +54,15 @@ func init() {
 	})
 }
 `
+
+// syncDomainFixtureDefaultWhy is the Why value newSyncDomainFixture bakes in
+// by default (used by every existing test that does not care about Why
+// specifically) — a real, non-empty rationale string, deliberately NOT ""
+// so a test asserting on it can distinguish "the registry's authored value
+// landed" from "Why silently came through empty" (the exact failure mode
+// the missing vendored field used to cause, see this file's WHY-round-trip
+// tests below).
+const syncDomainFixtureDefaultWhy = "the fixture component exists to prove the sync-domain module-boundary bridge end to end"
 
 // syncDomainFixture is a hermetic, disk-backed consumer-domain fixture
 // carrying everything `hotam sync-domain` needs: a project root (so
@@ -91,7 +109,7 @@ func newSyncDomainFixture(t *testing.T) *syncDomainFixture {
 		t.Fatalf("vendorOntology: %v", err)
 	}
 
-	reqSrc := strings.ReplaceAll(syncDomainRequirementsGoTemplate, "{{MODULE}}", modulePath)
+	reqSrc := syncDomainRequirementsGoSource(modulePath, syncDomainFixtureDefaultWhy)
 	if err := os.WriteFile(filepath.Join(specDir, "requirements.go"), []byte(reqSrc), 0o644); err != nil {
 		t.Fatalf("write spec/requirements.go: %v", err)
 	}
@@ -101,6 +119,27 @@ func newSyncDomainFixture(t *testing.T) *syncDomainFixture {
 	}
 
 	return &syncDomainFixture{root: root, domainDir: domainDir, graphPath: graphPath, specDir: specDir}
+}
+
+// syncDomainRequirementsGoSource fills in syncDomainRequirementsGoTemplate's
+// {{MODULE}}/{{WHY}} placeholders.
+func syncDomainRequirementsGoSource(modulePath, why string) string {
+	src := strings.ReplaceAll(syncDomainRequirementsGoTemplate, "{{MODULE}}", modulePath)
+	return strings.ReplaceAll(src, "{{WHY}}", why)
+}
+
+// rewriteRequirementWhy overwrites the fixture's spec/requirements.go with a
+// NEW Why value for R-fixture-one, everything else unchanged — used to drive
+// a second sync-domain pass down the CHANGED path (R-fixture-one already
+// exists in the graph from a prior sync; only its Why now disagrees with the
+// registry).
+func (fx *syncDomainFixture) rewriteRequirementWhy(t *testing.T, why string) {
+	t.Helper()
+	const modulePath = "hotamspec-fixture-consumer"
+	reqSrc := syncDomainRequirementsGoSource(modulePath, why)
+	if err := os.WriteFile(filepath.Join(fx.specDir, "requirements.go"), []byte(reqSrc), 0o644); err != nil {
+		t.Fatalf("rewrite spec/requirements.go with new Why: %v", err)
+	}
 }
 
 // runSyncDomain runs cmdSyncDomain in-process, capturing stdout/stderr —
@@ -266,6 +305,18 @@ func TestCmdSyncDomain_FullRoundTrip(t *testing.T) {
 		if r.Claim != "the fixture component shall behave predictably" {
 			t.Errorf("requirement Claim = %q, want the registry's fixture claim", r.Claim)
 		}
+		// Task #390 (W0.3) regression check: Why is a real field on the
+		// vendored hotamontology.Requirement mirror now, so the registry's
+		// authored Why value must flow all the way through registrydump's
+		// JSON marshal -> domainRegistryFromSubprocess's unmarshal into
+		// ontology.Requirement -> SyncGraph -> graph.json, landing exactly as
+		// authored — NOT silently dropped to "" (the bug this task fixed: the
+		// vendored struct used to have no Why field at all, so this value
+		// could never have been expressed in spec/requirements.go in the
+		// first place).
+		if r.Why != syncDomainFixtureDefaultWhy {
+			t.Errorf("requirement Why = %q, want the registry's authored Why %q — Why must not be silently dropped by the vendored ontology mirror", r.Why, syncDomainFixtureDefaultWhy)
+		}
 		if len(r.History) != 1 || !strings.Contains(r.History[0].Summary, "created via sync-self") {
 			t.Errorf("requirement History = %+v, want a single 'created via sync-self' seed entry", r.History)
 		}
@@ -289,6 +340,114 @@ func TestCmdSyncDomain_FullRoundTrip(t *testing.T) {
 	if !strings.Contains(string(lockData), "sync-domain") {
 		t.Errorf("graph.lock note does not mention sync-domain:\n%s", lockData)
 	}
+}
+
+// TestCmdSyncDomain_WhyRoundTripSurvivesChangedSync is task #390's (W0.3)
+// dedicated regression test: it reproduces exactly the data-loss scenario
+// the resolver flagged. Before this task's fix,
+// internal/ontology/canon/requirement.go (the vendored Requirement mirror a
+// consumer domain's spec/ module actually compiles against) had NO Why
+// field at all, so a domain that had a hand-written Why on a requirement
+// BEFORE adopting requirements_authority:"code" could never express that
+// Why in spec/requirements.go — the type simply had no such field — and the
+// very first `hotam sync-domain` would silently overwrite the graph's Why
+// with the zero value "" (Why is a STRUCTURAL field per
+// internal/selfspec/merge.go's MergeIntoGraph/SyncGraph, wholesale-replaced
+// from the registry on every sync, so there was no way for the old
+// hand-written value to survive).
+//
+// This test proves the fixed round trip end to end, through the REAL
+// module-boundary bridge (registrydump subprocess, not an in-process
+// shortcut): sync-domain CREATES R-fixture-one with an explicit, non-empty
+// Why (simulating a domain author who, now that the field compiles, writes
+// a real rationale from day one); a second sync-domain pass — after the
+// fixture's spec/requirements.go is rewritten with a DIFFERENT Why, the
+// same way a domain author would edit their own authored rationale — must
+// carry that NEW Why into the already-existing graph node (the CHANGED
+// path, StructuralFieldDiffs/SyncGraph), never falling back to "" and never
+// silently keeping the stale first value.
+func TestCmdSyncDomain_WhyRoundTripSurvivesChangedSync(t *testing.T) {
+	if testing.Short() {
+		t.Skip("sync-domain full round trip spawns a real `go run` subprocess; skipped in -short")
+	}
+	fx := newSyncDomainFixture(t)
+
+	// --- Pass 1: ADDED, with the fixture's default (non-empty) Why. ---
+	dryOut1, _, err := runSyncDomain(t, []string{"--domain", fx.domainDir})
+	if err != nil {
+		t.Fatalf("pass 1 dry-run failed: %v\n%s", err, dryOut1)
+	}
+	hash1 := extractDiffHash(t, dryOut1)
+	if _, _, err := runSyncDomain(t, []string{
+		"--domain", fx.domainDir, "--today", "2026-07-26",
+		"--confirm-hash", hash1,
+	}); err != nil {
+		t.Fatalf("pass 1 confirm-hash run failed: %v", err)
+	}
+
+	g1, err := loader.LoadGraph(fx.graphPath)
+	if err != nil {
+		t.Fatalf("reload graph after pass 1: %v", err)
+	}
+	if why := whyOf(t, g1, "R-fixture-one"); why != syncDomainFixtureDefaultWhy {
+		t.Fatalf("after pass 1 (ADDED): Why = %q, want the registry's authored default %q", why, syncDomainFixtureDefaultWhy)
+	}
+
+	// --- Pass 2: CHANGED — rewrite the registry's Why to a NEW value and
+	// sync again. This is the scenario that used to silently lose data: a
+	// second sync must carry the NEW authored Why through, not reset it to
+	// "" and not leave the stale pass-1 value in place.
+	const updatedWhy = "updated rationale: the fixture component now also guards against concurrent writers"
+	fx.rewriteRequirementWhy(t, updatedWhy)
+
+	dryOut2, _, err := runSyncDomain(t, []string{"--domain", fx.domainDir})
+	if err != nil {
+		t.Fatalf("pass 2 dry-run failed: %v\n%s", err, dryOut2)
+	}
+	if !strings.Contains(dryOut2, "[CHANGED] R-fixture-one") {
+		t.Errorf("pass 2 dry-run does not show R-fixture-one as CHANGED (Why must be detected as a structural-field diff):\n%s", dryOut2)
+	}
+	if !strings.Contains(dryOut2, "field Why:") {
+		t.Errorf("pass 2 dry-run field diff does not mention Why:\n%s", dryOut2)
+	}
+	hash2 := extractDiffHash(t, dryOut2)
+
+	confirmOut2, _, err := runSyncDomain(t, []string{
+		"--domain", fx.domainDir, "--today", "2026-07-27",
+		"--confirm-hash", hash2,
+	})
+	if err != nil {
+		t.Fatalf("pass 2 confirm-hash run failed: %v\n%s", err, confirmOut2)
+	}
+
+	g2, err := loader.LoadGraph(fx.graphPath)
+	if err != nil {
+		t.Fatalf("reload graph after pass 2: %v", err)
+	}
+	if why := whyOf(t, g2, "R-fixture-one"); why != updatedWhy {
+		t.Fatalf("after pass 2 (CHANGED): Why = %q, want the newly-authored value %q — Why must not be silently dropped to \"\" or left stale", why, updatedWhy)
+	}
+
+	violations, err := allViolations(fx.domainDir)
+	if err != nil {
+		t.Fatalf("allViolations: %v", err)
+	}
+	if len(violations) > 0 {
+		t.Errorf("expected 0 violations after the Why-changed sync-domain round-trip, got %d: %+v", len(violations), violations)
+	}
+}
+
+// whyOf returns the Why field of the requirement named id in g, failing the
+// test if id is not found.
+func whyOf(t *testing.T, g *ontology.Graph, id string) string {
+	t.Helper()
+	for _, r := range g.Requirements {
+		if r.ID == id {
+			return r.Why
+		}
+	}
+	t.Fatalf("requirement %s not found in graph", id)
+	return ""
 }
 
 // TestCmdSyncDomain_MissingSpecDirIsClearError proves gate 0's first failure

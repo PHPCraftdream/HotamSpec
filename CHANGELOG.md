@@ -190,6 +190,56 @@ History predating this file is not backfilled — see `git log` and
   fixture helpers are untouched, left for a follow-up wave if this pilot proves durable.
 
 ### Fixed
+- **`internal/ontology/canon/requirement.go`'s vendored `hotamontology.Requirement` mirror was
+  missing the `Why` field entirely, silently losing a domain's hand-authored requirement rationale
+  the first time it synced under `requirements_authority: "code"` (task #390, W0.3).** The vendored
+  mirror (copied byte-for-byte, via `hotam vendor-ontology`, into every consumer domain's own
+  `spec/hotamontology/` package — the type a domain's `spec/requirements.go` actually compiles
+  against, per `PLAN-authored-spec-discipline.md`'s module-boundary design) carried every field of
+  the full `internal/ontology.Requirement` (`internal/ontology/requirement.go`) EXCEPT `Why`, even
+  though `internal/selfspec/merge.go`'s `MergeIntoGraph`/`SyncGraph` — used by both `hotam sync-self`
+  and `hotam sync-domain` — already treated `Why` as a STRUCTURAL field, wholesale-replaced from the
+  registry on every sync (its own doc comment named `Why` among the structural fields all along).
+  Consequence: a domain that had a hand-written `Why` on a requirement BEFORE adopting
+  `requirements_authority: "code"` could never express that `Why` in `spec/requirements.go` — the
+  vendored struct simply had no such field, a compile error (`unknown field Why in struct literal
+  of type hotamontology.Requirement`) if attempted — so the very first `hotam sync-domain` silently
+  overwrote the graph's `Why` with the Go zero value `""`, with no error, no warning, and no way for
+  the domain author to prevent it.
+  - **Fix**: added `Why string \`json:"why"\`` to `internal/ontology/canon/requirement.go`'s
+    `Requirement` struct, in the same field position as the source (`internal/ontology/requirement.go`
+    ): immediately after `Status`, before `Relations`. The package doc comment's field-classification
+    prose (previously listing `Why` among the fields that "stay engine-side") was corrected to name
+    `Why` as a structural, registry-replaced field alongside `Claim`/`Owner`/`Status`.
+  - **Vendoring mechanism required no change**: `internal/ontology/vendor/vendor.go` banner-stamps
+    and embeds `requirement.go` in full via `//go:embed` (`internal/ontology/canon/embed.go`), so the
+    new field is picked up automatically by every `hotam vendor-ontology` run — confirmed by grepping
+    the whole repo for any other site constructing a `canon.Requirement`/`hotamontology.Requirement{}`
+    literal outside test fixtures; none exists, and `cmd/hotam/sync_domain.go`'s
+    `domainRegistryFromSubprocess` already unmarshaled registrydump's JSON directly into
+    `[]ontology.Requirement` (the full type), so the fix closes the data-loss path completely at its
+    one true source.
+  - **Regression coverage**: `cmd/hotam/sync_domain_test.go`'s `TestCmdSyncDomain_FullRoundTrip`
+    (the existing sync-domain e2e fixture, extended rather than duplicated) now asserts the
+    registry's authored `Why` lands unchanged in `graph.json` after an ADDED sync. A new dedicated
+    test, `TestCmdSyncDomain_WhyRoundTripSurvivesChangedSync`, reproduces the exact reported
+    scenario end-to-end through the real `go run ./registrydump` subprocess bridge: sync-domain
+    creates a requirement with an authored `Why`, the fixture's `spec/requirements.go` is then
+    rewritten with a DIFFERENT `Why` (mirroring a domain author editing their own rationale), and a
+    second `hotam sync-domain` pass (the CHANGED path) is proven to carry the NEW `Why` through —
+    never resetting it to `""`, never leaving the stale first value. Two new unit tests in
+    `internal/ontology/canon/requirement_test.go`
+    (`TestRequirement_WhyFieldRoundTripsToOntologyRequirement`,
+    `TestRequirement_WhyJSONTagMatchesOntology`) isolate the same proof at the JSON-marshal level,
+    without the e2e subprocess/gate machinery.
+  - **Verified the bug before the fix, not just the fix**: temporarily reverting the `Why` field
+    addition reproduced the failure exactly as diagnosed — `go run ./registrydump` fails with
+    `unknown field Why in struct literal of type hotamontology.Requirement`, causing both new/
+    extended tests to fail with that literal compiler error — then restoring the fix made both pass.
+  - **Full verification**: `go build ./...`, `go vet ./...`, `gofmt -l .` clean; full
+    `go test ./... -timeout 45m -count=1` green, 20/20 packages `ok`, 0 FAIL; `go run ./cmd/hotam
+    all-violations --domain domains/hotam-spec-self` and `--domain domains/hotam-dev` both
+    `0 violations — graph clean`.
 - **`deriveClaimFromVerifiedBy` (`internal/selfspec/claim_derive.go`) and its duplicated mirror
   `freshDerivedClaim` (`internal/invariants/claim_scenario_current.go`) no longer repeat a
   scenario title N times when N subscenarios inside ONE `verified_by` test share the same
