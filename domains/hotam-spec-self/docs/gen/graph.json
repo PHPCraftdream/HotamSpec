@@ -468,6 +468,7 @@
     "R-root-claude-md-is-sentinel-only",
     "R-rules-as-data",
     "R-run-speed-guarded",
+    "R-scenario-authority-owns-its-own-obligations",
     "R-scenario-spec-obligations-mechanically-enforced",
     "R-scope-is-projection",
     "R-scope-overlap-generated",
@@ -1394,6 +1395,42 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "This session's own history is the cautionary precedent. cmd/seed-due (removed, P2-2) backfilled last_reviewed_at/review_after on every SETTLED requirement from settled_at/created_at with no actual re-read of the text -- necessary to bootstrap the freshness engine (R-requirement-freshness-fields) with real dates instead of a universal NEVER-REVIEWED, but a review in name only: at the moment of backfill, 155+ of those requirements still described the superseded implementation (the P0-4 content-refresh wave that followed found and fixed exactly that staleness). A freshness field that can be set without reading the content it claims to attest defeats its own purpose -- hotam due would report those 155+ requirements as fresh while they were substantively wrong. This rule closes that gap going forward: a genuine review means confronting the current claim/why/evidence/source_refs against the real code or graph state (the same discipline the mediation loop's CONFRONT step already names) before touching last_reviewed_at, not merely rolling a date forward. Structurally unenforceable by design -- no mechanical check can verify a human or agent actually read and understood text, the same honesty boundary that sank R-boot-cite-measured (REJECTED, form-metric theatre) -- so this stays PROSE discipline, upheld by resolver review of what a ProposedReviewMark or ProposedRequirement UPDATE's evidence/why actually says, not by an automated check. RECLASSIFIED 2026-07-13: enforceability ENFORCEABLE -> INHERENTLY_PROSE (agent consultation, fm) -- this requirement's own text already argued unenforceability by design; the enforceability field is now brought in line with that argument, removing it from the closeable-debt count honestly rather than leaving it counted as fixable-but-unfixed."
+    },
+    {
+      "assumptions": [],
+      "claim": "check_scenario_quality's obligation (for a SETTLED requirement carrying a scenario, at least one verified_by entry's pass-verdict recorded artifact must have a non-empty title, an exact match between its own req_id and the citing requirement's ID, at least one Then step, and -- for a behavioral scenario carrying a When step -- a strict Given-before-When-before-Then order) is gated behind its own opt-in trigger, scenario_authority:\"quality\" (loader.ScenarioAuthorityQuality), entirely INDEPENDENT of discipline:\"full\"/claim_authority:\"scenario\"/public_surface_authority:\"linked\" -- it does NOT activate merely because a domain has already flipped ANY of those three pre-existing triggers, and it does NOT require any of them as a co-requirement either.",
+      "enforced_by": [
+        "check_scenario_quality",
+        "check_scenario_authority_ratchet"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-07-30",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        },
+        {
+          "at": "2026-07-30",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: task #397/W1.5: confront-gate opposite-marker hits are lexical false positives (shared ONLY/ANY/MUST/MUST-NOT vocabulary with 16 unrelated requirements, e.g. R-m-tag-format-valid sharing only the word 'match') -- reviewed, none are real semantic contradictions; R-scenario-authority-owns-its-own-obligations is the concrete instance of R-opt-in-trigger-owns-its-own-obligations for check_scenario_quality's new trigger, mirroring task #396's identical R-public-surface-authority-owns-its-own-obligations landing"
+        }
+      ],
+      "id": "R-scenario-authority-owns-its-own-obligations",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/loader/loader.go",
+        "internal/invariants/scenario_quality.go",
+        "internal/invariants/scenario_authority_ratchet.go",
+        "internal/loader/lock.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "Task #397 (W1.5): check_settled_requires_scenario/check_model_complete's 'has a scenario' bar is purely AST-based (does the test body call hotamspec.NewScenario anywhere, gate.ResolveSpecTest's HasScenario) -- a test that does `s := hotamspec.NewScenario(t, \"R-x\", \"\"); s.Then(\"\", true)` formally satisfies that bar with an empty title, an empty Then description, and (if it also has a Given/When) no guarantee they are recorded in a sensible order, directly undermining the methodology's core claim that 'a claim cannot exist without a GREEN and MEANINGFUL proof beside it' -- not merely without a scenario-constructor call. check_scenario_quality (internal/invariants/scenario_quality.go) closes that gap by inspecting the REAL recorded Artifact (via gate.RunVerifiedByTestRecording, the same call shape check_claim_matches_scenario/DeriveClaimsFromScenarios already use) against four quality rules. This is a BRAND NEW class of duty, and R-opt-in-trigger-owns-its-own-obligations already states the general law it must obey: 'an already-spent opt-in trigger is closed to new mechanical obligations... a new duty requires its own, separately-declared opt-in trigger.' check_settled_requires_scenario/check_model_complete (bundled under discipline:\"full\") and check_claim_matches_scenario/check_public_surface_linked_or_marked (their own separate triggers, claim_authority:\"scenario\" and public_surface_authority:\"linked\" respectively) ALL already have real consumer-domain or historical obligation sets tied to their CURRENT definitions -- tightening any of THEIR existing 'has a scenario' bar to demand quality, instead of giving this new demand its own trigger, would silently break those domains overnight, structurally the same harm task #369 caused and task #388 fixed, regardless of whether the change is framed as 'a new duty' or 'a tightened old one': the practical harm (a domain that opted in under one implicit contract wakes up to new failures with zero action on their part) is identical either way. This requirement is the concrete INSTANCE of R-opt-in-trigger-owns-its-own-obligations' general law for this specific new check -- mirroring the identical relationship R-public-surface-authority-owns-its-own-obligations has to the same shared anchor -- not a restatement of the general law itself. The mechanical embodiment: scenario_authority:\"quality\" (internal/loader/loader.go's ScenarioAuthorityQuality, manifest.json's \"scenario_authority\" field) is a wholly new, independently-resolved DomainManifest field, and check_scenario_authority_ratchet (internal/invariants/scenario_authority_ratchet.go, symmetric with check_public_surface_authority_ratchet) makes that trigger's own one-way-door promise mechanical: once a domain has explicitly opted in (pinned in graph.lock's ScenarioAuthorityQualityObserved), it cannot silently un-opt. This wave deliberately opts NO real domain into scenario_authority:\"quality\" -- domains/hotam-spec-self, domains/hotam-dev, and everything under PRAT-hotam stay honest no-ops for this check."
     },
     {
       "assumptions": [],

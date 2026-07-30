@@ -107,6 +107,7 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		RequirementsAuthorityCode:    resolveRequirementsAuthorityCode(path),
 		ClaimAuthorityScenario:       resolveClaimAuthorityScenario(path),
 		PublicSurfaceAuthorityLinked: resolvePublicSurfaceAuthorityLinked(path),
+		ScenarioAuthorityQuality:     resolveScenarioAuthorityQuality(path),
 		DomainDir:                    filepath.Dir(path),
 		Discipline:                   ResolveDiscipline(path),
 	}
@@ -354,6 +355,69 @@ func resolvePublicSurfaceAuthorityLinked(graphPath string) bool {
 		return false
 	}
 	return m.PublicSurfaceAuthority == PublicSurfaceAuthorityLinked
+}
+
+// ScenarioAuthorityQuality is the one recognized value of manifest.json's
+// optional "scenario_authority" field (task #397/W1.5) -- a BRAND NEW opt-in
+// trigger, entirely independent of DisciplineFull/ClaimAuthorityScenario/
+// PublicSurfaceAuthorityLinked above, for check_scenario_quality
+// (internal/invariants/scenario_quality.go): the QUALITY gate over a
+// requirement's recorded scenario artifact(s), sitting on top of
+// check_settled_requires_scenario's cheap, AST-only "does a scenario exist at
+// all" signal. A requirement can satisfy check_settled_requires_scenario's
+// HasScenario bar with an empty title, an empty Then description, and no
+// guarantee of Given/When/Then ordering -- check_scenario_quality asks
+// whether the recorded scenario is actually MEANINGFUL: non-empty title,
+// exact requirement-ID match, at least one Then step, and (for a behavioral
+// scenario carrying a When step) a strict Given-before-When-before-Then
+// order.
+//
+// This is a NEW obligation, not a restatement of an old one --
+// R-opt-in-trigger-owns-its-own-obligations (internal/selfspec/
+// requirements_authoredspec.go, task #388's own anchor for exactly this law)
+// forbids activating a new duty merely because an already-spent trigger
+// (discipline:"full") is set: prat and gpsm-sm both flipped discipline:"full"
+// long before this check existed, consenting only to the obligation set live
+// at that time, never to this one. ScenarioAuthorityQuality gives this check
+// its own, separately-declared, separately-ratcheted trigger
+// (check_scenario_authority_ratchet, internal/invariants/
+// scenario_authority_ratchet.go), so no domain sees a NEW violation from this
+// task landing unless it explicitly opts in.
+//
+// NOT co-gated with g.Discipline == loader.DisciplineFull, matching
+// PublicSurfaceAuthorityLinked's own precedent (not ClaimAuthorityScenario's,
+// which uniquely requires discipline:"full" as a co-requirement) -- see this
+// const's own doc comment on DomainManifest.ScenarioAuthority in
+// internal/loader/manifest.go for the full reasoning.
+//
+// The absent-key default is the honest no-op (identical to
+// PublicSurfaceAuthorityLinked's own "absence/any-other-value treated
+// identically" contract): a domain with no "scenario_authority" key, or any
+// value other than the single recognized literal "quality", is completely
+// unaffected by check_scenario_quality.
+const ScenarioAuthorityQuality = "quality"
+
+// resolveScenarioAuthorityQuality reads the optional "scenario_authority"
+// field from the manifest.json sitting next to graph.json, mirroring
+// resolvePublicSurfaceAuthorityLinked's exact pattern (read manifest,
+// tolerate a missing file, tolerate malformed JSON, default to false/absent
+// when the field is missing or holds any value other than the single
+// recognized literal "quality") -- the same "malformed opt-in never silently
+// masquerades as a real one" discipline ResolveDiscipline documents for
+// "full".
+func resolveScenarioAuthorityQuality(graphPath string) bool {
+	manifestPath := filepath.Join(filepath.Dir(graphPath), "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return false
+	}
+	var m struct {
+		ScenarioAuthority string `json:"scenario_authority"`
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return false
+	}
+	return m.ScenarioAuthority == ScenarioAuthorityQuality
 }
 
 // GenProfileFull and GenProfileConsumer are the two accepted values for the

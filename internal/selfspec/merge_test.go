@@ -41,7 +41,11 @@ const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 // task #396 (W1.4) via `hotam sync-self`, the self-hosting anchor for
 // check_public_surface_linked_or_marked/check_public_surface_authority_ratchet's
 // orphan-enforcer gate (257 SETTLED + 43 REJECTED + 6 DRAFT = 306).
-const wantRequirementCount = 306
+// 306 + 1: R-scenario-authority-owns-its-own-obligations -- landed task #397
+// (W1.5) via `hotam sync-self`, the self-hosting anchor for
+// check_scenario_quality/check_scenario_authority_ratchet's orphan-enforcer
+// gate (258 SETTLED + 43 REJECTED + 6 DRAFT = 307).
+const wantRequirementCount = 307
 
 // TestMergeIntoGraph_ByteIdenticalRoundTrip is the entire point of Phase A
 // (RAC-A, task #345, scaling Phase 0/RAC-0's proof to full coverage): load

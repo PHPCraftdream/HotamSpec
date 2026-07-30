@@ -102,7 +102,7 @@ func TestLoadGraph_DomainHotamSpecSelf(t *testing.T) {
 		// landed task #396 (W1.4) via `hotam sync-self`, the self-hosting
 		// anchor for check_public_surface_linked_or_marked/
 		// check_public_surface_authority_ratchet's orphan-enforcer gate.
-		{"requirements", len(g.Requirements), 306},
+		{"requirements", len(g.Requirements), 307}, // +1: R-scenario-authority-owns-its-own-obligations (task #397/W1.5)
 		// 8 + 1: task #347 (RAC-C part 3) landed C-d20cf537
 		// (reviewability-vs-code-authority, DETECTED, unresolved by design --
 		// the resolver-trust-shift RAC-B3/B4's self-hosting authority flip

@@ -17,6 +17,75 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **New check `check_scenario_quality` — a POST-HOC QUALITY gate over a requirement's already-recorded scenario
+  artifact, sitting on top of `check_settled_requires_scenario`'s cheap AST-only "has a scenario at all" signal,
+  gated behind its own brand-new opt-in trigger (task #397, W1.5).** `hotamspec.NewScenario` presence was
+  detected purely by AST (does the test body call it anywhere) — a test that does `s :=
+  hotamspec.NewScenario(t, "R-x", ""); s.Then("", true)` formally satisfied that bar with an empty title, an
+  empty `Then` description, and no guarantee of sensible Given/When/Then ordering, directly undermining "a
+  claim cannot exist without a GREEN and MEANINGFUL proof beside it."
+  - **Four quality rules**, evaluated against every PASS-verdict artifact of every scenario-carrying
+    `verified_by` entry (via `gate.RunVerifiedByTestRecording`, the same call shape
+    `check_claim_matches_scenario`/`DeriveClaimsFromScenarios` already use — never a bespoke AST parser reading
+    `Given`/`When`/`Then` call literals, which would be fragile against dynamic titles, helper indirection, and
+    loops): (1) non-empty title; (2) the artifact's own `req_id` exactly matches the citing requirement's ID;
+    (3) at least one `Then` step; (4) for a BEHAVIORAL scenario (carries a `When` step), a strict
+    Given-before-When-before-Then order (`Value` steps ignored) — a DECLARATIVE scenario (zero `When` steps,
+    the explicit "no action step" signal) is exempt from rule 4 entirely. A requirement is COMPLIANT iff AT
+    LEAST ONE checked artifact across ALL its scenario-carrying `verified_by` entries satisfies all four rules
+    (OR-across-entries, mirroring `anyVerifiedByEntryHasScenario`'s own semantics). An AST prefilter
+    (`gate.ResolveSpecTest`'s `HasScenario`) skips any `verified_by` entry with no scenario constructor call at
+    all — zero execution cost for a requirement `check_settled_requires_scenario` already covers.
+  - **Own, independent opt-in trigger.** New manifest.json key `scenario_authority: "quality"`
+    (`loader.ScenarioAuthorityQuality`, `internal/loader/loader.go`/`manifest.go`), wired into `LoadGraph` and
+    `ontology.Graph.ScenarioAuthorityQuality` (`json:"-"`). Deliberately NOT co-gated with `discipline:"full"`
+    (mirrors `public_surface_authority:"linked"`'s own precedent, not `claim_authority:"scenario"`'s, which
+    uniquely requires `discipline:"full"` as a co-requirement) — `check_settled_requires_scenario`/
+    `check_model_complete` (`discipline:"full"`) and `check_claim_matches_scenario`/
+    `check_public_surface_linked_or_marked` (their own separate triggers) already have real consumer-domain
+    obligation sets tied to their CURRENT "has a scenario" bar; tightening any of them instead of giving this
+    new demand its own trigger would reproduce the live regression task #369 caused and task #388 fixed.
+    Ratcheted one-way, mirroring `check_public_surface_authority_ratchet`'s exact shape: `graph.lock` gained
+    `ScenarioAuthorityQualityObserved` (`internal/loader/lock.go`, `loader.WriteLock`/
+    `loader.ReadScenarioAuthorityPin`), and new invariant `check_scenario_authority_ratchet`
+    (`internal/invariants/scenario_authority_ratchet.go`) fires if a domain ever observed with
+    `scenario_authority:"quality"` later reports a manifest without it.
+  - **Performance note (corrects an initial assumption in the task brief):** `gate.RunVerifiedByTestRecording`
+    carries NO verdict memoization of its own — its own doc comment states plainly it has "no in-memory
+    memoization or singleflight collapsing at all... every call spawns its OWN real `go test` subprocess." The
+    layer that DOES help a repeated call against an unchanged package is the LOWER, compile-artifact cache
+    (`internal/gate/compile_cache.go`'s `compileCache`, keyed by `(moduleRoot, pkgPattern, coverPkgPattern)`):
+    it skips a repeat `go test -c` (~42% of a cold engine pass per `docs/reviews/2026-07-30-test-suite-speed-
+    analysis.md` §1.7) but the run itself always re-executes — a real, fresh subprocess run each time, not a
+    cache hit. The recorder's own byte-for-byte determinism guarantee (proved by
+    `TestRunVerifiedByTestRecording_Deterministic_TwoRunsByteIdentical`) is what makes two independently-run
+    calls agree on content regardless.
+  - New self-hosting anchor requirement `R-scenario-authority-owns-its-own-obligations`
+    (`internal/selfspec/requirements_authoredspec.go`, `refines R-opt-in-trigger-owns-its-own-obligations`).
+    `EnforcedBy` names both new checks (`check_scenario_quality`, `check_scenario_authority_ratchet`). Landed
+    via `hotam sync-self` (confront-gate opposite-marker hits against 16 unrelated requirements were reviewed
+    and confirmed lexical false positives — shared ONLY/ANY/MUST/MUST-NOT vocabulary, e.g. sharing only the
+    word "match" with `R-m-tag-format-valid` — recorded via `--decision-ref`).
+  - `internal/invariants/registry_complete_test.go`'s registered-invariant count moves 119 → 121 (two new
+    checks); `internal/selfspec/merge_test.go`'s `wantRequirementCount` and
+    `internal/loader/loader_domain_test.go`'s requirement-count assertion both move 306 → 307.
+  - **This wave opts NO real domain into `scenario_authority:"quality"`** — `domains/hotam-spec-self`,
+    `domains/hotam-dev`, and everything under `PRAT-hotam` stay honest no-ops for this check; `all-violations`
+    confirmed 0 on both `domains/hotam-spec-self` and `domains/hotam-dev` after landing (`domains/hotam-dev`'s
+    own generated `CLAUDE.md` needed one `hotam gen-spec --claude-md` regen after `hotam-spec-self`'s SETTLED
+    count bumped, mirroring task #396's own cross-domain staleness catch).
+  - New tests: `internal/loader/scenario_authority_test.go` (`resolveScenarioAuthorityQuality`
+    true/false/absent/malformed cases, `LoadGraph` end-to-end wiring),
+    `internal/invariants/scenario_authority_ratchet_test.go` (mirrors
+    `public_surface_authority_ratchet_test.go`'s full regression/no-op/independence suite),
+    `internal/invariants/scenario_quality_test.go` (all four quality rules individually, against REAL recorded
+    fixtures built from the vendored `hotamspec` canon and run via `gate.RunVerifiedByTestRecording` — never
+    hand-constructed fake JSON — plus the OR-across-entries compliance case, the honest-no-op cases, and a
+    fully-compliant green case).
+  - Verified: `go build`/`go vet`/`gofmt` clean (excl. pre-existing untracked `.scratch` draft), targeted tests
+    (`internal/loader`, `internal/invariants`, `internal/ontology`, `internal/gate`, `internal/selfspec`,
+    `cmd/hotam`) all pass, full `go test ./...` green.
+
 - **New check `check_public_surface_linked_or_marked` — the SYMMETRIC INVERSE of `check_model_complete`: every
   exported authored symbol (receiver method, interface method, or top-level function/constructor) must be
   EITHER cited + scenario-complete OR explicitly marked infrastructure/ignored, gated behind its own brand-new

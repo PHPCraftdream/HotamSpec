@@ -89,6 +89,25 @@ type Graph struct {
 	// internal/loader/loader.go for why this is a brand-new, wholly
 	// independent trigger per R-opt-in-trigger-owns-its-own-obligations.
 	PublicSurfaceAuthorityLinked bool `json:"-"`
+	// ScenarioAuthorityQuality is the domain's manifest.json
+	// "scenario_authority": "quality" opt-in
+	// (loader.resolveScenarioAuthorityQuality, task #397/W1.5), populated by
+	// the loader at LoadGraph time exactly like PublicSurfaceAuthorityLinked
+	// above -- deliberately unserialized (json:"-"): it lives in
+	// manifest.json, not graph.json, so it never round-trips through this
+	// struct's own JSON encoding. It is the SOLE opt-in trigger for
+	// check_scenario_quality (internal/invariants/scenario_quality.go) --
+	// the QUALITY gate over a requirement's already-recorded scenario
+	// artifact(s), sitting on top of check_settled_requires_scenario's
+	// cheap, AST-only "does a scenario exist at all" signal. Deliberately
+	// NOT co-gated with Discipline == DisciplineFull (matching
+	// PublicSurfaceAuthorityLinked's own precedent, not
+	// ClaimAuthorityScenario's, which uniquely requires discipline:"full" IN
+	// ADDITION TO claim_authority:"scenario") -- see
+	// loader.ScenarioAuthorityQuality's own doc comment in
+	// internal/loader/loader.go for why this is a brand-new, wholly
+	// independent trigger per R-opt-in-trigger-owns-its-own-obligations.
+	ScenarioAuthorityQuality bool `json:"-"`
 	// DomainDir is the filesystem path of the domain directory this graph was
 	// loaded from (the resolved --domain path, i.e. the parent dir of
 	// graph.json). Populated by the loader at LoadGraph time; deliberately

@@ -189,6 +189,28 @@ type DomainManifest struct {
 	// riding in on an already-spent one (discipline:"full" was already
 	// spent by prat/gpsm-sm before this check existed).
 	PublicSurfaceAuthority string `json:"public_surface_authority,omitempty"`
+
+	// ScenarioAuthority is the optional "scenario_authority" opt-in
+	// (resolveScenarioAuthorityQuality, task #397/W1.5). The single
+	// recognized non-empty value is ScenarioAuthorityQuality ("quality");
+	// an absent key (or any other value) resolves to the SAME honest-no-op
+	// default as an absent key -- mirroring PublicSurfaceAuthority's own
+	// "one recognized literal, every other value/absence treated
+	// identically" contract above. It gates check_scenario_quality
+	// (internal/invariants/scenario_quality.go) as its OWN, INDEPENDENT
+	// trigger -- it does NOT require g.Discipline == loader.DisciplineFull
+	// as a co-requirement, matching PublicSurfaceAuthority's own precedent
+	// (not ClaimAuthority's, which uniquely requires discipline:"full" as a
+	// co-requirement). This mirrors R-opt-in-trigger-owns-its-own-
+	// obligations: a brand-new obligation (every scenario-carrying
+	// verified_by artifact must have a non-empty title, match the citing
+	// requirement's own reqID, carry at least one Then step, and -- for a
+	// behavioral scenario with a When step -- hold a strict Given-before-
+	// When-before-Then order) gets its OWN, separately-declared,
+	// separately-ratcheted trigger, never riding in on an already-spent one
+	// (discipline:"full"/claim_authority:"scenario"/public_surface_
+	// authority:"linked" were already spent before this check existed).
+	ScenarioAuthority string `json:"scenario_authority,omitempty"`
 }
 
 // LoadManifest reads and decodes the manifest.json at path into a DomainManifest.

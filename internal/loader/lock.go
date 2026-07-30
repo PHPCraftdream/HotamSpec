@@ -49,6 +49,21 @@ import (
 // with the Go zero value (false) -- 100% backward compatible with every
 // graph.lock already on disk, the same convention DisciplineFullObserved/
 // ClaimAuthorityScenarioObserved themselves established.
+//
+// ScenarioAuthorityQualityObserved is the F2-shaped ratchet pin for
+// scenario_authority:"quality" (task #397/W1.5), symmetric with
+// PublicSurfaceAuthorityLinkedObserved above: once a domain's manifest.json
+// has EVER been observed with scenario_authority:"quality", this field is
+// pinned true and NEVER goes back to false, closing the identical
+// silent-regression gap F2 closed for discipline:"full" (see
+// check_scenario_authority_ratchet, internal/invariants/
+// scenario_authority_ratchet.go). ADDITIVE
+// (json:"scenario_authority_quality_observed,omitempty"): an existing
+// graph.lock written before this field existed lacks it entirely and decodes
+// with the Go zero value (false) -- 100% backward compatible with every
+// graph.lock already on disk, the same convention DisciplineFullObserved/
+// ClaimAuthorityScenarioObserved/PublicSurfaceAuthorityLinkedObserved
+// themselves established.
 type lockData struct {
 	SHA256                               string `json:"sha256"`
 	UpdatedAt                            string `json:"updated_at"`
@@ -56,6 +71,7 @@ type lockData struct {
 	DisciplineFullObserved               bool   `json:"discipline_full_observed,omitempty"`
 	ClaimAuthorityScenarioObserved       bool   `json:"claim_authority_scenario_observed,omitempty"`
 	PublicSurfaceAuthorityLinkedObserved bool   `json:"public_surface_authority_linked_observed,omitempty"`
+	ScenarioAuthorityQualityObserved     bool   `json:"scenario_authority_quality_observed,omitempty"`
 }
 
 func LockPath(graphPath string) string {
@@ -94,14 +110,17 @@ func WriteLock(graphPath string, note string) error {
 	}
 	// F2 ratchet: preserve a previously-pinned discipline:full observation.
 	// Read the existing lock (if any) to get the old DisciplineFullObserved /
-	// ClaimAuthorityScenarioObserved / PublicSurfaceAuthorityLinkedObserved.
+	// ClaimAuthorityScenarioObserved / PublicSurfaceAuthorityLinkedObserved /
+	// ScenarioAuthorityQualityObserved.
 	prevFullObserved := false
 	prevClaimAuthorityObserved := false
 	prevPublicSurfaceAuthorityObserved := false
+	prevScenarioAuthorityObserved := false
 	if prevLock, pErr := readLockData(graphPath); pErr == nil {
 		prevFullObserved = prevLock.DisciplineFullObserved
 		prevClaimAuthorityObserved = prevLock.ClaimAuthorityScenarioObserved
 		prevPublicSurfaceAuthorityObserved = prevLock.PublicSurfaceAuthorityLinkedObserved
+		prevScenarioAuthorityObserved = prevLock.ScenarioAuthorityQualityObserved
 	}
 	// Observe the live discipline. If it is "full" now, pin it; otherwise
 	// preserve the previous pin (ratchet: once true, always true).
@@ -111,6 +130,9 @@ func WriteLock(graphPath string, note string) error {
 	// task #396/W1.4 ratchet: same one-way pin, for
 	// public_surface_authority:"linked".
 	livePublicSurfaceAuthorityLinked := resolvePublicSurfaceAuthorityLinked(graphPath)
+	// task #397/W1.5 ratchet: same one-way pin, for
+	// scenario_authority:"quality".
+	liveScenarioAuthorityQuality := resolveScenarioAuthorityQuality(graphPath)
 	lock := lockData{
 		SHA256:                               hash,
 		UpdatedAt:                            time.Now().UTC().Format(time.RFC3339),
@@ -118,6 +140,7 @@ func WriteLock(graphPath string, note string) error {
 		DisciplineFullObserved:               prevFullObserved || liveFull,
 		ClaimAuthorityScenarioObserved:       prevClaimAuthorityObserved || liveClaimAuthorityScenario,
 		PublicSurfaceAuthorityLinkedObserved: prevPublicSurfaceAuthorityObserved || livePublicSurfaceAuthorityLinked,
+		ScenarioAuthorityQualityObserved:     prevScenarioAuthorityObserved || liveScenarioAuthorityQuality,
 	}
 	data, err := json.MarshalIndent(lock, "", "  ")
 	if err != nil {
@@ -190,6 +213,22 @@ func ReadPublicSurfaceAuthorityPin(graphPath string) (linkedObserved bool, exist
 		return false, false
 	}
 	return lock.PublicSurfaceAuthorityLinkedObserved, true
+}
+
+// ReadScenarioAuthorityPin reads graph.lock next to graphPath and returns
+// whether scenario_authority:"quality" was ever observed (task #397/W1.5's
+// ratchet pin), mirroring ReadPublicSurfaceAuthorityPin exactly. Returns
+// (false, false) when the lock does not exist or cannot be parsed -- the
+// caller (check_scenario_authority_ratchet) treats absence as "no pin yet"
+// (honest no-op, same shape as ReadPublicSurfaceAuthorityPin's own
+// absent-lock bail). Returns (pinValue, true) when the lock exists and was
+// parsed.
+func ReadScenarioAuthorityPin(graphPath string) (qualityObserved bool, exists bool) {
+	lock, err := readLockData(graphPath)
+	if err != nil {
+		return false, false
+	}
+	return lock.ScenarioAuthorityQualityObserved, true
 }
 
 func VerifyLock(graphPath string) (bool, error) {

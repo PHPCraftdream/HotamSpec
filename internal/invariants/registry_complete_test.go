@@ -199,7 +199,26 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// -- once a domain has been observed with public_surface_authority:
 	// "linked" (pinned in graph.lock's PublicSurfaceAuthorityLinkedObserved),
 	// silently withdrawing that opt-in is a regression violation.
-	const expected = 119
+	// Task #397 (W1.5: a QUALITY gate over an already-recorded scenario
+	// artifact, sitting on top of check_settled_requires_scenario's cheap
+	// AST-only "has a scenario at all" signal) added TWO more. A 120th,
+	// check_scenario_quality (scenario_quality.go): for a SETTLED
+	// requirement carrying a scenario, at least one verified_by entry's
+	// pass-verdict recorded artifact must have a non-empty title, an exact
+	// requirement-ID match, at least one Then step, and -- for a behavioral
+	// scenario carrying a When step -- a strict Given-before-When-before-Then
+	// order -- gated behind its own BRAND NEW opt-in trigger,
+	// scenario_authority:"quality" (loader.ScenarioAuthorityQuality),
+	// deliberately NOT co-gated with discipline:"full" (mirroring
+	// public_surface_authority:"linked"'s own precedent, per
+	// R-opt-in-trigger-owns-its-own-obligations). A 121st,
+	// check_scenario_authority_ratchet (scenario_authority_ratchet.go): the
+	// scenario_authority:"quality" one-way ratchet, symmetric with
+	// check_public_surface_authority_ratchet -- once a domain has been
+	// observed with scenario_authority:"quality" (pinned in graph.lock's
+	// ScenarioAuthorityQualityObserved), silently withdrawing that opt-in is
+	// a regression violation.
+	const expected = 121
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}
