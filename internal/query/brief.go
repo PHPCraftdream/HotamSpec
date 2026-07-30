@@ -27,9 +27,10 @@ type FreshnessInfo struct {
 //
 // JSON shape is self-describing: the `kind` field discriminates which sub-
 // fields are populated. For a Requirement anchor: `requirement`, `neighbors`,
-// `assumptions`, `conflicts`, `shared_assumption_with`, and `freshness` are
-// set. For a Conflict anchor: `conflict` and `neighbors`. For an Assumption
-// anchor: `assumption` and `neighbors`.
+// `assumptions`, `conflicts`, `shared_assumption_with`, `freshness`, and the
+// evidence packet fields (`signatures`, `port_contracts`, `scenario`,
+// `entity_process`) are set. For a Conflict anchor: `conflict` and `neighbors`.
+// For an Assumption anchor: `assumption` and `neighbors`.
 type BriefCard struct {
 	Kind AnchorKind `json:"kind"`
 	ID   string     `json:"id"`
@@ -59,6 +60,25 @@ type BriefCard struct {
 	// nil (omitted in JSON) for Conflict/Assumption anchors — freshness is
 	// not a Conflict/Assumption concept in this codebase.
 	Freshness *FreshnessInfo `json:"freshness,omitempty"`
+
+	// Evidence packet (task #399/W2.2): Requirement-only enrichment carrying
+	// the implementation/proof/structure context an agent would otherwise
+	// assemble from 3-4 separate round-trips. Each section is independently
+	// nil/omitempty (honest-absent when nothing matches) and entirely absent
+	// for Conflict/Assumption anchors, exactly like Freshness already is.
+
+	// Signatures resolves every implemented_by entry to its owning
+	// ModelObject + the specific symbol's signature/doc.
+	Signatures []EvidenceSignature `json:"signatures,omitempty"`
+	// PortContracts surfaces the full method set of any port (interface) or
+	// mock object the requirement touches.
+	PortContracts []EvidencePortContract `json:"port_contracts,omitempty"`
+	// Scenario is the actual Given/When/Then narrative from the first
+	// passing recorded scenario artifact.
+	Scenario *EvidenceScenario `json:"scenario,omitempty"`
+	// EntityProcess reverse-matches implemented_by files against
+	// EntityType.ModelSymbol, surfacing connected entities + processes.
+	EntityProcess *EvidenceEntityProcess `json:"entity_process,omitempty"`
 }
 
 // Brief builds the full single-call orientation card for any anchor
@@ -100,6 +120,7 @@ func briefRequirement(g *ontology.Graph, id, today string) (BriefCard, error) {
 		// Context succeeded so the requirement exists; this is unreachable.
 		return BriefCard{}, &ErrNotFound{ID: id}
 	}
+	ev := buildEvidence(g, r)
 	return BriefCard{
 		Kind:                 KindRequirement,
 		ID:                   id,
@@ -112,6 +133,10 @@ func briefRequirement(g *ontology.Graph, id, today string) (BriefCard, error) {
 			Status:      string(freshness.Classify(r, today)),
 			OverdueDays: freshness.OverdueDays(r, today),
 		},
+		Signatures:    ev.signatures,
+		PortContracts: ev.portContracts,
+		Scenario:      ev.scenario,
+		EntityProcess: ev.entityProcess,
 	}, nil
 }
 

@@ -17,6 +17,56 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`hotam brief` now assembles a five-section evidence packet for a Requirement anchor -- object/method
+  signatures, port/mock contracts, the actual Given/When/Then scenario narrative, related entity/process
+  links, and per-section provenance -- assembling into one single-call answer what previously required
+  reading the graph, the Go source, the generated docs, and the tests separately (task #399, W2.2).**
+  An AI agent orienting on one Requirement today had to cold-start across 3-4 separate round-trips
+  (~54k tokens, 8.6 tool calls, 60s per question in a saved evaluation run). The four content sections
+  are all Requirement-only -- nil/omitempty for Conflict/Assumption anchors, exactly like `Freshness`
+  already is -- and each is independently honest-absent: a stale/malformed citation, a missing scenario,
+  or no EntityType match simply omits that section rather than erroring.
+  - **Promoted `gate.MatchCitedSymbol` + `gate.SymbolKind`.** The citation-resolution machinery
+    (`matchCitedSymbol`/`symbolKind`/`splitQualifiedCitationSymbol`/`normalizeRelPath`) was previously
+    UNEXPORTED inside `internal/invariants/model_complete.go` -- the enforcement/violation layer.
+    `internal/query` (a read-only presentation layer) must NOT import `internal/invariants` (a real
+    layering violation with a latent import-cycle risk), so the matcher was promoted to `internal/gate`
+    (a true leaf both layers already depend on) as the EXPORTED `MatchCitedSymbol` + `SymbolKind` enum
+    (`internal/gate/citation_match.go`). The three-category priority order (receiver methods → interface
+    methods → bare-only top-level funcs) is preserved byte-for-byte. `internal/invariants` was refactored
+    to call `gate.MatchCitedSymbol`/`gate.SymbolKind` directly -- **behavior-preserving**, proven by a
+    zero-line `git diff --stat` on both `model_complete_test.go` and `model_complete_symmetric_test.go`.
+  - **New `BriefCard` fields (`internal/query/brief.go`).** `Signatures []EvidenceSignature`,
+    `PortContracts []EvidencePortContract`, `Scenario *EvidenceScenario`, `EntityProcess
+    *EvidenceEntityProcess` -- computed by `buildEvidence` in the new `internal/query/evidence.go`.
+    Each section carries its own `Source` provenance string (e.g. `"gate.ScanAuthoredModels +
+    gate.MatchCitedSymbol of spec/model/risk.go"`, `"live go test execution of TestValidate_Scenario
+    (verdict: pass)"`, `"graph.json EntityType.model_symbol reverse-match against implemented_by files"`).
+  - **Section 1 (signatures):** for every `implemented_by` entry that resolves via `gate.MatchCitedSymbol`,
+    the owning `ModelObject`'s Name/Kind/ModelKind/Doc plus the resolved symbol's own signature+doc.
+    Section 2 (port/mock contract): when the resolved object is a port (interface), its full
+    `InterfaceMethods`; when a mock, its own `Methods` (a known simplification that does NOT
+    cross-reference back to the specific port it implements -- noted rather than building a reverse index).
+    Section 3 (scenario): the first `verified_by` entry that AST-carries a scenario
+    (`gate.ResolveSpecTest`'s `HasScenario`) and produces at least one `Verdict=="pass"` artifact via
+    `gate.RunVerifiedByTestRecording` -- its Title plus full ordered Steps. Deliberately does NOT apply
+    task #397's four-rule quality gate (presentational, not a compliance check). Section 4 (entity/process):
+    reverse-match implemented_by files against `EntityType.ModelSymbol` fields, surfacing matched
+    EntityTypes and any `Process` whose `DrivesEntities` includes their Slug.
+  - **Scope boundary.** `hotam brief` operates on ONE anchor at a time -- the `gate.ScanAuthoredModels`
+    + one `gate.RunVerifiedByTestRecording` call per brief invocation is the SAME acceptable, already-
+    established cost class task #398's `State` field pays. NOT wired into `hotam req list`/`search`
+    (same reasoning). Does not touch `internal/generator/traceability.go`, `coverage.go`, or any
+    `docs/gen/*.md` rendering path (task #317's byte-idempotency guarantee for `hotam land`).
+    No new opt-in trigger/invariant/ratchet -- a pure read-path enhancement over already-computed data.
+  - New tests: `internal/gate/citation_match_test.go` (10 tests: qualified/bare receiver method,
+    interface method, top-level func, qualified-cannot-match-func, unexported excluded, wrong file,
+    type-only excluded, priority order, path normalization), `internal/query/evidence_test.go` (10 tests:
+    receiver-method+func signatures, port contract, mock contract, real passing scenario narrative via
+    vendored recorder, honest-absent no-scenario, entity/process reverse-match, nothing-matches,
+    Conflict/Assumption never populate evidence, stale citation omitted), `cmd/hotam/brief_test.go`
+    (`TestCmdBrief_JSONIncludesEvidenceKeys` against real CLI stdout via `captureStdout`).
+
 - **`hotam req show` and `hotam brief` now surface a Requirement's COMPUTED proof lifecycle state
   (NO_CARRIER / UNVERIFIED / FAILING / STALE / PROVEN) as a `proof state:` line in human-readable
   output and a `state` key in `--json` output (task #398, W2.1).** `selfspec.RequirementState`

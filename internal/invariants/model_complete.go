@@ -18,8 +18,6 @@ package invariants
 
 import (
 	"fmt"
-	"go/token"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -120,7 +118,7 @@ func checkModelComplete(g *ontology.Graph) []Violation {
 	// implemented_by entries ONCE and resolves each against the full scanned
 	// inventory (receiver methods, interface methods, top-level funcs) --
 	// see that function's own doc comment. checkModelComplete then filters
-	// the result down to ONLY symbolKindMethod entries, grouped by owning
+	// the result down to ONLY gate.SymbolKindMethod entries, grouped by owning
 	// object, EXACTLY the citedMethod shape this function computed inline
 	// before the refactor -- this filtering step is what keeps this
 	// function's own output byte-for-byte unchanged.
@@ -131,7 +129,7 @@ func checkModelComplete(g *ontology.Graph) []Violation {
 	// the refactor).
 	cited := map[string]map[string]*citedSymbolAgg{}
 	for _, agg := range citedSymbols {
-		if agg.kind != symbolKindMethod {
+		if agg.kind != gate.SymbolKindMethod {
 			continue
 		}
 		bucket := cited[agg.objName]
@@ -193,30 +191,15 @@ func checkModelComplete(g *ontology.Graph) []Violation {
 	return out
 }
 
-// symbolKind classifies which of the three EXPORTED public-surface
-// categories collectCitedSymbols/matchCitedSymbol resolved an implemented_by
-// citation to -- the same three categories task #396/W1.4's brief names as
-// checkPublicSurfaceLinkedOrMarked's scope: a receiver method
-// (ModelObject.Methods), an interface's own declared method
-// (ModelObject.InterfaceMethods, Name != ""), or a top-level function/
-// constructor (ModelFile.Funcs).
-type symbolKind int
-
-const (
-	symbolKindMethod symbolKind = iota
-	symbolKindInterfaceMethod
-	symbolKindFunc
-)
-
 // citedSymbolAgg is one (kind, objName, symbolName) triple's aggregated
 // citation info across every SETTLED requirement citing it -- the SAME shape
 // checkModelComplete's own pre-refactor citedMethodAgg carried (file/reqIDs/
 // anyScenario), generalized with kind+objName+symbolName so a single map can
-// hold all three symbol categories at once. objName is "" for symbolKindFunc
+// hold all three symbol categories at once. objName is "" for gate.SymbolKindFunc
 // (a top-level function has no owning object).
 type citedSymbolAgg struct {
-	kind        symbolKind
-	objName     string // "" for symbolKindFunc
+	kind        gate.SymbolKind
+	objName     string // "" for gate.SymbolKindFunc
 	symbolName  string
 	file        string // domain-relative file of the implemented_by citation (diagnostic)
 	reqIDs      []string
@@ -227,7 +210,7 @@ type citedSymbolAgg struct {
 // checkModelComplete and checkPublicSurfaceLinkedOrMarked call (task #396/
 // W1.4 refactor of checkModelComplete's own former inline loop): walk every
 // SETTLED requirement's implemented_by entries ONCE, resolve each in-scope
-// entry against files (matchCitedSymbol, extended from
+// entry against files (gate.MatchCitedSymbol, extended from
 // matchCitedExportedMethod to also recognize interface methods and top-level
 // funcs), and aggregate by (kind, objName, symbolName) -- one citedSymbolAgg
 // per distinct symbol, carrying every citing requirement's ID and the OR of
@@ -239,7 +222,7 @@ type citedSymbolAgg struct {
 // (same SETTLED filter, same parseSpecEntries/EntryWithinSpecScope gates,
 // same anyVerifiedByEntryHasScenario signal), plus two NEW categories
 // (interface methods, funcs) matchCitedExportedMethod never recognized.
-// checkModelComplete filters the result back down to symbolKindMethod only,
+// checkModelComplete filters the result back down to gate.SymbolKindMethod only,
 // so its own output is unaffected by this generalization -- see that
 // function's own doc comment for the filtering step that preserves it.
 func collectCitedSymbols(g *ontology.Graph, files []gate.ModelFile) map[string]*citedSymbolAgg {
@@ -266,7 +249,7 @@ func collectCitedSymbols(g *ontology.Graph, files []gate.ModelFile) map[string]*
 				// violation, not this check's.
 				continue
 			}
-			kind, objName, symbolName, found := matchCitedSymbol(files, ie.file, ie.symbol)
+			kind, objName, symbolName, found := gate.MatchCitedSymbol(files, ie.file, ie.symbol)
 			if !found {
 				// Not an exported method/interface-method/func of a scanned
 				// model file (a type-only citation, an unexported symbol, or
@@ -292,135 +275,8 @@ func collectCitedSymbols(g *ontology.Graph, files []gate.ModelFile) map[string]*
 
 // citedSymbolKey renders a (kind, objName, symbolName) triple into a unique
 // map key for collectCitedSymbols' aggregation map.
-func citedSymbolKey(kind symbolKind, objName, symbolName string) string {
+func citedSymbolKey(kind gate.SymbolKind, objName, symbolName string) string {
 	return fmt.Sprintf("%d\x00%s\x00%s", kind, objName, symbolName)
-}
-
-// matchCitedSymbol resolves a cited implemented_by "file:symbol" entry
-// against the scanned authored-model inventory and reports, when the
-// citation names an EXPORTED receiver method, an EXPORTED interface method,
-// or an EXPORTED top-level function, which category it is (symbolKind) and
-// its identity (objName -- "" for a func -- and symbolName). Returns
-// found=false for anything that is not one of those three categories -- a
-// type-only citation, an unexported symbol, an embedded interface entry (no
-// Name of its own), or a citation into a file the scan did not parse (e.g.
-// an out-of-scope path).
-//
-// task #396/W1.4 GENERALIZATION of the former matchCitedExportedMethod: that
-// function matched ONLY obj.Methods (receiver methods). This function
-// preserves that exact matching behavior for receiver methods (byte-for-byte
-// -- checkModelComplete's own filtered view of collectCitedSymbols' output
-// is unaffected) and adds two more categories, checked in this priority
-// order per candidate object/file so a qualified "Type.Symbol" citation
-// naming an INTERFACE never accidentally matches an unrelated top-level func
-// of the same bare name:
-//
-//  1. obj.Methods (receiver methods) -- exactly matchCitedExportedMethod's
-//     original rule.
-//  2. obj.InterfaceMethods with Name != "" (an interface's own declared
-//     method; Embedded entries, which have no Name, are never matched here
-//     -- they are not this object's own declared method, per this task's
-//     brief).
-//  3. ModelFile.Funcs (top-level functions/constructors) -- matched only
-//     when the citation is BARE (unqualified) or when NO object in the file
-//     matched categories 1-2, since a func is not receiver-scoped and has no
-//     "Type." qualifier of its own; a QUALIFIED citation whose Type does not
-//     match any object in the file cannot legitimately be a func citation
-//     either (the qualifier already commits to naming a type), so funcs are
-//     tried only for a bare wantName in this pass.
-//
-// Matching rules for categories 1-2 mirror gate.ResolveSpecSymbol's own
-// documented convention for implemented_by symbol names (spec_resolver.go):
-//   - a QUALIFIED "Type.Method" symbol matches an object named "Type" in the
-//     named file that declares an exported method "Method";
-//   - a BARE "Method" symbol matches the FIRST object in the named file
-//     (declaration order) that declares an exported method "Method" --
-//     matching ResolveSpecSymbol's "any receiver" semantics for bare names
-//     (authored spec code rarely has two same-named exported methods on
-//     different receivers in one file; the qualified form exists for that
-//     rare ambiguity).
-//
-// fileRel is the citation's domain-relative file path (forward-slash, as
-// authored); each scanned ModelFile.RelPath is root-relative forward-slash
-// -- both are normalized via filepath.ToSlash(filepath.Clean(...)) before
-// comparison so platform separator/cleaning differences cannot cause a
-// spurious mismatch.
-func matchCitedSymbol(files []gate.ModelFile, fileRel, symbol string) (kind symbolKind, objName, symbolName string, found bool) {
-	wantFile := normalizeRelPath(fileRel)
-	wantType, wantName, qualified := splitQualifiedCitationSymbol(symbol)
-
-	for _, f := range files {
-		if normalizeRelPath(f.RelPath) != wantFile {
-			continue
-		}
-		for _, obj := range f.Objects {
-			if qualified && obj.Name != wantType {
-				continue
-			}
-			// Category 1: receiver methods (matchCitedExportedMethod's
-			// original, unchanged rule).
-			for _, m := range obj.Methods {
-				if m.Name != wantName {
-					continue
-				}
-				if !token.IsExported(m.Name) {
-					// Unexported methods are out of scope (D5:
-					// "ЭКСПОРТИРУЕМЫЙ метод"). Keep scanning -- a different
-					// object in the same file may declare an exported
-					// method of the same name.
-					continue
-				}
-				return symbolKindMethod, obj.Name, m.Name, true
-			}
-			// Category 2: interface methods (Name != "" only -- an Embedded
-			// entry is not this object's own declared method).
-			for _, im := range obj.InterfaceMethods {
-				if im.Name != wantName || im.Name == "" {
-					continue
-				}
-				if !token.IsExported(im.Name) {
-					continue
-				}
-				return symbolKindInterfaceMethod, obj.Name, im.Name, true
-			}
-		}
-		// Category 3: top-level funcs -- only for a BARE citation (see doc
-		// comment: a qualified citation already commits to naming a type,
-		// so it cannot legitimately resolve to a func here).
-		if !qualified {
-			for _, fn := range f.Funcs {
-				if fn.Name != wantName {
-					continue
-				}
-				if !token.IsExported(fn.Name) {
-					continue
-				}
-				return symbolKindFunc, "", fn.Name, true
-			}
-		}
-		return symbolKindMethod, "", "", false
-	}
-	return symbolKindMethod, "", "", false
-}
-
-// splitQualifiedCitationSymbol splits an implemented_by symbol of the form
-// "Type.Method" into its two parts (mirroring gate.splitQualifiedSymbol,
-// which is unexported and lives in spec_resolver.go -- not re-exported to
-// avoid widening gate's surface for this one caller). If symbol contains no
-// ".", qualified is false and name is the whole symbol.
-func splitQualifiedCitationSymbol(symbol string) (typeName, name string, qualified bool) {
-	if idx := strings.LastIndex(symbol, "."); idx >= 0 {
-		return symbol[:idx], symbol[idx+1:], true
-	}
-	return "", symbol, false
-}
-
-// normalizeRelPath cleans a domain-relative path and forces forward slashes
-// so an authored implemented_by file ("spec/model/risk.go") compares equal
-// to a scanned ModelFile.RelPath regardless of OS separator or minor
-// cleaning differences.
-func normalizeRelPath(p string) string {
-	return filepath.ToSlash(filepath.Clean(p))
 }
 
 // dedupSortedStrings returns the sorted, de-duplicated copy of in -- used
@@ -455,7 +311,7 @@ var _ = All.MustRegister("check_model_complete", Invariant{
 		"compute the domain's authored model inventory via gate.ScanAuthoredModels (the SAME scan BuildModels/" +
 		"ScanModelLayerCounts render from, excluding the vendored recorder). For every Requirement with status == " +
 		"SETTLED whose implemented_by entries are parsed via parseSpecEntries and in-scope via gate.EntryWithinSpecScope, " +
-		"resolve each entry against the scanned inventory (matchCitedSymbol, filtered to receiver methods): a QUALIFIED \"Type.Method\" " +
+		"resolve each entry against the scanned inventory (gate.MatchCitedSymbol, filtered to receiver methods): a QUALIFIED \"Type.Method\" " +
 		"symbol matches an object named Type declaring an exported method Method in the named file; a BARE \"Method\" " +
 		"symbol matches the first object in the named file declaring an exported method Method. For each (object, " +
 		"method) cited by at least one SETTLED requirement, the method is scenario-complete iff AT LEAST ONE citing " +

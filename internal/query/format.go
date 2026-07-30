@@ -227,6 +227,60 @@ func FormatBrief(b BriefCard) string {
 		}
 	}
 
+	// Evidence packet (task #399/W2.2) -- Requirement-only sections, nil
+	// for Conflict/Assumption anchors.
+	if len(b.Signatures) > 0 {
+		sb.WriteString("\n\nsignatures (implemented_by resolved):\n")
+		for i, s := range b.Signatures {
+			if i > 0 {
+				sb.WriteString("\n")
+			}
+			fmt.Fprintf(&sb, "  %s [%s/%s] %s", s.Citation, s.ObjectModelKind, s.SymbolKind, s.Signature)
+			if s.SymbolDoc != "" {
+				fmt.Fprintf(&sb, " — %s", s.SymbolDoc)
+			}
+		}
+	}
+	if len(b.PortContracts) > 0 {
+		sb.WriteString("\n\nport/mock contracts:\n")
+		for i, c := range b.PortContracts {
+			if i > 0 {
+				sb.WriteString("\n")
+			}
+			fmt.Fprintf(&sb, "  %s (%s, %d methods)", c.ObjectName, c.ModelKind, len(c.Methods))
+			for _, m := range c.Methods {
+				if m.Embedded != "" {
+					fmt.Fprintf(&sb, "\n    [embedded] %s", m.Embedded)
+				} else {
+					fmt.Fprintf(&sb, "\n    %s %s", m.Name, m.Signature)
+				}
+			}
+		}
+	}
+	if b.Scenario != nil {
+		sb.WriteString("\n\nscenario narrative:\n")
+		fmt.Fprintf(&sb, "  title: %s\n", b.Scenario.Title)
+		for _, step := range b.Scenario.Steps {
+			fmt.Fprintf(&sb, "  %s: %s\n", step.Kind, step.Desc)
+		}
+		sb.WriteString("  source: " + b.Scenario.Source)
+	}
+	if b.EntityProcess != nil {
+		sb.WriteString("\n\nrelated entities/processes:\n")
+		for i, e := range b.EntityProcess.Entities {
+			if i > 0 {
+				sb.WriteString("\n")
+			}
+			fmt.Fprintf(&sb, "  entity %s (model_symbol: %s)", e.EntityTypeSlug, e.ModelSymbol)
+			for _, p := range e.Processes {
+				fmt.Fprintf(&sb, "\n    driven by process %s", p.ID)
+				if p.Why != "" {
+					fmt.Fprintf(&sb, " — %s", p.Why)
+				}
+			}
+		}
+	}
+
 	sb.WriteString("\n\nneighbors:\n")
 	sb.WriteString(indent(FormatRelated(b.Neighbors)))
 

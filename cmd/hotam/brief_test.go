@@ -5,6 +5,29 @@ import (
 	"testing"
 )
 
+// TestCmdBrief_JSONIncludesEvidenceKeys proves the new evidence-packet keys
+// (task #399/W2.2) flow through the actual CLI --json output for a real
+// requirement with a real implemented_by pair. R-no-hand-edit-graph cites
+// internal/proposal/apply.go:Apply (an exported top-level function) as
+// implemented_by, so the "signatures" key must appear. Not parallel:
+// captureStdout mutates process-global os.Stdout.
+func TestCmdBrief_JSONIncludesEvidenceKeys(t *testing.T) {
+	domainDir := copySelfDomain(t)
+	stdout := captureStdout(t, func() {
+		if err := cmdBrief([]string{"--json", "--domain", domainDir, "--today", "2026-07-30", "R-no-hand-edit-graph"}); err != nil {
+			t.Fatalf("cmdBrief: %v", err)
+		}
+	})
+	if !strings.Contains(stdout, `"signatures"`) {
+		// Truncate output for readability on failure.
+		out := stdout
+		if len(out) > 500 {
+			out = out[:500]
+		}
+		t.Errorf("expected \"signatures\" key in brief JSON output, got:\n%s", out)
+	}
+}
+
 func TestCmdBrief_RequirementSmoke(t *testing.T) {
 	t.Parallel()
 	domainDir := copySelfDomain(t)

@@ -149,7 +149,7 @@ func checkPublicSurfaceLinkedOrMarked(g *ontology.Graph) []Violation {
 	// citedComplete looks up whether a given (kind, objName, symbolName)
 	// triple is cited AND scenario-complete -- the identical bar
 	// check_model_complete applies via the SAME shared aggregation.
-	citedComplete := func(kind symbolKind, objName, symbolName string) (citedAtAll, complete bool) {
+	citedComplete := func(kind gate.SymbolKind, objName, symbolName string) (citedAtAll, complete bool) {
 		agg, ok := cited[citedSymbolKey(kind, objName, symbolName)]
 		if !ok {
 			return false, false
@@ -165,7 +165,7 @@ func checkPublicSurfaceLinkedOrMarked(g *ontology.Graph) []Violation {
 					continue
 				}
 				if v, ok := evaluatePublicSurfaceSymbol(f.RelPath, obj.Name, m.Name, "method", m.Doc,
-					symbolKindMethod, citedComplete); ok {
+					gate.SymbolKindMethod, citedComplete); ok {
 					out = append(out, v)
 				}
 			}
@@ -181,7 +181,7 @@ func checkPublicSurfaceLinkedOrMarked(g *ontology.Graph) []Violation {
 					continue
 				}
 				if v, ok := evaluatePublicSurfaceSymbol(f.RelPath, obj.Name, im.Name, "interface method", im.Doc,
-					symbolKindInterfaceMethod, citedComplete); ok {
+					gate.SymbolKindInterfaceMethod, citedComplete); ok {
 					out = append(out, v)
 				}
 			}
@@ -191,7 +191,7 @@ func checkPublicSurfaceLinkedOrMarked(g *ontology.Graph) []Violation {
 				continue
 			}
 			if v, ok := evaluatePublicSurfaceSymbol(f.RelPath, "", fn.Name, "function", fn.Doc,
-				symbolKindFunc, citedComplete); ok {
+				gate.SymbolKindFunc, citedComplete); ok {
 				out = append(out, v)
 			}
 		}
@@ -209,8 +209,8 @@ func checkPublicSurfaceLinkedOrMarked(g *ontology.Graph) []Violation {
 // violation message.
 func evaluatePublicSurfaceSymbol(
 	relPath, objName, symbolName, category, doc string,
-	kind symbolKind,
-	citedComplete func(kind symbolKind, objName, symbolName string) (citedAtAll, complete bool),
+	kind gate.SymbolKind,
+	citedComplete func(kind gate.SymbolKind, objName, symbolName string) (citedAtAll, complete bool),
 ) (Violation, bool) {
 	citedAtAll, complete := citedComplete(kind, objName, symbolName)
 	if citedAtAll && complete {
@@ -278,7 +278,7 @@ var _ = All.MustRegister("check_public_surface_linked_or_marked", Invariant{
 		"of model state or discipline. OTHERWISE, compute the domain's authored model inventory via " +
 		"gate.ScanAuthoredModels (the SAME scan check_model_complete uses) and the SAME collectCitedSymbols " +
 		"citation-aggregation pass check_model_complete uses (SETTLED requirements' implemented_by entries resolved " +
-		"via matchCitedSymbol against receiver methods, interface methods with Name != \"\", and top-level funcs). " +
+		"via gate.MatchCitedSymbol against receiver methods, interface methods with Name != \"\", and top-level funcs). " +
 		"For EVERY exported symbol in the inventory (ModelObject.Methods, ModelObject.InterfaceMethods with Name != " +
 		"\"\" -- Embedded entries skipped, and ModelFile.Funcs), the symbol is COMPLIANT iff (it is cited by at least " +
 		"one SETTLED requirement AND that citation's aggregated anyVerifiedByEntryHasScenario is true) OR (its own " +
