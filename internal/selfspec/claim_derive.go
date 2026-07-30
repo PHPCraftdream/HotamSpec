@@ -17,6 +17,11 @@
 //     hotamspec.NewScenario(t, id, description) description string, in
 //     verified_by's own declared order. A single verified_by entry is the
 //     trivial n=1 case of the same rule — not a separately coded branch.
+//     Within one verified_by entry, a title repeated by two or more
+//     subscenarios contributes only ONCE (first-occurrence order kept) —
+//     task #389/W0.2, see deriveClaimFromVerifiedBy's own doc comment for
+//     why this dedup is scoped to a single entry and deliberately NOT
+//     applied across two different verified_by entries.
 //  2. Separator: a single space (" "). Chosen over a newline because Claim
 //     is graph.json's own short, single-line "normative claim" field
 //     (SPEC.md's own doc comment: "claim остаётся коротким авторским
@@ -158,6 +163,37 @@ func RequirementInClaimDerivationScope(r ontology.Requirement) bool {
 // when NOT ONE entry produced any narrated scenario at all (nothing to
 // derive a Claim from) — the caller then leaves the Requirement's existing
 // Claim untouched rather than overwriting it with an empty string.
+//
+// DEDUPLICATION SCOPE (task #389, W0.2 — resolver-settled, see this file's
+// own CHANGELOG entry for the full worked example): titles are deduplicated
+// ONLY within the artifacts produced by a SINGLE verified_by entry (one
+// `go test` run of one test function/subtest tree), preserving first-
+// occurrence order — never GLOBALLY across two DIFFERENT verified_by
+// entries. Rationale:
+//
+//   - WITHIN one entry, a repeated title is a mechanical artifact, not
+//     signal: one test function that calls hotamspec.NewScenario(t, id,
+//     "same wording") several times (e.g. once per loop-driven sub-case,
+//     or once per t.Run table row sharing the same narrated intent) proves
+//     the SAME sentence-worthy behavior repeatedly, not several distinct
+//     behaviors — concatenating it N times (the bug this task fixes; see
+//     the real R-gate-pg0-source-ready example this task's brief captured
+//     verbatim, where one test's four identically-titled subscenarios
+//     quadrupled a single sentence in the derived Claim) never added
+//     information, only noise.
+//   - ACROSS two DIFFERENT verified_by entries, a repeated title is a
+//     distinct, worth-keeping signal instead of noise: it means two
+//     independently-declared tests happen to narrate identically, which is
+//     either (a) intentional — the SAME behavior is proven from two angles
+//     and the requirement's author wants both entries listed as
+//     independent proof, or (b) a genuine duplicate-coverage smell in the
+//     requirement's own verified_by list. Silently collapsing that
+//     cross-entry repeat would hide (b) instead of surfacing it, and would
+//     make Claim's word count an unreliable proxy for "how many
+//     independent verified_by entries actually contributed text" — a
+//     property callers (and human readers comparing verified_by's length
+//     to Claim's clause count) may reasonably lean on. Cross-entry
+//     duplication is therefore left visible on purpose, not swallowed here.
 func deriveClaimFromVerifiedBy(specRoot string, selfHosting bool, verifiedBy []string) (claim string, ok bool) {
 	var titles []string
 	for _, entry := range verifiedBy {
@@ -169,12 +205,17 @@ func deriveClaimFromVerifiedBy(specRoot string, selfHosting bool, verifiedBy []s
 		if result.Skipped || result.Err != nil || result.CompileFailed || !result.Passed {
 			continue
 		}
+		var entryTitles []string
+		seen := make(map[string]bool, len(result.Artifacts))
 		for _, art := range result.Artifacts {
 			title, verdictOK := scenarioArtifactTitleIfPass(art.RawJSON)
-			if verdictOK {
-				titles = append(titles, title)
+			if !verdictOK || seen[title] {
+				continue
 			}
+			seen[title] = true
+			entryTitles = append(entryTitles, title)
 		}
+		titles = append(titles, entryTitles...)
 	}
 	if len(titles) == 0 {
 		return "", false

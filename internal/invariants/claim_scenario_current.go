@@ -147,15 +147,26 @@ func checkClaimMatchesScenario(g *ontology.Graph) []Violation {
 
 // freshDerivedClaim mirrors internal/selfspec's own unexported
 // deriveClaimFromVerifiedBy exactly (same RunVerifiedByTestRecording +
-// concatenation logic) -- duplicated at this package boundary (internal/
-// invariants cannot reach an unexported function in internal/selfspec, and
-// exporting deriveClaimFromVerifiedBy from selfspec purely for this one
-// cross-package call would widen that package's public surface for a single
-// caller) via the SAME exported building blocks selfspec.
+// concatenation logic, INCLUDING its per-entry title deduplication -- task
+// #389/W0.2, see deriveClaimFromVerifiedBy's own doc comment for the full
+// local-vs-global dedup rationale this mirrors byte-for-byte: dedup titles
+// WITHIN one verified_by entry's own artifacts only, never across two
+// different verified_by entries) -- duplicated at this package boundary
+// (internal/invariants cannot reach an unexported function in
+// internal/selfspec, and exporting deriveClaimFromVerifiedBy from selfspec
+// purely for this one cross-package call would widen that package's public
+// surface for a single caller) via the SAME exported building blocks selfspec.
 // DeriveClaimsFromScenarios itself is built from: gate.RunVerifiedByTestRecording,
 // gate.ParseFileColonSymbol, and selfspec.ClaimDerivationSeparator (the one
 // exported constant naming the join separator, so the two copies can never
 // silently disagree on IT even though the surrounding loop is duplicated).
+// This function's own drift-detection purpose (checkClaimMatchesScenario
+// compares its return value against the graph's committed Claim) makes
+// keeping this dedup logic symmetric with selfspec's copy a HARD
+// requirement, not a nicety: an asymmetric fix here would make `hotam
+// sync-domain` (which writes via selfspec.DeriveClaimsFromScenarios) and
+// `check_claim_matches_scenario` (which reads via this function) permanently
+// disagree on the very same requirement's derived Claim.
 func freshDerivedClaim(specRoot string, selfHosting bool, verifiedBy []string) (claim string, ok bool) {
 	var titles []string
 	for _, entry := range verifiedBy {
@@ -167,12 +178,17 @@ func freshDerivedClaim(specRoot string, selfHosting bool, verifiedBy []string) (
 		if result.Skipped || result.Err != nil || result.CompileFailed || !result.Passed {
 			continue
 		}
+		var entryTitles []string
+		seen := make(map[string]bool, len(result.Artifacts))
 		for _, art := range result.Artifacts {
 			title, verdictOK := scenarioArtifactTitleForClaimCheck(art.RawJSON)
-			if verdictOK {
-				titles = append(titles, title)
+			if !verdictOK || seen[title] {
+				continue
 			}
+			seen[title] = true
+			entryTitles = append(entryTitles, title)
 		}
+		titles = append(titles, entryTitles...)
 	}
 	if len(titles) == 0 {
 		return "", false
@@ -187,13 +203,17 @@ var _ = All.MustRegister("check_claim_matches_scenario", Invariant{
 	Claim: "in a domain that is BOTH discipline:full AND claim_authority:\"scenario\" (task #388/W0.1 -- two " +
 		"independent opt-in triggers, not one), every Requirement in Claim-derivation scope (not INHERENTLY_PROSE, " +
 		"carries verified_by entries) has a Claim that matches the concatenation of its verified_by test(s)' " +
-		"currently-recorded hotamspec scenario description(s), joined by a single space, in verified_by's own declared " +
+		"currently-recorded hotamspec scenario description(s) (titles repeated WITHIN one verified_by entry's own " +
+		"subscenarios deduplicated to a single occurrence -- task #389/W0.2 -- but titles repeated ACROSS two " +
+		"different verified_by entries kept as-is), joined by a single space, in verified_by's own declared " +
 		"order; a domain missing EITHER trigger is an honest no-op.",
 	Rule: "IF g.Discipline == loader.DisciplineFull AND g.ClaimAuthorityScenario (task #388/W0.1: BOTH conditions " +
 		"required, neither replaces the other), THEN for every Requirement r where " +
 		"selfspec.RequirementInClaimDerivationScope(r) is true (Enforceability != INHERENTLY_PROSE AND len(VerifiedBy) > 0), " +
 		"a fresh re-derivation (running every verified_by entry via gate.RunVerifiedByTestRecording and concatenating each " +
-		"currently-passing entry's recorded scenario title(s), joined by selfspec.ClaimDerivationSeparator, in " +
+		"currently-passing entry's recorded scenario title(s) -- deduplicated to first-occurrence order WITHIN that single " +
+		"entry's own artifacts only, task #389/W0.2, never across two different verified_by entries -- joined by " +
+		"selfspec.ClaimDerivationSeparator, in " +
 		"verified_by's own declared order -- the SAME logic selfspec.DeriveClaimsFromScenarios performs at `hotam " +
 		"sync-domain` write time) MUST equal r.Claim exactly. A Requirement outside derivation scope, or one whose fresh " +
 		"derivation currently produces nothing at all (every verified_by entry fails to resolve/compile/pass, or records " +

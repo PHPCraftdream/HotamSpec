@@ -190,6 +190,56 @@ History predating this file is not backfilled — see `git log` and
   fixture helpers are untouched, left for a follow-up wave if this pilot proves durable.
 
 ### Fixed
+- **`deriveClaimFromVerifiedBy` (`internal/selfspec/claim_derive.go`) and its duplicated mirror
+  `freshDerivedClaim` (`internal/invariants/claim_scenario_current.go`) no longer repeat a
+  scenario title N times when N subscenarios inside ONE `verified_by` test share the same
+  `hotamspec.NewScenario(...)` title (task #389, W0.2).** A real fixture shaped like
+  `PRAT-hotam/domains/prat`'s `R-gate-pg0-source-ready` — one test that calls `t.Run` in a loop
+  over several sub-cases, each constructing its own `Scenario` with the IDENTICAL title, plus a
+  second `verified_by` entry with a distinct title — proved a fresh derivation currently
+  concatenates the repeated title once per subscenario before joining the trailing distinct
+  title on. **Before this fix** (reproduced on a controlled fixture matching the brief's
+  captured example verbatim): a fresh derivation for an `R-gate-pg0-source-ready`-shaped
+  requirement would read
+  > "SourceReady() only returns nil when columns, scope, and the project profile are ALL present
+  > SourceReady() only returns nil when columns, scope, and the project profile are ALL present
+  > SourceReady() only returns nil when columns, scope, and the project profile are ALL present
+  > SourceReady() only returns nil when columns, scope, and the project profile are ALL present
+  > Approve refuses to set ApprovedByPM when the artifact is not yet SourceReady, even if a
+  > caller tries to force approval"
+
+  (the four-subscenario sentence repeated once per sub-case, run against the live fixture in
+  `internal/selfspec` before the fix landed). **After this fix**, the same fixture derives:
+  > "SourceReady() only returns nil when columns, scope, and the project profile are ALL present
+  > Approve refuses to set ApprovedByPM when the artifact is not yet SourceReady, even if a
+  > caller tries to force approval"
+
+  — the repeated sentence contributes once, the distinct second-entry sentence follows
+  unchanged. **Fix**: both `deriveClaimFromVerifiedBy` and `freshDerivedClaim` now dedupe titles
+  with a `map[string]bool` scoped to ONE `verified_by` entry's own `result.Artifacts` loop
+  (first-occurrence order preserved via a parallel `entryTitles` slice), reset for every new
+  entry. **Deliberately scoped to a single entry, not global across a requirement's whole
+  `verified_by` list**: within one entry, a repeated title is a mechanical artifact of
+  loop-driven/`t.Run`-driven sub-cases narrating the identical sentence-worthy behavior — pure
+  noise. Across two DIFFERENT `verified_by` entries, a repeated title is a distinct signal
+  (either two tests intentionally proving the same behavior from two angles, worth keeping
+  visible as two clauses, or a duplicate-coverage smell in the requirement's own `verified_by`
+  list worth surfacing) — collapsing it globally would silently hide that signal and make
+  Claim's clause count an unreliable proxy for how many `verified_by` entries actually
+  contributed text. See `deriveClaimFromVerifiedBy`'s own doc comment
+  (`internal/selfspec/claim_derive.go`) for the full rationale, mirrored byte-for-byte in
+  `freshDerivedClaim`'s doc comment so `hotam sync-domain`'s write path and
+  `check_claim_matches_scenario`'s read path can never silently disagree on one requirement's
+  derived Claim again. New regression test
+  `TestDeriveClaimsFromScenarios_RepeatedSubscenarioTitleDedupedWithinEntry`
+  (`internal/selfspec/claim_derive_test.go`) proves the intra-entry dedup on a controlled
+  fixture; the pre-existing `TestDeriveClaimsFromScenarios_
+  MultiVerifiedByEntryConcatenatesInOrder` (proving two DIFFERENT verified_by entries still
+  concatenate in full, unaffected by this fix) stays green unmodified. `go build ./...`,
+  `go vet ./...`, `gofmt -l .` clean; full `go test ./... -timeout 45m -count=1` green (19
+  packages ok, 0 FAIL); `all-violations` 0 on both `domains/hotam-spec-self` and
+  `domains/hotam-dev`. Not applied to any `PRAT-hotam` domain — out of scope for this task, whose
+  own `claim_authority:"scenario"` opt-in (task #388) is not enabled there.
 - **`hashPackageInputs` (`internal/gate/test_exec.go`) no longer walks/hashes stray compiled
   build outputs at the module root (task #379, continuing task #378's profiling)** — task #378
   CPU-profiled three real heavy tests (`TestCmdSyncSelf_FullRoundTrip`,

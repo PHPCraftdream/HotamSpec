@@ -86,6 +86,44 @@ func TestBrdPackage_SignOff_AllowsZeroBlockers(t *testing.T) {
 `
 }
 
+// claimDeriveFixtureRepeatedSubscenarioTitleSrc mirrors the REAL,
+// resolver-verified bug this task (#389/W0.2) fixes: ONE test function that
+// calls hotamspec.NewScenario(t, id, "same title") from INSIDE a t.Run loop
+// over several sub-cases, each sub-case sharing the identical narrated
+// title -- exactly the shape that made PRAT-hotam's R-gate-pg0-source-ready
+// derive a Claim with one sentence repeated four times back to back before
+// this fix. A SECOND, differently-titled Scenario follows in its own
+// subtest, proving dedup collapses only the genuine repeat and leaves a
+// distinct title alone.
+func claimDeriveFixtureRepeatedSubscenarioTitleSrc(modulePath string) string {
+	return `package model
+
+import (
+	"testing"
+
+	"` + modulePath + `/hotamspec"
+)
+
+func TestBrdPackage_SignOff_RejectsBlockers(t *testing.T) {
+	cases := []int{1, 2, 3, 4}
+	for _, blockers := range cases {
+		t.Run("", func(t *testing.T) {
+			s := hotamspec.NewScenario(t, "R-claim-derive-repeat", "sign-off is rejected while a blocker is outstanding")
+			p := &BrdPackage{Blockers: blockers}
+			err := p.SignOff()
+			s.Then("sign-off returns an error", err != nil)
+		})
+	}
+	t.Run("allows_zero", func(t *testing.T) {
+		s := hotamspec.NewScenario(t, "R-claim-derive-repeat", "zero blockers alone is sufficient for sign-off")
+		p := &BrdPackage{Blockers: 0}
+		err := p.SignOff()
+		s.Then("sign-off succeeds", err == nil)
+	})
+}
+`
+}
+
 // claimDeriveFixturePlainTestSrc is a genuine, passing Go test that does NOT
 // use hotamspec at all (no scenario narrated) -- used to prove a
 // non-narrating verified_by entry contributes nothing to the derived Claim
@@ -215,6 +253,41 @@ func TestDeriveClaimsFromScenarios_MultiVerifiedByEntryConcatenatesInOrder(t *te
 	wantReversed := "zero blockers alone is sufficient for sign-off" + ClaimDerivationSeparator + "sign-off is rejected while a blocker is outstanding"
 	if got2.Claim != wantReversed {
 		t.Fatalf("reversed order: Claim = %q, want %q", got2.Claim, wantReversed)
+	}
+}
+
+// TestDeriveClaimsFromScenarios_RepeatedSubscenarioTitleDedupedWithinEntry is
+// the RED-then-GREEN regression proof for task #389/W0.2's fix: a SINGLE
+// verified_by entry whose test function narrates four sub-cases via
+// t.Run-nested hotamspec.NewScenario calls sharing the IDENTICAL title must
+// contribute that title to the derived Claim exactly ONCE (first-occurrence
+// position), never four times back to back -- reproducing, on a controlled
+// fixture, the exact real bug the task brief captured verbatim from
+// PRAT-hotam's R-gate-pg0-source-ready (a fresh derivation there repeated
+// "SourceReady() only returns nil when columns, scope, and the project
+// profile are ALL present" four times in a row before this fix). The
+// trailing, genuinely DIFFERENT title from the fixture's fifth subtest must
+// still be concatenated afterward -- proving dedup removes only the true
+// repeat, not every subsequent title.
+func TestDeriveClaimsFromScenarios_RepeatedSubscenarioTitleDedupedWithinEntry(t *testing.T) {
+	if testing.Short() {
+		t.Skip("claim-derive e2e: discipline=full + ENFORCEABLE + verified_by in scope drives DeriveClaimsFromScenarios into a real go build/go test subprocess via gate.RunVerifiedByTestRecording; skipped in -short")
+	}
+	root := writeClaimDeriveFixtureModule(t, map[string]string{
+		"impl_test.go": claimDeriveFixtureRepeatedSubscenarioTitleSrc("example.com/claimderive"),
+	})
+	reg := registry.New[ontology.Requirement]()
+	r := claimDeriveFixtureReq("R-claim-derive-repeat", []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}, ontology.EnforceabilityENFORCEABLE)
+	reg.MustRegister(r.ID, r)
+
+	changed := DeriveClaimsFromScenarios(reg, root, false, loader.DisciplineFull)
+	if len(changed) != 1 || changed[0] != r.ID {
+		t.Fatalf("expected exactly %s to be reported changed, got %v", r.ID, changed)
+	}
+	got, _ := reg.Get(r.ID)
+	want := "sign-off is rejected while a blocker is outstanding" + ClaimDerivationSeparator + "zero blockers alone is sufficient for sign-off"
+	if got.Claim != want {
+		t.Fatalf("Claim = %q, want %q (the repeated sub-case title must contribute only once, in first-occurrence order, followed by the distinct trailing title)", got.Claim, want)
 	}
 }
 
