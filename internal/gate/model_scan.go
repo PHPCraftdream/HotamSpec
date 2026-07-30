@@ -55,22 +55,76 @@ import (
 )
 
 // ModelObject is one rendered type declaration: its name, kind (struct/
-// interface/other), fields (struct only), and methods (functions with this
+// interface/other), fields (struct only), methods (functions with this
 // type as receiver, matched by base type name so both pointer and value
-// receivers collapse onto the same object).
+// receivers collapse onto the same object, PLUS -- for an interface kind --
+// the interface's own declared method set, InterfaceMethods), and any
+// exported typed const values declared against this type (Consts, e.g. a
+// `type Status string; const ( StatusA Status = "a"; ... )` enum group).
 type ModelObject struct {
 	Name    string
 	Kind    string // "struct" | "interface" | "type"
 	Doc     string
 	Fields  []ModelField
 	Methods []ModelMethod
+	// InterfaceMethods holds this object's own method set when Kind ==
+	// "interface" -- the contract an interface type DECLARES, as opposed to
+	// Methods (functions authored elsewhere with this type as receiver,
+	// which a plain interface type never has since Go forbids methods on an
+	// interface type itself). Populated only for Kind == "interface"; nil
+	// otherwise. This is priority #1 of task #393 (W1.1): an interface is a
+	// port/mock contract with the outside world, and before this field
+	// existed MODELS.md showed the interface's NAME with no visible
+	// methods, i.e. an empty-looking port.
+	InterfaceMethods []ModelInterfaceMethod
+	// Consts holds every exported `const` value declared with this object's
+	// own type (e.g. `const StatusActive Status = "active"` when Name ==
+	// "Status") -- an enum-value group. Populated for any Kind (typically
+	// "type" for a named string/int alias); nil when no such const exists.
+	Consts []ModelConst
+}
+
+// ModelInterfaceMethod is one method declared directly in an interface
+// type's own method-set list (as opposed to ModelMethod, which is a
+// receiver-method authored elsewhere against a concrete type). Embedded
+// interfaces (a bare type name with no method list, e.g. `io.Reader`) are
+// recorded as a single ModelInterfaceMethod with Embedded set and no
+// Signature/Params/Results, matching how the AST actually represents them
+// (an *ast.Field with no Names).
+type ModelInterfaceMethod struct {
+	Name      string
+	Signature string // "Recognize(photo []byte) (VehicleID, error)"-shaped rendering, no receiver
+	Doc       string
+	Embedded  string // set instead of Name/Signature when this entry is an embedded interface, e.g. "io.Reader"
+}
+
+// ModelConst is one exported `const` declaration whose own type matches its
+// enclosing ModelObject's Name (a typed enum-value member), or -- for a
+// plain untyped/primitive const group not attached to any declared type --
+// a top-level entry surfaced on ModelFile.Consts instead. Value is the
+// literal's source-shaped text (e.g. `"active"`, `3`), not an evaluated
+// Go value, consistent with this scan's read-only/non-executing charter.
+type ModelConst struct {
+	Name  string
+	Typ   string // "" for an untyped/inferred const
+	Value string
+	Doc   string
 }
 
 // ModelField is one declared field of a struct-typed ModelObject (one entry
-// per declared name; embedded and multi-name declarations expand).
+// per declared name; embedded and multi-name declarations expand). Tag
+// holds the field's raw struct tag text exactly as written (e.g.
+// `json:"name,omitempty" validate:"required"`), unparsed -- this scan does
+// not interpret any specific tag vocabulary (encoding/json, validator
+// libraries, ...), it only preserves the literal text for rendering. Doc
+// holds the field's own doc comment (the comment group immediately above
+// the field declaration), independent of the enclosing ModelObject's own
+// Doc.
 type ModelField struct {
 	Name string
 	Typ  string
+	Tag  string
+	Doc  string
 }
 
 // ModelMethod is one method declared with a ModelObject's type as receiver
@@ -89,6 +143,18 @@ type ModelError struct {
 	Doc  string
 }
 
+// ModelFunc is one exported top-level `func` declaration that is NOT a
+// receiver method (FuncDecl.Recv == nil) -- a constructor (`func
+// NewWidget(...) *Widget`) or any other domain-authored top-level function.
+// Kept distinct from ModelObject.Methods (which are always receiver-bound)
+// so rendering can label constructors/free functions separately from a
+// type's own method set, per task #393 (W1.1) priority #2.
+type ModelFunc struct {
+	Name      string
+	Signature string // "func NewWidget(name string) *Widget"-shaped rendering
+	Doc       string
+}
+
 // ModelFile is one parsed authored Go source file's extracted inventory,
 // keyed by its path relative to the scan root (specRoot for an ordinary
 // domain, engineRoot for self-hosting) so callers can group by file and
@@ -98,6 +164,17 @@ type ModelFile struct {
 	Pkg     string
 	Objects []ModelObject
 	Errors  []ModelError
+	// Funcs holds every exported top-level function that is not a receiver
+	// method (constructors and other free functions), sorted by name.
+	Funcs []ModelFunc
+	// Consts holds every exported top-level `const` declaration whose type
+	// does NOT match any ModelObject declared in this same file (an
+	// untyped/primitive const group, or one typed against a type declared
+	// elsewhere/not itself exported) -- a typed const whose type IS one of
+	// this file's own ModelObjects is attached to that object's own Consts
+	// field instead (see ModelObject.Consts), so a typed enum group renders
+	// next to its type rather than being duplicated here.
+	Consts []ModelConst
 }
 
 // ScanAuthoredModels runs the SAME source selection BuildModels/ScanModelLayerCounts
@@ -352,12 +429,19 @@ func IsGeneratedOrVendoredFile(path string) bool {
 
 // extractModelFile walks one parsed *ast.File's top-level declarations into
 // a ModelFile: GenDecl(TYPE) -> ModelObject (struct fields extracted when
-// the underlying type is *ast.StructType), FuncDecl with a receiver ->
+// the underlying type is *ast.StructType; interface methods extracted when
+// the underlying type is *ast.InterfaceType), FuncDecl with a receiver ->
 // attached to the matching ModelObject by base receiver type name,
-// GenDecl(VAR) whose spec name starts with "Err" -> ModelError. Everything
-// is re-sorted (objects/methods/errors sorted by name; struct fields left
-// declaration-ordered since field order is itself meaningful API surface)
-// so output is deterministic regardless of source declaration order.
+// FuncDecl WITHOUT a receiver -> ModelFunc (constructors/top-level
+// functions), GenDecl(VAR) whose spec name starts with "Err" ->
+// ModelError, GenDecl(CONST) -> ModelConst, attached to the matching
+// ModelObject when the const's own type names one of this file's objects,
+// else collected on ModelFile.Consts directly. Everything is re-sorted
+// (objects/methods/interface-methods/errors/funcs sorted by name; struct
+// fields and const groups left declaration-ordered since that order is
+// itself meaningful API surface -- a field list's shape and an enum's
+// member order are both authored intent) so output is deterministic
+// regardless of source declaration order.
 func extractModelFile(astFile *ast.File, relPath string) ModelFile {
 	f := ModelFile{RelPath: relPath, Pkg: astFile.Name.Name}
 
@@ -386,6 +470,7 @@ func extractModelFile(astFile *ast.File, relPath string) ModelFile {
 					obj.Fields = extractFields(t)
 				case *ast.InterfaceType:
 					obj.Kind = "interface"
+					obj.InterfaceMethods = extractInterfaceMethods(t)
 				default:
 					obj.Kind = "type"
 				}
@@ -412,9 +497,72 @@ func extractModelFile(astFile *ast.File, relPath string) ModelFile {
 		}
 	}
 
+	// Second pass for CONST groups: deferred until after every TYPE spec has
+	// been collected into objByName, so a typed const referencing a type
+	// declared LATER in the same file (or earlier -- declaration order
+	// within one file is not otherwise significant) still resolves to its
+	// object correctly regardless of which GenDecl comes first in
+	// astFile.Decls.
+	lastTypeName := "" // iota-style groups can omit the type on later ValueSpecs, inheriting the prior spec's type
+	for _, decl := range astFile.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok || gd.Tok != token.CONST {
+			continue
+		}
+		lastTypeName = ""
+		for _, spec := range gd.Specs {
+			vs, ok := spec.(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+			typeName := ""
+			if vs.Type != nil {
+				typeName = exprToString(vs.Type)
+				lastTypeName = typeName
+			} else if len(vs.Values) == 0 {
+				// No explicit type and no explicit value: an iota-style
+				// continuation line inherits the previous ValueSpec's type.
+				typeName = lastTypeName
+			}
+			for i, name := range vs.Names {
+				if !name.IsExported() {
+					continue
+				}
+				doc := docText(gd.Doc)
+				if doc == "" && i == 0 {
+					doc = docText(vs.Doc)
+				}
+				value := ""
+				if i < len(vs.Values) {
+					value = exprToString(vs.Values[i])
+				}
+				mc := ModelConst{Name: name.Name, Typ: typeName, Value: value, Doc: doc}
+				if obj, ok := objByName[typeName]; ok {
+					obj.Consts = append(obj.Consts, mc)
+				} else {
+					f.Consts = append(f.Consts, mc)
+				}
+			}
+		}
+	}
+
 	for _, decl := range astFile.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
-		if !ok || fn.Recv == nil || len(fn.Recv.List) == 0 {
+		if !ok {
+			continue
+		}
+		if fn.Recv == nil || len(fn.Recv.List) == 0 {
+			// Not a receiver method: a constructor or other top-level
+			// function. Only exported ones count as domain-authored public
+			// surface, same exportedness gate every other category here
+			// applies (types, errors, consts).
+			if fn.Name.IsExported() {
+				f.Funcs = append(f.Funcs, ModelFunc{
+					Name:      fn.Name.Name,
+					Signature: renderFuncSignature(fn, ""),
+					Doc:       docText(fn.Doc),
+				})
+			}
 			continue
 		}
 		baseName := receiverBaseTypeName(fn.Recv)
@@ -434,12 +582,26 @@ func extractModelFile(astFile *ast.File, relPath string) ModelFile {
 	for _, name := range objOrder {
 		obj := objByName[name]
 		sort.Slice(obj.Methods, func(i, j int) bool { return obj.Methods[i].Name < obj.Methods[j].Name })
+		sort.Slice(obj.InterfaceMethods, func(i, j int) bool {
+			return interfaceMethodSortKey(obj.InterfaceMethods[i]) < interfaceMethodSortKey(obj.InterfaceMethods[j])
+		})
 		f.Objects = append(f.Objects, *obj)
 	}
 	sort.Slice(f.Objects, func(i, j int) bool { return f.Objects[i].Name < f.Objects[j].Name })
 	sort.Slice(f.Errors, func(i, j int) bool { return f.Errors[i].Name < f.Errors[j].Name })
+	sort.Slice(f.Funcs, func(i, j int) bool { return f.Funcs[i].Name < f.Funcs[j].Name })
 
 	return f
+}
+
+// interfaceMethodSortKey gives a stable sort key for a ModelInterfaceMethod:
+// its own method Name when set, else its Embedded interface name (an
+// embedded interface entry has no Name).
+func interfaceMethodSortKey(m ModelInterfaceMethod) string {
+	if m.Name != "" {
+		return m.Name
+	}
+	return m.Embedded
 }
 
 // extractFields renders a struct type's field list as ModelFields, one per
@@ -447,7 +609,11 @@ func extractModelFile(astFile *ast.File, relPath string) ModelFile {
 // `X, Y int` both expand to one ModelField per name). Unexported fields are
 // included too -- the inventory is of the WHOLE shape a domain author wrote,
 // not just its public API, since an authored spec/ model commonly keeps its
-// invariant-carrying fields unexported on purpose.
+// invariant-carrying fields unexported on purpose. Tag carries the field's
+// raw struct tag text verbatim (e.g. `json:"name,omitempty"`, "" when the
+// field has none); Doc carries the field's own doc comment, independent of
+// any multi-name sibling on the same declaration line and independent of
+// the enclosing type's own Doc.
 func extractFields(t *ast.StructType) []ModelField {
 	if t.Fields == nil {
 		return nil
@@ -455,16 +621,69 @@ func extractFields(t *ast.StructType) []ModelField {
 	var fields []ModelField
 	for _, field := range t.Fields.List {
 		typeStr := exprToString(field.Type)
+		tag := ""
+		if field.Tag != nil {
+			tag = strings.Trim(field.Tag.Value, "`")
+		}
+		doc := docText(field.Doc)
 		if len(field.Names) == 0 {
 			// Embedded field: name is the type's own base identifier.
-			fields = append(fields, ModelField{Name: typeStr, Typ: typeStr})
+			fields = append(fields, ModelField{Name: typeStr, Typ: typeStr, Tag: tag, Doc: doc})
 			continue
 		}
 		for _, n := range field.Names {
-			fields = append(fields, ModelField{Name: n.Name, Typ: typeStr})
+			fields = append(fields, ModelField{Name: n.Name, Typ: typeStr, Tag: tag, Doc: doc})
 		}
 	}
 	return fields
+}
+
+// extractInterfaceMethods renders an interface type's own declared method
+// set (the contract it specifies) as ModelInterfaceMethods -- one per
+// method (rendered without a receiver, since an interface method has none)
+// and one per embedded interface (a bare type name with no method list,
+// e.g. `io.Reader`, recorded with Embedded set instead of Name/Signature).
+// Unexported interface methods ARE included (mirroring extractFields'
+// same "whole authored shape, not just exported surface" policy) since an
+// unexported interface method is still part of the contract a same-package
+// mock must satisfy.
+func extractInterfaceMethods(t *ast.InterfaceType) []ModelInterfaceMethod {
+	if t.Methods == nil {
+		return nil
+	}
+	var methods []ModelInterfaceMethod
+	for _, field := range t.Methods.List {
+		doc := docText(field.Doc)
+		if len(field.Names) == 0 {
+			// Embedded interface: no name, the type expression IS the
+			// embedded interface's own identifier (possibly qualified,
+			// e.g. io.Reader, or a union/approximation element in a type
+			// set -- exprToString degrades unknown shapes to "?" rather
+			// than panicking).
+			methods = append(methods, ModelInterfaceMethod{Embedded: exprToString(field.Type), Doc: doc})
+			continue
+		}
+		ft, ok := field.Type.(*ast.FuncType)
+		if !ok {
+			// A named type-set element (Go 1.18+ generic interface
+			// constraint, e.g. `Ordered interface { int | float64 }`) --
+			// not a callable method. Record it as an embedded-shaped entry
+			// under its own name so the constraint element is still
+			// visible rather than silently dropped.
+			for _, n := range field.Names {
+				methods = append(methods, ModelInterfaceMethod{Embedded: n.Name, Doc: doc})
+			}
+			continue
+		}
+		for _, n := range field.Names {
+			methods = append(methods, ModelInterfaceMethod{
+				Name:      n.Name,
+				Signature: n.Name + renderFieldList(ft.Params, true) + renderResultSuffix(ft.Results),
+				Doc:       doc,
+			})
+		}
+	}
+	return methods
 }
 
 // renderReceiverType renders a method receiver's type expression back to
@@ -473,8 +692,12 @@ func renderReceiverType(expr ast.Expr) string {
 	return exprToString(expr)
 }
 
-// renderFuncSignature renders a method's full signature the way it appears
-// in source: "func (r *Risk) Validate(ctx context.Context) error".
+// renderFuncSignature renders a function or method's full signature the way
+// it appears in source: "func (r *Risk) Validate(ctx context.Context)
+// error" for a receiver method, "func NewRisk(name string) *Risk" for a
+// top-level function (fn.Recv == nil, recvType then unused). Shared by both
+// ModelMethod (receiver methods) and ModelFunc (top-level functions) so the
+// two categories render results/params identically.
 func renderFuncSignature(fn *ast.FuncDecl, recvType string) string {
 	var b strings.Builder
 	b.WriteString("func ")
@@ -487,15 +710,27 @@ func renderFuncSignature(fn *ast.FuncDecl, recvType string) string {
 	}
 	b.WriteString(fn.Name.Name)
 	b.WriteString(renderFieldList(fn.Type.Params, true))
-	if fn.Type.Results != nil {
-		results := renderFieldList(fn.Type.Results, false)
-		if len(fn.Type.Results.List) == 1 && len(fn.Type.Results.List[0].Names) == 0 {
-			b.WriteString(" " + strings.Trim(results, "()"))
-		} else {
-			b.WriteString(" " + results)
-		}
-	}
+	b.WriteString(renderResultSuffix(fn.Type.Results))
 	return b.String()
+}
+
+// renderResultSuffix renders a function/method/interface-method's result
+// field list as the trailing " T" / " (a A, b B)"-shaped suffix that
+// follows its parameter list in source (a single unnamed result is
+// rendered bare, without parens; anything else keeps parens) -- "" when
+// results is nil (no results). Shared by renderFuncSignature (receiver
+// methods and top-level functions) and extractInterfaceMethods (interface
+// methods, which have no *ast.FuncDecl to hang this on) so all three
+// categories render results identically.
+func renderResultSuffix(results *ast.FieldList) string {
+	if results == nil {
+		return ""
+	}
+	rendered := renderFieldList(results, false)
+	if len(results.List) == 1 && len(results.List[0].Names) == 0 {
+		return " " + strings.Trim(rendered, "()")
+	}
+	return " " + rendered
 }
 
 // renderFieldList renders a parameter or result field list back to

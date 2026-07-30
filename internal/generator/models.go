@@ -44,7 +44,10 @@ import (
 type modelObject = gate.ModelObject
 type modelField = gate.ModelField
 type modelMethod = gate.ModelMethod
+type modelInterfaceMethod = gate.ModelInterfaceMethod
+type modelConst = gate.ModelConst
 type modelError = gate.ModelError
+type modelFunc = gate.ModelFunc
 type modelFile = gate.ModelFile
 
 // isVendoredRecorderFile re-exports gate.IsGeneratedOrVendoredFile under the
@@ -133,13 +136,14 @@ func BuildModels(g *ontology.Graph) string {
 		return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 	}
 
-	totalObjects, totalErrors := 0, 0
+	totalObjects, totalErrors, totalFuncs := 0, 0, 0
 	for _, f := range files {
 		totalObjects += len(f.Objects)
 		totalErrors += len(f.Errors)
+		totalFuncs += len(f.Funcs)
 	}
 	lines = append(lines,
-		"**"+itoa(len(files))+" file(s) scanned; "+itoa(totalObjects)+" object(s); "+itoa(totalErrors)+" typed error(s).**")
+		"**"+itoa(len(files))+" file(s) scanned; "+itoa(totalObjects)+" object(s); "+itoa(totalFuncs)+" top-level function(s); "+itoa(totalErrors)+" typed error(s).**")
 	lines = append(lines, "")
 	lines = append(lines, "---")
 	lines = append(lines, "")
@@ -152,8 +156,8 @@ func BuildModels(g *ontology.Graph) string {
 			lines = append(lines, "")
 		}
 
-		if len(f.Objects) == 0 && len(f.Errors) == 0 {
-			lines = append(lines, "_No exported objects or typed errors in this file._")
+		if len(f.Objects) == 0 && len(f.Errors) == 0 && len(f.Funcs) == 0 && len(f.Consts) == 0 {
+			lines = append(lines, "_No exported objects, functions, constants, or typed errors in this file._")
 			lines = append(lines, "")
 			continue
 		}
@@ -168,10 +172,29 @@ func BuildModels(g *ontology.Graph) string {
 			if len(obj.Fields) > 0 {
 				lines = append(lines, "**Fields:**")
 				lines = append(lines, "")
-				lines = append(lines, "| field | type |")
-				lines = append(lines, "|---|---|")
+				lines = append(lines, "| field | type | tag | doc |")
+				lines = append(lines, "|---|---|---|---|")
 				for _, fld := range obj.Fields {
-					lines = append(lines, "| `"+fld.Name+"` | `"+fld.Typ+"` |")
+					tagCell := ""
+					if fld.Tag != "" {
+						tagCell = "`" + fld.Tag + "`"
+					}
+					lines = append(lines, "| `"+fld.Name+"` | `"+fld.Typ+"` | "+tagCell+" | "+Cell(fld.Doc)+" |")
+				}
+				lines = append(lines, "")
+			}
+			if len(obj.InterfaceMethods) > 0 {
+				lines = append(lines, "**Interface methods:**")
+				lines = append(lines, "")
+				for _, im := range obj.InterfaceMethods {
+					if im.Embedded != "" {
+						lines = append(lines, "- embeds `"+im.Embedded+"`")
+					} else {
+						lines = append(lines, "- `"+im.Signature+"`")
+					}
+					if im.Doc != "" {
+						lines = append(lines, "  "+Cell(im.Doc))
+					}
 				}
 				lines = append(lines, "")
 			}
@@ -186,6 +209,43 @@ func BuildModels(g *ontology.Graph) string {
 				}
 				lines = append(lines, "")
 			}
+			if len(obj.Consts) > 0 {
+				lines = append(lines, "**Values:**")
+				lines = append(lines, "")
+				lines = append(lines, "| name | value | doc |")
+				lines = append(lines, "|---|---|---|")
+				for _, c := range obj.Consts {
+					lines = append(lines, "| `"+c.Name+"` | `"+c.Value+"` | "+Cell(c.Doc)+" |")
+				}
+				lines = append(lines, "")
+			}
+		}
+
+		if len(f.Funcs) > 0 {
+			lines = append(lines, "**Functions:**")
+			lines = append(lines, "")
+			for _, fn := range f.Funcs {
+				lines = append(lines, "- `"+fn.Signature+"`")
+				if fn.Doc != "" {
+					lines = append(lines, "  "+Cell(fn.Doc))
+				}
+			}
+			lines = append(lines, "")
+		}
+
+		if len(f.Consts) > 0 {
+			lines = append(lines, "**Constants:**")
+			lines = append(lines, "")
+			lines = append(lines, "| name | type | value | doc |")
+			lines = append(lines, "|---|---|---|---|")
+			for _, c := range f.Consts {
+				typCell := ""
+				if c.Typ != "" {
+					typCell = "`" + c.Typ + "`"
+				}
+				lines = append(lines, "| `"+c.Name+"` | "+typCell+" | `"+c.Value+"` | "+Cell(c.Doc)+" |")
+			}
+			lines = append(lines, "")
 		}
 
 		if len(f.Errors) > 0 {

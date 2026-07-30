@@ -41,10 +41,13 @@ func (w *Widget) IsReady() bool {
 `
 
 // writeModelScanVendorExclusionFixture builds a domain directory that has
-// gone through BOTH real vendoring/scaffolding steps this task closes the
-// exclusion gap for -- `hotam vendor-ontology` (task #365,
-// spec/hotamontology/requirement.go + registry.go) and
-// `hotam scaffold-registrydump` (task #367, spec/registrydump/main.go) --
+// gone through ALL THREE real vendoring/scaffolding steps this exclusion
+// covers -- `hotam vendor-ontology` (task #365,
+// spec/hotamontology/requirement.go + registry.go), `hotam
+// scaffold-registrydump` (task #367, spec/registrydump/main.go), and `hotam
+// vendor-recorder` (spec/hotamspec/hotamspec.go, added to this shared
+// fixture by task #393/W1.1 since it is the one producer whose source
+// declares an interface + typed const group + top-level constructor) --
 // PLUS a real domain-authored model file at spec/model/registry.go. Modeled
 // directly on newSyncDomainFixture (sync_domain_test.go)'s spec/ scaffolding
 // sequence, minus the requirements.go/sync-domain-specific pieces this test
@@ -72,6 +75,17 @@ func writeModelScanVendorExclusionFixture(t *testing.T) (domainDir string) {
 	// Requires the vendored hotamontology package to already exist (just written above).
 	if _, err := scaffoldRegistrydump(domainDir); err != nil {
 		t.Fatalf("scaffoldRegistrydump: %v", err)
+	}
+
+	// Real vendor-recorder writer -- spec/hotamspec/hotamspec.go. Task #393
+	// (W1.1) added this to the fixture: the recorder is the one vendored
+	// producer whose own source genuinely declares an interface (T), a typed
+	// const enum group (StepKind/StepGiven/...), and a top-level constructor
+	// (NewScenario) -- exactly the three NEW extraction categories task #393
+	// adds, so this fixture proves all of them stay excluded, not just the
+	// pre-existing struct/method/Err-var categories task #391 covered.
+	if _, err := vendorRecorder(domainDir); err != nil {
+		t.Fatalf("vendorRecorder: %v", err)
 	}
 
 	// Real domain-authored model, deliberately named registry.go -- see
@@ -160,6 +174,76 @@ func TestScanAuthoredModels_ExcludesVendorOntologyAndRegistrydumpScaffold(t *tes
 			t.Errorf("MODELS.md leaked vendored/generated content %q -- vendored ontology mirror and registrydump scaffold must be excluded entirely:\n%s", forbidden, rendered)
 		}
 	}
+}
+
+// TestScanAuthoredModels_ExcludesVendoredInterfacesConstructorsAndConsts is
+// task #393's (W1.1) own regression proof that the NEW extraction
+// categories it adds (interface methods, top-level constructors, typed
+// const groups) never punch a hole back through task #391's (W0.4) vendor
+// exclusion: the real vendored recorder copy this fixture plants
+// (spec/hotamspec/hotamspec.go, byte-for-byte recordervendor.Source()) is
+// not a toy -- it genuinely declares an interface (T, with 3 methods), a
+// typed const enum group (StepKind/StepGiven/StepWhen/StepThen/StepValue),
+// and a top-level constructor (NewScenario) -- exactly the three shapes
+// task #393 taught ScanAuthoredModels to extract. Before this scan's new
+// categories existed there was nothing to leak; now that InterfaceMethods/
+// Funcs/Consts extraction exists, this proves parseModelFiles' single
+// choke point (IsGeneratedOrVendoredFile, checked before extractModelFile
+// is ever called) still keeps ALL of them out, not just the previously
+// existing struct/method/Err-var categories.
+func TestScanAuthoredModels_ExcludesVendoredInterfacesConstructorsAndConsts(t *testing.T) {
+	domainDir := writeModelScanVendorExclusionFixture(t)
+
+	g := &ontology.Graph{
+		DomainDir:   domainDir,
+		SelfHosting: false,
+		Stakeholders: []ontology.Stakeholder{
+			{ID: "fixture-owner", Name: "Fixture Owner", DeclOrder: 1},
+		},
+	}
+
+	files, err := gate.ScanAuthoredModels(g)
+	if err != nil {
+		t.Fatalf("ScanAuthoredModels: %v", err)
+	}
+	if len(files) != 1 || files[0].RelPath != "spec/model/registry.go" {
+		t.Fatalf("ScanAuthoredModels files = %v, want exactly [spec/model/registry.go]", files)
+	}
+	f := files[0]
+
+	// The vendored recorder's own top-level constructor (NewScenario) and
+	// interface (T) must never surface in the domain-authored inventory --
+	// only the fixture's own Widget/IsReady content is domain-authored.
+	for _, fn := range f.Funcs {
+		if fn.Name == "NewScenario" {
+			t.Errorf("Funcs leaked vendored recorder constructor NewScenario: %+v", f.Funcs)
+		}
+	}
+	for _, obj := range f.Objects {
+		if obj.Name == "T" || obj.Name == "recordT" || obj.Name == "StepKind" || obj.Name == "Scenario" {
+			t.Errorf("Objects leaked vendored recorder type %q: %v", obj.Name, objectNamesForTest(f))
+		}
+	}
+	if len(f.Consts) != 0 {
+		t.Errorf("f.Consts leaked vendored recorder StepKind enum values: %v", f.Consts)
+	}
+
+	// Belt-and-braces: render MODELS.md and prove none of the vendored
+	// interface/const/constructor symbols leak into the rendered doc either.
+	rendered := generator.BuildModels(g)
+	for _, forbidden := range []string{"NewScenario", "StepGiven", "StepWhen", "StepThen", "recordT", "Recognize(photo"} {
+		if strings.Contains(rendered, forbidden) {
+			t.Errorf("MODELS.md leaked vendored recorder content %q (interface/const/constructor category):\n%s", forbidden, rendered)
+		}
+	}
+}
+
+func objectNamesForTest(f gate.ModelFile) []string {
+	var names []string
+	for _, obj := range f.Objects {
+		names = append(names, obj.Name)
+	}
+	return names
 }
 
 // TestIsGeneratedOrVendoredFile_RecognizesAllThreeKnownBanners is the direct

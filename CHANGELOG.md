@@ -17,6 +17,51 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`gate.ScanAuthoredModels`'s AST scan now extracts interface methods, top-level functions/constructors,
+  typed const enum groups, struct field doc comments, and raw struct tags (task #393, W1.1).** Before this
+  task, the scan (`internal/gate/model_scan.go`) inventoried only exported top-level types, struct fields
+  (name+type only), receiver methods, and `Err*` sentinel vars — an `interface` type rendered in MODELS.md
+  as a bare name with NO visible method set, so a port/mock contract with the outside world (e.g.
+  `domains/gpsm-sm`'s `OcrRecognizer` seam) looked empty even though it names a real contract. Priority #1
+  of this task closes exactly that gap.
+  - `ModelObject` gained `InterfaceMethods []ModelInterfaceMethod` (populated only for `Kind == "interface"`
+    — the interface's own declared method set, rendered as readable `Name(params) (results)` signatures, with
+    embedded interfaces recorded via `Embedded` instead of `Name`/`Signature`) and `Consts []ModelConst` (an
+    exported typed const enum group whose own type matches this object's `Name`, e.g. `type Status string;
+    const StatusActive Status = "active"`, kept in declaration order — enum member order is itself authored
+    intent, not alphabetized).
+  - New `ModelFunc` (`Name`/`Signature`/`Doc`) captures every exported top-level (non-receiver) `func` —
+    constructors (`NewWidget`) and other free functions — on `ModelFile.Funcs`, sorted by name; a function
+    with a receiver is unaffected (still attaches to its `ModelObject.Methods` exactly as before).
+  - `ModelFile` gained `Consts []ModelConst` for exported top-level const declarations whose type does NOT
+    match any object declared in the same file (untyped/primitive const groups, e.g. `const MaxRetries = 3`)
+    — a typed enum group attaches to its own type's `ModelObject.Consts` instead, so it renders next to its
+    type rather than being duplicated at file level.
+  - `ModelField` gained `Tag` (the field's raw struct tag text verbatim, e.g. `json:"name,omitempty"
+    validate:"required"` — unparsed; this scan does not interpret any specific tag vocabulary, only preserves
+    the literal text) and `Doc` (the field's own doc comment, independent of the enclosing type's `Doc`).
+  - `internal/generator/models.go`'s `BuildModels` (MODELS.md renderer) gained matching sections: an
+    "Interface methods:" list per interface object, a "Functions:" list per file, a "Values:"
+    table per object carrying a typed const group, and a file-level "Constants:" table for untyped consts;
+    the existing Fields table grew `tag`/`doc` columns. The summary line grew a
+    "N top-level function(s)" count. `ModelLayerCounts`/`ScanModelLayerCounts` (COVERAGE.md's narrower
+    models→fields→methods→tests layer ratchet) are UNCHANGED — this task only extends MODELS.md's fuller
+    inventory, not COVERAGE.md's layer-progression counts.
+  - Task #391's (W0.4) vendor/generated-file exclusion (`IsGeneratedOrVendoredFile`) needed NO code change:
+    every new category is extracted inside `extractModelFile`, which `parseModelFiles` only ever calls AFTER
+    the exclusion check — the same single choke point automatically covers interfaces/functions/consts too.
+    Verified experimentally: `cmd/hotam/model_scan_vendor_exclusion_test.go` gained
+    `TestScanAuthoredModels_ExcludesVendoredInterfacesConstructorsAndConsts`, extending the shared fixture
+    with a real `hotam vendor-recorder` copy (whose own source genuinely declares an interface `T`, a typed
+    const enum group `StepKind`, and a top-level constructor `NewScenario`) and proving none of the three
+    leak into the scan or into rendered MODELS.md.
+  - New unit tests: `internal/gate/model_scan_test.go` (interface methods incl. embedding/sorting,
+    constructors vs. unexported top-level funcs, typed vs. untyped const groups in declaration order, struct
+    tag/field-doc preservation) and `internal/generator/models_new_categories_test.go` (end-to-end MODELS.md
+    rendering of all five new categories against a fixture modeled on the real `OcrRecognizer` port).
+  - Regenerating `docs/gen/` for `hotam-spec-self` (self-hosting: scans the engine's own linked files) grew
+    MODELS.md from 339 to 785 lines purely from previously-invisible top-level functions, struct tags, and
+    const groups now surfacing on the engine's own real code — an expected, not accidental, growth.
 - **`ProposedGoal` and `ProposedEntityInstance` proposal kinds resolve the "no sanctioned write path"
   gap for the `Goal` and `EntityInstance` graph node types (task #392, W0.5).** Neither type had a
   Go-authored path (`internal/ontology/canon/` vendors only `Requirement`+`Registry`) nor a JSON-proposal
