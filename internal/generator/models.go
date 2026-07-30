@@ -163,7 +163,7 @@ func BuildModels(g *ontology.Graph) string {
 		}
 
 		for _, obj := range f.Objects {
-			lines = append(lines, "### `"+obj.Name+"` ("+obj.Kind+")")
+			lines = append(lines, "### `"+obj.Name+"` ("+modelKindHeadingSuffix(obj)+")")
 			lines = append(lines, "")
 			if obj.Doc != "" {
 				lines = append(lines, Cell(obj.Doc))
@@ -301,6 +301,24 @@ func ScanModelLayerCounts(g *ontology.Graph) (ModelLayerCounts, error) {
 		}
 	}
 	return c, nil
+}
+
+// modelKindHeadingSuffix renders an object's "(kind)" or "(kind, modelkind)"
+// heading parenthetical (task #394, W1.2): obj.ModelKind == "object" (the
+// common-case default) or "" (empty/unset -- defense only, should never
+// happen post-classification since classifyModelKind always assigns one of
+// the five values) renders exactly as before this task, "kind" alone --
+// preserving byte-identical rendering for every object whose classification
+// stays the ordinary default, so #393's existing byte-identity fixture test
+// needs no update unless it genuinely contains a spec/policy/-rooted or
+// value-shaped object. Any OTHER ModelKind ("port"/"mock"/"value"/"policy")
+// appends itself after a comma, e.g. "interface, port" or "struct, mock", so
+// the semantic classification is visible without disturbing the common case.
+func modelKindHeadingSuffix(obj modelObject) string {
+	if obj.ModelKind == "" || obj.ModelKind == "object" {
+		return obj.Kind
+	}
+	return obj.Kind + ", " + obj.ModelKind
 }
 
 // itoa is a tiny local wrapper so this file does not need to import

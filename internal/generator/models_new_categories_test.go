@@ -120,3 +120,92 @@ func TestBuildModels_RendersInterfaceMethodsConstructorsConstsAndTags(t *testing
 		t.Errorf("MODELS.md missing raw struct tag text:\n%s", got)
 	}
 }
+
+// mockAndPortModelSrc is task #394's (W1.2) fixture: a single-method port
+// interface, modeled directly on the real PRAT-hotam/domains/gpsm-sm
+// OcrRecognizer seam this task's brief cites (replicated inline, not copied
+// from that read-only reference repo).
+const mockAndPortModelSrc = `package model
+
+// OcrRecognizer is the photo OCR service seam.
+type OcrRecognizer interface {
+	// Recognize extracts the VIN/STS identity from photo.
+	Recognize(photo []byte) (string, error)
+}
+`
+
+// mockAndPortTestSrc is the SAME package's _test.go file: the mock struct
+// (mockOcrRecognizer, unexported, matching OcrRecognizer's method set) PLUS
+// an ordinary test function (TestRecognize_Placeholder) that must never leak
+// into MODELS.md's rendering.
+const mockAndPortTestSrc = `package model
+
+// mockOcrRecognizer is a test double for OcrRecognizer.
+type mockOcrRecognizer struct {
+	result string
+}
+
+// Recognize returns the configured result.
+func (m *mockOcrRecognizer) Recognize(photo []byte) (string, error) {
+	return m.result, nil
+}
+
+// TestRecognize_Placeholder is an ordinary test function that must never
+// leak into MODELS.md's rendering -- the mock pass surfaces ONLY matched
+// mock objects, never a file's other test content.
+func TestRecognize_Placeholder(t *testing.T) {}
+`
+
+// writeMockAndPortFixture builds a minimal domain directory whose spec/model/
+// carries a port interface (vin_ocr.go) and its own _test.go file declaring
+// the matching mock (vin_ocr_test.go) alongside an ordinary test function.
+func writeMockAndPortFixture(t *testing.T) (domainDir string) {
+	t.Helper()
+	root := t.TempDir()
+	modelDir := filepath.Join(root, "spec", "model")
+	if err := os.MkdirAll(modelDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll spec/model: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(modelDir, "vin_ocr.go"), []byte(mockAndPortModelSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile vin_ocr.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(modelDir, "vin_ocr_test.go"), []byte(mockAndPortTestSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile vin_ocr_test.go: %v", err)
+	}
+	return root
+}
+
+// TestBuildModels_RendersMockAndPortWithModelKindSuffixNoTestLeakage is task
+// #394's (W1.2) end-to-end rendering proof: a port interface renders with
+// the "(interface, port)" heading suffix, its matching mock renders with
+// "(struct, mock)", AND the test file's OTHER content (the plain
+// TestRecognize_Placeholder test function alongside the mock struct in the
+// same fixture file) does NOT leak into the rendering.
+func TestBuildModels_RendersMockAndPortWithModelKindSuffixNoTestLeakage(t *testing.T) {
+	domainDir := writeMockAndPortFixture(t)
+	g := &ontology.Graph{
+		DomainDir:   domainDir,
+		SelfHosting: false,
+		Stakeholders: []ontology.Stakeholder{
+			{ID: "fixture-owner", Name: "Fixture Owner", DeclOrder: 1},
+		},
+	}
+
+	got := BuildModels(g)
+
+	if !strings.Contains(got, "### `OcrRecognizer` (interface, port)") {
+		t.Errorf("MODELS.md missing port heading suffix:\n%s", got)
+	}
+	if !strings.Contains(got, "### `mockOcrRecognizer` (struct, mock)") {
+		t.Errorf("MODELS.md missing mock heading suffix:\n%s", got)
+	}
+	if !strings.Contains(got, "spec/model/vin_ocr_test.go") {
+		t.Errorf("MODELS.md missing the mock's own test-file section header:\n%s", got)
+	}
+
+	// The plain test function must never leak in -- neither as a "Functions:"
+	// entry nor anywhere else in the rendered output.
+	if strings.Contains(got, "TestRecognize_Placeholder") {
+		t.Errorf("MODELS.md leaked the ordinary test function TestRecognize_Placeholder:\n%s", got)
+	}
+}

@@ -17,6 +17,76 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **`ModelObject` gains `ModelKind` — a semantic `object`/`value`/`port`/`mock`/`policy` classification, and
+  mocks (unexported `_test.go` structs satisfying a port's method set) become visible in MODELS.md for the
+  first time (task #394, W1.2).** The plan's own words: "Классификация object / value / port / mock / policy
+  без изменения их исполняемой природы. Моки — не временная подмена, а правильные исполняемые суррогаты
+  внешнего мира" — this is a read-only classification/visibility feature layered on top of task #393's
+  (W1.1) `Kind` field; nothing about how any code actually executes changes, no mock is moved out of its
+  `_test.go` file.
+  - `ModelObject.ModelKind` is computed by `classifyModelKind` (`internal/gate/model_scan.go`) in priority
+    order: (1) `"policy"` — the object's own file lives under an EXACT `spec/policy/` path-SEGMENT sequence
+    (a segment match, not `strings.Contains` — a hypothetical `spec/model/policyholder.go` must NOT
+    false-positive on the substring "policy"; mirrors `docs/AUTHORED-SPEC-CONTRACT.md` §1's own established
+    `spec/policy/` convention); (2) `"port"` — `Kind == "interface"`; (3) `"value"` — `Kind == "type"` (a
+    named primitive/alias) AND zero `Methods` anywhere in the file (a value-shaped type that DOES carry a
+    method, e.g. a `String()`-like receiver, deliberately falls through to `"object"` instead — a narrow,
+    honest heuristic documented as a known limitation, not special-cased further); (4) `"object"` — the
+    default fallback (every ordinary struct/typed-with-methods declaration, and every object classified
+    before this task's `ModelKind` field existed).
+  - `"mock"` (rule 5) is NEVER derived from the four file-local rules above — it requires a separate
+    cross-file pass, `scanDomainMockFiles`, wired into `ScanAuthoredModels`'s non-self-hosting branch AFTER
+    `scanDomainModelFiles` returns its normal (unchanged) file list. It (a) collects every already-scanned
+    `ModelKind == "port"` object whose `InterfaceMethods` has NO `Embedded` entry (an interface that embeds
+    another interface, e.g. `io.Closer`, has an incomplete method-name set from AST alone — full
+    `go/types` resolution is out of scope for this AST-only scanner, so embedding interfaces are excluded
+    from mock-matching entirely, a deliberate, documented limitation) and whose required method-name set is
+    non-empty (an empty interface is never eligible either — it would trivially "match" everything); (b)
+    short-circuits to `(nil, nil)` WITHOUT walking the filesystem at all when zero eligible ports exist (the
+    common case for most domains — "no ports declared yet" is a calm, expected state, not a scan failure);
+    (c) otherwise walks the SAME `specDir` root's `_test.go` files (reusing `SpecRootForGraph`/
+    `IsGeneratedOrVendoredFile`, task #391's existing exclusion, defense in depth); (d) parses each via a
+    new `extractModelFileForMockScan` — the exact same extraction algorithm as `extractModelFile`
+    (`extractModelFileImpl` is the one shared body both thin wrappers call; `extractModelFile`'s own public
+    signature/behavior is completely unchanged), except top-level type declarations are collected regardless
+    of exportedness. This one relaxation exists because a real mock is CONVENTIONALLY UNEXPORTED (confirmed
+    against `PRAT-hotam/domains/gpsm-sm`'s real `mockOcrRecognizer`/`recordingAdapter` — each an unexported
+    struct declared in a `_test.go` file, same package as but a different file from the port interface it
+    implements): `extractModelFile`'s ordinary exported-only gate would otherwise make every real-world mock
+    invisible, defeating this task's entire purpose. The general (non-test) scan's own behavior for
+    top-level types is entirely untouched. (e) Each candidate struct's own method-name set (from its
+    `Methods`, name-only — never full `go/types` signature checking of params/results, the same accepted
+    approximation this whole AST-only scanner already uses everywhere else) is checked against every
+    eligible port; a FULL SUPERSET match marks it `ModelKind = "mock"` and keeps it, a partial or empty
+    overlap drops it. (f) A matched test file's retained `ModelFile` carries ONLY its matched mock
+    `Objects` — `Funcs`/`Consts`/`Errors` are always left zero-value even if the source test file declares
+    them, and a test file with zero matched mocks is dropped from the result entirely, so ordinary test
+    helpers/table-driven test funcs never leak into MODELS.md as noise. (g) Mock files are merged into the
+    normal file list and the combined slice is re-sorted by `RelPath`, so output stays fully deterministic.
+  - `internal/generator/models.go`'s `BuildModels` renders a NON-default `ModelKind` (`"port"`/`"mock"`/
+    `"value"`/`"policy"`) as a `, modelkind` suffix on the existing `### `Name` (kind)` heading — e.g.
+    `### `OcrRecognizer` (interface, port)`, `### `mockOcrRecognizer` (struct, mock)` — via a new
+    `modelKindHeadingSuffix` helper; `ModelKind == "object"` (or empty/unset, defense only) renders EXACTLY
+    as before this task, preserving byte-identical output for the common case.
+  - New unit tests: `internal/gate/model_scan_test.go` gained 10 new tests (all four file-local
+    classification rules including the policy false-positive-avoidance case and the value-shaped-type-with-
+    a-method fall-through, plus the mock pass's true-positive full-superset match, true-negative partial
+    overlap, zero-ports short-circuit, and embedding-interface exclusion — the true-positive fixture is
+    modeled directly on the real `PRAT-hotam/domains/gpsm-sm` `OcrRecognizer`/`mockOcrRecognizer` shape,
+    replicated inline, never read/copied from that reference repo). `internal/generator/
+    models_new_categories_test.go` gained an end-to-end rendering test proving a port and its mock both
+    surface with the new heading suffixes while the test file's OTHER content (a plain test function) does
+    not leak into MODELS.md.
+  - `ModelLayerCounts`/`ScanModelLayerCounts` (COVERAGE.md's narrower layer-progression ratchet) and the
+    self-hosting scan (`scanSelfHostingModelFiles`) are both UNCHANGED by design — the mock pass is scoped
+    to ordinary (non-self-hosting) domains only, no real-world evidence of test-file mocks in the engine's
+    own self-hosting file slice.
+  - Regenerating `docs/gen/` for `hotam-spec-self` (self-hosting: rules 1-4 classification DOES run inside
+    the shared `extractModelFile`, since self-hosting also calls it) changed exactly two lines: `internal/
+    proposal.ConflictChecker`/`ProvenanceChecker` (both `type X func(...)` aliases with zero receiver
+    methods) now render as `(type, value)` instead of `(type)` — a correct, honest application of rule 3,
+    not a regression. `hotam-dev`'s own `docs/gen/` had zero content changes. `all-violations` stayed 0 on
+    both domains before and after regeneration.
 - **`gate.ScanAuthoredModels`'s AST scan now extracts interface methods, top-level functions/constructors,
   typed const enum groups, struct field doc comments, and raw struct tags (task #393, W1.1).** Before this
   task, the scan (`internal/gate/model_scan.go`) inventoried only exported top-level types, struct fields

@@ -570,11 +570,11 @@ package `ontology`
 
 package `proposal`
 
-### `ConflictChecker` (type)
+### `ConflictChecker` (type, value)
 
 ConflictChecker is injected by a periphery-aware caller (cmd/hotam) so internal/proposal (core) never imports internal/diagnose (periphery) -- see R-core-periphery-import-ratchet, enforced by internal/selfcheck/imports_test.go's TestCorePeriphery_ImportRatchet. It returns a non-nil, ready-to-surface error if claim semantically conflicts with SETTLED content in g, or nil if clear.
 
-### `ProvenanceChecker` (type)
+### `ProvenanceChecker` (type, value)
 
 ProvenanceChecker is injected by the caller (cmd/hotam) so ApplyBatch can enforce the opt-in provenance gate (require_provenance in manifest.json — see internal/loader.ResolveRequireProvenance and cmd/hotam/provenance_gate.go) on the batch path with the SAME logic the single-file path (cmd/hotam's provenanceGate) runs, closing the class of "single-file protected, batch bypassed" gap task #155 closed for ConflictChecker. It is called for each ProposedRequirement BEFORE applyToGraph mutates g, against the ROLLING in-memory graph (so it reflects proposals already applied earlier in the same batch), and returns a non-nil, ready-to-surface error naming the missing provenance field(s), or nil if the requirement's simulated post-merge result satisfies the gate (or the gate is not opted into for this domain). checkProvenance may be nil, in which case no provenance checking is performed (used by callers/tests that don't need the gate).
 

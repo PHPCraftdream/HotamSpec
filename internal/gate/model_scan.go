@@ -82,6 +82,58 @@ type ModelObject struct {
 	// "Status") -- an enum-value group. Populated for any Kind (typically
 	// "type" for a named string/int alias); nil when no such const exists.
 	Consts []ModelConst
+	// ModelKind is task #394's (W1.2) semantic classification of WHAT ROLE
+	// this object plays in the domain's object model, layered on top of Kind
+	// (which only records the Go-syntactic shape: struct/interface/type).
+	// The plan's own words: "Классификация object / value / port / mock /
+	// policy без изменения их исполняемой природы" -- this is a read-only
+	// label for navigation/visibility in MODELS.md, never a behavior change;
+	// nothing about how any of this code actually executes is touched.
+	// Vocabulary, in the priority order extractModelFile applies the rules
+	// (see classifyModelKind and scanDomainMockFiles for the exact rules):
+	//
+	//   - "object" -- the DEFAULT/fallback. An ordinary aggregate or service
+	//     with fields and/or methods -- the common case, and also what every
+	//     object classified before this task's ModelKind field existed
+	//     implicitly was. Also the honest fallback for a struct/type this
+	//     scan cannot otherwise place (see "value" below for the one
+	//     deliberately narrow exception carved out of it).
+	//   - "value" -- a named primitive/alias declaration (Kind == "type",
+	//     e.g. `type VehicleID string`) that has NO receiver methods
+	//     anywhere in its file. A value type that DOES carry a method (e.g.
+	//     a `String()`/`Validate()` receiver) falls back to "object" instead
+	//     of "value" -- this is a deliberately narrow, honest heuristic, not
+	//     an attempt to special-case Stringer-like methods (which would be
+	//     over-engineering beyond what this classification needs to prove).
+	//   - "port" -- Kind == "interface" (an interface's method set already
+	//     makes it a contract with the outside world by construction).
+	//   - "mock" -- an unexported struct declared in a `_test.go` file, in
+	//     the SAME package as (but a different file from) a "port" interface
+	//     it implements, whose own method set is a full superset of that
+	//     port's required method names. NEVER derived from rules 1-4 above
+	//     (which only ever look at ONE file) -- mocks require the separate
+	//     cross-file matching pass in scanDomainMockFiles, since knowing
+	//     "does this struct satisfy that interface" needs both files at
+	//     once. A mock is not a stand-in or a hack: per the plan, "моки — не
+	//     временная подмена, а правильные исполняемые суррогаты внешнего
+	//     мира" (mocks are legitimate executable surrogates for the outside
+	//     world) -- this classification exists so a mock becomes VISIBLE in
+	//     MODELS.md next to the port contract it stands in for, not so it
+	//     can be treated as lesser.
+	//   - "policy" -- the object's own file lives under a `spec/policy/`
+	//     directory (an exact path-segment match, `.../spec/policy/...`,
+	//     never a substring match against the whole relPath -- see
+	//     classifyModelKind's own doc comment for why substring matching
+	//     would false-positive). Mirrors docs/AUTHORED-SPEC-CONTRACT.md §1's
+	//     own already-established `spec/policy/` convention: "политики/
+	//     гейты/предикаты" (policies/gates/predicates).
+	//
+	// Checked BEFORE "port"/"value" in classifyModelKind's own priority
+	// order (policy's path-based rule can match an interface or a bare type
+	// declared inside spec/policy/ just as easily as a struct, and a policy
+	// classification is more specific/intentional than the generic
+	// port/value fallback would be).
+	ModelKind string
 }
 
 // ModelInterfaceMethod is one method declared directly in an interface
@@ -201,7 +253,25 @@ func ScanAuthoredModels(g *ontology.Graph) ([]ModelFile, error) {
 	if g.SelfHosting {
 		return scanSelfHostingModelFiles(g)
 	}
-	return scanDomainModelFiles(g)
+	files, err := scanDomainModelFiles(g)
+	if err != nil {
+		return nil, err
+	}
+
+	// Mock cross-file pass (task #394, W1.2) -- scoped to ordinary domains
+	// only, deliberately NOT extended to scanSelfHostingModelFiles above (no
+	// real-world evidence of test-file mocks in the engine's own
+	// self-hosting file slice; out of scope per this task's own plan text).
+	mockFiles, err := scanDomainMockFiles(g, files)
+	if err != nil {
+		return nil, err
+	}
+	if len(mockFiles) > 0 {
+		files = append(files, mockFiles...)
+		sort.Slice(files, func(i, j int) bool { return files[i].RelPath < files[j].RelPath })
+	}
+
+	return files, nil
 }
 
 // scanDomainModelFiles walks an ordinary (non-self-hosting) domain's
@@ -243,6 +313,226 @@ func scanDomainModelFiles(g *ontology.Graph) ([]ModelFile, error) {
 	}
 
 	return parseModelFiles(goFiles, specRoot)
+}
+
+// mockPortSignature is one eligible port's required method-name set for
+// mock-matching (task #394, W1.2 step 1) -- collected from the ALREADY
+// file-classified ModelObjects scanDomainModelFiles returned (ModelKind ==
+// "port"), before any test file is ever walked.
+type mockPortSignature struct {
+	portName string
+	methods  map[string]struct{}
+}
+
+// eligiblePortSignatures collects mockPortSignature entries from files' own
+// already-scanned (non-test) ModelObjects: every object with Kind ==
+// "interface" and ModelKind == "port" is a CANDIDATE port, but two further
+// conditions must hold before it becomes ELIGIBLE for mock-matching:
+//
+//   - none of its InterfaceMethods entries may have Embedded set (an
+//     interface that embeds another interface, e.g. `io.Closer`, has an
+//     incomplete method-name set from AST alone -- resolving io.Closer's own
+//     methods would need full type-checking this AST-only scanner
+//     deliberately does not do; embedding interfaces are excluded from
+//     mock-matching entirely, a known, deliberate limitation, not a bug);
+//   - its required method-name set (the Name of every InterfaceMethods
+//     entry) must be non-empty -- an empty interface (zero methods) is never
+//     eligible either, since matching against zero required methods would
+//     trivially match every struct in existence.
+func eligiblePortSignatures(files []ModelFile) []mockPortSignature {
+	var ports []mockPortSignature
+	for _, f := range files {
+		for _, obj := range f.Objects {
+			if obj.Kind != "interface" || obj.ModelKind != "port" {
+				continue
+			}
+			embeds := false
+			methods := map[string]struct{}{}
+			for _, im := range obj.InterfaceMethods {
+				if im.Embedded != "" {
+					embeds = true
+					break
+				}
+				methods[im.Name] = struct{}{}
+			}
+			if embeds || len(methods) == 0 {
+				continue
+			}
+			ports = append(ports, mockPortSignature{portName: obj.Name, methods: methods})
+		}
+	}
+	return ports
+}
+
+// scanDomainMockFiles is task #394's (W1.2) mock cross-file pass: it walks
+// an ordinary (non-self-hosting) domain's `_test.go` files under the same
+// specDir scanDomainModelFiles already computes, looking ONLY for unexported
+// structs whose own method set is a full superset of at least one eligible
+// port's required method names -- i.e. real mocks, per the real-world
+// evidence this task's brief cites (PRAT-hotam/domains/gpsm-sm's
+// recordingAdapter/mockOcrRecognizer, each an unexported struct declared in
+// a `_test.go` file, same package as but a different file from the
+// interface it implements).
+//
+// This pass exists ONLY to surface mocks -- it is NOT a second general-
+// purpose scan of `_test.go` content. Every returned ModelFile carries ONLY
+// its matched mock Objects (Funcs/Consts/Errors are always left zero-value
+// even if the source test file declares them); a test file with zero
+// matched mocks is dropped from the result entirely, so an ordinary
+// `_test.go` file with only table-driven test funcs/assertion helpers never
+// appears in MODELS.md as a hollow "no exported objects" section.
+//
+// files is the ALREADY-scanned non-test file list scanDomainModelFiles just
+// returned (so this pass reuses that file-local ModelKind classification
+// rather than re-deriving port eligibility itself). Returns (nil, nil)
+// immediately, without walking the filesystem at all, when zero eligible
+// ports exist -- "no ports declared yet" is a calm, expected state for the
+// large majority of domains, per this codebase's established convention
+// (ScanAuthoredModels' own doc comment), not a scan failure, and walking
+// every `_test.go` file just to find nothing worth matching would be a
+// wasted directory walk for that common case.
+func scanDomainMockFiles(g *ontology.Graph, files []ModelFile) ([]ModelFile, error) {
+	ports := eligiblePortSignatures(files)
+	if len(ports) == 0 {
+		return nil, nil
+	}
+
+	specRoot := SpecRootForGraph(g)
+	specDir := filepath.Join(specRoot, "spec")
+
+	var testFiles []string
+	err := filepath.WalkDir(specDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		name := d.Name()
+		if !strings.HasSuffix(name, "_test.go") {
+			return nil
+		}
+		testFiles = append(testFiles, path)
+		return nil
+	})
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if len(testFiles) == 0 {
+		return nil, nil
+	}
+
+	seen := map[string]struct{}{}
+	var uniquePaths []string
+	for _, p := range testFiles {
+		clean := filepath.Clean(p)
+		if _, ok := seen[clean]; ok {
+			continue
+		}
+		seen[clean] = struct{}{}
+		uniquePaths = append(uniquePaths, clean)
+	}
+	sort.Strings(uniquePaths)
+
+	var mockFiles []ModelFile
+	fset := token.NewFileSet()
+	for _, p := range uniquePaths {
+		// Same defense-in-depth exclusion every other path in this file
+		// applies, even though no real vendored _test.go copy is known to
+		// exist today (task #391's IsGeneratedOrVendoredFile choke point).
+		if IsGeneratedOrVendoredFile(p) {
+			continue
+		}
+		astFile, err := parser.ParseFile(fset, p, nil, parser.ParseComments)
+		if err != nil {
+			continue
+		}
+		rel, err := filepath.Rel(specRoot, p)
+		if err != nil {
+			rel = p
+		}
+		rel = filepath.ToSlash(rel)
+
+		// extractModelFileForMockScan, not extractModelFile: a real mock is
+		// conventionally an UNEXPORTED struct (mockOcrRecognizer,
+		// recordingAdapter -- see this function's own doc comment), which
+		// extractModelFile's ordinary exported-only gate would otherwise
+		// make invisible.
+		extracted := extractModelFileForMockScan(astFile, rel)
+
+		var mocks []ModelObject
+		for _, obj := range extracted.Objects {
+			if matchesAnyPort(obj, ports) {
+				obj.ModelKind = "mock"
+				mocks = append(mocks, obj)
+			}
+		}
+		if len(mocks) == 0 {
+			// No matched mock in this test file: drop it entirely rather
+			// than emit an empty "no exported objects" section -- that
+			// would be pure noise across every domain's ordinary test
+			// helpers/table-driven test funcs.
+			continue
+		}
+
+		mockFiles = append(mockFiles, ModelFile{
+			RelPath: rel,
+			Pkg:     extracted.Pkg,
+			Objects: mocks,
+			// Funcs/Consts/Errors deliberately left zero-value: this pass
+			// surfaces ONLY matched mocks, never a second general-purpose
+			// scan of a test file's other content (plain test functions,
+			// unrelated consts, ...).
+		})
+	}
+
+	sort.Slice(mockFiles, func(i, j int) bool { return mockFiles[i].RelPath < mockFiles[j].RelPath })
+	return mockFiles, nil
+}
+
+// matchesAnyPort reports whether obj's own method set (from obj.Methods --
+// the receiver methods this same test file declares against it) is a full
+// superset of at least one eligible port's required method-name set, i.e.
+// obj is a name-only-verified mock of that port. Name-only method-set
+// matching (never full go/types signature checking of params/results) is
+// the accepted, documented approximation this whole AST-only scanner
+// already uses everywhere else (e.g. receiverBaseTypeName's own base-type
+// collapsing) -- proving a mock genuinely satisfies an interface's full
+// signature would require full type-checking this scan deliberately never
+// performs.
+func matchesAnyPort(obj ModelObject, ports []mockPortSignature) bool {
+	if len(obj.Methods) == 0 {
+		return false
+	}
+	objMethods := map[string]struct{}{}
+	for _, m := range obj.Methods {
+		objMethods[m.Name] = struct{}{}
+	}
+	for _, port := range ports {
+		if isSuperset(objMethods, port.methods) {
+			return true
+		}
+	}
+	return false
+}
+
+// isSuperset reports whether super contains every key in sub (sub is empty-
+// safe: an empty sub is vacuously a subset of anything, but
+// eligiblePortSignatures already guarantees every port.methods it produces
+// is non-empty, so that vacuous case never actually arises here).
+func isSuperset(super, sub map[string]struct{}) bool {
+	for k := range sub {
+		if _, ok := super[k]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // scanSelfHostingModelFiles resolves the focused engine-file slice for a
@@ -442,7 +732,45 @@ func IsGeneratedOrVendoredFile(path string) bool {
 // itself meaningful API surface -- a field list's shape and an enum's
 // member order are both authored intent) so output is deterministic
 // regardless of source declaration order.
+//
+// Only EXPORTED top-level type declarations become a ModelObject (see
+// extractModelFileImpl's includeUnexportedTypes parameter for the one
+// deliberate exception, used solely by scanDomainMockFiles' mock-matching
+// pass -- task #394, W1.2). This is a thin, zero-cost wrapper preserving the
+// exact pre-#394 signature and behavior, so every existing call site
+// (parseModelFiles, and the structural assertion
+// TestExtractModelFile_VendoredFileNeverReachesExtraction which pins this
+// exact two-arg shape) is entirely unaffected.
 func extractModelFile(astFile *ast.File, relPath string) ModelFile {
+	return extractModelFileImpl(astFile, relPath, false)
+}
+
+// extractModelFileForMockScan is extractModelFile's ONLY other caller-facing
+// entry point: identical extraction algorithm (never a forked/duplicated
+// parallel implementation -- both wrappers share extractModelFileImpl's one
+// body), except top-level type declarations are collected regardless of
+// exportedness. This one relaxation exists solely because a real mock is
+// conventionally an UNEXPORTED struct (see this task's brief and the real
+// PRAT-hotam/domains/gpsm-sm evidence -- mockOcrRecognizer,
+// recordingAdapter): extractModelFile's ordinary exported-only gate would
+// silently make every real-world mock invisible to scanDomainMockFiles'
+// matching pass, defeating this task's entire purpose. Used ONLY by
+// scanDomainMockFiles, on `_test.go` files, never on an ordinary domain
+// model file -- the general (non-test) scan's own exported-only behavior for
+// top-level types is completely unchanged.
+func extractModelFileForMockScan(astFile *ast.File, relPath string) ModelFile {
+	return extractModelFileImpl(astFile, relPath, true)
+}
+
+// extractModelFileImpl is the single shared implementation both
+// extractModelFile and extractModelFileForMockScan call -- includeUnexportedTypes
+// is the only behavioral difference between the two, gating solely the
+// top-level TYPE declaration's own exportedness check (GenDecl(VAR)/
+// GenDecl(CONST)/top-level FuncDecl exportedness gates are UNCHANGED either
+// way; a mock struct's own methods and any const/var it happens to declare
+// still follow the ordinary rules -- only whether the struct ITSELF becomes
+// a ModelObject at all is affected).
+func extractModelFileImpl(astFile *ast.File, relPath string, includeUnexportedTypes bool) ModelFile {
 	f := ModelFile{RelPath: relPath, Pkg: astFile.Name.Name}
 
 	objByName := map[string]*ModelObject{}
@@ -457,7 +785,7 @@ func extractModelFile(astFile *ast.File, relPath string) ModelFile {
 		case token.TYPE:
 			for _, spec := range gd.Specs {
 				ts, ok := spec.(*ast.TypeSpec)
-				if !ok || !ts.Name.IsExported() {
+				if !ok || (!includeUnexportedTypes && !ts.Name.IsExported()) {
 					continue
 				}
 				obj := ModelObject{Name: ts.Name.Name, Doc: docText(gd.Doc)}
@@ -585,6 +913,12 @@ func extractModelFile(astFile *ast.File, relPath string) ModelFile {
 		sort.Slice(obj.InterfaceMethods, func(i, j int) bool {
 			return interfaceMethodSortKey(obj.InterfaceMethods[i]) < interfaceMethodSortKey(obj.InterfaceMethods[j])
 		})
+		// ModelKind is classified last, after Methods is fully populated --
+		// rule 3 ("value") depends on knowing whether ANY receiver method
+		// was ever attached to this object, which is only certain once the
+		// FuncDecl pass above (which runs after every TYPE spec is
+		// collected) has finished.
+		obj.ModelKind = classifyModelKind(*obj, relPath)
 		f.Objects = append(f.Objects, *obj)
 	}
 	sort.Slice(f.Objects, func(i, j int) bool { return f.Objects[i].Name < f.Objects[j].Name })
@@ -592,6 +926,56 @@ func extractModelFile(astFile *ast.File, relPath string) ModelFile {
 	sort.Slice(f.Funcs, func(i, j int) bool { return f.Funcs[i].Name < f.Funcs[j].Name })
 
 	return f
+}
+
+// classifyModelKind implements ModelKind's file-local classification rules
+// 1-4 (task #394, W1.2) -- everything except "mock" (rule 5, which requires
+// cross-file knowledge and is applied separately by scanDomainMockFiles,
+// overriding whatever this function would have returned). Priority order,
+// first match wins:
+//
+//  1. "policy" -- obj's own file lives under a `spec/policy/` directory.
+//  2. "port"   -- obj.Kind == "interface".
+//  3. "value"  -- obj.Kind == "type" (a named primitive/alias) AND obj has
+//     zero Methods.
+//  4. "object" -- the default fallback, everything else (ordinary structs,
+//     types that DO carry a method, ...).
+//
+// relPath is expected already root-relative and forward-slash-normalized
+// (parseModelFiles does this once via filepath.ToSlash before calling
+// extractModelFile), so isUnderSpecPolicyDir can split on "/" directly
+// without re-normalizing.
+func classifyModelKind(obj ModelObject, relPath string) string {
+	if isUnderSpecPolicyDir(relPath) {
+		return "policy"
+	}
+	if obj.Kind == "interface" {
+		return "port"
+	}
+	if obj.Kind == "type" && len(obj.Methods) == 0 {
+		return "value"
+	}
+	return "object"
+}
+
+// isUnderSpecPolicyDir reports whether relPath (forward-slash, root-relative)
+// contains the exact path-segment sequence ".../spec/policy/..." -- i.e. an
+// exact segment equal to "policy" immediately following an exact segment
+// equal to "spec". This is deliberately a SEGMENT match, not a substring
+// match: strings.Contains(relPath, "policy") would false-positive on a
+// hypothetical domain-authored spec/model/policyholder.go (a real object
+// model file that merely has "policy" as a substring of its own file name),
+// wrongly classifying an ordinary object as a policy. Mirrors
+// docs/AUTHORED-SPEC-CONTRACT.md §1's own established spec/policy/
+// convention ("политики/гейты/предикаты" -- policies/gates/predicates).
+func isUnderSpecPolicyDir(relPath string) bool {
+	segments := strings.Split(relPath, "/")
+	for i := 0; i+1 < len(segments); i++ {
+		if segments[i] == "spec" && segments[i+1] == "policy" {
+			return true
+		}
+	}
+	return false
 }
 
 // interfaceMethodSortKey gives a stable sort key for a ModelInterfaceMethod:
