@@ -5,7 +5,7 @@ reader: domain-user
 
 Generated from this domain's `graph.json` plus its authored `spec/` tree (PLAN-authored-spec-discipline.md §4/§7): which SETTLED requirements have a real carrier (authored `implemented_by`+`verified_by`, re-resolved here the same way TRACEABILITY.md does; or engine `enforced_by`) versus honest roadmap debt versus permanent discipline, and which LAYER (models -> fields -> methods -> tests, §4/§8 step 3-6) this domain's authored spec/ tree currently sits at, read from the same `go/ast` scan MODELS.md performs. Not an enforcement gate itself — `internal/invariants/authored_links.go` is the actual mechanical floor; this doc only reports its verdict for orientation (R-authored-spec-projections-are-derived). Every scenario signal below (the Layer table's scenarios column, the scenario ratchet) is the CHEAP, AST-only `hotamspec.NewScenario(...)` detection — never a real executed verdict — so this document stays byte-identical regardless of mode; the REAL, executed narrative lives in `docs/gen/SPEC.md` (`hotam gen-spec --spec` only), whose freshness is separately enforced by `check_spec_md_current`.
 
-**258 SETTLED requirement(s): 9 authored-carrier, 173 engine-carrier, 40 roadmap-debt, 36 permanent discipline.**
+**259 SETTLED requirement(s): 9 authored-carrier, 174 engine-carrier, 40 roadmap-debt, 36 permanent discipline.**
 
 ---
 
@@ -230,6 +230,7 @@ SETTLED requirements proven by the engine mechanism (a `check_*` invariant or re
 | `R-signoff-preserved-in-substrate` | check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff, check_history_signoff_has_provenance, check_history_signoff_decided_by_is_known_stakeholder | A resolver signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate. |
 | `R-project-root-not-hardcoded` | TestProjectRoot_Priority_NativeMarkerBeatsPyproject | HotamSpec resolves the consumer's project root through a single function, paths.ProjectRoot() (internal/paths/project_root.go), via a documented R1-R6 priority chain, never through a raw runtime.Caller-based parents-climb guess at the consumer's files. |
 | `R-core-periphery-import-ratchet` | TestCorePeriphery_ImportRatchet | A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only. |
+| `R-engine-docs-fingerprint-current` | check_engine_docs_fingerprint_current | A domain's committed docs/gen/ENGINE-VERSION.md, if present, SHALL carry a stamped engine content fingerprint matching the current engine's own fingerprint (gate.EngineDocsFingerprint), so that a domain whose generated docs were produced by a different engine build is mechanically surfaced as stale. |
 
 ## Roadmap debt (SETTLED, ENFORCEABLE, no carrier yet)
 

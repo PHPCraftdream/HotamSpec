@@ -6213,6 +6213,43 @@
       "blocked_on": "blocked on a content-hash pin mechanism + a baseline-update tool (both unregistered)"
     },
     {
+      "id": "R-engine-docs-fingerprint-current",
+      "claim": "A domain's committed docs/gen/ENGINE-VERSION.md, if present, SHALL carry a stamped engine content fingerprint matching the current engine's own fingerprint (gate.EngineDocsFingerprint), so that a domain whose generated docs were produced by a different engine build is mechanically surfaced as stale.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Consumer-generated documentation can silently lag behind engine evolution: the engine changes in its own commits, the consumer's generated docs sit in a separate repository, and no mechanism told the consumer's resolver 'the engine that produced these docs is not the engine you have now.' This exact class of problem caused the W0.1 regression (task #369's engine upgrade retroactively broke domains in another repository with zero warning). Task #400 closes that gap: gate.EngineDocsFingerprint computes a deterministic sha256 content-hash over internal/generator, internal/ontology, internal/loader (the packages whose changes affect generated-doc shape/content) -- deliberately NOT a raw git commit SHA (too noisy, invalidates on every unrelated commit) NOR a manually-bumped version number (defaults to 'dev' for local builds). generator.BuildEngineVersionMD stamps the short 16-char fingerprint into every domain's docs/gen/ENGINE-VERSION.md on genSpec; check_engine_docs_fingerprint_current fires one violation when the stamped fingerprint disagrees with the current engine's own. ENFORCED by check_engine_docs_fingerprint_current (internal/invariants/engine_version_current.go): unconditional for every domain, honest no-op when the file is absent (same class as check_spec_md_current) or when the current engine's fingerprint cannot be computed (a consumer repo whose engine is a compiled binary without source). No opt-in trigger needed: this is NOT a new obligation riding an already-spent trigger, it is the same class of unconditional staleness check check_spec_md_current/check_domain_claude_md_current already are.",
+      "assumptions": [
+        "A-finite-context-operators",
+        "A-compaction-loses-working"
+      ],
+      "relations": [],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_engine_docs_fingerprint_current"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-07-31",
+      "settled_at": "2026-07-31",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "internal/gate/engine_fingerprint.go",
+        "internal/generator/engine_version.go",
+        "internal/invariants/engine_version_current.go"
+      ],
+      "history": [
+        {
+          "at": "2026-07-31",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 275
+    },
+    {
       "id": "R-entities-md-generated",
       "claim": "domains/<name>/docs/gen/ENTITIES.md shall be generated from the domain's graph by gen-spec, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances.",
       "owner": "framework-author",

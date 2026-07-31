@@ -55,6 +55,11 @@ var genTopLevelOwned = []string{
 	// orphan-deletes it), so it belongs in the always-owned set exactly like
 	// the other top-level entries, present or not.
 	"SPEC.md",
+	// ENGINE-VERSION.md (task #400, W2.3) is always written unconditionally
+	// (not content-gated) — its content is engine metadata (a content-hash
+	// fingerprint of the engine's own source packages), not a graph-derived
+	// projection, so every domain has one regardless of graph emptiness.
+	"ENGINE-VERSION.md",
 	"atoms-operator.md", "atoms-substrate.md", "atoms-discipline.md", "atoms-check.md",
 }
 

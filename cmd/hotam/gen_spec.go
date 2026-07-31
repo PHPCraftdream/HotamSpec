@@ -485,6 +485,26 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	if modelsWritten {
 		mdDocs = append(mdDocs, docEntry{"MODELS.md", modelsMD})
 	}
+	// ENGINE-VERSION.md (task #400, W2.3): engine identity fingerprint —
+	// always written (unconditional, not content-gated) because every domain
+	// has an engine fingerprint regardless of graph content. Content depends
+	// only on the engine's own source packages (internal/generator,
+	// internal/ontology, internal/loader), not the domain graph at all — it
+	// is engine metadata, not a graph-derived projection. NOT added to
+	// repoMapDocs/fullRepoMapDocs (REPO-MAP.md lists graph-derived docs, and
+	// this file is not one), and NOT gated by any *MDHasContent predicate.
+	// If the fingerprint cannot be computed (the three engine packages are
+	// absent from the resolved module root — e.g. a temp/test domain created
+	// in os.TempDir() by an e2e test, or a consumer repo whose engine is a
+	// compiled binary without source), the write is SKIPPED silently: a
+	// domain without engine source has no meaningful fingerprint to stamp,
+	// and the freshness check (check_engine_docs_fingerprint_current)
+	// degrades to an honest no-op for the identical reason, mirroring
+	// check_spec_md_current's own honest-no-op-when-absent shape.
+	engineVersionMD, engineVersionErr := generator.BuildEngineVersionMD(repoRoot)
+	if engineVersionErr == nil {
+		mdDocs = append(mdDocs, docEntry{"ENGINE-VERSION.md", engineVersionMD})
+	}
 
 	// mdDocs's content was already fully rendered above (each entry a pure
 	// function of the graph); only the disk write is left, and every write
@@ -895,6 +915,7 @@ func cleanupStaleGenFiles(genDir string, written []string, exemptTopLevelNames [
 		"REPO-MAP.md", "atoms-operator.md", "atoms-substrate.md",
 		"atoms-discipline.md", "atoms-check.md", "live-state.md",
 		"AGENT-CONTEXT.md", "DECISIONS.md", "ENTITIES.md", "graph.json",
+		"ENGINE-VERSION.md",
 	}
 	var candidates []string
 	for _, name := range topLevelFiles {

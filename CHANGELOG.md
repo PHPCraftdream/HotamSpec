@@ -17,6 +17,45 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Added
+- **Engine identity fingerprint stamped into every domain's generated docs via a new `docs/gen/ENGINE-VERSION.md`,
+  with a mechanical freshness check (`check_engine_docs_fingerprint_current`) that fires when the stamped fingerprint
+  disagrees with the current engine's own (task #400, W2.3).**
+  Consumer-generated documentation can silently lag behind engine evolution: the engine changes in its own commits,
+  the consumer's generated docs sit in a separate repository, and nothing told the consumer's resolver "the engine
+  that produced these docs is not the engine you have now." This exact class of problem caused the W0.1 regression
+  (task #369's engine upgrade retroactively broke domains in another repository with zero warning). This task closes
+  that gap.
+  - **`gate.EngineDocsFingerprint(moduleRoot string) (string, error)` (new, `internal/gate/engine_fingerprint.go`):**
+    a deterministic sha256 content-hash over the three generator-relevant packages (`internal/generator`,
+    `internal/ontology`, `internal/loader`) — the set whose changes affect a domain's generated-doc shape/content.
+    Deliberately NOT a raw git commit SHA (which would invalidate on every unrelated commit, far too noisy) NOR a
+    manually-bumped version number (which defaults to "dev"/"unknown" for local builds). A new scope-limited
+    `hashDirContent` helper walks one directory at a time (same algorithm philosophy `hashPackageInputs` uses, but
+    scoped to a single package dir — `hashPackageInputs` itself ignores its `pkgDir` parameter and hashes the whole
+    module, load-bearing for `runCache`/`coverageRunCache` cache invalidation and untouched by this task). The
+    three per-dir hashes are sorted lexicographically before a final sha256 combination, so the result is
+    deterministic regardless of which package is hashed first.
+  - **`generator.BuildEngineVersionMD(moduleRoot string) (string, error)` (new, `internal/generator/engine_version.go`):**
+    renders `docs/gen/ENGINE-VERSION.md` — the `generatedHeaderComment` banner, a short 16-char hex fingerprint, and
+    a human-readable note directing the reader to regenerate via `hotam gen-spec` when the fingerprint disagrees.
+    Written unconditionally by genSpec (not content-gated — engine metadata, not a graph-derived projection), but
+    silently skipped when the fingerprint can't be computed (a temp/test domain without engine source, or a consumer
+    repo whose engine is a compiled binary), mirroring the invariant check's own honest-no-op degradation.
+  - **`check_engine_docs_fingerprint_current` (new, `internal/invariants/engine_version_current.go`):** the 122nd
+    registered invariant. Reads the domain's `docs/gen/ENGINE-VERSION.md` (if present), extracts the stamped
+    fingerprint, computes the current engine's own via `gate.EngineDocsFingerprint`, and fires one violation with an
+    actionable message when they differ. Honest no-op when the file is absent, when the stamped value is unparseable,
+    or when the current engine's fingerprint can't be computed — the same unconditional-but-honest-no-op-when-absent
+    class as `check_spec_md_current`/`check_domain_claude_md_current`. No opt-in trigger needed (unlike
+    `check_claim_authority_ratchet`/`check_public_surface_authority_ratchet`): this is not a new obligation riding an
+    already-spent trigger.
+  - **`R-engine-docs-fingerprint-current` (new anchor, `internal/selfspec/requirements_deterministic.go`):** ENFORCED
+    by `check_engine_docs_fingerprint_current`, projected onto the graph via `hotam sync-self`.
+  - **Scope boundary.** Does not touch `internal/generator/traceability.go`, `coverage.go`, or any existing
+    `docs/gen/*.md` banner — Decision 2's dedicated new file is the entire stamp surface. The fingerprint is a pure
+    function of the checked-out source tree (byte-idempotent across two consecutive gen-spec runs from the same
+    unchanged engine binary), so stamping it does not violate task #317's byte-idempotency guarantee.
+
 - **`hotam brief` now assembles a five-section evidence packet for a Requirement anchor -- object/method
   signatures, port/mock contracts, the actual Given/When/Then scenario narrative, related entity/process
   links, and per-section provenance -- assembling into one single-call answer what previously required

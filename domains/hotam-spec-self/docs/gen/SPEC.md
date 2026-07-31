@@ -5,7 +5,7 @@ reader: domain-user
 
 Generated from this domain's `graph.json` claims plus REAL, currently-passing `go test` runs of every `verified_by` entry, recorded via the `hotamspec` scenario API (PLAN-scenario-generated-spec.md §1/§2 D1/D2, task W1.3): the normative body under each requirement is not hand-written prose — it is the Given/When/Then/Value narrative a real test run just produced. `graph.json` remains the bookkeeping layer (id, short authored claim, status); this document is the derived projection, never the other way around. Not an enforcement gate itself — a future `check_spec_md_current` (W2.3) is the mechanical staleness floor; this generator only renders what the CURRENT run reports.
 
-**13 requirement(s) carry `verified_by`; 2 have at least one recorded scenario narrative; 294 carry no `verified_by` yet (no code carrier, honest gap).**
+**13 requirement(s) carry `verified_by`; 2 have at least one recorded scenario narrative; 295 carry no `verified_by` yet (no code carrier, honest gap).**
 
 ---
 
@@ -309,6 +309,7 @@ Requirements with no `verified_by` entry at all: SETTLED without a code carrier 
 | `R-enforcement-levels-declared` | SETTLED | A requirement shall carry an enforcement level from the set PROSE, STRUCTURAL, ENFORCED. |
 | `R-enforcement-perimeter-baselines-guarded` | SETTLED | A host-hook guard shall deny direct Edit/Write to enforcement-perimeter baseline files (ratchet-test baselines, the active-domain pin), with sanctioned updates routed through a dedicated baseline-update tool. |
 | `R-enforcement-perimeter-visible` | SETTLED | A content-hash pin shall cover the enforcement-perimeter code files, failing RED on any content change until the baseline is consciously updated via a dedicated baseline-update tool. |
+| `R-engine-docs-fingerprint-current` | SETTLED | A domain's committed docs/gen/ENGINE-VERSION.md, if present, SHALL carry a stamped engine content fingerprint matching the current engine's own fingerprint (gate.EngineDocsFingerprint), so that a domain whose generated docs were produced by a different engine build is mechanically surfaced as stale. |
 | `R-entities-md-generated` | SETTLED | domains/<name>/docs/gen/ENTITIES.md shall be generated from the domain's graph by gen-spec, listing every EntityType with its lifecycle Mermaid diagram, fields, covering check_entity_* invariants, and instances. |
 | `R-entity-checks-by-iteration` | SETTLED | The check_entity_* invariant family shall cover every declared EntityType by iterating g.EntityTypes, requiring no new check_* code per additional type. |
 | `R-entity-derived-requirement` | SETTLED | Each EntityType in the domain's graph shall be projected as R-entity-<slug> in the domain's FRAMEWORK-INVARIANTS.md, with enforced_by listing the check_entity_* family covering it. |

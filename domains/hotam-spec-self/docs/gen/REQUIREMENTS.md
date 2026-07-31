@@ -318,6 +318,7 @@ Generated from the executable model: the methodology narrative comes from the fr
 | `R-core-periphery-import-ratchet` | SETTLED | `framework-author` | A-core-periphery-layering-holds | A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only. |
 | `R-wheel-build-atomic-verified` | SETTLED | `framework-author` | A-python-stack | A release artifact shall be produced by a single atomic build command that fuses population + build + a self-check refusing to emit an artifact whose shipped tool-member names do not match the source-of-truth tool set on disk. |
 | `R-binary-enforcement-gradient` | REJECTED | `framework-author` | — | The three-level enforcement gradient (PROSE/STRUCTURAL/ENFORCED) shall be collapsed into a binary ENFORCED/NOT_ENFORCED distinction plus a separate inherently_prose flag, because the middle STRUCTURAL tier is redundant. |
+| `R-engine-docs-fingerprint-current` | SETTLED | `framework-author` | A-finite-context-operators, A-compaction-loses-working | A domain's committed docs/gen/ENGINE-VERSION.md, if present, SHALL carry a stamped engine content fingerprint matching the current engine's own fingerprint (gate.EngineDocsFingerprint), so that a domain whose generated docs were produced by a different engine build is mechanically surfaced as stale. |
 
 ## Stakeholders
 

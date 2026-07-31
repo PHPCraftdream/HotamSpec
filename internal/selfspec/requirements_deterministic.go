@@ -110,6 +110,25 @@ var _ = Requirements.MustRegister("R-drift-structurally-impossible", ontology.Re
 	DeclOrder:      1,
 })
 
+var _ = Requirements.MustRegister("R-engine-docs-fingerprint-current", ontology.Requirement{
+	ID:             "R-engine-docs-fingerprint-current",
+	Claim:          "A domain's committed docs/gen/ENGINE-VERSION.md, if present, SHALL carry a stamped engine content fingerprint matching the current engine's own fingerprint (gate.EngineDocsFingerprint), so that a domain whose generated docs were produced by a different engine build is mechanically surfaced as stale.",
+	Owner:          "framework-author",
+	Status:         "SETTLED",
+	Why:            "Consumer-generated documentation can silently lag behind engine evolution: the engine changes in its own commits, the consumer's generated docs sit in a separate repository, and no mechanism told the consumer's resolver 'the engine that produced these docs is not the engine you have now.' This exact class of problem caused the W0.1 regression (task #369's engine upgrade retroactively broke domains in another repository with zero warning). Task #400 closes that gap: gate.EngineDocsFingerprint computes a deterministic sha256 content-hash over internal/generator, internal/ontology, internal/loader (the packages whose changes affect generated-doc shape/content) -- deliberately NOT a raw git commit SHA (too noisy, invalidates on every unrelated commit) NOR a manually-bumped version number (defaults to 'dev' for local builds). generator.BuildEngineVersionMD stamps the short 16-char fingerprint into every domain's docs/gen/ENGINE-VERSION.md on genSpec; check_engine_docs_fingerprint_current fires one violation when the stamped fingerprint disagrees with the current engine's own. ENFORCED by check_engine_docs_fingerprint_current (internal/invariants/engine_version_current.go): unconditional for every domain, honest no-op when the file is absent (same class as check_spec_md_current) or when the current engine's fingerprint cannot be computed (a consumer repo whose engine is a compiled binary without source). No opt-in trigger needed: this is NOT a new obligation riding an already-spent trigger, it is the same class of unconditional staleness check check_spec_md_current/check_domain_claude_md_current already are.",
+	Assumptions:    []string{"A-finite-context-operators", "A-compaction-loses-working"},
+	Relations:      []ontology.Relation{},
+	Enforcement:    "ENFORCED",
+	EnforcedBy:     []string{"check_engine_docs_fingerprint_current"},
+	MTag:           "",
+	Enforceability: "ENFORCEABLE",
+	Summary:        "",
+	CreatedAt:      "2026-07-31",
+	SettledAt:      "2026-07-31",
+	SourceRefs:     []string{"internal/gate/engine_fingerprint.go", "internal/generator/engine_version.go", "internal/invariants/engine_version_current.go"},
+	DeclOrder:      275,
+})
+
 var _ = Requirements.MustRegister("R-enforceability-kind-declared", ontology.Requirement{
 	ID:             "R-enforceability-kind-declared",
 	Claim:          "A requirement shall carry an enforceability kind from the set ENFORCEABLE or INHERENTLY_PROSE, distinguishing real closeable debt from permanent discipline.",

@@ -14,7 +14,7 @@ growing while closeable debt (ENFORCEABLE, PROSE/STRUCTURAL of SETTLED) shrinks.
 INHERENTLY_PROSE requirements are NOT counted as debt — they are honestly-labeled
 judgment calls no check_* could ever verify.
 
-**Burn-down: SETTLED-ENFORCED 182 / SETTLED 258; closeable-now 5; feature-blocked 35; inherent discipline 36; DRAFT 6; OPEN 0; REJECTED 43.**
+**Burn-down: SETTLED-ENFORCED 183 / SETTLED 259; closeable-now 5; feature-blocked 35; inherent discipline 36; DRAFT 6; OPEN 0; REJECTED 43.**
 
 ---
 
@@ -297,6 +297,7 @@ These ENFORCEABLE requirements stay PROSE because the feature they describe does
 | `R-project-root-not-hardcoded` | TestProjectRoot_Priority_NativeMarkerBeatsPyproject | HotamSpec resolves the consumer's project root through a single function, paths.ProjectRoot() (internal/paths/project_root.go), via a documented R1-R6 priority chain, never through a raw runtime.Caller-based parents-climb guess at the consumer's files. |
 | `R-requirement-freshness-fields` | check_requirement_history_wellformed | A Requirement carries optional freshness fields (last_reviewed_at, review_after, evidence, source_refs) and a DERIVED, append-only per-node change history (history: slice of HistoryEntry), where each HistoryEntry is written by the proposal system from the field diff on every UPDATE of an already-existing node (never at first creation, never hand-authored), and the history trail is STRUCTURALLY well-formed: every entry has a non-empty at-stamp and summary, and stamps are monotonically non-decreasing. |
 | `R-core-periphery-import-ratchet` | TestCorePeriphery_ImportRatchet | A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only. |
+| `R-engine-docs-fingerprint-current` | check_engine_docs_fingerprint_current | A domain's committed docs/gen/ENGINE-VERSION.md, if present, SHALL carry a stamped engine content fingerprint matching the current engine's own fingerprint (gate.EngineDocsFingerprint), so that a domain whose generated docs were produced by a different engine build is mechanically surfaced as stale. |
 
 ## DRAFT (not yet promoted)
 

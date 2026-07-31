@@ -5,7 +5,7 @@ reader: (unresolved-reader)
 
 Generated from `implemented_by`/`verified_by` on each requirement in this domain's `graph.json` (PLAN-authored-spec-discipline.md §4/§7). Each authored link is RE-RESOLVED here (same resolver the mechanical gate uses — internal/gate/spec_resolver.go) purely for display: `resolves` means the named file:symbol / file:test was found by parsing that file; `ORPHANED` means it was not (stale reference, typo, or renamed/deleted symbol) — the mechanical gate (internal/invariants/authored_links.go) is the actual enforcement point, this doc only reports its verdict for navigation. The `scenario` column (PLAN-scenario-generated-spec.md §3 W1.4) is a CHEAP, AST-only signal (no test execution) that a verified_by test's body calls `hotamspec.NewScenario(...)` — this is the only scenario signal this document ever renders, so it stays byte-identical on every `gen-spec` run. The REAL, executed narrative — Given/When/Then/Value steps from an actually-passing `go test` run — lives in `docs/gen/SPEC.md`, generated only by `hotam gen-spec --spec` (real, but expensive: a full compile+run per verified_by entry); that file's own freshness is separately enforced by `check_spec_md_current`, so this document does not need to (and must not) overlay its outcome here.
 
-**13 requirement(s) carry authored links; 173 are engine-enforced (enforced_by, no authored carrier); 121 are prose/roadmap-debt (no code carrier yet).**
+**13 requirement(s) carry authored links; 174 are engine-enforced (enforced_by, no authored carrier); 121 are prose/roadmap-debt (no code carrier yet).**
 
 ---
 
@@ -206,6 +206,7 @@ SETTLED+ENFORCED requirements proven by the engine mechanism (a `check_*` invari
 | `R-signoff-preserved-in-substrate` | check_signoff_chosen_variant_resolves, check_decided_conflict_carries_signoff, check_history_signoff_has_provenance, check_history_signoff_decided_by_is_known_stakeholder | A resolver signoff on a DECIDED/HELD Conflict or a transitioned Assumption shall be preserved as a Signoff payload IN the graph node (not only in gitignored proposal JSON) -- decided_by, date, verbatim (optional), instrument and chosen_variant (for HELD->DECIDED) are auditable from the substrate. |
 | `R-project-root-not-hardcoded` | TestProjectRoot_Priority_NativeMarkerBeatsPyproject | HotamSpec resolves the consumer's project root through a single function, paths.ProjectRoot() (internal/paths/project_root.go), via a documented R1-R6 priority chain, never through a raw runtime.Caller-based parents-climb guess at the consumer's files. |
 | `R-core-periphery-import-ratchet` | TestCorePeriphery_ImportRatchet | A core module (ontology / graph / proposal / invariant layer) shall never import a periphery module (attention, reflection, generator-internal) -- the core/periphery dependency arrow points one way only. |
+| `R-engine-docs-fingerprint-current` | check_engine_docs_fingerprint_current | A domain's committed docs/gen/ENGINE-VERSION.md, if present, SHALL carry a stamped engine content fingerprint matching the current engine's own fingerprint (gate.EngineDocsFingerprint), so that a domain whose generated docs were produced by a different engine build is mechanically surfaced as stale. |
 
 ## Prose / roadmap-debt (no code carrier yet)
 

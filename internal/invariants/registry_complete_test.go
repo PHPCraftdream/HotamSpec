@@ -218,7 +218,15 @@ func TestRegistryComplete_CountMatchesTarget(t *testing.T) {
 	// observed with scenario_authority:"quality" (pinned in graph.lock's
 	// ScenarioAuthorityQualityObserved), silently withdrawing that opt-in is
 	// a regression violation.
-	const expected = 121
+	// Task #400 (W2.3: engine identity fingerprint) added a 122nd,
+	// check_engine_docs_fingerprint_current (engine_version_current.go): the
+	// mechanical staleness gate for a domain's committed docs/gen/ENGINE-
+	// VERSION.md -- if present, its stamped engine content fingerprint (a
+	// deterministic sha256 content-hash over internal/generator,
+	// internal/ontology, internal/loader) MUST match the current engine's own
+	// fingerprint; a domain with no ENGINE-VERSION.md is an honest no-op,
+	// mirroring check_spec_md_current's identical opt-in-when-absent shape.
+	const expected = 122
 	if len(invs) != expected {
 		t.Fatalf("expected %d registered invariants (check_lifecycle_wellformed is an unregistered non-graph helper), got %d", expected, len(invs))
 	}

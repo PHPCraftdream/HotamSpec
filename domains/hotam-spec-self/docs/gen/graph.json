@@ -352,6 +352,7 @@
     "R-enforcement-levels-declared",
     "R-enforcement-perimeter-baselines-guarded",
     "R-enforcement-perimeter-visible",
+    "R-engine-docs-fingerprint-current",
     "R-entities-md-generated",
     "R-entity-checks-by-iteration",
     "R-entity-derived-requirement",
@@ -12200,6 +12201,38 @@
       "status": "REJECTED",
       "verified_by": [],
       "why": "REJECTED — REPLACES by enforceability (ENFORCEABLE | INHERENTLY_PROSE) + Requirement.is_closeable_debt(). The ratchet pressure the binarization was meant to deliver is ALREADY binary and lives on a different axis than the descriptive enforcement gradient. is_closeable_debt() returns `enforcement != ENFORCED and enforceability == ENFORCEABLE` — it ignores the PROSE-vs-STRUCTURAL distinction entirely and keys the only normative pressure (real, closeable debt) off enforceability, not off which of the three descriptive tiers a claim sits in. Concretely: most STRUCTURAL nodes already carry enforceability=INHERENTLY_PROSE and are therefore NOT counted as debt; after Этап T (#122) real closeable debt is down to 2 nodes. Binarizing PROSE/STRUCTURAL/ENFORCED would be a ~50-site code refactor (proposal.py, apply_proposal.py, gen_spec.py, PROPOSAL-REFERENCE.md, ~270 existing graph nodes) for exactly zero change to the debt metric. The three-level enforcement value is retained as a DESCRIPTIVE, non-normative scale (how deeply a claim is crystallized: recorded / addressable / auto-checked) — useful for reading and reporting — while all normative convergence pressure stays on the already-binary enforceability + is_closeable_debt() pair. REVISIT WHEN a second, independent normative consumer of the STRUCTURAL tier appears (something that must treat STRUCTURAL differently from PROSE for a gate/metric, not merely for display). — (was: external-review backlog item D3 — binarize the enforcement gradient.) — (was: External-review backlog item D3. Proposed to binarize the enforcement scale.)"
+    },
+    {
+      "assumptions": [
+        "A-finite-context-operators",
+        "A-compaction-loses-working"
+      ],
+      "claim": "A domain's committed docs/gen/ENGINE-VERSION.md, if present, SHALL carry a stamped engine content fingerprint matching the current engine's own fingerprint (gate.EngineDocsFingerprint), so that a domain whose generated docs were produced by a different engine build is mechanically surfaced as stale.",
+      "enforced_by": [
+        "check_engine_docs_fingerprint_current"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-07-31",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        }
+      ],
+      "id": "R-engine-docs-fingerprint-current",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/gate/engine_fingerprint.go",
+        "internal/generator/engine_version.go",
+        "internal/invariants/engine_version_current.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "Consumer-generated documentation can silently lag behind engine evolution: the engine changes in its own commits, the consumer's generated docs sit in a separate repository, and no mechanism told the consumer's resolver 'the engine that produced these docs is not the engine you have now.' This exact class of problem caused the W0.1 regression (task #369's engine upgrade retroactively broke domains in another repository with zero warning). Task #400 closes that gap: gate.EngineDocsFingerprint computes a deterministic sha256 content-hash over internal/generator, internal/ontology, internal/loader (the packages whose changes affect generated-doc shape/content) -- deliberately NOT a raw git commit SHA (too noisy, invalidates on every unrelated commit) NOR a manually-bumped version number (defaults to 'dev' for local builds). generator.BuildEngineVersionMD stamps the short 16-char fingerprint into every domain's docs/gen/ENGINE-VERSION.md on genSpec; check_engine_docs_fingerprint_current fires one violation when the stamped fingerprint disagrees with the current engine's own. ENFORCED by check_engine_docs_fingerprint_current (internal/invariants/engine_version_current.go): unconditional for every domain, honest no-op when the file is absent (same class as check_spec_md_current) or when the current engine's fingerprint cannot be computed (a consumer repo whose engine is a compiled binary without source). No opt-in trigger needed: this is NOT a new obligation riding an already-spent trigger, it is the same class of unconditional staleness check check_spec_md_current/check_domain_claude_md_current already are."
     }
   ],
   "schema_version": 3,
