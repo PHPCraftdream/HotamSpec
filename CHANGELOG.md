@@ -16,6 +16,76 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Wave summary — code-authority-completion (tasks #388-#402, #404-#405)
+
+Full plan: `docs/PLAN-code-authority-completion.md`. Individual task entries below carry the full
+technical detail (file-by-file, verification-by-verification); this section is the connected
+narrative a reader should start with.
+
+**Trigger.** Two independent architectural reviews (one `@oh`-delegated, one separately produced)
+converged on the same root cause: task #369 had wired a new mechanical obligation
+(`check_claim_matches_scenario`) into an already-spent opt-in trigger (`discipline:"full"`),
+breaking two real consumer domains (`PRAT-hotam/domains/prat`, `gpsm-sm`) with a live regression —
+20 and 23 violations respectively, zero action on their part — while the "any information system
+describable as objects/fields/methods/tests" promise was still badly incomplete on the model side
+(interfaces/constructors/consts invisible to the scan, no mock/port classification, no
+EntityType-to-Go link, no symmetric public-surface-completeness check, no scenario content-quality
+gate).
+
+- **W0 — stop the bleeding (#388-#392).** Fixed the regression by giving `check_claim_matches_scenario`
+  its own opt-in trigger (`claim_authority:"scenario"`) instead of weakening the check; deduped
+  scenario-title derivation per-`verified_by`-entry; restored a `Why` field silently dropped from a
+  vendored mirror; unified vendor/generated-file exclusion across three producers; added
+  `ProposedGoal`/`ProposedEntityInstance` JSON-proposal kinds. Established the wave's central,
+  repeatedly-cited law: **an already-spent opt-in trigger is closed to new obligations — a new duty
+  needs its OWN, separately-declared, separately-ratcheted trigger**
+  (`R-opt-in-trigger-owns-its-own-obligations`).
+- **W1 — complete the model half (#393-#397).** AST scan extended to interface methods,
+  constructors, typed consts, struct tags, doc comments (previously invisible); added
+  `object`/`value`/`port`/`mock`/`policy` semantic classification (mocks are legitimate executable
+  surrogates, never structurally exempted); linked `EntityType.ModelSymbol` to real Go symbols and
+  REJECTED (not fulfilled) a self-hosted requirement that had been demanding the wrong direction
+  (Go-generation-from-EntityType); added a symmetric "every public symbol linked+scenario'd or
+  explicitly marked infrastructure/ignored" check (own trigger, `public_surface_authority:"linked"`);
+  added a scenario content-quality gate — non-empty title, exact reqID match, real
+  Given-before-When-before-Then ordering (own trigger, `scenario_authority:"quality"`).
+- **W2 — make proof visible and cheap (#398-#400).** Surfaced `RequirementState()` in `hotam req
+  show`/`hotam brief` (deliberately not in `list`/`search`, which would multiply real-test-execution
+  cost across a whole roster, and not in `TRACEABILITY.md`/`COVERAGE.md`, which task #317 made
+  execution-independent for `hotam land`'s idempotency); built a five-section evidence packet into
+  `hotam brief` (signatures, port/mock contract, real Given/When/Then, related entity/process),
+  promoting a citation-matcher from `internal/invariants` up into `internal/gate` along the way
+  (a layering fix, `internal/query` must not depend on the enforcement layer); added an
+  engine-identity content-hash fingerprint (deliberately not the raw git commit SHA, which would
+  invalidate on every unrelated commit) stamped into `docs/gen/ENGINE-VERSION.md`, with an
+  unconditional freshness check.
+- **W3 — prove it on a real vertical slice (#404-#405, replacing the original umbrella task #401).**
+  Founded the `life` domain (a separate repository, `D:\ai_dev\prat\life`) with 7 objects, one real
+  Lifecycle, one port+mock, 7 requirements with real scenarios — the first real domain to opt into
+  `discipline:"full"` plus both of this wave's new triggers — then ran a genuinely fresh cold-start
+  AI evaluation (15 pre-written questions, pre-written answer key, zero prior context). Result: 14/15
+  (93%) correct, median 1 tool call per question (bar: ≤5), ~15,000 tokens for all 15 questions
+  combined (bar: ≤15k per question; the plan's own cited baseline was ~54k for one question). Full
+  report: `docs/reviews/2026-07-31-life-methodology-acceptance.md`.
+- **W4 — reconcile docs with reality (#402).** Fixed 5 documentation-vs-reality gaps, including a
+  real correction found via ground-truth measurement: the plan's own "289 of 302 requirements lack a
+  carrier" estimate was dramatically wrong (didn't account for `enforced_by` alone satisfying the
+  gate) — the real, measured number is 43.
+
+**Verification discipline.** Every task was independently zero-trust-verified before committing:
+the actual diff read, build/vet/gofmt/targeted-tests/all-violations-on-both-self-domains/full-suite
+all re-run personally, and in three cases a delegate's own claimed "refutation test" (deliberately
+breaking a check to confirm it fires, then reverting) was personally reproduced rather than trusted.
+One cross-domain staleness gap a delegate missed (task #396: `hotam-dev`'s `CLAUDE.md` referencing
+`hotam-spec-self`'s pulse figures) was caught by the resolver's own `all-violations` run and fixed
+before committing; every subsequent task's brief was updated to warn about this exact class of gap.
+
+**A separate, related deliverable**: mid-wave, a read-only test-suite-speed investigation
+(`docs/reviews/2026-07-30-test-suite-speed-analysis.md`, commit `9c930c5`) found the session's own
+`go test ./...` runs were the dominant time cost, largely from concurrent-agent contention on this
+shared workspace; its top recommendation (one full-suite run per commit boundary, never concurrent
+with another agent) informed how later tasks in this wave were verified.
+
 ### Changed
 - **Documentation reconciliation: corrected five claims where the docs described a different reality
   than the code (task #402, W4.1).** An agent reading the docs got two incompatible instructions about
