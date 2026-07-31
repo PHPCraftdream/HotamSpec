@@ -17,10 +17,19 @@ specification**. Фреймворк не пишет модель за агент
 результат** (реальные ссылки, реальные тесты) и генерирует лишь **производные проекции**
 (`REQUIREMENTS.md`, `MODELS.md`, `TRACEABILITY.md`, `COVERAGE.md`, `UNENFORCED.md`) — не сам код.
 
-Рекурсивно: сам HotamSpec построен так же. Его engine-код (`internal/ontology`, `internal/proposal`,
-...) authored руками; домен `hotam-spec-self` связывает движковые требования с этим реальным кодом
-через те же `implemented_by`/`verified_by` поля, которые этот домен использует для любого другого
-домена — фреймворк проверяется своей же дисциплиной против себя.
+Рекурсивно: сам HotamSpec построен так же — но с ЗАЯВЛЕННОЙ асимметрией. Его engine-код
+(`internal/ontology`, `internal/proposal`, ...) authored руками; домен `hotam-spec-self` связывает
+движковые требования с этим реальным кодом через те же `implemented_by`/`verified_by` поля и держит
+над собой СТРУКТУРНЫЙ пол (реальные символы/тесты/ссылки, `check_self_requirements_match_registry`
++ RAC-A/B). НО домен НЕ объявляет `discipline: "full"` в `manifest.json` и потому НЕ opt-in в ПОЛНУЮ
+сценарно-генерируемую спеку, которую требует от consumer-доменов (`check_settled_requires_scenario`
+и смежные гейты — honest no-op без opt-in). Это осознанный долг, не тайное исключение: на 2026-07-31
+только 43 из 259 SETTLED требований домена не имеют носителя (ни `enforced_by`, ни `INHERENTLY_PROSE`,
+ни `implemented_by`+`verified_by`) — остальные проходят через движковый `enforced_by` (180) или честно
+помечены `INHERENTLY_PROSE` (36). Замер задачи #402: временный flip `discipline:"full"` даёт ровно 43
+нарушения `check_settled_requires_scenario` (не ~289 из ранних оценок — те не учитывали, что `enforced_by`
+сам по себе удовлетворяет гейт). Закрыть долг — снабдить носителем эти 43 и провести сценарную
+миграцию, а не переключить флаг.
 
 ## 1. Authored `spec/` слой
 
@@ -240,9 +249,16 @@ slice (не map — map-order hazard закрыт структурно), зна�
 `BuildSpecFromRows`). Поэтому `gen-spec` по умолчанию её НЕ пишет — каждый существующий вызов
 остаётся таким же быстрым и byte-identical, как до этой волны; генерация нормативного текста
 opt-in per run. Тело под каждым требованием = claim (из `graph.json`) + Given/When/Then/Value-
-нарратив реального прогона; ручного текста в `docs/gen/` нет вообще. `graph.json` остаётся
-бухгалтерией (id, короткий claim, статус); SPEC.md — производная проекция, никогда первоисточник
-(подтверждается D2).
+нарратив реального прогона. Уточнение о границе «ручного текста»: файлы `docs/gen/` МЕХАНИЧЕСКИ
+регенерируются `gen-spec` и не правятся по месту, но их нормативное тело — это АВТОРСКИЙ prose
+(поля `Claim`/`Why`/`Context`, написанные руками в `graph.json` и спроецированные дословно);
+сгенерирована лишь СТРУКТУРА (таблицы, ID, статусы, кросс-ссылки, счётчики), не сам текст.
+Измерено (задача #402): авторский prose — ~12% объёма `docs/gen/*.md` на «тощем» домене (hotam-dev)
+и ~49% на self-hosting-домене (hotam-spec-self); один авторский `Claim` — ~54% `REQUIREMENTS.md`
+(hotam-spec-self). SPEC.md — единственная проекция, чьё тело ДОПОЛНЯЕТСЯ машинно-сгенерированным
+сценарным нарративом; прочий нормативный текст в `docs/gen/` — проекция авторских полей.
+`graph.json` остаётся бухгалтерией (id, короткий claim, статус); SPEC.md — производная проекция,
+никогда первоисточник (подтверждается D2).
 
 ### 8.3 Гейты обязательности (W2.1–W2.4) — честный NO-OP до opt-ина
 
@@ -315,3 +331,25 @@ coverage-proof, byte-identical SPEC.md), зеркальный аудит сер�
 класса вопросов, на который ни одна существующая проекция не отвечает, — повод завести для него
 строку в этой таблице и (если это реальная потребность) SETTLED-требование по образцу
 R-domain-overview-projection, а не молча оставить пробел.
+
+## 11. Code-authority: требования как Go-код (`sync-domain`)
+
+§1–§7 описывают домен, чьи требования живут в `graph.json` и попадают туда через mediation loop
+(`hotam apply-proposal`/`land` над JSON-профсами). Альтернатива (task #365–#367, RAC2): домен
+объявляет `"requirements_authority": "code"` в `manifest.json` и авторитативно держит требования
+как Go-литералы в своём `spec/requirements.go` (через зеркальный registry), а граф — их проекция.
+
+Механика (consumer-домен):
+1. `hotam vendor-ontology --domain <path>` — вендорит минимальное зеркало `Requirement`+`Registry`
+   из `internal/ontology/canon` в `<domain>/spec/hotamontology/`.
+2. `hotam scaffold-registrydump --domain <path>` — пишет `<domain>/spec/registrydump/main.go`,
+   печатающий `json.Marshal(Requirements.All())`.
+3. Автор пишет требования как `[]ontology.Requirement` в `<domain>/spec/requirements.go`.
+4. `hotam sync-domain --domain <path>` — читает Go-registry (через `go run ./registrydump`),
+   dry-run по умолчанию, `--confirm-hash` для записи, зеркалируя Go→graph (тот же handshake и
+   gate-order, что у `sync-self`). `requirements_authority: "code"` затем блокирует
+   `apply-proposal`/`land` от ручного авторинга Requirement/Rejection для этого домена.
+
+Self-hosting-домен `hotam-spec-self` использует ту же механику через `sync-self` (его Go-registry —
+`internal/selfspec/requirements_*.go`, §self-hosting lock). Направление ВСЕГДА Go→graph (код —
+первоисточник), никогда graph→Go: это тот же принцип «authored spec, не генератор кода», что и §9.

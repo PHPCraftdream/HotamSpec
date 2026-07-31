@@ -69,8 +69,9 @@ The `hotam` binary (see `cmd/hotam/main.go`) implements 21 commands:
 
 ```
 hotam init <dir> [--name <domain-name>] [--profile consumer|full]
-        Scaffold a new domain: minimal graph.json (seed Stakeholder + seed
-        SETTLED Requirement, all-violations=0 immediately), manifest.json
+        Scaffold a new domain: a genuinely EMPTY graph.json (0 nodes;
+        all-violations=0 by construction -- task #364 retired the earlier
+        auto-seeded Stakeholder + SETTLED Requirement), manifest.json
         (defaults to the consumer gen-spec profile, matching init-project),
         docs/gen/, and a README.md pointing at the next commands to run.
         --profile full overrides to the heavier framework-self-hosting doc
@@ -80,10 +81,15 @@ hotam init <dir> [--name <domain-name>] [--profile consumer|full]
 hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD]
         Bootstrap an external business project's full Hotam-Spec layout in
         one call: scaffold a base domain under <dir>/domains/<name> (default
-        <name>=main), write the project-root marker (.hotam-spec-project),
-        and render the root crystal (CLAUDE.md/AGENTS.md/GEMINI.md) + all
-        docs/gen/* via gen-spec. Refuses to overwrite an existing project
-        marker or CLAUDE.md. <dir> may be anywhere on disk.
+        <name>=main, empty graph -- 0 nodes, task #364), write the project-root
+        marker (.hotam-spec-project), and render the root crystal
+        (CLAUDE.md/AGENTS.md/GEMINI.md) + all docs/gen/* via gen-spec. Defaults
+        to --discipline full (BORN FULLY OBLIGATED: scaffolds spec/go.mod + the
+        vendored hotamspec recorder, so every SETTLED requirement carries a
+        scenario-narrated verified_by test from the start; pass --discipline ""
+        for a bare soft-discipline domain matching `hotam init`). Refuses to
+        overwrite an existing project marker or CLAUDE.md. <dir> may be anywhere
+        on disk.
 
 hotam use <domain-name>
         Set the active-domain preference for the current project: records

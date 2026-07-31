@@ -16,6 +16,35 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Changed
+- **Documentation reconciliation: corrected five claims where the docs described a different reality
+  than the code (task #402, W4.1).** An agent reading the docs got two incompatible instructions about
+  who generates what and what counts as truth; this task closes those gaps with no graph-content change
+  and no new code behavior — all 27 Go-file edits are comment-only.
+  - **`internal/selfspec/requirements_*.go` (27 files):** replaced the misleading `// Code generated …
+    DO NOT EDIT BY HAND` banner (which pointed at a throwaway codegen program that was never committed
+    to git and went graph→Go — the opposite of today's sync direction) with an honest banner stating the
+    files are HAND-MAINTAINED Go source, kept in sync Go→graph via `hotam sync-self`. Comment-only.
+  - **`docs/AUTHORED-SPEC-CONTRACT.md`:** (a) §8.2 — the claim "no manual text in `docs/gen/` at all"
+    was false: measured authored prose is ~12% of `docs/gen/*.md` on the leanest domain (hotam-dev) and
+    ~49% on hotam-spec-self (the authored `Claim` alone is ~54% of `REQUIREMENTS.md`); the files are
+    regenerated but their normative body is projected human-authored `Claim`/`Why`, not pure derived
+    structure. (b) §0 — disclosed the declared asymmetry that `hotam-spec-self` does NOT opt into
+    `discipline:"full"` (so `check_settled_requires_scenario` is a no-op for it): a measured temporary
+    flip yields 43 violations, NOT ~289 as previously estimated — the old estimate ignored that
+    `enforced_by` alone satisfies the gate (180 of 259 SETTLED requirements pass that way; 36 more via
+    `INHERENTLY_PROSE`). (c) new §11 documents the code-authority path (`requirements_authority:"code"`,
+    `vendor-ontology`/`scaffold-registrydump`/`sync-domain`), previously absent from the contract.
+  - **`README.md`:** `hotam init`/`init-project` described a "seed Stakeholder + seed Requirement" that
+    task #364 retired (both now write a genuinely empty graph); `init-project` also now defaults to
+    `--discipline full` (BORN FULLY OBLIGATED) — corrected both descriptions.
+  - **`docs/QUICKSTART-CONSUMER.md`:** same seed→empty-graph correction throughout, plus a new concise
+    "Code-authority" section (the quickstart previously documented only the JSON-proposal path).
+  - **`docs/PLAN-code-authority-completion.md`:** `check_method_matches_docstring` was listed as a
+    "пустышка … implement or delete"; corrected to match the check's own (already-correct) `Why`: it is
+    an architecturally-justified honest no-op (`Claim`/`Rule`/`Why`/`Check` are fields of one struct
+    registered together, so docstring/body drift cannot arise), not unfinished work.
+
 ### Added
 - **Engine identity fingerprint stamped into every domain's generated docs via a new `docs/gen/ENGINE-VERSION.md`,
   with a mechanical freshness check (`check_engine_docs_fingerprint_current`) that fires when the stamped fingerprint
