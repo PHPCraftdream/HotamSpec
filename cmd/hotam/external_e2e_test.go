@@ -292,7 +292,9 @@ func TestExternal_InitGenSpecOutsideAnyProject_BareDomain(t *testing.T) {
 	// non-zero exit, so this assertion directly fails the test against the
 	// pre-fix code). After the tier-3 fix it must succeed and print a
 	// non-empty file listing.
-	genSpecOut := run(clearedEnv, "gen-spec", "--domain", domainDir)
+	// The lightweight consumer profile writes nothing for an empty domain, so
+	// the non-empty-listing proof runs under --profile full.
+	genSpecOut := run(clearedEnv, "gen-spec", "--domain", domainDir, "--profile", "full")
 	if strings.TrimSpace(genSpecOut) == "" {
 		t.Fatalf("gen-spec on a bare domain produced no file listing")
 	}
@@ -308,9 +310,10 @@ func TestExternal_InitGenSpecOutsideAnyProject_BareDomain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read generated CLAUDE.md: %v", err)
 	}
-	const gracefulMarker = "domains/ directory absent"
-	if !strings.Contains(string(crystal), gracefulMarker) {
-		t.Errorf("CLAUDE.md DOMAIN-MAP should carry the graceful empty text %q for a bare domain with no siblings; got:\n%s", gracefulMarker, string(crystal))
+	// The lightweight consumer crystal carries no DOMAIN-MAP for a lone domain:
+	// it must render cleanly (no hard error), titled by the domain.
+	if !strings.HasPrefix(string(crystal), "# bare-project") {
+		t.Errorf("bare-domain consumer CLAUDE.md should open with the domain title \"# bare-project\"; got:\n%s", string(crystal))
 	}
 }
 

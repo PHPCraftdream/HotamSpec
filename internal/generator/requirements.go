@@ -248,12 +248,8 @@ func gateSignoffRows(reqs []ontology.Requirement) []string {
 // := ... }` gate, cmd/hotam/gen_spec.go) and --profile full is what
 // re-enables it, so the pointer never dangles.
 //
-// The tools/INDEX.md pointer is a repo-root-relative bare path
-// ("framework/tools/INDEX.md"), because task #357 promoted the tool docs
-// (and GLOSSARY.md) from a per-domain framework/ directory to the PROJECT
-// root's framework/ — a single shared copy sibling to domains/. A repo-root-
-// relative reference is correct here: framework/ is genuinely at the repo
-// root, not under any one domain.
+// The commands pointer is `hotam -h`: the consumer profile no longer writes
+// framework/tools/* at all.
 func consumerClosingSection(domainName string) []string {
 	return []string{
 		"## About Hotam-Spec",
@@ -262,7 +258,7 @@ func consumerClosingSection(domainName string) []string {
 		"",
 		"This file covers this domain's own requirement roster only. For the framework itself:",
 		"",
-		"- **Implemented commands** — `framework/tools/INDEX.md`.",
+		"- **Implemented commands** — `hotam -h`.",
 		"- **Operating loop** (how an agent should read and act on this model) — the root crystal: `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.",
 		"- **Full methodology reference** (every §-section's Canon/Narrative/Why) — not generated under this profile; regenerate with `hotam gen-spec --profile full` if ever needed.",
 		"",

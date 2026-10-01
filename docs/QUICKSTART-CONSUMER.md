@@ -39,11 +39,14 @@ scaffolds a base domain (default name `main`) with a genuinely EMPTY graph
 (0 nodes -- `all-violations`-clean by construction, task #364), defaults to
 `--discipline full` (BORN FULLY OBLIGATED: it scaffolds `spec/go.mod` + the
 vendored `hotamspec` scenario recorder, so every SETTLED requirement you add
-later must carry a scenario-narrated `verified_by` test), writes the
-project-root marker (`.hotam-spec-project`, recording `main` as the active
-domain), and renders the root crystal (`CLAUDE.md`/`AGENTS.md`/`GEMINI.md`)
-plus every `docs/gen/*` view — a fully working project the instant the
-command returns:
+later must carry a scenario-narrated `verified_by` test) with requirements in
+code (`requirements_authority: "code"`: it also vendors the ontology mirror
+and the registrydump bridge and writes an empty `spec/requirements.go`),
+writes the project-root marker (`.hotam-spec-project`, recording `main` as the
+active domain), and renders the lightweight root crystal
+(`CLAUDE.md`/`AGENTS.md`/`GEMINI.md`, a few KB: requirements inline, status,
+how to change, rules) plus the few `docs/gen/*` views that carry data — a
+fully working project the instant the command returns:
 
 ```bash
 mkdir -p my-project
@@ -54,10 +57,13 @@ hotam init-project .
 This creates `domains/main/graph.json` (a genuinely EMPTY graph -- 0 nodes;
 task #364 retired the earlier auto-seeded Stakeholder `owner` + Requirement
 `R-domain-exists`), `domains/main/manifest.json` (`discipline: "full"`,
-defaulted to the consumer gen-spec profile), `domains/main/spec/` (a Go
-module + the vendored `hotamspec` recorder, ready for scenario-narrated
-tests), `domains/main/docs/gen/`, and the root crystal. Inspect what it
-made you:
+`requirements_authority: "code"`, defaulted to the consumer gen-spec
+profile), `domains/main/spec/` (a Go module + the vendored `hotamspec`
+recorder, the `hotamontology` mirror, `registrydump`, and an empty
+`requirements.go`), `domains/main/docs/gen/` (`SPEC.md`), and the root
+crystal. Pass `--discipline ""` instead to get a domain without `spec/`
+scaffolding whose requirements go through the JSON proposals of section 4.
+Inspect what it made you:
 
 ```bash
 hotam all-violations --domain domains/main   # 0 violations — graph clean
@@ -134,6 +140,13 @@ without getting lost. `--limit N` caps how many signals it prints (default
 
 ## 4. Create your first Stakeholder, Requirement, and Conflict
 
+> A default `hotam init-project` domain keeps its requirements in code: write
+> them in `spec/requirements.go` and project them with `hotam sync-domain` (see
+> "Requirements as code" below); `hotam land` refuses Requirement proposals
+> there. The Requirement steps (c, d) below apply to a domain created with
+> `hotam init-project --discipline ""` or a bare `hotam init`. Stakeholders,
+> axes, conflicts and assumptions always use the JSON path.
+
 The graph is **never hand-edited** past the `hotam init-project` (or `hotam
 init` / bare `graph.json`) bootstrap above. Every change goes through
 `hotam apply-proposal`, which reads a small JSON file, applies it to
@@ -182,12 +195,21 @@ The graph in `graph.json` is the source of truth, but it is not meant to be
 read directly. `hotam land` (used for r1.json/r2.json above) already
 regenerates docs/gen as part of its pipeline; `apply-proposal` alone (used
 for the stakeholders/axis/conflict above) does not. Regenerate the Markdown
-views (`REQUIREMENTS.md`, `TENSIONS.md`, `CONSTITUTION.md`, ...) under
-`domains/main/docs/gen/` standalone at any time with:
+views under `domains/main/docs/gen/` standalone at any time with:
 
 ```bash
 hotam gen-spec --domain domains/main
 ```
+
+The consumer profile is lightweight: it writes `SPEC.md` (with `--spec`),
+`REQUIREMENTS.md` (not for code-authority + `discipline: "full"` domains,
+whose text lives in `spec/requirements.go` and `SPEC.md`), and
+`TENSIONS.md`/`PIPELINE.md`/`HISTORY.md`/`OPEN.md`/`UNENFORCED.md` only when
+the domain has data for them. The engine's own self-documentation
+(`CONSTITUTION.md`, `TRACEABILITY.md`, `COVERAGE.md`, `REPO-MAP.md`,
+`AGENT-CONTEXT.md`, `framework/tools/`, `framework/GLOSSARY.md`, ...) is not
+written; `hotam gen-spec --domain domains/main --profile full` renders it
+one-shot, and the next consumer run removes it again.
 
 ## 6. Verify the graph stays structurally sound
 
@@ -239,19 +261,31 @@ therefore needs `--domain` only as an OVERRIDE, not on every call — this
 guide keeps it explicit on every example anyway, as the most literal,
 unambiguous, copy-pasteable form for a first read.
 
-## Code-authority: requirements as Go code (optional)
+## Requirements as code (the `init-project` default)
 
-The steps above author requirements as JSON proposals (`hotam apply-proposal`/
-`land`) — `graph.json` is the source of truth. A consumer domain may instead
-declare `"requirements_authority": "code"` in its `manifest.json` and keep its
-requirements as Go literals in its own `spec/requirements.go`, with the graph
-as a derived projection (task #365–#367). The flow:
+The JSON steps above author requirements as proposals (`hotam apply-proposal`/
+`land`) — `graph.json` is the source of truth. A default `init-project` domain
+instead declares `"requirements_authority": "code"` in its `manifest.json` and
+keeps its requirements as Go literals in its own `spec/requirements.go`, with
+the graph as a derived projection (task #365–#367). `init-project` already
+vendored the ontology mirror, scaffolded `registrydump` and wrote an empty
+registry. The flow:
+
+```bash
+# ...write the scenario test and register the requirement in domains/main/spec/requirements.go...
+hotam sync-domain --domain domains/main            # dry-run: preview Go->graph diff + its hash
+# show the diff to the owner; after approval:
+hotam sync-domain --domain domains/main --today 2026-07-12 --confirm-hash <hex>
+hotam all-violations --domain domains/main         # must print 0
+```
+
+For a domain created by bare `hotam init` or `--discipline ""`, opt in manually
+first:
 
 ```bash
 hotam vendor-ontology --domain domains/main        # vendor the Requirement+Registry mirror into spec/hotamontology/
 hotam scaffold-registrydump --domain domains/main  # write spec/registrydump/main.go (prints the registry as JSON)
-# ...author requirements as []ontology.Requirement in domains/main/spec/requirements.go...
-hotam sync-domain --domain domains/main            # dry-run: preview Go->graph diff; --confirm-hash <hex> to write
+# ...then add "requirements_authority": "code" to manifest.json and author spec/requirements.go
 ```
 
 Under `discipline: "full"` in the manifest, the Claim of any requirement with

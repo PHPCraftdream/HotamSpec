@@ -31,3 +31,5 @@ Thumbs.db
 /worktrees/
 # rush sub-agent prompts and envelopes
 /.rush/
+# Agent-tool worktrees
+/.claude/worktrees/

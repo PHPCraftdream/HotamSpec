@@ -58,8 +58,10 @@ func TestGenSpec_MissingGraphRendersCalmNotice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("R-empty-content-gen-notice: genSpec on missing graph.json must not fail, got: %v", err)
 	}
-	if len(written) == 0 {
-		t.Fatal("R-empty-content-gen-notice: genSpec wrote no files at all (expected the project-shared framework/ files at minimum)")
+	// The lightweight consumer profile writes no project-shared framework/
+	// files either, so an empty domain yields nothing at all.
+	if _, statErr := os.Stat(filepath.Join(projectRoot, "framework")); !os.IsNotExist(statErr) {
+		t.Errorf("R-empty-content-gen-notice: consumer profile must not write framework/, stat err=%v", statErr)
 	}
 
 	// docs/gen/ must either not exist, or exist with 0 files — no
@@ -160,7 +162,7 @@ func TestGenSpec_SharedProjectionsModeIndependent(t *testing.T) {
 	// to execute (no real `go test` subprocess spawned), keeping this fast
 	// while still exercising includeSpec=true's code path and establishing
 	// SPEC.md on disk.
-	if _, _, err := genSpec(domainDir, "", "2026-07-23", "", true); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-23", "full", true); err != nil {
 		t.Fatalf("genSpec --spec: %v", err)
 	}
 	afterSpec := readAll(t)
@@ -169,7 +171,7 @@ func TestGenSpec_SharedProjectionsModeIndependent(t *testing.T) {
 	// already-spec'd domain: SPEC.md already exists on disk, so REPO-MAP.md's
 	// own acknowledgment logic still lists it — all three files must render
 	// byte-identically to the --spec run.
-	if _, _, err := genSpec(domainDir, "", "2026-07-23", "", false); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-23", "full", false); err != nil {
 		t.Fatalf("genSpec plain (after --spec): %v", err)
 	}
 	afterPlain := readAll(t)
@@ -181,7 +183,7 @@ func TestGenSpec_SharedProjectionsModeIndependent(t *testing.T) {
 
 	// (3) Round-trip back to --spec once more: still byte-identical, proving
 	// this is a stable fixpoint, not an artifact of write order.
-	if _, _, err := genSpec(domainDir, "", "2026-07-23", "", true); err != nil {
+	if _, _, err := genSpec(domainDir, "", "2026-07-23", "full", true); err != nil {
 		t.Fatalf("genSpec --spec (round-trip): %v", err)
 	}
 	afterSpec2 := readAll(t)

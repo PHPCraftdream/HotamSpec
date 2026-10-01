@@ -185,7 +185,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// generator.XxxMDHasContent's own doc comment (internal/generator) for
 	// why the predicate is graph-emptiness: every one of these files'
 	// EmptyNotice fallback is keyed off the SAME g.IsEmpty() check already.
-	requirementsWritten := generator.RequirementsMDHasContent(g)
+	requirementsWritten := generator.RequirementsMDWritten(g, consumer)
 	openWritten := generator.OpenMDHasContent(g)
 	unenforcedWritten := generator.UnenforcedMDHasContent(g)
 	frameworkInvariantsWritten := generator.FrameworkInvariantsMDHasContent(g)
@@ -197,6 +197,23 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	agentContextWritten := generator.AgentContextMDHasContent(g)
 	liveStateWritten := generator.LiveStateMDHasContent(g)
 	graphJSONWritten := generator.GraphJSONHasContent(g)
+	if consumer {
+		// Lightweight consumer profile: HISTORY/OPEN/UNENFORCED only with
+		// their own data; engine self-documentation and derived indexes are
+		// not written (`gen-spec --profile full` renders them one-shot).
+		openWritten = openWritten && generator.ConsumerOpenMDHasContent(g)
+		unenforcedWritten = unenforcedWritten && generator.ConsumerUnenforcedMDHasContent(g)
+		modelsWritten = modelsWritten && !g.IsEmpty()
+		historyWritten = historyWritten && generator.ConsumerHistoryMDHasContent(g)
+		frameworkInvariantsWritten = false
+		constitutionWritten = false
+		traceabilityWritten = false
+		coverageWritten = false
+		repoMapWritten = false
+		agentContextWritten = false
+		liveStateWritten = false
+		graphJSONWritten = false
+	}
 
 	// requirementsMD..coverageMD hold the rendered content for the 8
 	// previously-unconditional top-level docs/gen/ projections
@@ -294,9 +311,13 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// vocabulary, byte-identical for every domain. Written to the repo-root
 	// framework/ directory and listed under REPO-MAP.md's "Framework reference
 	// (project-shared)" section (frameworkDocs below).
-	glossaryMD := generator.BuildGlossary(g, consumer)
-	frameworkDocs := []generator.GenDocEntry{
-		{Filename: "GLOSSARY.md", Content: glossaryMD},
+	var glossaryMD string
+	var frameworkDocs []generator.GenDocEntry
+	if !consumer {
+		glossaryMD = generator.BuildGlossary(g, consumer)
+		frameworkDocs = []generator.GenDocEntry{
+			{Filename: "GLOSSARY.md", Content: glossaryMD},
+		}
 	}
 	var repoMapDocs []generator.GenDocEntry
 	if requirementsWritten {
@@ -644,11 +665,13 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// so cleanupStaleProjectFrameworkFiles treats it as current rather than
 	// stale. FRAMEWORK-INVARIANTS.md, by contrast, is per-domain and now writes
 	// through mdDocs into docs/gen/ (where it was before task #355).
-	glossaryPath := filepath.Join(projectFrameworkDir, "GLOSSARY.md")
-	if err := writeFileMkdir(glossaryPath, []byte(glossaryMD)); err != nil {
-		return written, nil, err
+	if !consumer {
+		glossaryPath := filepath.Join(projectFrameworkDir, "GLOSSARY.md")
+		if err := writeFileMkdir(glossaryPath, []byte(glossaryMD)); err != nil {
+			return written, nil, err
+		}
+		written = append(written, glossaryPath)
 	}
-	written = append(written, glossaryPath)
 
 	// thinking/*.md and tools/*.md: BuildThinkingDocs/BuildToolDocs return
 	// maps (Go randomizes map iteration order per run), so the filenames are
@@ -689,36 +712,38 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// both land under the PROJECT-root framework/tools/ (sibling of domains/),
 	// NOT docs/gen/tools/ — engine self-documentation shared across all domains,
 	// byte-identical regardless of which domain regenerated it.
-	toolDocs := generator.BuildToolDocs(consumer)
-	toolKeys := make([]string, 0, len(toolDocs))
-	for cmd := range toolDocs {
-		if consumer && !toolIsImplemented(cmd) {
-			continue
+	if !consumer {
+		toolDocs := generator.BuildToolDocs(consumer)
+		toolKeys := make([]string, 0, len(toolDocs))
+		for cmd := range toolDocs {
+			if consumer && !toolIsImplemented(cmd) {
+				continue
+			}
+			toolKeys = append(toolKeys, cmd)
 		}
-		toolKeys = append(toolKeys, cmd)
-	}
-	sort.Strings(toolKeys)
-	toolPaths := make([]string, len(toolKeys))
-	toolContents := make([][]byte, len(toolKeys))
-	for i, cmd := range toolKeys {
-		toolPaths[i] = filepath.Join(projectFrameworkDir, "tools", cmd+".md")
-		toolContents[i] = []byte(toolDocs[cmd])
-	}
-	if err := writeFilesParallel(toolPaths, toolContents); err != nil {
-		return written, nil, err
-	}
-	written = append(written, toolPaths...)
+		sort.Strings(toolKeys)
+		toolPaths := make([]string, len(toolKeys))
+		toolContents := make([][]byte, len(toolKeys))
+		for i, cmd := range toolKeys {
+			toolPaths[i] = filepath.Join(projectFrameworkDir, "tools", cmd+".md")
+			toolContents[i] = []byte(toolDocs[cmd])
+		}
+		if err := writeFilesParallel(toolPaths, toolContents); err != nil {
+			return written, nil, err
+		}
+		written = append(written, toolPaths...)
 
-	// tools/INDEX.md: a single entry-point page splitting the registry into
-	// Implemented (real commands) vs Planned (methodology surface only), so a
-	// browser of framework/tools/ is not misled by the raw file count (40 .md
-	// files, only 13 backing runnable commands). Purely additive — one extra
-	// file alongside the per-tool docs above.
-	toolIndexPath := filepath.Join(projectFrameworkDir, "tools", "INDEX.md")
-	if err := writeFileMkdir(toolIndexPath, []byte(generator.BuildToolDocsIndex(consumer))); err != nil {
-		return written, nil, err
+		// tools/INDEX.md: a single entry-point page splitting the registry into
+		// Implemented (real commands) vs Planned (methodology surface only), so a
+		// browser of framework/tools/ is not misled by the raw file count (40 .md
+		// files, only 13 backing runnable commands). Purely additive — one extra
+		// file alongside the per-tool docs above.
+		toolIndexPath := filepath.Join(projectFrameworkDir, "tools", "INDEX.md")
+		if err := writeFileMkdir(toolIndexPath, []byte(generator.BuildToolDocsIndex(consumer))); err != nil {
+			return written, nil, err
+		}
+		written = append(written, toolIndexPath)
 	}
-	written = append(written, toolIndexPath)
 
 	// Root CLAUDE.md (R-claude-md-template-driven): the crystal is WRITTEN
 	// to disk only when --claude-md points at a path — the reference behavior
@@ -813,9 +838,14 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// (docs/gen/GLOSSARY.md, docs/gen/tools/*.md): those closed-list entries are
 	// no longer written to docs/gen/, so they register as stale and get removed
 	// — that is the migration path from the old location to the new one.
-	removedProjectFW, err := cleanupStaleProjectFrameworkFiles(projectFrameworkDir, written)
-	if err != nil {
-		return written, nil, err
+	// The shared framework/ is left alone while any domain of the project
+	// still renders the full profile (it owns those files).
+	var removedProjectFW []string
+	if !projectUsesFullProfile(repoRoot, consumer) {
+		removedProjectFW, err = cleanupStaleProjectFrameworkFiles(projectFrameworkDir, written)
+		if err != nil {
+			return written, nil, err
+		}
 	}
 	// Per-domain framework/ migration cleanup (task #357 retires #355's
 	// layout): the old domains/<name>/framework/ directory held FRAMEWORK-
@@ -958,6 +988,31 @@ func cleanupStaleGenFiles(genDir string, written []string, exemptTopLevelNames [
 	}
 	sort.Strings(removed)
 	return removed, nil
+}
+
+// projectUsesFullProfile reports whether any domain under repoRoot/domains
+// resolves to the full gen profile, in which case the project-shared
+// framework/ files belong to that domain and a consumer run must not delete
+// them. activeConsumer is this run's own profile: when this run is full the
+// answer is trivially yes (its own written list protects the files anyway).
+func projectUsesFullProfile(repoRoot string, activeConsumer bool) bool {
+	if !activeConsumer {
+		return true
+	}
+	entries, err := os.ReadDir(filepath.Join(repoRoot, "domains"))
+	if err != nil {
+		return false
+	}
+	for _, e := range entries {
+		if !e.IsDir() || strings.HasPrefix(e.Name(), "_") {
+			continue
+		}
+		gp := filepath.Join(repoRoot, "domains", e.Name(), "graph.json")
+		if loader.ResolveGenProfile(gp) == loader.GenProfileFull {
+			return true
+		}
+	}
+	return false
 }
 
 // cleanupStaleProjectFrameworkFiles deletes generator-owned files under the

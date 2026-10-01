@@ -71,35 +71,19 @@ func TestBuildRequirements_ConsumerProfileDropsFrameworkNoise(t *testing.T) {
 	}
 }
 
-// TestBuildRequirements_ConsumerClosingSectionUsesProjectFrameworkToolsIndex
-// proves the task #357 fix: the consumer closing section's "Implemented
-// commands" pointer must be a repo-root-relative bare path
-// ("framework/tools/INDEX.md"), because task #357 promoted the tool docs
-// (and GLOSSARY.md) from a per-domain framework/ directory to the PROJECT
-// root's framework/ — a single shared copy sibling to domains/. The earlier
-// task #140/R7-a assertion (which REQUIRED a domain prefix) is now inverted:
-// a "domains/<name>/framework/tools/INDEX.md" reference would point inside a
-// domain that no longer carries its own framework/ copy, so it must NOT
-// survive.
-func TestBuildRequirements_ConsumerClosingSectionUsesProjectFrameworkToolsIndex(t *testing.T) {
+// TestBuildRequirements_ConsumerClosingSectionPointsAtHotamH proves the
+// consumer closing section no longer references framework/tools/INDEX.md (the
+// consumer profile does not write framework/tools/) and points at `hotam -h`.
+func TestBuildRequirements_ConsumerClosingSectionPointsAtHotamH(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)
 
-	const domainName = "some-other-domain"
-	consumer := BuildRequirements(g, domainName, true)
-
-	wantBare := "`framework/tools/INDEX.md`"
-	if !strings.Contains(consumer, wantBare) {
-		t.Errorf("consumer closing section must reference the project-root %q, got:\n%s", wantBare, consumer)
+	consumer := BuildRequirements(g, "some-other-domain", true)
+	if strings.Contains(consumer, "framework/tools") {
+		t.Errorf("consumer closing section must not reference framework/tools, got:\n%s", consumer)
 	}
-
-	// The domain-prefixed form must not survive: a literal
-	// "domains/<name>/framework/tools/INDEX.md" would resolve inside a domain
-	// that no longer carries its own framework/ copy (task #357 moved it to the
-	// project root), so it is a dangling reference.
-	prefixedForm := "`domains/" + domainName + "/framework/tools/INDEX.md`"
-	if strings.Contains(consumer, prefixedForm) {
-		t.Errorf("consumer closing section must NOT reference the per-domain form %q (framework/ is now project-shared)", prefixedForm)
+	if !strings.Contains(consumer, "`hotam -h`") {
+		t.Errorf("consumer closing section must point at `hotam -h`, got:\n%s", consumer)
 	}
 }
 

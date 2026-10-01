@@ -106,8 +106,16 @@ func cmdInitProject(args []string) error {
 	fmt.Printf("  cd %s\n", rawDir)
 	fmt.Printf("  # found the domain skeleton-first (R-domain-founded-in-wave-order): land the\n")
 	fmt.Printf("  # skeleton (purpose/goals + a ProposedProcess naming stages and roles + Axes)\n")
-	fmt.Printf("  # BEFORE the first ProposedRequirement — see %s/README.md \"Founding order\".\n", domainRel)
-	fmt.Printf("  # draft a ProposedRequirement JSON (see PROPOSAL-REFERENCE.md), then:\n")
+	fmt.Printf("  # BEFORE the first requirement — see %s/README.md \"Founding order\".\n", domainRel)
+	if *discipline == "full" {
+		fmt.Printf("  # requirements live in code: write the scenario test and the literal in\n")
+		fmt.Printf("  # %s/spec/requirements.go, then project it (dry-run first; show the diff to the owner):\n", domainRel)
+		fmt.Printf("  hotam sync-domain --domain %s\n", domainRel)
+		fmt.Printf("  hotam sync-domain --domain %s --today %s --confirm-hash <hex>\n", domainRel, today)
+		fmt.Printf("  # conflicts/assumptions/other nodes: a Proposed* JSON (see PROPOSAL-REFERENCE.md), then:\n")
+	} else {
+		fmt.Printf("  # draft a ProposedRequirement JSON (see PROPOSAL-REFERENCE.md), then:\n")
+	}
 	fmt.Printf("  hotam land <proposal.json> --domain %s --today %s\n", domainRel, today)
 	fmt.Printf("  hotam what-now --domain %s\n", domainRel)
 	fmt.Printf("  hotam all-violations --domain %s\n", domainRel)
@@ -119,6 +127,20 @@ func cmdInitProject(args []string) error {
 	fmt.Printf("  # works from inside %s; --domain %s remains available for scripts/explicitness.\n", rawDir, domainRel)
 	return nil
 }
+
+// emptyRequirementsGoTemplate is the spec/requirements.go a code-authority
+// project is born with: an empty registry in the spec root package. %s is the
+// spec module path (documentation only; the import is module-relative).
+const emptyRequirementsGoTemplate = `// Requirements of this domain, authored as code (manifest
+// requirements_authority: "code"). Register each requirement here next to its
+// scenario test, then project it with ` + "`hotam sync-domain`" + `.
+// Module: %s.
+package spec
+
+import hotamontology "%[1]s/hotamontology"
+
+var Requirements = hotamontology.New[hotamontology.Requirement]()
+`
 
 // initProject performs the full project bootstrap and returns every path it
 // wrote, in write order, so cmdInitProject and the init-project tests can both
@@ -184,7 +206,7 @@ func initProject(dir, domainName, today string, requireProvenance bool, discipli
 	if disciplineFull || requireProvenance {
 		manifest := "{\"self_hosting\": false, \"gen_profile\": \"consumer\", \"parent\": null"
 		if disciplineFull {
-			manifest += ", \"discipline\": \"full\""
+			manifest += ", \"discipline\": \"full\", \"requirements_authority\": \"code\""
 		}
 		if requireProvenance {
 			manifest += ", \"require_provenance\": true"
@@ -232,6 +254,28 @@ func initProject(dir, domainName, today string, requireProvenance bool, discipli
 			return written, fmt.Errorf("vendor recorder into %s: %w", domainDir, err)
 		}
 		written = append(written, recorderPath)
+
+		// (iii) Requirements-in-code from birth: vendored ontology mirror,
+		// the registrydump bridge, and an empty spec/requirements.go (the
+		// registry `hotam sync-domain` projects onto graph.json).
+		ontologyPaths, err := vendorOntology(domainDir)
+		if err != nil {
+			return written, fmt.Errorf("vendor ontology into %s: %w", domainDir, err)
+		}
+		written = append(written, ontologyPaths...)
+
+		dumpPath, err := scaffoldRegistrydump(domainDir)
+		if err != nil {
+			return written, fmt.Errorf("scaffold registrydump into %s: %w", domainDir, err)
+		}
+		written = append(written, dumpPath)
+
+		requirementsPath := filepath.Join(domainDir, "spec", "requirements.go")
+		requirementsSrc := fmt.Sprintf(emptyRequirementsGoTemplate, domainName+"-spec")
+		if err := writeFileMkdir(requirementsPath, []byte(requirementsSrc)); err != nil {
+			return written, fmt.Errorf("write %s: %w", requirementsPath, err)
+		}
+		written = append(written, requirementsPath)
 	}
 
 	// (3) Write the project-root marker, recording the scaffolded domain as the

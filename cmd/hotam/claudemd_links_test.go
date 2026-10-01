@@ -333,20 +333,26 @@ func TestCrystalLinks_RealDomainRecentlyRejectedFooterReferencesExistOnDisk(t *t
 var toolIndexLinkTargetRE = regexp.MustCompile(`\]\(([^)]+\.md)\)`)
 
 // TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk is the link-existence
-// acceptance test for task #144 (R8-a, review-8): it runs a REAL consumer-
-// profile genSpec against a scratch domain, reads the generated
-// docs/gen/tools/INDEX.md from disk, extracts every markdown link
-// `[...](<target>.md)` in it, and asserts each target resolves to a real
-// `.md` file that actually exists in the tools/ directory. Under the
-// consumer profile genSpec writes per-tool pages ONLY for Implemented tools
-// (the toolIsImplemented filter skips the 27 Planned tools), so before the
-// fix BuildToolDocsIndex rendered 27 dead `](<cmd>.md)` links to Planned
-// tools whose pages were never written — this test failed against that
-// pre-fix code (confirmed during this task: temporarily reverting
-// BuildToolDocsIndex to the pre-fix always-link Planned rendering made this
-// test fail with 27 missing-file errors).
+// acceptance test for task #144 (R8-a): the consumer-flavoured tool index
+// (generator.BuildToolDocsIndex(true), still rendered one-shot by
+// `gen-spec --profile full` callers) must link only to per-tool pages that
+// exist in the consumer page set (Implemented tools). The consumer profile
+// itself no longer writes framework/tools/ at all (asserted below).
 func TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk(t *testing.T) {
 	t.Parallel()
+
+	text := generator.BuildToolDocsIndex(true)
+	matches := toolIndexLinkTargetRE.FindAllStringSubmatch(text, -1)
+	if len(matches) == 0 {
+		t.Fatalf("extracted zero markdown links from the consumer tool index; extraction regex likely broken")
+	}
+	pages := generator.BuildToolDocs(true)
+	for _, m := range matches {
+		cmd := strings.TrimSuffix(m[1], ".md")
+		if _, ok := pages[cmd]; !ok || !toolIsImplemented(cmd) {
+			t.Errorf("consumer tool index links to %q but no Implemented page exists for it", m[1])
+		}
+	}
 
 	repoRoot := t.TempDir()
 	domainDir := filepath.Join(repoRoot, "domains", "test-toolindex-linkcheck")
@@ -356,26 +362,8 @@ func TestToolIndexLinks_ConsumerEveryLinkResolvesOnDisk(t *testing.T) {
 	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
-
-	indexPath := filepath.Join(repoRoot, "framework", "tools", "INDEX.md")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read generated INDEX.md: %v", err)
-	}
-	text := string(content)
-
-	matches := toolIndexLinkTargetRE.FindAllStringSubmatch(text, -1)
-	if len(matches) == 0 {
-		t.Fatalf("extracted zero markdown links from INDEX.md -- the Implemented section must carry real links (its pages are always written); extraction regex likely broken")
-	}
-
-	toolsDir := filepath.Join(repoRoot, "framework", "tools")
-	for _, m := range matches {
-		target := m[1]
-		p := filepath.Join(toolsDir, target)
-		if _, err := os.Stat(p); err != nil {
-			t.Errorf("consumer INDEX.md links to %q but it does not exist on disk at %s: %v", target, p, err)
-		}
+	if _, err := os.Stat(filepath.Join(repoRoot, "framework")); !os.IsNotExist(err) {
+		t.Errorf("consumer profile must not write framework/, stat err=%v", err)
 	}
 }
 
@@ -469,65 +457,31 @@ func TestConsumerProfile_DocsGenNoFrameworkSourceReferences(t *testing.T) {
 	if _, err := initDomain(domainDir, "test-consumer-docsgen", "2026-07-14"); err != nil {
 		t.Fatalf("initDomain: %v", err)
 	}
+	seedMinimalRequirement(t, domainDir, "test-consumer-docsgen", "2026-07-14")
 	if _, _, err := genSpec(domainDir, "", "2026-07-14", "consumer", false); err != nil {
 		t.Fatalf("genSpec consumer: %v", err)
 	}
 
-	genDir := filepath.Join(domainDir, "docs", "gen")
-	// Task #357: GLOSSARY.md + tools/*.md live at the PROJECT-root framework/.
-	frameworkDir := filepath.Join(repoRoot, "framework")
+	// The consumer profile writes no project-shared framework/ files.
+	if _, err := os.Stat(filepath.Join(repoRoot, "framework")); !os.IsNotExist(err) {
+		t.Errorf("consumer profile must not write framework/, stat err=%v", err)
+	}
 
-	// framework/tools/INDEX.md + every per-tool framework/tools/*.md page
-	// actually written under consumer (INDEX.md + Implemented tools only —
-	// Planned pages are skipped). Task #357 keeps tools/*.md at the project-root
-	// framework/tools/ directory. Globbed, not hardcoded, so the sweep stays
-	// exhaustive.
-	toolMds, err := filepath.Glob(filepath.Join(frameworkDir, "tools", "*.md"))
+	mds, err := filepath.Glob(filepath.Join(domainDir, "docs", "gen", "*.md"))
 	if err != nil {
-		t.Fatalf("glob framework/tools/*.md: %v", err)
+		t.Fatalf("glob docs/gen/*.md: %v", err)
 	}
-	if len(toolMds) == 0 {
-		t.Fatalf("test precondition failed: consumer genSpec wrote zero .md files under framework/tools/ — expected INDEX.md + Implemented tool pages")
+	if len(mds) == 0 {
+		t.Fatalf("test precondition failed: consumer genSpec wrote no docs/gen/*.md for a non-empty domain")
 	}
-	for _, p := range toolMds {
+	for _, p := range mds {
 		b, err := os.ReadFile(p)
 		if err != nil {
 			t.Fatalf("read %s: %v", p, err)
 		}
-		text := string(b)
-		if strings.Contains(text, "internal/") {
-			rel := filepath.ToSlash(strings.TrimPrefix(p, repoRoot+string(os.PathSeparator)))
-			t.Errorf("consumer %s must not reference any internal/ path, but does:\n%s", rel, firstMatchContext(text, "internal/"))
+		if text := string(b); strings.Contains(text, "internal/") {
+			t.Errorf("consumer %s must not reference any internal/ path, but does:\n%s", filepath.Base(p), firstMatchContext(text, "internal/"))
 		}
-	}
-
-	// CONSTITUTION.md — two pre-fix leaks: the critical-core verification line
-	// ("verified on every run by `go test ./internal/invariants/...`") and the
-	// check-names line ("verbatim check names from `internal/invariants`").
-	// Task #364: this fixture is a bare `initDomain` with zero content, so
-	// CONSTITUTION.md is withheld entirely (generator.ConstitutionMDHasContent(g)
-	// is false) — os.IsNotExist is the vacuous-true case: no file, nothing to check.
-	constPath := filepath.Join(genDir, "CONSTITUTION.md")
-	constBytes, err := os.ReadFile(constPath)
-	if err != nil && !os.IsNotExist(err) {
-		t.Fatalf("read CONSTITUTION.md: %v", err)
-	}
-	constText := string(constBytes)
-	if strings.Contains(constText, "internal/") {
-		t.Errorf("consumer CONSTITUTION.md must not reference any internal/ path, but does:\n%s", firstMatchContext(constText, "internal/"))
-	}
-
-	// GLOSSARY.md — one pre-fix leak: the "Source:
-	// `internal/generator/glossary_terms_data.go`." clause. Task #357 moved
-	// GLOSSARY.md to the project-root framework/.
-	glossPath := filepath.Join(repoRoot, "framework", "GLOSSARY.md")
-	glossBytes, err := os.ReadFile(glossPath)
-	if err != nil {
-		t.Fatalf("read GLOSSARY.md: %v", err)
-	}
-	glossText := string(glossBytes)
-	if strings.Contains(glossText, "internal/") {
-		t.Errorf("consumer GLOSSARY.md must not reference any internal/ path, but does:\n%s", firstMatchContext(glossText, "internal/"))
 	}
 }
 

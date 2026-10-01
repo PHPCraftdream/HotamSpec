@@ -81,7 +81,10 @@ func TestExternal_InitProject(t *testing.T) {
 	domainDir := filepath.Join(projDir, "domains", "main")
 
 	// (1) hotam init-project: full bootstrap from nothing.
-	out, err := runAt(workDir, "init-project", projDir, "--today", "2026-07-13")
+	// --discipline "" keeps the ordinary ProposedRequirement JSON path this test
+	// walks (the default full discipline is code-authority, covered by
+	// TestExternal_InitProjectBornObligated).
+	out, err := runAt(workDir, "init-project", projDir, "--today", "2026-07-13", "--discipline", "")
 	if err != nil {
 		t.Fatalf("init-project failed: %v\nOUTPUT:\n%s", err, out)
 	}
@@ -143,8 +146,13 @@ func TestExternal_InitProject(t *testing.T) {
 		t.Fatalf("CLAUDE.md not created at project root: %v", err)
 	}
 	claudeBody := string(data)
-	if !strings.Contains(claudeBody, "### main") {
-		t.Errorf("CLAUDE.md DOMAIN-MAP does not list the 'main' domain:\n%s", claudeBody)
+	// Titled by the scaffolded domain; a single-domain project carries no
+	// DOMAIN-MAP block in the lightweight consumer crystal.
+	if !strings.HasPrefix(claudeBody, "# main") {
+		t.Errorf("CLAUDE.md is not titled by the 'main' domain:\n%s", claudeBody)
+	}
+	if strings.Contains(claudeBody, "### main") {
+		t.Errorf("single-domain consumer CLAUDE.md must not carry a DOMAIN-MAP:\n%s", claudeBody)
 	}
 	if !strings.Contains(claudeBody, "domains/main/") {
 		t.Errorf("CLAUDE.md does not reference domains/main/:\n%s", claudeBody)

@@ -142,47 +142,6 @@ func TestRenderStakeholdersBlock_Empty(t *testing.T) {
 	}
 }
 
-// TestRenderBusinessContent_ConsumerProfileSectionOrder enforces the
-// consumer-profile BUSINESS-bucket reorder: PROJECT-ESSENCE →
-// STAKEHOLDERS → LIVE-STATE → CONSTITUTION → DOMAIN-MAP → PARENT-PROJECT →
-// AGENT-MAP → RECENTLY-REJECTED, with CONCEPT-MAP omitted entirely.
-// This is the "what is this project / what is blocked" first-screen UX
-// the demo transcript motivated; the operational order (LIVE-STATE first)
-// stays in place for the full profile, asserted by a separate test below.
-func TestRenderBusinessContent_ConsumerProfileSectionOrder(t *testing.T) {
-	t.Parallel()
-	g := loadFixtureGraph(t)
-	repoRoot := t.TempDir() // no domains/ → PROJECT-ESSENCE falls back to placeholders, DOMAIN-MAP renders "no domains yet"
-	out := RenderBusinessContent(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", true)
-
-	wantOrder := []string{
-		"PROJECT-ESSENCE", "STAKEHOLDERS", "LIVE-STATE", "CONSTITUTION",
-		"DOMAIN-MAP", "PARENT-PROJECT", "AGENT-MAP", "RECENTLY-REJECTED",
-	}
-	for _, name := range wantOrder {
-		if _, ok := ExtractBlock(out, name); !ok {
-			t.Errorf("consumer BUSINESS bucket missing block %s", name)
-		}
-	}
-	// the rendered BEGIN sentinels must appear in the exact order above
-	lastPos := -1
-	for _, name := range wantOrder {
-		begin := BeginSentinel(name)
-		pos := strings.Index(out, begin)
-		if pos == -1 {
-			t.Fatalf("consumer BUSINESS bucket missing BEGIN sentinel for %s", name)
-		}
-		if pos < lastPos {
-			t.Errorf("consumer BUSINESS bucket order: %s BEGIN (pos %d) must come AFTER the previous block (pos %d)", name, pos, lastPos)
-		}
-		lastPos = pos
-	}
-	// CONCEPT-MAP must NOT appear under consumer
-	if strings.Contains(out, BeginSentinel("CONCEPT-MAP")) {
-		t.Errorf("consumer BUSINESS bucket must omit CONCEPT-MAP (framework source-file paths absent in external consumer repos), but its sentinel was rendered")
-	}
-}
-
 // TestRenderBusinessContent_FullProfileSectionOrderUnchanged is the
 // regression guard for the FULL profile: the BUSINESS-bucket order must
 // stay byte-identical to the pre-reorder sequence
@@ -220,49 +179,6 @@ func TestRenderBusinessContent_FullProfileSectionOrderUnchanged(t *testing.T) {
 	}
 }
 
-// TestRenderClaudeMDFromTemplate_ConsumerProfileOpensWithEssence is the
-// end-to-end smoke for the consumer crystal: the rendered CLAUDE.md
-// template substitution must surface PROJECT-ESSENCE / STAKEHOLDERS
-// before the operational blocks (LIVE-STATE / DOMAIN-MAP), and drop
-// CONCEPT-MAP — the same gates already covered per-block above, here
-// verified through the full template-substitution path the real
-// `hotam gen-spec --profile consumer` invocation walks.
-func TestRenderClaudeMDFromTemplate_ConsumerProfileOpensWithEssence(t *testing.T) {
-	t.Parallel()
-	g := loadFixtureGraph(t)
-	repoRoot := t.TempDir()
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", repoRoot, 4200, nil, "2026-07-12", true)
-
-	// PROJECT-ESSENCE must appear before LIVE-STATE on the rendered crystal
-	// (the "first screen" property the demo transcript motivated).
-	essenceAt := strings.Index(out, BeginSentinel("PROJECT-ESSENCE"))
-	liveStateAt := strings.Index(out, BeginSentinel("LIVE-STATE"))
-	if essenceAt == -1 {
-		t.Fatalf("consumer crystal missing PROJECT-ESSENCE block")
-	}
-	if liveStateAt == -1 {
-		t.Fatalf("consumer crystal missing LIVE-STATE block")
-	}
-	if essenceAt > liveStateAt {
-		t.Errorf("consumer crystal must open with PROJECT-ESSENCE (pos %d) BEFORE LIVE-STATE (pos %d)", essenceAt, liveStateAt)
-	}
-
-	// STAKEHOLDERS must appear before the operational DOMAIN-MAP
-	stakeAt := strings.Index(out, BeginSentinel("STAKEHOLDERS"))
-	domainMapAt := strings.Index(out, BeginSentinel("DOMAIN-MAP"))
-	if stakeAt == -1 || domainMapAt == -1 {
-		t.Fatalf("consumer crystal missing STAKEHOLDERS or DOMAIN-MAP sentinel")
-	}
-	if stakeAt > domainMapAt {
-		t.Errorf("consumer crystal must surface STAKEHOLDERS (pos %d) BEFORE DOMAIN-MAP (pos %d)", stakeAt, domainMapAt)
-	}
-
-	// CONCEPT-MAP must be absent under consumer
-	if strings.Contains(out, BeginSentinel("CONCEPT-MAP")) {
-		t.Errorf("consumer crystal must NOT carry CONCEPT-MAP (framework source-file paths absent in external consumer repos)")
-	}
-}
-
 // TestConsumerHeaderLine_PurposePresent proves the GREEN path: a manifest
 // carrying a purpose renders "# <domainName> — <purpose>", the domain-first
 // header external review P1 (task E2) requires — the file's first line
@@ -295,56 +211,6 @@ func TestConsumerHeaderLine_MissingManifestFallsBackToBareDomainName(t *testing.
 	want := "# never-existed"
 	if got != want {
 		t.Errorf("consumerHeaderLine = %q, want %q", got, want)
-	}
-}
-
-// TestRenderClaudeMDFromTemplate_ConsumerProfileDomainFirstHeader is the
-// end-to-end regression guard for task E2 (external review P1): the
-// consumer-profile crystal's FIRST LINE must open with the domain's own
-// name/purpose, not the framework-identity "# CLAUDE.md — Hotam-Spec
-// framework" header, and the business cluster (PROJECT-ESSENCE) must
-// render BEFORE the methodology seed (OPERATOR-ROLE) — the inverse of the
-// full-profile ordering asserted by
-// TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest.
-func TestRenderClaudeMDFromTemplate_ConsumerProfileDomainFirstHeader(t *testing.T) {
-	t.Parallel()
-	repoRoot := t.TempDir()
-	domainDir := filepath.Join(repoRoot, "domains", "acme-widgets")
-	if err := os.MkdirAll(domainDir, 0o755); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	manifest := `{"purpose": "Ships widgets to acme customers."}`
-	if err := os.WriteFile(filepath.Join(domainDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
-		t.Fatalf("write manifest: %v", err)
-	}
-	g := loadFixtureGraph(t)
-	out := RenderClaudeMDFromTemplate(g, "acme-widgets", repoRoot, 4200, nil, "2026-07-12", true)
-
-	firstLine := strings.SplitN(out, "\n", 2)[0]
-	wantFirstLine := "# acme-widgets — Ships widgets to acme customers."
-	if firstLine != wantFirstLine {
-		t.Errorf("consumer crystal first line = %q, want %q", firstLine, wantFirstLine)
-	}
-	if strings.Contains(out, "# CLAUDE.md — Hotam-Spec framework") {
-		t.Errorf("consumer crystal must NOT carry the framework-identity header line")
-	}
-
-	// The business cluster must render BEFORE the methodology seed.
-	essenceAt := strings.Index(out, BeginSentinel("PROJECT-ESSENCE"))
-	roleAt := strings.Index(out, BeginSentinel("OPERATOR-ROLE"))
-	if essenceAt == -1 || roleAt == -1 {
-		t.Fatalf("consumer crystal missing PROJECT-ESSENCE or OPERATOR-ROLE sentinel")
-	}
-	if essenceAt > roleAt {
-		t.Errorf("consumer crystal must render PROJECT-ESSENCE (pos %d) BEFORE OPERATOR-ROLE (pos %d)", essenceAt, roleAt)
-	}
-	// RECENTLY-REJECTED (last business block) must still precede OPERATOR-ROLE.
-	rejectedAt := strings.Index(out, BeginSentinel("RECENTLY-REJECTED"))
-	if rejectedAt == -1 {
-		t.Fatalf("consumer crystal missing RECENTLY-REJECTED sentinel")
-	}
-	if rejectedAt > roleAt {
-		t.Errorf("consumer crystal must render the full business cluster (through RECENTLY-REJECTED, pos %d) BEFORE the methodology seed (OPERATOR-ROLE, pos %d)", rejectedAt, roleAt)
 	}
 }
 

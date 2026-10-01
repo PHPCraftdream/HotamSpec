@@ -299,10 +299,19 @@ Close every step with ` + "`hotam gen-spec`" + ` and read
 
 ## Making changes
 
-The graph is never hand-edited. Every change goes through
-` + "`hotam apply-proposal <proposal.json> --domain . --today YYYY-MM-DD`" + `
-(or ` + "`hotam land`" + ` to apply + regenerate docs + re-verify in one step),
-which fails closed — writes nothing — if the change would introduce a new
-invariant violation. See PROPOSAL-REFERENCE.md in the Hotam-Spec repo for
-the full JSON shape of every proposal kind.
+The graph is never hand-edited.
+
+- **Requirements in code** (manifest ` + "`requirements_authority: code`" + `, the
+  ` + "`hotam init-project`" + ` default): edit the scenario test and the requirement
+  literal in ` + "`spec/requirements.go`" + `, run ` + "`hotam sync-domain --domain .`" + `
+  (dry-run: prints the diff and a hash), show the diff to the owner, then
+  ` + "`hotam sync-domain --domain . --today YYYY-MM-DD --confirm-hash <hex>`" + `.
+  Finish with ` + "`hotam all-violations --domain .`" + ` = 0. ` + "`hotam land`" + ` refuses
+  Requirement/Rejection JSON on such a domain.
+- **Everything else** (conflicts, assumptions, and requirements on a domain
+  without code authority): ` + "`hotam land <proposal.json> --domain . --today YYYY-MM-DD`" + `
+  (apply + regenerate docs + re-verify in one step; fails closed — writes
+  nothing — if the change would introduce a new invariant violation). See
+  PROPOSAL-REFERENCE.md in the Hotam-Spec repo for the JSON shape of every
+  proposal kind.
 `

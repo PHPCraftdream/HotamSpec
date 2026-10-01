@@ -5463,7 +5463,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "When the active domain has no content yet (missing or genuinely empty graph), `hotam gen-spec` shall NOT fail, and shall write ZERO files under docs/gen/ — no 'no content yet' notice rendered into a placeholder-filled docs/gen/*.md set.",
+      "claim": "When the active domain has no content yet (missing or genuinely empty graph), `hotam gen-spec` shall NOT fail, and shall write ZERO files under docs/gen/ (full profile; the lightweight consumer profile additionally writes no project-shared framework/ files) — no 'no content yet' notice rendered into a placeholder-filled docs/gen/*.md set.",
       "enforced_by": [
         "TestGenSpec_MissingGraphRendersCalmNotice"
       ],
@@ -5506,6 +5506,11 @@
           "at": "2026-07-26",
           "decided_by": "",
           "summary": "field Claim: When the active domain has no content yet (missing graph), `hotam gen-spec` shall emit a 'no content yet' notice into docs/gen/*.md, not fail. -> When the active domain has no content yet (missing or genuinely empty graph), `hotam gen-spec` shall NOT fail, and shall write ZERO files under docs/gen/ — no 'no content yet' notice rendered into a placeholder-filled docs/gen/*.md set.; field Why: Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block the regen step of the closed loop for new adopters. ENFORCED 2026-07-13: genSpec (cmd/hotam/gen_spec.go) now loads the domain graph via loadGraphOrEmpty, which detects os.IsNotExist on the missing graph.json specifically and substitutes an empty graph (&ontology.Graph{DomainDir: domainDir}) instead of propagating the raw read error. An empty graph flows through every generator unchanged: the Build* helpers in internal/generator already detect g.IsEmpty() and render the calm EmptyNotice (internal/generator/common.go) into docs/gen/*.md, so the missing-file case produces output identical to the empty-but-present case (the two situations are indistinguishable to an adopter with nothing modeled yet). The discrimination is mechanical and the only one that should trigger the calm path: errors.Is(err, os.ErrNotExist) — a genuine error (a malformed graph.json decode failure, or a permissions error) still surfaces as a real error, enforced by the TestGenSpec_MissingGraph_MalformedStillErrors non-vacuity control. The identical missing-file gap also exists in the what-now code path (R-empty-content-calm-banner's own why documents this); that is NOT this requirement's anchor and remains an honest open gap there — loadGraphOrEmpty is deliberately scoped to gen-spec, not shared via loadDomainGraph, to avoid expanding scope across every loader caller. -> Atom of R-empty-content-is-legitimate (gen-notice concern). D2 split decided by domain-user 2026-06-30. WHY: failing on missing content would block the regen step of the closed loop for new adopters. ENFORCED 2026-07-13, REVISED 2026-07-26 (task #364): genSpec (cmd/hotam/gen_spec.go) still loads the domain graph via loadGraphOrEmpty, which detects os.IsNotExist on the missing graph.json specifically and substitutes an empty graph (&ontology.Graph{DomainDir: domainDir}) instead of propagating the raw read error — but the empty-graph BEHAVIOR itself changed: previously every Build* helper's g.IsEmpty() branch rendered the calm EmptyNotice (internal/generator/common.go) INTO docs/gen/*.md, so a freshly-scaffolded, unmodeled domain accumulated a directory full of calm-but-pointless placeholder files nobody asked for. Task #364 (business-domain feedback: a truly empty domain should produce NO generated artifacts at all) extended every remaining docs/gen/*.md projection (REQUIREMENTS/OPEN/UNENFORCED/FRAMEWORK-INVARIANTS/HISTORY/CONSTITUTION/TRACEABILITY/COVERAGE/REPO-MAP/AGENT-CONTEXT/live-state.md, plus the docs/gen/graph.json archival copy) with the SAME conditional-write pattern DECISIONS.md/ENTITIES.md/TENSIONS.md/PIPELINE.md/MODELS.md already used (each gated behind its own generator.XxxMDHasContent(g) predicate, all reducing to !g.IsEmpty() here) — and, in the SAME task, removed `hotam init`/`initDomain`'s own auto-seeded Stakeholder+Requirement, so a freshly scaffolded domain is now GENUINELY empty (0 nodes) rather than carrying one worked-example requirement. The missing-file case (this requirement's own anchor) and the empty-but-present case remain indistinguishable to an adopter with nothing modeled yet, so they still produce IDENTICAL output — just now that output is ZERO docs/gen/ files instead of a full calm-notice set. The discrimination between 'missing/empty, calm' and 'a real error' is unchanged and still mechanical: errors.Is(err, os.ErrNotExist) — a genuine error (a malformed graph.json decode failure, or a permissions error) still surfaces as a real error, enforced by the TestGenSpec_MissingGraph_MalformedStillErrors non-vacuity control. The PROJECT-shared framework/ output (GLOSSARY.md, tools/*.md/INDEX.md) is UNAFFECTED by any of this — it is written unconditionally, independent of domain content. The identical missing-file gap also exists in the what-now code path (R-empty-content-calm-banner's own why documents this); that is NOT this requirement's anchor and remains an honest open gap there — loadGraphOrEmpty is deliberately scoped to gen-spec, not shared via loadDomainGraph, to avoid expanding scope across every loader caller.; field SourceRefs: [cmd/hotam/gen_spec.go internal/loader/loader.go internal/generator/common.go] -> [cmd/hotam/gen_spec.go internal/loader/loader.go internal/generator/common.go cmd/hotam/init_cmd.go]"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Claim: When the active domain has no content yet (missing or genuinely empty graph), `hotam gen-spec` shall NOT fail, and shall write ZERO files under docs/gen/ — no 'no content yet' notice rendered into a placeholder-filled docs/gen/*.md set. -> When the active domain has no content yet (missing or genuinely empty graph), `hotam gen-spec` shall NOT fail, and shall write ZERO files under docs/gen/ (full profile; the lightweight consumer profile additionally writes no project-shared framework/ files) — no 'no content yet' notice rendered into a placeholder-filled docs/gen/*.md set."
         }
       ],
       "id": "R-empty-content-gen-notice",
@@ -8692,7 +8697,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (sourced from Section.Canon, guarded via shortForm) plus a path link to domains/<domain>/docs/gen/thinking/<slug>.md, not a multi-line RULE+WHY distillate.",
+      "claim": "Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits the thinking block), the operator's CLAUDE.md shall embed one RULE sentence per thinking topic (sourced from Section.Canon, guarded via shortForm) plus a path link to domains/<domain>/docs/gen/thinking/<slug>.md, not a multi-line RULE+WHY distillate.",
       "enforced_by": [
         "TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection",
         "TestRenderEmbeddedThinkingBlock_NoMidWordTruncation",
@@ -8719,6 +8724,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "claim: The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (via short_form) plus a path link to spec/docs/thinking/<slug>.md, not a mu…→The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (sourced from Section.Canon, guarded via shortForm) plus a path link to dom…; why: REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach: even compressed RULE+WHY pairs consumed ~19k chars across 22 topics. A single RUL…→REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach: even compressed RULE+WHY pairs consumed ~19k chars across 22 topics. The implemen…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection, TestRenderEmbeddedThinkingBlock_NoMidWordTruncation, TestRenderEmbeddedThinkingBlock_Crysta…; last_reviewed_at: 2026-07-02→2026-07-13; review_after: 2027-01-02→2027-02-12; evidence: []→[internal/generator/claudemd_coverage_test.go::TestRenderEmbeddedThinkingBlock_DistillsCanonPerSection — every registered methodology.Sections entr…; source_refs: []→[internal/generator/claudemd.go, internal/methodology/sections_data.go, internal/generator/thinkingdocs.go]"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Claim: The operator's CLAUDE.md shall embed one RULE sentence per thinking topic (sourced from Section.Canon, guarded via shortForm) plus a path link to domains/<domain>/docs/gen/thinking/<slug>.md, not a multi-line RULE+WHY distillate. -> Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits the thinking block), the operator's CLAUDE.md shall embed one RULE sentence per thinking topic (sourced from Section.Canon, guarded via shortForm) plus a path link to domains/<domain>/docs/gen/thinking/<slug>.md, not a multi-line RULE+WHY distillate."
         }
       ],
       "id": "R-operator-crystal-embeds-thinking-distilled",
@@ -8739,7 +8749,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block that reports the Implemented and Planned tool counts from the methodology.Tool registry and directs the operator to `hotam -h`, `hotam status --json`, `hotam req`, `hotam brief`, and docs/gen/tools/INDEX.md for on-demand detail — a compact pointer-only reference, not a per-tool distillation.",
+      "claim": "Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits the tools block and writes no framework/tools/), the operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block that reports the Implemented and Planned tool counts from the methodology.Tool registry and directs the operator to `hotam -h`, `hotam status --json`, `hotam req`, `hotam brief`, and docs/gen/tools/INDEX.md for on-demand detail — a compact pointer reference, not a per-tool distillation.",
       "enforced_by": [
         "TestRenderEmbeddedToolsBlock_PointerOneLiner"
       ],
@@ -8780,6 +8790,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "claim: The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block projecting one line per tool (command + purpose + Implemented/Planned status) from the m…→The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block that reports the Implemented and Planned tool counts from the methodology.Tool registry …; why: REPLACES the Tier-1 multi-paragraph RULE+WHY distillation approach for tools: even compressed RULE+WHY text consumed excessive chars across many tool…→SUPERSEDES the one-line-per-Implemented-tool distillation: now that agentic on-demand tool discovery (`hotam -h`, `hotam req`, `hotam brief` — task…; enforced_by: [TestRenderEmbeddedToolsBlock_ImplementedOneLinePlannedCollapsed]→[TestRenderEmbeddedToolsBlock_PointerOneLiner]"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Claim: The operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block that reports the Implemented and Planned tool counts from the methodology.Tool registry and directs the operator to `hotam -h`, `hotam status --json`, `hotam req`, `hotam brief`, and docs/gen/tools/INDEX.md for on-demand detail — a compact pointer-only reference, not a per-tool distillation. -> Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits the tools block and writes no framework/tools/), the operator's CLAUDE.md shall embed an EMBEDDED-TOOLS block that reports the Implemented and Planned tool counts from the methodology.Tool registry and directs the operator to `hotam -h`, `hotam status --json`, `hotam req`, `hotam brief`, and docs/gen/tools/INDEX.md for on-demand detail — a compact pointer reference, not a per-tool distillation."
         }
       ],
       "id": "R-operator-crystal-embeds-tools-distilled",
@@ -8800,7 +8815,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "Root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.",
+      "claim": "Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.",
       "enforced_by": [
         "TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw"
       ],
@@ -8821,6 +8836,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Phase 2 of the crystal redesign (task #8): the operator's identity — guardian of spec↔tests↔business consistency under one generative law (ever…→Phase 2 of the crystal redesign (task #8): the operator's identity — guardian of spec↔tests↔business consistency under one generative law (ever…; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw]"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Claim: Root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology. -> Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology."
         }
       ],
       "id": "R-crystal-carries-role-seed",
@@ -8837,7 +8857,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop -- ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND -- each step naming its real tool command.",
+      "claim": "Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop -- ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND -- each step naming its real tool command.",
       "enforced_by": [
         "TestRenderMediationLoopBlock_NamesSixStepsAndRealTools"
       ],
@@ -8863,6 +8883,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist -- `hotam …→The loop is the operator's operating procedure for ANY input: it binds the role (guardian, hypothesis-checker) to tools that already exist -- `hotam …; enforcement: STRUCTURAL→ENFORCED; enforced_by: []→[TestRenderMediationLoopBlock_NamesSixStepsAndRealTools]"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Claim: Root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop -- ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND -- each step naming its real tool command. -> Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated MEDIATION-LOOP sentinel block rendering the six-step input-processing loop -- ORIENT, LOCATE, CONFRONT, TRANSLATE, PRESENT, LAND -- each step naming its real tool command."
         }
       ],
       "id": "R-crystal-carries-mediation-loop",
@@ -8882,7 +8907,7 @@
       "assumptions": [
         "A-finite-context-operators"
       ],
-      "claim": "Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope.",
+      "claim": "Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope.",
       "enforced_by": [
         "TestRenderOperatorRecursionBlock_SameSeedNarrowed"
       ],
@@ -8918,6 +8943,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Recursion is a CAPABILITY of the sole operator, not a set of materialized files: while R-claude-md-consolidates-when-single-agent holds (one domain, …→Recursion is a CAPABILITY of the sole operator, not a set of materialized files: while R-claude-md-consolidates-when-single-agent holds (one domain, …; settled_at: 2026-07-13→2026-07-12"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Claim: Root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope. -> Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-RECURSION sentinel block describing sub-operator spawning as this same seed narrowed to a sub-scope."
         }
       ],
       "id": "R-crystal-carries-recursion-seed",

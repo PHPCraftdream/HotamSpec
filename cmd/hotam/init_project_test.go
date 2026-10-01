@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -302,6 +303,35 @@ func TestCmdInitProject_DisciplineDefaultFull(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(domainDir, "docs", "gen", "SPEC.md")); err != nil {
 		t.Errorf("default cmdInitProject should render docs/gen/SPEC.md: %v", err)
+	}
+
+	// Requirements-in-code from birth: authority declared, ontology mirror +
+	// registrydump vendored, empty registry written, and the whole spec/
+	// module compiles.
+	if !strings.Contains(string(manifestData), `"requirements_authority": "code"`) {
+		t.Errorf("default cmdInitProject manifest.json missing requirements_authority: code, got:\n%s", manifestData)
+	}
+	for _, rel := range []string{
+		filepath.Join("spec", "hotamontology", "requirement.go"),
+		filepath.Join("spec", "hotamontology", "registry.go"),
+		filepath.Join("spec", "registrydump", "main.go"),
+		filepath.Join("spec", "requirements.go"),
+	} {
+		if _, err := os.Stat(filepath.Join(domainDir, rel)); err != nil {
+			t.Errorf("default cmdInitProject should scaffold %s: %v", rel, err)
+		}
+	}
+	reqSrc, err := os.ReadFile(filepath.Join(domainDir, "spec", "requirements.go"))
+	if err != nil {
+		t.Fatalf("read spec/requirements.go: %v", err)
+	}
+	if !strings.Contains(string(reqSrc), "var Requirements = hotamontology.New[hotamontology.Requirement]()") {
+		t.Errorf("spec/requirements.go must declare an empty Requirements registry, got:\n%s", reqSrc)
+	}
+	build := exec.Command("go", "build", "./...")
+	build.Dir = filepath.Join(domainDir, "spec")
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Errorf("scaffolded spec/ module does not compile: %v\n%s", err, out)
 	}
 }
 
