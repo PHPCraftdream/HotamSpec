@@ -26,3 +26,8 @@ vendor/
 *~
 .DS_Store
 Thumbs.db
+
+# /wrush task worktrees — always created here, in-tree
+/worktrees/
+# rush sub-agent prompts and envelopes
+/.rush/
