@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	registrydumpvendor "github.com/PHPCraftdream/HotamSpec/internal/registrydump/vendor"
@@ -83,7 +84,14 @@ func scaffoldRegistrydump(domainDir string) (string, error) {
 	}
 
 	target := filepath.Join(specDir, "registrydump", "main.go")
-	content := []byte(registrydumpSource(modulePath))
+	withStakeholders := declaresStakeholders(specDir)
+	if withStakeholders {
+		vendoredStk := filepath.Join(specDir, "hotamontology", "stakeholder.go")
+		if _, err := os.Stat(vendoredStk); err != nil {
+			return "", fmt.Errorf("scaffold-registrydump: spec/ declares Stakeholders but %s is missing -- re-run `hotam vendor-ontology --domain %s` to vendor the Stakeholder mirror", vendoredStk, domainDir)
+		}
+	}
+	content := []byte(registrydumpSource(modulePath, withStakeholders))
 	if err := writeFileMkdir(target, content); err != nil {
 		return "", fmt.Errorf("scaffold-registrydump: %w", err)
 	}
@@ -129,11 +137,66 @@ func main() {
 }
 `
 
+// registrydumpEnvelopeTemplate is the variant for a domain that ALSO declares
+// `var Stakeholders = hotamontology.New[hotamontology.Stakeholder]()`: stdout
+// is the JSON envelope {"requirements":[...],"stakeholders":[...]} instead of
+// a bare Requirement array. sync-domain accepts both (a leading '[' is the
+// legacy array, '{' the envelope), so a domain without Stakeholders keeps the
+// legacy template and an already-scaffolded old main.go keeps working.
+const registrydumpEnvelopeTemplate = `package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+
+	spec "{{MODULE}}"
+)
+
+// main prints {"requirements": spec.Requirements.All(), "stakeholders":
+// spec.Stakeholders.All()} -- the envelope ` + "`hotam sync-domain`" + ` reads back and
+// projects onto this domain's graph.json.
+func main() {
+	data, err := json.Marshal(struct {
+		Requirements any ` + "`json:\"requirements\"`" + `
+		Stakeholders any ` + "`json:\"stakeholders\"`" + `
+	}{spec.Requirements.All(), spec.Stakeholders.All()})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "registrydump: marshal registries: %v\n", err)
+		os.Exit(1)
+	}
+	os.Stdout.Write(data)
+}
+`
+
+// declaresStakeholders reports whether the domain's spec/ root package
+// declares a `Stakeholders` registry variable (best-effort source scan of
+// non-test *.go files directly in specDir).
+func declaresStakeholders(specDir string) bool {
+	files, _ := filepath.Glob(filepath.Join(specDir, "*.go"))
+	for _, f := range files {
+		if strings.HasSuffix(f, "_test.go") {
+			continue
+		}
+		if data, err := os.ReadFile(f); err == nil && stakeholdersDeclRe.Match(data) {
+			return true
+		}
+	}
+	return false
+}
+
+var stakeholdersDeclRe = regexp.MustCompile(`(?m)^(var\s+|\s+)Stakeholders\s*(=|\*?hotamontology\.)`)
+
 // registrydumpSource returns the full byte-for-byte content
 // spec/registrydump/main.go should hold for a domain whose spec/ module's
-// own go.mod declares modulePath.
-func registrydumpSource(modulePath string) string {
-	return registrydumpBanner + "\n" + strings.ReplaceAll(registrydumpTemplate, "{{MODULE}}", modulePath)
+// own go.mod declares modulePath; withStakeholders selects the envelope
+// variant.
+func registrydumpSource(modulePath string, withStakeholders bool) string {
+	tpl := registrydumpTemplate
+	if withStakeholders {
+		tpl = registrydumpEnvelopeTemplate
+	}
+	return registrydumpBanner + "\n" + strings.ReplaceAll(tpl, "{{MODULE}}", modulePath)
 }
 
 // readGoModModulePath reads the `module <path>` directive out of the go.mod

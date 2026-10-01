@@ -150,3 +150,32 @@ func TestCheckOntologyVendorCurrent_RegistryFileCheckedIndependently(t *testing.
 		t.Fatalf("expected a non-empty violation message")
 	}
 }
+
+// TestCheckOntologyVendorCurrent_StakeholderFileChecked proves the
+// stakeholder.go mirror is checked: genuine copy is green, a hand-edited one
+// fires, and a domain vendored before it existed (file absent) stays green.
+func TestCheckOntologyVendorCurrent_StakeholderFileChecked(t *testing.T) {
+	t.Parallel()
+	genuine := ontologyvendor.StakeholderSource()
+
+	domainDir := writeVendoredOntologyFixture(t, "stakeholder.go", genuine)
+	g := &ontology.Graph{DomainDir: domainDir}
+	if vs := runCheck(t, "check_ontology_vendor_current", g); len(vs) != 0 {
+		t.Fatalf("expected no violations for a genuine stakeholder.go, got %v", vs)
+	}
+
+	target := filepath.Join(domainDir, "spec", "hotamontology", "stakeholder.go")
+	if err := os.WriteFile(target, []byte(genuine+"\n// hand-edited\n"), 0o644); err != nil {
+		t.Fatalf("tamper: %v", err)
+	}
+	if vs := runCheck(t, "check_ontology_vendor_current", g); len(vs) != 1 {
+		t.Fatalf("expected exactly 1 violation for a tampered stakeholder.go, got %v", vs)
+	}
+
+	if err := os.Remove(target); err != nil {
+		t.Fatalf("remove: %v", err)
+	}
+	if vs := runCheck(t, "check_ontology_vendor_current", g); len(vs) != 0 {
+		t.Fatalf("expected honest no-op for an absent stakeholder.go, got %v", vs)
+	}
+}

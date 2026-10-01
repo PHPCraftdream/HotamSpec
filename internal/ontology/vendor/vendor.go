@@ -28,6 +28,7 @@ import (
 var (
 	canonicalRequirementSource = hotamontology.RequirementSource
 	canonicalRegistrySource    = hotamontology.RegistrySource
+	canonicalStakeholderSource = hotamontology.StakeholderSource
 )
 
 // Banner is the do-not-edit banner prepended to every vendored copy -- same
@@ -66,6 +67,19 @@ func RequirementSource() string {
 // canonical registry.go source, unmodified.
 func RegistrySource() string {
 	return Banner + canonicalRegistrySource
+}
+
+// StakeholderSource returns the full byte-for-byte content this spec/
+// module's spec/hotamontology/stakeholder.go should hold: Banner followed by
+// the canonical stakeholder.go source, unmodified.
+func StakeholderSource() string {
+	return Banner + canonicalStakeholderSource
+}
+
+// StakeholderBodyForHash returns ONLY the canonical stakeholder.go bytes (no
+// banner), the text check_ontology_vendor_current hashes.
+func StakeholderBodyForHash() string {
+	return canonicalStakeholderSource
 }
 
 // RequirementBodyForHash returns ONLY the canonical requirement.go bytes (no

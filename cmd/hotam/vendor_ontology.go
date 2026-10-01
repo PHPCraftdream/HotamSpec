@@ -86,5 +86,9 @@ func vendorOntology(domainDir string) ([]string, error) {
 	if err := writeFileMkdir(regTarget, []byte(ontologyvendor.RegistrySource())); err != nil {
 		return nil, fmt.Errorf("vendor-ontology: %w", err)
 	}
-	return []string{reqTarget, regTarget}, nil
+	stkTarget := filepath.Join(targetDir, "stakeholder.go")
+	if err := writeFileMkdir(stkTarget, []byte(ontologyvendor.StakeholderSource())); err != nil {
+		return nil, fmt.Errorf("vendor-ontology: %w", err)
+	}
+	return []string{reqTarget, regTarget, stkTarget}, nil
 }

@@ -60,6 +60,10 @@ func checkOntologyVendorCurrent(g *ontology.Graph) []Violation {
 		g.DomainDir, "registry.go",
 		ontologyvendor.RegistryBodyForHash(),
 	)...)
+	violations = append(violations, checkVendoredOntologyFile(
+		g.DomainDir, "stakeholder.go",
+		ontologyvendor.StakeholderBodyForHash(),
+	)...)
 	return violations
 }
 
@@ -117,7 +121,7 @@ func checkVendoredOntologyFile(domainDir, fileName, wantBody string) []Violation
 var _ = All.MustRegister("check_ontology_vendor_current", Invariant{
 	Name:  "check_ontology_vendor_current",
 	Canon: methodology.Domain,
-	Claim: "a domain's vendored spec/hotamontology/{requirement.go,registry.go}, if present, are byte-identical (post-banner) to the engine's own canonical ontology mirror.",
+	Claim: "a domain's vendored spec/hotamontology/{requirement.go,registry.go,stakeholder.go}, if present, are byte-identical (post-banner) to the engine's own canonical ontology mirror.",
 	Rule: "IF a file exists at <domainDir>/spec/hotamontology/requirement.go and/or spec/hotamontology/registry.go, each MUST start with the exact " +
 		"`hotam vendor-ontology` do-not-edit banner (internal/ontology/vendor's Banner), and the body following that banner MUST sha256-match " +
 		"internal/ontology/canon's own current content for that file (ontologyvendor.RequirementBodyForHash() / RegistryBodyForHash(), themselves " +

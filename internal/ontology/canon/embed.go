@@ -20,3 +20,9 @@ var RequirementSource string
 //
 //go:embed registry.go
 var RegistrySource string
+
+// StakeholderSource is stakeholder.go, embedded verbatim -- same rationale as
+// RegistrySource (separate embed, canon files only).
+//
+//go:embed stakeholder.go
+var StakeholderSource string

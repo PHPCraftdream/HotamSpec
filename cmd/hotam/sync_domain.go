@@ -86,7 +86,7 @@ func cmdSyncDomain(args []string) error {
 	// surfaced as an immediate, specific error -- never as a silently empty
 	// registry that would make SyncGraph look like "nothing to sync" (see
 	// runRegistryDump's own doc comment for the module-boundary mechanics).
-	reg, err := domainRegistryFromSubprocess(domainDir)
+	reg, dumpedStakeholders, err := domainDumpFromSubprocess(domainDir)
 	if err != nil {
 		return fmt.Errorf("sync-domain: %w", err)
 	}
@@ -142,12 +142,14 @@ func cmdSyncDomain(args []string) error {
 		}
 	}
 
+	// Stakeholders first, so requirement owners added below resolve (gate 8).
+	addedStk := appendDomainStakeholders(after, dumpedStakeholders)
 	report, err := selfspec.SyncGraph(after, reg, syncToday)
 	if err != nil {
 		return fmt.Errorf("sync-domain: SyncGraph: %w", err)
 	}
 
-	diffHash, err := computeDomainSyncDiffHash(gp, report)
+	diffHash, err := computeDomainSyncDiffHash(gp, report, addedStk)
 	if err != nil {
 		return fmt.Errorf("sync-domain: compute diff hash: %w", err)
 	}
@@ -158,9 +160,9 @@ func cmdSyncDomain(args []string) error {
 	out := syncOut(*asJSON)
 
 	if *confirmHash == "" {
-		renderDomainSyncDryRun(out, report, diffHash, gateReport, gateErr, claimNotes)
+		renderDomainSyncDryRun(out, report, addedStk, diffHash, gateReport, gateErr, claimNotes)
 		if *asJSON {
-			return printJSON(newSyncDomainResult(false, report, diffHash, gateReport, gateErr, nil, claimNotes))
+			return printJSON(newSyncDomainResult(false, report, diffHash, gateReport, gateErr, nil, claimNotes).withStakeholders(addedStk))
 		}
 		return nil
 	}
@@ -168,7 +170,7 @@ func cmdSyncDomain(args []string) error {
 	if *today == "" {
 		return fmt.Errorf("sync-domain: --today is required with --confirm-hash (YYYY-MM-DD)")
 	}
-	if len(report.Entries) == 0 {
+	if len(report.Entries) == 0 && len(addedStk) == 0 {
 		return fmt.Errorf("sync-domain: nothing to sync — the domain's spec/requirements.go registry already matches %s", relPathForDisplay(gp))
 	}
 	if *confirmHash != diffHash {
@@ -180,7 +182,7 @@ func cmdSyncDomain(args []string) error {
 		return fmt.Errorf("sync-domain: refusing to write: %w", gateErr)
 	}
 
-	return runSyncDomainWrite(domainDir, gp, before, after, report, diffHash, syncToday, *reason, ackOpts, out, *asJSON, claimNotes)
+	return runSyncDomainWrite(domainDir, gp, before, after, report, addedStk, diffHash, syncToday, *reason, ackOpts, out, *asJSON, claimNotes)
 }
 
 // --- Gate 0: registry dump (the structural difference from sync-self) ---
@@ -208,35 +210,65 @@ const domainRegistrySubprocessTimeout = 180 * time.Second
 // report "0 entries to sync" indistinguishable from "the registry genuinely
 // already matches the graph" (the task brief's explicit anti-goal).
 func domainRegistryFromSubprocess(domainDir string) (*registry.Registry[ontology.Requirement], error) {
+	reg, _, err := domainDumpFromSubprocess(domainDir)
+	return reg, err
+}
+
+// domainDumpFromSubprocess is domainRegistryFromSubprocess plus the
+// Stakeholders registry. registrydump stdout is either the legacy bare
+// Requirement array (a domain without Stakeholders, or an old scaffold) or
+// the envelope {"requirements":[...],"stakeholders":[...]} (see
+// registrydumpEnvelopeTemplate); the first non-space byte tells them apart.
+func domainDumpFromSubprocess(domainDir string) (*registry.Registry[ontology.Requirement], []ontology.Stakeholder, error) {
 	specDir := filepath.Join(domainDir, "spec")
 	if _, err := os.Stat(specDir); err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("registry dump: %s does not exist — this domain has not adopted the spec/requirements.go Go-authoring path yet (see R-domain-founded-in-wave-order step 6)", specDir)
+			return nil, nil, fmt.Errorf("registry dump: %s does not exist — this domain has not adopted the spec/requirements.go Go-authoring path yet (see R-domain-founded-in-wave-order step 6)", specDir)
 		}
-		return nil, fmt.Errorf("registry dump: stat %s: %w", specDir, err)
+		return nil, nil, fmt.Errorf("registry dump: stat %s: %w", specDir, err)
 	}
 	registrydumpDir := filepath.Join(specDir, "registrydump")
 	if _, err := os.Stat(registrydumpDir); err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("registry dump: %s does not exist — run `hotam scaffold-registrydump --domain %s` first", registrydumpDir, domainDir)
+			return nil, nil, fmt.Errorf("registry dump: %s does not exist — run `hotam scaffold-registrydump --domain %s` first", registrydumpDir, domainDir)
 		}
-		return nil, fmt.Errorf("registry dump: stat %s: %w", registrydumpDir, err)
+		return nil, nil, fmt.Errorf("registry dump: stat %s: %w", registrydumpDir, err)
 	}
 
 	stdout, err := runRegistryDump(specDir)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var entries []ontology.Requirement
-	if err := json.Unmarshal(stdout, &entries); err != nil {
-		return nil, fmt.Errorf("registry dump: %s produced output that is not a valid JSON []Requirement array: %w\noutput was:\n%s", registrydumpDir, err, boundedForError(stdout))
+	var stakeholders []ontology.Stakeholder
+	if trimmed := bytes.TrimSpace(stdout); len(trimmed) > 0 && trimmed[0] == '{' {
+		var env struct {
+			Requirements []ontology.Requirement `json:"requirements"`
+			Stakeholders []ontology.Stakeholder `json:"stakeholders"`
+		}
+		if err := json.Unmarshal(trimmed, &env); err != nil {
+			return nil, nil, fmt.Errorf("registry dump: %s produced output that is not a valid JSON {requirements, stakeholders} envelope: %w\noutput was:\n%s", registrydumpDir, err, boundedForError(stdout))
+		}
+		entries, stakeholders = env.Requirements, env.Stakeholders
+	} else if err := json.Unmarshal(stdout, &entries); err != nil {
+		return nil, nil, fmt.Errorf("registry dump: %s produced output that is not a valid JSON []Requirement array: %w\noutput was:\n%s", registrydumpDir, err, boundedForError(stdout))
+	}
+	seenStk := map[string]bool{}
+	for _, s := range stakeholders {
+		if s.ID == "" {
+			return nil, nil, fmt.Errorf("registry dump: %s produced a stakeholder with an empty ID — refusing to sync it", registrydumpDir)
+		}
+		if seenStk[s.ID] {
+			return nil, nil, fmt.Errorf("registry dump: %s produced a duplicate stakeholder ID %q — refusing to sync it", registrydumpDir, s.ID)
+		}
+		seenStk[s.ID] = true
 	}
 
 	reg := registry.New[ontology.Requirement]()
 	for _, e := range entries {
 		if e.ID == "" {
-			return nil, fmt.Errorf("registry dump: %s produced an entry with an empty ID — refusing to build a registry from it", registrydumpDir)
+			return nil, nil, fmt.Errorf("registry dump: %s produced an entry with an empty ID — refusing to build a registry from it", registrydumpDir)
 		}
 		if _, dup := reg.Get(e.ID); dup {
 			// registry.Registry.MustRegister PANICS on a duplicate name (see
@@ -251,11 +283,37 @@ func domainRegistryFromSubprocess(domainDir string) (*registry.Registry[ontology
 			// registry's own MustRegister already panics inside the
 			// subprocess at registration time) -- this guards against a
 			// hand-broken or future non-Registry-backed registrydump program.
-			return nil, fmt.Errorf("registry dump: %s produced a duplicate requirement ID %q — refusing to build a registry from it", registrydumpDir, e.ID)
+			return nil, nil, fmt.Errorf("registry dump: %s produced a duplicate requirement ID %q — refusing to build a registry from it", registrydumpDir, e.ID)
 		}
 		reg.MustRegister(e.ID, e)
 	}
-	return reg, nil
+	return reg, stakeholders, nil
+}
+
+// appendDomainStakeholders appends to g every dumped stakeholder whose ID is
+// absent from g.Stakeholders and returns them as added. Append-only: an
+// existing graph stakeholder is never rewritten or removed, even if the code
+// declaration differs.
+func appendDomainStakeholders(g *ontology.Graph, dumped []ontology.Stakeholder) []ontology.Stakeholder {
+	have := map[string]bool{}
+	next := 0
+	for _, s := range g.Stakeholders {
+		have[s.ID] = true
+		if s.DeclOrder >= next {
+			next = s.DeclOrder + 1
+		}
+	}
+	var added []ontology.Stakeholder
+	for _, s := range dumped {
+		if have[s.ID] {
+			continue
+		}
+		s.DeclOrder = next
+		next++
+		g.Stakeholders = append(g.Stakeholders, s)
+		added = append(added, s)
+	}
+	return added
 }
 
 // runRegistryDump spawns `go run ./registrydump` with cmd.Dir=specDir — the
@@ -313,7 +371,7 @@ func boundedForError(b []byte) string {
 // payloads are independent artifacts of independent commands, and sharing a
 // helper across them would couple two otherwise-unrelated CLI surfaces for
 // no behavioral benefit.
-func computeDomainSyncDiffHash(graphPath string, report *selfspec.SyncReport) (string, error) {
+func computeDomainSyncDiffHash(graphPath string, report *selfspec.SyncReport, addedStk []ontology.Stakeholder) (string, error) {
 	baseHash, err := sha256HexFile(graphPath)
 	if err != nil {
 		return "", fmt.Errorf("hash base graph %s: %w", graphPath, err)
@@ -325,9 +383,12 @@ func computeDomainSyncDiffHash(graphPath string, report *selfspec.SyncReport) (s
 	payload := struct {
 		BaseGraphSHA256 string              `json:"base_graph_sha256"`
 		Diff            selfspec.SyncReport `json:"diff"`
+		// omitempty: a requirements-only sync hashes byte-identically to before.
+		AddedStakeholders []ontology.Stakeholder `json:"added_stakeholders,omitempty"`
 	}{
-		BaseGraphSHA256: baseHash,
-		Diff:            selfspec.SyncReport{Entries: entries},
+		BaseGraphSHA256:   baseHash,
+		Diff:              selfspec.SyncReport{Entries: entries},
+		AddedStakeholders: addedStk,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -461,7 +522,7 @@ func domainClaimForConfront(reg *registry.Registry[ontology.Requirement], entry 
 // own contracts, not from anything self-hosting-specific), so this function
 // reuses rollbackSyncSelf directly rather than duplicating it under a new
 // name.
-func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, report *selfspec.SyncReport, diffHash, today, reason string, ackOpts landAckOptions, out *os.File, asJSON bool, claimNotes []string) error {
+func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, report *selfspec.SyncReport, addedStk []ontology.Stakeholder, diffHash, today, reason string, ackOpts landAckOptions, out *os.File, asJSON bool, claimNotes []string) error {
 	claudeMDPath := resolveClaudeMDPath(domainDir, "")
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
@@ -478,6 +539,9 @@ func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, rep
 		shortHash = shortHash[:12]
 	}
 	note := fmt.Sprintf("sync-domain: %d changed, %d added; diff-hash %s", changed, added, shortHash)
+	if len(addedStk) > 0 {
+		note = fmt.Sprintf("sync-domain: %d changed, %d added, %d stakeholder(s) added; diff-hash %s", changed, added, len(addedStk), shortHash)
+	}
 	if reason != "" {
 		note += "; reason: " + reason
 	}
@@ -491,7 +555,7 @@ func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, rep
 	for _, n := range claimNotes {
 		fmt.Fprintln(out, n)
 	}
-	fmt.Fprintf(out, "synced %d changed, %d added requirement(s) into %s\n", changed, added, relPathForDisplay(gp))
+	fmt.Fprintf(out, "synced %d changed, %d added requirement(s), %d stakeholder(s) added into %s\n", changed, added, len(addedStk), relPathForDisplay(gp))
 
 	if ackOpts.hasAck() {
 		if err := appendDomainSyncAckHistory(gp, report, today, ackOpts); err != nil {
@@ -523,7 +587,7 @@ func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, rep
 
 	fmt.Fprintln(out, "sync-domain landed: graph synced, docs regenerated, 0 violations")
 	if asJSON {
-		return printJSON(newSyncDomainResult(true, report, diffHash, nil, nil, violations, claimNotes))
+		return printJSON(newSyncDomainResult(true, report, diffHash, nil, nil, violations, claimNotes).withStakeholders(addedStk))
 	}
 	return nil
 }
@@ -588,11 +652,15 @@ func appendDomainSyncAckHistory(graphPath string, report *selfspec.SyncReport, t
 // --- dry-run render (byte-identical SHAPE to sync-self's renderSyncDryRun)
 // ---
 
-func renderDomainSyncDryRun(out *os.File, report *selfspec.SyncReport, diffHash string, gateReport *domainSyncGateReport, gateErr error, claimNotes []string) {
+func renderDomainSyncDryRun(out *os.File, report *selfspec.SyncReport, addedStk []ontology.Stakeholder, diffHash string, gateReport *domainSyncGateReport, gateErr error, claimNotes []string) {
 	fmt.Fprintln(out, "hotam sync-domain — DRY RUN (default mode; pass --confirm-hash <hex> to write)")
 	fmt.Fprintln(out)
-	if len(report.Entries) == 0 {
+	if len(report.Entries) == 0 && len(addedStk) == 0 {
 		fmt.Fprintln(out, "no differences: the domain's spec/requirements.go registry already matches the on-disk graph")
+	}
+	for _, s := range addedStk {
+		fmt.Fprintf(out, "[ADDED stakeholder] %s\n", s.ID)
+		fmt.Fprintf(out, "    name: %s\n    domain: %s\n", abbrevSyncValue(s.Name), abbrevSyncValue(s.Domain))
 	}
 	for _, entry := range report.Entries {
 		fmt.Fprintf(out, "[%s] %s\n", entry.Kind, entry.ID)
@@ -641,6 +709,13 @@ type syncDomainResult struct {
 	GateError  string                     `json:"gate_error,omitempty"`
 	Violations []invariants.Violation     `json:"violations,omitempty"`
 	Notes      []string                   `json:"notes,omitempty"`
+
+	AddedStakeholders []ontology.Stakeholder `json:"added_stakeholders,omitempty"`
+}
+
+func (r *syncDomainResult) withStakeholders(added []ontology.Stakeholder) *syncDomainResult {
+	r.AddedStakeholders = added
+	return r
 }
 
 func newSyncDomainResult(landed bool, report *selfspec.SyncReport, diffHash string, gateReport *domainSyncGateReport, gateErr error, violations []invariants.Violation, notes []string) *syncDomainResult {

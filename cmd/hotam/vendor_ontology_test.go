@@ -46,8 +46,16 @@ func TestVendorOntology_WritesBannerStampedCopies(t *testing.T) {
 	}
 	wantReq := filepath.Join(specDir, "hotamontology", "requirement.go")
 	wantReg := filepath.Join(specDir, "hotamontology", "registry.go")
-	if len(written) != 2 || written[0] != wantReq || written[1] != wantReg {
-		t.Fatalf("vendorOntology returned %v, want [%q %q]", written, wantReq, wantReg)
+	wantStk := filepath.Join(specDir, "hotamontology", "stakeholder.go")
+	if len(written) != 3 || written[0] != wantReq || written[1] != wantReg || written[2] != wantStk {
+		t.Fatalf("vendorOntology returned %v, want [%q %q %q]", written, wantReq, wantReg, wantStk)
+	}
+	gotStk, err := os.ReadFile(wantStk)
+	if err != nil {
+		t.Fatalf("ReadFile stakeholder.go: %v", err)
+	}
+	if string(gotStk) != ontologyvendor.StakeholderSource() {
+		t.Fatalf("written stakeholder.go content does not match ontologyvendor.StakeholderSource()")
 	}
 
 	gotReq, err := os.ReadFile(wantReq)

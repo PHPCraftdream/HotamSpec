@@ -260,6 +260,17 @@ derived automatically from the verified_by test's recorded scenario title
 (and a hand-written Claim for such a requirement is ignored, with a NOTE
 printed by `sync-domain`).
 
+Requirement owners can be declared in code too: add `var Stakeholders =
+hotamontology.New[hotamontology.Stakeholder]()` (fields `ID`, `Name`, `Domain`)
+to the `spec/` package, re-run `hotam vendor-ontology` (adds
+`spec/hotamontology/stakeholder.go`) and `hotam scaffold-registrydump`, which
+then emits a `{"requirements":[...],"stakeholders":[...]}` envelope instead of a
+bare array (a domain without `Stakeholders` keeps the old scaffold, and
+`sync-domain` reads both). `sync-domain` only ever ADDS stakeholders missing from
+`graph.json` (listed in the dry-run, covered by the diff-hash, landed before the
+requirements that reference them); existing graph stakeholders are never
+rewritten or removed.
+
 Declaring `requirements_authority: "code"` then locks `apply-proposal`/`land`
 out of hand-authoring Requirement/Rejection proposals for that domain — the
 Go registry is the only authority, mirroring how the framework's own
