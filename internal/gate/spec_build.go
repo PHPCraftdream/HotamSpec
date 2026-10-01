@@ -375,6 +375,12 @@ func BuildSpecFromRows(g *ontology.Graph, rows map[string]SpecRow) string {
 
 	var withScenario, withoutVerifiedBy []ontology.Requirement
 	for _, r := range reqs {
+		// REJECTED is withdrawn, not roadmap debt (mirrors coverage.go's
+		// SETTLED-only partition): a rejected requirement renders nowhere in
+		// SPEC.md — not in the honest-gap table, not in the summary counts.
+		if r.Status == ontology.StatusREJECTED {
+			continue
+		}
 		if len(r.VerifiedBy) == 0 {
 			withoutVerifiedBy = append(withoutVerifiedBy, r)
 			continue
@@ -541,7 +547,7 @@ func renderSpecRequirement(row SpecRow) []string {
 			continue
 		}
 		for _, art := range o.artifacts {
-			lines = append(lines, renderSpecArtifact(art)...)
+			lines = append(lines, renderSpecArtifact(art, row.req.Claim)...)
 		}
 		_ = i
 	}
@@ -562,9 +568,17 @@ func renderSpecRequirement(row SpecRow) []string {
 // reports false while an EARLIER Then's failure is what actually flipped
 // t.Failed(); rendering each step's own recorded Passed value keeps the
 // narrative honest about exactly which assertion(s) held).
-func renderSpecArtifact(art specArtifact) []string {
+//
+// claim is the requirement's own Claim text: when the scenario title is
+// exactly equal to it, the bold title line is suppressed — in discipline:
+// "full" domains the Claim is DERIVED from that very title
+// (internal/selfspec/claim_derive.go), so printing both would repeat the
+// same sentence twice in a row.
+func renderSpecArtifact(art specArtifact, claim string) []string {
 	var lines []string
-	lines = append(lines, "**"+specCell(art.Title)+"**", "")
+	if strings.TrimSpace(art.Title) != strings.TrimSpace(claim) {
+		lines = append(lines, "**"+specCell(art.Title)+"**", "")
+	}
 	for _, step := range art.Steps {
 		switch step.Kind {
 		case "given":
