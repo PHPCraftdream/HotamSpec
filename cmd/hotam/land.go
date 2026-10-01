@@ -139,6 +139,10 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) 
 	// rationale): the forward genSpec and every rollback re-render in this
 	// batch path must agree on whether the root crystal is in scope.
 	claudeMDPath = resolveClaudeMDPath(domainDir, claudeMDPath)
+	specSnapshot, specPresent, err := snapshotSpecMD(domainDir)
+	if err != nil {
+		return nil, fmt.Errorf("pre-land SPEC.md snapshot failed, nothing landed: %w", err)
+	}
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
 		return nil, fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
@@ -161,16 +165,16 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) 
 	}
 	fmt.Fprintf(landOut(asJSON), "applied batch of %d proposals to %s\n", len(proposals), relPathForDisplay(gp))
 
-	written, _, err := genSpec(domainDir, claudeMDPath, today, "", false)
+	written, _, err := genSpec(domainDir, claudeMDPath, today, "", specRenderNeeded(domainDir))
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return nil, rolledBackError("doc regeneration failed", err, rerr)
 	}
 	fmt.Fprintf(landOut(asJSON), "regenerated %d doc(s)\n", len(written))
 
 	violations, err := allViolations(domainDir)
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return nil, rolledBackError("violation check failed to run", err, rerr)
 	}
 	if len(violations) > 0 {
@@ -178,7 +182,7 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) 
 			fmt.Fprintf(landOut(asJSON), "[%s] %s: %s\n", v.Check, v.ID, v.Message)
 		}
 		cause := fmt.Errorf("%d invariant violation(s) found after gen-spec (apply already validated the graph before writing it — this signals drift introduced by gen-spec or a concurrent change, not a bad proposal)", len(violations))
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return nil, rolledBackError("graph invalid after gen-spec", cause, rerr)
 	}
 
@@ -365,6 +369,10 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 	// present) auto-regenerates the crystal so docs/gen and the boot crystal
 	// can never diverge again (see resolveClaudeMDPath).
 	claudeMDPath = resolveClaudeMDPath(domainDir, claudeMDPath)
+	specSnapshot, specPresent, err := snapshotSpecMD(domainDir)
+	if err != nil {
+		return nil, fmt.Errorf("pre-land SPEC.md snapshot failed, nothing landed: %w", err)
+	}
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
 		return nil, fmt.Errorf("pre-land snapshot failed, nothing landed: %w", err)
@@ -384,21 +392,21 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 	// here triggers the same rollback as any other post-apply failure.
 	if hadConflict && ackOpts.hasAck() {
 		if err := appendAckHistory(gp, p, today, ackOpts); err != nil {
-			rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+			rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 			return nil, rolledBackError("ack history append failed", err, rerr)
 		}
 	}
 
-	written, _, err := genSpec(domainDir, claudeMDPath, today, "", false)
+	written, _, err := genSpec(domainDir, claudeMDPath, today, "", specRenderNeeded(domainDir))
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return nil, rolledBackError("doc regeneration failed", err, rerr)
 	}
 	fmt.Fprintf(landOut(asJSON), "regenerated %d doc(s)\n", len(written))
 
 	violations, err := allViolations(domainDir)
 	if err != nil {
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return nil, rolledBackError("violation check failed to run", err, rerr)
 	}
 	if len(violations) > 0 {
@@ -406,7 +414,7 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 			fmt.Fprintf(landOut(asJSON), "[%s] %s: %s\n", v.Check, v.ID, v.Message)
 		}
 		cause := fmt.Errorf("%d invariant violation(s) found after gen-spec (apply already validated the graph before writing it — this signals drift introduced by gen-spec or a concurrent change, not a bad proposal)", len(violations))
-		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
+		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return nil, rolledBackError("graph invalid after gen-spec", cause, rerr)
 	}
 
@@ -488,6 +496,20 @@ func snapshotGraphFiles(domainDir string) (*graphSnapshot, error) {
 	}
 
 	return s, nil
+}
+
+// specRenderNeeded reports whether land's gen-spec pass must render SPEC.md
+// (includeSpec=true, the same decision sync-self/sync-domain make
+// unconditionally): check_spec_md_current fires when a committed SPEC.md
+// exists (any discipline — it may have drifted from the new graph) or when
+// the domain's manifest declares discipline:"full" (the SPEC.md must exist
+// from birth). Domains where the check is an honest no-op keep today's
+// cheaper includeSpec=false render (no test execution added for them).
+func specRenderNeeded(domainDir string) bool {
+	if _, err := os.Stat(specMDPath(domainDir)); err == nil {
+		return true
+	}
+	return loader.ResolveDiscipline(graphPathForDomain(domainDir)) == loader.DisciplineFull
 }
 
 // rollbackLand restores a domain's graph.json + graph.lock to the bytes held

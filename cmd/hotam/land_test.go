@@ -1129,3 +1129,112 @@ func TestCmdLand_AutoCrystal_RepoRootIsDomainDir(t *testing.T) {
 		t.Fatal("CLAUDE.md was NOT regenerated for the bare repoRoot==domainDir layout")
 	}
 }
+
+// TestCmdLand_FreshDisciplineFullProject_DoesNotRollBack reproduces the
+// init-project defect: a fresh `hotam init-project` scaffold (discipline
+// "full" by default) is born with docs/gen/SPEC.md containing an empty-graph
+// notice, and the very first `hotam land` — even a trivial Stakeholder
+// proposal — used to roll back, because land's gen-spec pass rendered with
+// includeSpec=false, so SPEC.md was left describing the pre-land graph while
+// the graph had moved; the post-land all-violations run then reported
+// check_spec_md_current. Land must re-render SPEC.md on such domains the same
+// way sync-domain does, so the first land succeeds.
+func TestCmdLand_FreshDisciplineFullProject_DoesNotRollBack(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	if err := cmdInitProject([]string{dir}); err != nil {
+		t.Fatalf("cmdInitProject: %v", err)
+	}
+	domainDir := filepath.Join(dir, "domains", defaultInitProjectDomain)
+	specPath := filepath.Join(domainDir, "docs", "gen", "SPEC.md")
+	if _, err := os.Stat(specPath); err != nil {
+		t.Fatalf("init-project should render docs/gen/SPEC.md: %v", err)
+	}
+
+	proposalPath := filepath.Join(dir, "p.json")
+	proposalJSON := `{"kind": "Stakeholder", "id": "a", "name": "A", "domain": "x", "why": "first land on a fresh discipline:full project"}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal fixture: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", domainDir,
+		"--today", "2026-10-01",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("first land on a fresh discipline:full project rolled back: %v", err)
+	}
+
+	// graph.json must actually carry the landed stakeholder (not a silent
+	// pre-land state after a rollback).
+	graphData, err := os.ReadFile(graphPathForDomain(domainDir))
+	if err != nil {
+		t.Fatalf("read graph.json: %v", err)
+	}
+	if !strings.Contains(string(graphData), `"a"`) {
+		t.Error("graph.json does not contain the landed stakeholder after land")
+	}
+
+	// SPEC.md must have been re-rendered with the post-land graph: the
+	// empty-graph notice init-project wrote must be gone.
+	after, err := os.ReadFile(specPath)
+	if err != nil {
+		t.Fatalf("read post-land SPEC.md: %v", err)
+	}
+	if strings.Contains(string(after), "No domain content loaded") {
+		t.Error("docs/gen/SPEC.md still carries the empty-graph notice after land (it was not re-rendered)")
+	}
+}
+
+// TestCmdLandBatch_FreshDisciplineFullProject_DoesNotRollBack is the batch
+// counterpart of TestCmdLand_FreshDisciplineFullProject_DoesNotRollBack: the
+// --batch path must re-render SPEC.md exactly like the single-file path does
+// (specRenderNeeded gating + rollbackSyncSelf rollback), so the very first
+// batch land on a fresh init-project scaffold (discipline "full" by default,
+// SPEC.md born with an empty-graph notice) succeeds instead of rolling back
+// on a check_spec_md_current violation.
+func TestCmdLandBatch_FreshDisciplineFullProject_DoesNotRollBack(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	if err := cmdInitProject([]string{dir}); err != nil {
+		t.Fatalf("cmdInitProject: %v", err)
+	}
+	domainDir := filepath.Join(dir, "domains", defaultInitProjectDomain)
+	specPath := filepath.Join(domainDir, "docs", "gen", "SPEC.md")
+	if _, err := os.Stat(specPath); err != nil {
+		t.Fatalf("init-project should render docs/gen/SPEC.md: %v", err)
+	}
+
+	batchDir := filepath.Join(dir, "batch")
+	if err := os.Mkdir(batchDir, 0o755); err != nil {
+		t.Fatalf("mkdir batch dir: %v", err)
+	}
+	proposalJSON := []byte(`{"kind": "Stakeholder", "id": "b", "name": "B", "domain": "x", "why": "first batch land on a fresh discipline:full project"}`)
+	if err := os.WriteFile(filepath.Join(batchDir, "01-stakeholder.json"), proposalJSON, 0o644); err != nil {
+		t.Fatalf("write batch proposal: %v", err)
+	}
+
+	if err := cmdLand([]string{
+		"--domain", domainDir,
+		"--today", "2026-10-01",
+		"--batch", batchDir,
+	}); err != nil {
+		t.Fatalf("first batch land on a fresh discipline:full project rolled back: %v", err)
+	}
+
+	graphData, err := os.ReadFile(graphPathForDomain(domainDir))
+	if err != nil {
+		t.Fatalf("read graph.json: %v", err)
+	}
+	if !strings.Contains(string(graphData), `"b"`) {
+		t.Error("graph.json does not contain the batch-landed stakeholder after land")
+	}
+
+	after, err := os.ReadFile(specPath)
+	if err != nil {
+		t.Fatalf("read post-land SPEC.md: %v", err)
+	}
+	if strings.Contains(string(after), "No domain content loaded") {
+		t.Error("docs/gen/SPEC.md still carries the empty-graph notice after batch land (it was not re-rendered)")
+	}
+}

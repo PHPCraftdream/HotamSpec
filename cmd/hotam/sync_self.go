@@ -476,8 +476,7 @@ func runSyncSelfWrite(domainDir, gp string, before, after *ontology.Graph, repor
 	// graph.json/graph.lock and then re-renders every OTHER doc via a plain
 	// genSpec(..., false) call, which — per that flag's own contract in
 	// gen_spec.go — deliberately never touches an EXISTING SPEC.md (it only
-	// reads it for REPO-MAP.md's title). That is exactly right for `hotam
-	// land`, which never opts into --spec, but WRONG here once this
+	// reads it for REPO-MAP.md's title). That is WRONG here once this
 	// function's own forward path has already written a NEW SPEC.md
 	// reflecting the post-sync graph: a rollback that restores graph.json to
 	// its pre-sync bytes but leaves the post-sync SPEC.md on disk would
@@ -485,7 +484,9 @@ func runSyncSelfWrite(domainDir, gp string, before, after *ontology.Graph, repor
 	// longer exists. restoreSpecSnapshot (below) is the local, sync-self-only
 	// fix — applied AFTER every rollbackLand call that can fire once genSpec
 	// has run with includeSpec=true — rather than widening rollbackLand's own
-	// shared signature for a concern only this caller has.
+	// shared signature for a concern only this caller has. (`hotam land`
+	// itself now opts into includeSpec via specRenderNeeded and shares this
+	// exact snapshot/restore pair through rollbackSyncSelf.)
 	specSnapshot, specPresent, err := snapshotSpecMD(domainDir)
 	if err != nil {
 		return fmt.Errorf("sync-self: pre-write SPEC.md snapshot failed, nothing synced: %w", err)
@@ -596,8 +597,10 @@ func snapshotSpecMD(domainDir string) (data []byte, present bool, err error) {
 // rollbackSyncSelf wraps rollbackLand (land.go) with the SPEC.md-specific
 // restore this file's own runSyncSelfWrite doc comment explains is needed:
 // rollbackLand's own genSpec(..., includeSpec=false) call deliberately never
-// touches an on-disk SPEC.md (correct for `hotam land`, which never opts into
-// --spec), so once runSyncSelfWrite's forward path has rendered a NEW
+// touches an on-disk SPEC.md (correct for `hotam land`, which renders SPEC.md
+// only when specRenderNeeded is true and shares THIS wrapper for its rollback,
+// so land's forward re-render is undone here too), so once runSyncSelfWrite's
+// forward path has rendered a NEW
 // SPEC.md (includeSpec=true, reflecting the post-sync graph), a bare
 // rollbackLand call would leave that new SPEC.md in place even after
 // graph.json is restored to its pre-sync bytes — a SPEC.md/graph mismatch

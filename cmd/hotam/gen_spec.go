@@ -271,8 +271,9 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// --spec -- the REAL executed narrative lives solely in SPEC.md, whose
 	// own freshness is separately enforced by check_spec_md_current. This
 	// is what makes TRACEABILITY.md/COVERAGE.md/REPO-MAP.md safe for
-	// `hotam land`'s own routine regeneration (which always calls plain
-	// genSpec, never --spec) to commit: they are no longer shaped by
+	// `hotam land`'s own routine regeneration to commit (land passes
+	// includeSpec=true only when specRenderNeeded says check_spec_md_current
+	// applies): they are no longer shaped by
 	// whichever mode last regenerated them (see
 	// TestGenSpec_SharedProjectionsModeIndependent).
 	var specRows map[string]generator.SpecRow
@@ -327,7 +328,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// reading the graph/filesystem alone — see includeSpec's own doc comment
 	// above. Appended conditionally, at the end, so every existing index into
 	// repoMapDocs/mdDocs by position (below) stays valid whether or not it is
-	// present, and every pre-existing caller (includeSpec always false) never
+	// present, and every caller that does not request SPEC.md never
 	// pays this cost or sees SPEC.md in its written/removed lists.
 	var specMD string
 	if includeSpec {
