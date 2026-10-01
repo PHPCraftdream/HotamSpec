@@ -523,6 +523,33 @@ func TestEngineRoot_NoGoModAboveDomainDir_FallsBackToCWD(t *testing.T) {
 	}
 }
 
+// TestWalkUpToGoMod_IgnoresSystemTempRootGoMod pins cmd/go's
+// golang.org/issue/26708 rule: a stray go.mod directly in os.TempDir() is not
+// a module root, so it never captures t.TempDir() fixtures beneath it.
+func TestWalkUpToGoMod_IgnoresSystemTempRootGoMod(t *testing.T) {
+	// Not t.Parallel(): t.Setenv redirects the process-wide os.TempDir().
+	fakeTemp := t.TempDir()
+	if err := os.WriteFile(filepath.Join(fakeTemp, "go.mod"), []byte("module stray\n"), 0o644); err != nil {
+		t.Fatalf("write stray go.mod: %v", err)
+	}
+	sub := filepath.Join(fakeTemp, "domains", "d")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+
+	// Control: an ordinary directory's go.mod is still a module root.
+	if root, ok := walkUpToGoMod(sub); !ok || root != fakeTemp {
+		t.Fatalf("control: walkUpToGoMod(%s) = (%q, %v), want (%q, true)", sub, root, ok, fakeTemp)
+	}
+
+	for _, k := range []string{"TMPDIR", "TMP", "TEMP"} {
+		t.Setenv(k, fakeTemp)
+	}
+	if root, ok := walkUpToGoMod(sub); ok {
+		t.Fatalf("go.mod in the system temp root must be ignored, got root %q", root)
+	}
+}
+
 // TestSpecRoot_NonSelfHosting_StillResolvesAgainstDomainDir is the
 // regression proof: an ordinary (non-self-hosting) domain's SpecRoot MUST
 // still return domainDir itself, unaffected by the self-hosting engine-root

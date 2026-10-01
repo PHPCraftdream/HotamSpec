@@ -727,11 +727,16 @@ func engineRoot(domainDir string) (string, bool) {
 
 // walkUpToGoMod walks UP from start looking for the directory that contains
 // go.mod, returning that directory. Returns ok=false if no go.mod is found
-// before reaching the filesystem root.
+// before reaching the filesystem root, or if the first go.mod found sits in
+// the system temp root — cmd/go ignores that one too (golang.org/issue/26708),
+// so a stray os.TempDir()/go.mod never captures t.TempDir() fixtures.
 func walkUpToGoMod(start string) (string, bool) {
 	dir := start
 	for {
 		if info, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil && !info.IsDir() {
+			if isSystemTempRoot(dir) {
+				return "", false
+			}
 			return dir, true
 		}
 		parent := filepath.Dir(dir)
@@ -740,4 +745,18 @@ func walkUpToGoMod(start string) (string, bool) {
 		}
 		dir = parent
 	}
+}
+
+// isSystemTempRoot reports whether dir is os.TempDir() itself (SameFile, so
+// case and symlink differences do not matter).
+func isSystemTempRoot(dir string) bool {
+	a, err := os.Stat(dir)
+	if err != nil {
+		return false
+	}
+	b, err := os.Stat(os.TempDir())
+	if err != nil {
+		return false
+	}
+	return os.SameFile(a, b)
 }
