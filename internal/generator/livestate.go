@@ -40,7 +40,18 @@ func LiveStateMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildLiveState(g *ontology.Graph, domainName string, claudeMDCharCount int, today string) string {
-	return BuildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, invariants.AllViolations(g))
+	return buildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, invariants.AllViolations(g))
+}
+
+// BuildLiveStateWithViolationsRoot is BuildLiveStateWithViolations with the
+// repo root threaded through, so any absolute path under it embedded in a
+// violation message (e.g. check_spec_md_current's rendered file path) is
+// rewritten to a root-relative, forward-slashed path before the standalone
+// docs/gen/live-state.md is rendered — no machine-specific absolute path
+// leaks into the committed document. repoRoot "" keeps the legacy
+// (unrewritten) form for callers that have no root.
+func BuildLiveStateWithViolationsRoot(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, violations []invariants.Violation, repoRoot string) string {
+	return rewriteRepoAbsPaths(repoRoot, buildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, violations))
 }
 
 // BuildLiveStateWithViolations is BuildLiveState's core, parameterized over
@@ -61,6 +72,10 @@ func BuildLiveState(g *ontology.Graph, domainName string, claudeMDCharCount int,
 // NOT need this consistency (a standalone BuildLiveState call with no
 // DOMAIN-MAP block alongside it) uses unchanged.
 func BuildLiveStateWithViolations(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, violations []invariants.Violation) string {
+	return buildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, violations)
+}
+
+func buildLiveStateWithViolations(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, violations []invariants.Violation) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}

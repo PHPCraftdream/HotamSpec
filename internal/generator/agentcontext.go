@@ -55,6 +55,20 @@ func AgentContextMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool) string {
+	return buildAgentContext(g, domainName, claudeMDCharCount, today, consumer)
+}
+
+// BuildAgentContextRoot is BuildAgentContext with the repo root threaded
+// through, so absolute paths under it embedded in violation/what-now signal
+// text are rewritten to root-relative, forward-slashed paths before
+// docs/gen/AGENT-CONTEXT.md is rendered — no machine-specific absolute path
+// leaks into the committed document. repoRoot "" keeps the legacy
+// (unrewritten) form for callers that have no root.
+func BuildAgentContextRoot(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool, repoRoot string) string {
+	return rewriteRepoAbsPaths(repoRoot, buildAgentContext(g, domainName, claudeMDCharCount, today, consumer))
+}
+
+func buildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}

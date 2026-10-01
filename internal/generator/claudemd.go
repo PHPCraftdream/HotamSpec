@@ -1030,12 +1030,18 @@ func renderBusinessContentWithViolations(g *ontology.Graph, domainName, repoRoot
 	// fix.
 	var liveState, domainMap string
 	if violations != nil {
-		liveState = BuildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, violations.Violations)
+		liveState = buildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, violations.Violations)
 		domainMap = renderDomainMapBlockWithViolations(repoRoot, domainGraphs, today, violations, selfCrystalPath)
 	} else {
 		liveState = BuildLiveState(g, domainName, claudeMDCharCount, today)
 		domainMap = renderDomainMapBlockWithViolations(repoRoot, domainGraphs, today, nil, selfCrystalPath)
 	}
+	// Violation/finding messages can embed the renderer's own absolute repo
+	// paths (check_spec_md_current, check_domain_claude_md_current, ...);
+	// rewrite any under repoRoot to root-relative, forward-slashed form so
+	// the committed crystal stays machine-independent.
+	liveState = rewriteRepoAbsPaths(repoRoot, liveState)
+	domainMap = rewriteRepoAbsPaths(repoRoot, domainMap)
 	if !consumer {
 		// Full profile: preserve byte-identical historical order.
 		parts := []string{

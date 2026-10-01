@@ -609,11 +609,11 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	var liveStateAndAgentContextContents [][]byte
 	if liveStateWritten {
 		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "live-state.md"))
-		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildLiveStateWithViolations(g, domainName, charCount, today, activeViolations)))
+		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildLiveStateWithViolationsRoot(g, domainName, charCount, today, activeViolations, repoRoot)))
 	}
 	if agentContextWritten {
 		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "AGENT-CONTEXT.md"))
-		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildAgentContext(g, domainName, charCount, today, consumer)))
+		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildAgentContextRoot(g, domainName, charCount, today, consumer, repoRoot)))
 	}
 	if err := writeFilesParallel(liveStateAndAgentContextPaths, liveStateAndAgentContextContents); err != nil {
 		return written, nil, err
