@@ -456,7 +456,9 @@ func testBodyHasTeeth(body *ast.BlockStmt) bool {
 // Scenario.Then asserts through the underlying *testing.T's Errorf exactly
 // like a hand-written `if !cond { t.Errorf(...) }`, so a verified_by test
 // written against the hotamspec API has REAL teeth even though the AST here
-// sees `s.Then(...)`, never a literal `t.Error*` call). t.Log/t.Logf and
+// sees `s.Then(...)`, never a literal `t.Error*` call). Scenario.Eq asserts
+// the same way, so "Eq" is matched by the same name-only rule below.
+// t.Log/t.Logf and
 // other non-assertion calls (helper setup, fmt.Sprintf, etc.) do not count.
 //
 // "Then" is recognized by method name alone (not qualified to a specific
@@ -479,7 +481,7 @@ func isTeethCall(call *ast.CallExpr) bool {
 	}
 	method := sel.Sel.Name
 	switch method {
-	case "Error", "Errorf", "Fatal", "Fatalf", "FailNow", "Fail", "Then":
+	case "Error", "Errorf", "Fatal", "Fatalf", "FailNow", "Fail", "Then", "Eq":
 		return true
 	}
 	if ident, ok := sel.X.(*ast.Ident); ok {

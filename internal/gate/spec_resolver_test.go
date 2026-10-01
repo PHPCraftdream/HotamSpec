@@ -944,6 +944,33 @@ func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 	}
 }
 
+// TestResolveSpecTest_ScenarioEqCountsAsTeeth: a test asserting only via
+// hotamspec's s.Eq(...) has real teeth, same as s.Then(...).
+func TestResolveSpecTest_ScenarioEqCountsAsTeeth(t *testing.T) {
+	t.Parallel()
+	const src = `package model
+
+import (
+	"testing"
+
+	"prat-spec/hotamspec"
+)
+
+func TestBirthYear(t *testing.T) {
+	s := hotamspec.NewScenario(t, "R-example", "example")
+	s.Eq("born:", BirthYear(), 1987)
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/human_test.go", src)
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/human_test.go", "TestBirthYear")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if !res.HasTeeth {
+		t.Fatalf("expected HasTeeth=true for a test using hotamspec's s.Eq(...), got %+v", res)
+	}
+}
+
 // TestResolveSpecTest_UnrelatedThenMethodAlsoCountsAsTeeth documents the
 // deliberate, narrow over-approximation isTeethCall's doc comment accepts:
 // ANY method literally named "Then" (not just hotamspec.Scenario's) is
