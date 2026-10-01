@@ -26,7 +26,7 @@ func TestExternal_Use_SwitchesActiveDomain(t *testing.T) {
 	}
 	// Not t.Parallel(): mutates TMP/TEMP (process-global) via t.Setenv.
 
-	// Clean temp roots outside both the repo and C:\Users\Computer (same
+	// Clean temp roots outside both the repo and the user's home directory (same
 	// marker-isolation discipline as TestExternal_InitProject).
 	cleanTmp := filepath.FromSlash("D:/ai_dev/_clean_tmp")
 	if st, err := os.Stat(cleanTmp); err != nil || !st.IsDir() {

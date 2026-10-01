@@ -10,7 +10,7 @@ import (
 
 // TestExternal_InitProject is the end-to-end proof for `hotam init-project`:
 // it builds the real binary, runs it as a subprocess from a genuinely external
-// temp dir (outside both this repo AND C:\Users\Computer, whose stray
+// temp dir (outside both this repo AND the user's home directory, whose stray
 // home-dir markers can mask CWD-resolution bugs — hence TMP/TEMP pointed at a
 // clean root), and verifies the full onboarding contract:
 //
@@ -31,7 +31,7 @@ func TestExternal_InitProject(t *testing.T) {
 	// t.Setenv to steer os.MkdirTemp at a clean root, and env-mutating tests
 	// are inherently serial.
 
-	// Clean temp roots outside both the repo and C:\Users\Computer, so this
+	// Clean temp roots outside both the repo and the user's home directory, so this
 	// developer's stray home-dir markers (.claude/CLAUDE.md/domains) cannot
 	// mask a CWD-resolution bug. os.MkdirTemp reads TMP/TEMP via os.TempDir.
 	cleanTmp := filepath.FromSlash("D:/ai_dev/_clean_tmp")
