@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -377,7 +378,7 @@ func ResolveSpecTest(specRoot, file, testName string) (SpecTestResult, error) {
 		if !isRealTestSignature(fn) {
 			continue
 		}
-		teeth := testBodyHasTeeth(fn.Body)
+		teeth := testBodyHasTeeth(fn.Body, importsHotamspec(astFile))
 		skip := testBodyHasTopLevelSkip(fn.Body)
 		scenario := testBodyHasScenarioConstructor(fn.Body)
 		return SpecTestResult{Found: true, HasTeeth: teeth, HasSkip: skip, HasScenario: scenario}, nil
@@ -429,7 +430,7 @@ func isRealTestSignature(fn *ast.FuncDecl) bool {
 // assertion-shaped call exist anywhere in the body" -- control-flow no
 // longer counts on its own, it is only a container an assertion may (or may
 // not) be nested inside.
-func testBodyHasTeeth(body *ast.BlockStmt) bool {
+func testBodyHasTeeth(body *ast.BlockStmt, hotamspecImported bool) bool {
 	if body == nil {
 		return false
 	}
@@ -438,7 +439,7 @@ func testBodyHasTeeth(body *ast.BlockStmt) bool {
 		if found {
 			return false
 		}
-		if call, ok := n.(*ast.CallExpr); ok && isTeethCall(call) {
+		if call, ok := n.(*ast.CallExpr); ok && isTeethCall(call, hotamspecImported) {
 			found = true
 			return false
 		}
@@ -461,7 +462,11 @@ func testBodyHasTeeth(body *ast.BlockStmt) bool {
 // t.Log/t.Logf and
 // other non-assertion calls (helper setup, fmt.Sprintf, etc.) do not count.
 //
-// "Then" is recognized by method name alone (not qualified to a specific
+// "Then"/"Eq" count ONLY when the test file imports a package whose path is
+// "hotamspec" or ends in "/hotamspec" (importsHotamspec): a `.Then(...)` on
+// an unrelated type (promise/future libs) in a file without the recorder is
+// not teeth. Within such a file they are recognized by method name alone
+// (not qualified to a specific
 // receiver/package identifier the way require./assert. are) because AST-only
 // inspection cannot resolve which concrete type a `s` variable has without a
 // full type-checking pass (go/types) this checker deliberately does not run
@@ -474,19 +479,40 @@ func testBodyHasTeeth(body *ast.BlockStmt) bool {
 // check_verified_by_test_passes actually running and passing the test) to
 // stay ENFORCED, so this widening does not weaken the overall discipline's
 // honesty boundary, only its most literal AST-shape half.
-func isTeethCall(call *ast.CallExpr) bool {
+func isTeethCall(call *ast.CallExpr, hotamspecImported bool) bool {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	if !ok {
 		return false
 	}
 	method := sel.Sel.Name
 	switch method {
-	case "Error", "Errorf", "Fatal", "Fatalf", "FailNow", "Fail", "Then", "Eq":
+	case "Error", "Errorf", "Fatal", "Fatalf", "FailNow", "Fail":
 		return true
+	case "Then", "Eq":
+		return hotamspecImported
 	}
 	if ident, ok := sel.X.(*ast.Ident); ok {
 		switch ident.Name {
 		case "require", "assert":
+			return true
+		}
+	}
+	return false
+}
+
+// importsHotamspec reports whether f imports a package whose path is
+// "hotamspec" or ends in "/hotamspec" (the vendored scenario recorder),
+// under any alias except blank.
+func importsHotamspec(f *ast.File) bool {
+	for _, imp := range f.Imports {
+		if imp.Name != nil && imp.Name.Name == "_" {
+			continue
+		}
+		p, err := strconv.Unquote(imp.Path.Value)
+		if err != nil {
+			continue
+		}
+		if p == "hotamspec" || strings.HasSuffix(p, "/hotamspec") {
 			return true
 		}
 	}

@@ -971,15 +971,38 @@ func TestBirthYear(t *testing.T) {
 	}
 }
 
-// TestResolveSpecTest_UnrelatedThenMethodAlsoCountsAsTeeth documents the
-// deliberate, narrow over-approximation isTeethCall's doc comment accepts:
-// ANY method literally named "Then" (not just hotamspec.Scenario's) is
-// treated as teeth, since AST-only inspection cannot resolve the receiver's
-// concrete type. This is intentional, not a regression to guard against --
-// see isTeethCall's doc comment for why the remaining verified_by checks
-// (especially check_verified_by_test_passes actually running the test)
-// keep this widening safe.
-func TestResolveSpecTest_UnrelatedThenMethodAlsoCountsAsTeeth(t *testing.T) {
+// TestResolveSpecTest_ThenWithAliasedHotamspecImportCountsAsTeeth: the import
+// is matched by path, so an alias still enables Then/Eq as teeth.
+func TestResolveSpecTest_ThenWithAliasedHotamspecImportCountsAsTeeth(t *testing.T) {
+	t.Parallel()
+	const src = `package model
+
+import (
+	"testing"
+
+	hs "example.com/dom/spec/hotamspec"
+)
+
+func TestAliased(t *testing.T) {
+	s := hs.NewScenario(t, "R-x", "x")
+	s.Then("ok", true)
+}
+`
+	domainDir := writeSpecFixture(t, "spec/model/a_test.go", src)
+	res, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/a_test.go", "TestAliased")
+	if err != nil {
+		t.Fatalf("ResolveSpecTest: %v", err)
+	}
+	if !res.HasTeeth {
+		t.Fatalf("expected HasTeeth=true with aliased hotamspec import, got %+v", res)
+	}
+}
+
+// TestResolveSpecTest_UnrelatedThenMethodDoesNotCountAsTeeth: a `.Then(...)`
+// / `.Eq(...)` on an unrelated type in a file that does NOT import a
+// hotamspec package is not teeth (the former name-only over-approximation is
+// closed).
+func TestResolveSpecTest_UnrelatedThenMethodDoesNotCountAsTeeth(t *testing.T) {
 	t.Parallel()
 	const src = `package model
 
@@ -988,10 +1011,12 @@ import "testing"
 type notAScenario struct{}
 
 func (n notAScenario) Then(desc string) {}
+func (n notAScenario) Eq(a, b any)      {}
 
 func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 	var n notAScenario
 	n.Then("unrelated Then method, not hotamspec's")
+	n.Eq(1, 1)
 }
 `
 	domainDir := writeSpecFixture(t, "spec/model/risk_test.go", src)
@@ -999,8 +1024,8 @@ func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ResolveSpecTest: %v", err)
 	}
-	if !res.HasTeeth {
-		t.Fatalf("expected HasTeeth=true (documented over-approximation for any .Then(...) call), got %+v", res)
+	if res.HasTeeth {
+		t.Fatalf("expected HasTeeth=false for .Then/.Eq without a hotamspec import, got %+v", res)
 	}
 }
 

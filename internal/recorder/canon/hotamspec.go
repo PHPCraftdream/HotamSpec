@@ -165,6 +165,21 @@ type Scenario struct {
 	reqID string
 	title string
 	steps []Step
+
+	defaultWhen string // WithWhen; "" = none
+	whenDone    bool   // explicit When seen, or default already resolved
+}
+
+// Option configures NewScenario.
+type Option func(*Scenario)
+
+// WithWhen sets a default When narration: if the test never calls s.When
+// before its first Then/Eq/Value, the recorder inserts StepWhen(desc) right
+// there -- the recorded steps are exactly those of an explicit s.When(desc)
+// at that point. An explicit s.When always takes precedence (no duplicate).
+// Removes the `s.When("init")` boilerplate repeated across a file's scenarios.
+func WithWhen(desc string) Option {
+	return func(s *Scenario) { s.defaultWhen = desc }
 }
 
 // RecordDirEnv is the environment variable that switches Scenario into
@@ -256,9 +271,15 @@ type ArtifactFact struct {
 // silently swallowed: a record-mode run that FAILS to produce its artifact
 // must be visibly red, never a quiet no-op that looks identical to success
 // from the test's own PASS/FAIL alone.
-func NewScenario(t T, reqID, title string) *Scenario {
+//
+// Options: WithWhen(desc) sets a default When step for scenarios that all
+// repeat the same action narration -- see WithWhen.
+func NewScenario(t T, reqID, title string, opts ...Option) *Scenario {
 	t.Helper()
 	s := &Scenario{t: t, reqID: reqID, title: title}
+	for _, o := range opts {
+		o(s)
+	}
 	if dir := os.Getenv(RecordDirEnv); dir != "" {
 		if rt, ok := t.(recordT); ok {
 			rt.Cleanup(func() { s.writeArtifact(rt, dir) })
@@ -379,7 +400,23 @@ func (s *Scenario) Given(desc string, kvPairs ...any) {
 // second, parallel calling convention alongside the direct method call the
 // test already makes.
 func (s *Scenario) When(desc string) {
+	s.whenDone = true
 	s.steps = append(s.steps, Step{Kind: StepWhen, Desc: desc})
+}
+
+// ensureWhen records the default When (WithWhen) exactly once, immediately
+// before the first Then/Eq/Value step, unless the test already called When
+// explicitly (an explicit When always wins; a later explicit When appends
+// normally). The result is identical to an explicit s.When(desc) call placed
+// there.
+func (s *Scenario) ensureWhen() {
+	if s.whenDone {
+		return
+	}
+	s.whenDone = true
+	if s.defaultWhen != "" {
+		s.steps = append(s.steps, Step{Kind: StepWhen, Desc: s.defaultWhen})
+	}
 }
 
 // Then asserts cond and records the outcome. On cond==false it reports a
@@ -397,6 +434,7 @@ func (s *Scenario) When(desc string) {
 // possible) instead of Then trying to guess when fatal is appropriate.
 func (s *Scenario) Then(desc string, cond bool) bool {
 	s.t.Helper()
+	s.ensureWhen()
 	if !cond {
 		s.t.Errorf("hotamspec: Then(%q) failed for %s (%s)", desc, s.reqID, s.title)
 	}
@@ -408,23 +446,91 @@ func (s *Scenario) Then(desc string, cond bool) bool {
 // execution, not from the author's hand: the recorded StepThen's Desc is
 // `label + " " + renderValue(got)`, so the narrated number/string is whatever
 // the code actually produced -- an author cannot write "born 1990" in the text
-// while the code asserts 1987. got and want are each canonically rendered via
-// renderValue (the same map-order/float-format/pointer-dereference treatment
-// the rest of this file gives values); the comparison itself is on the
-// RENDERED strings, so two values that render identically are equal here by
-// construction. On mismatch it reports via t.Errorf (non-fatal, like Then)
-// including the label and both renderings. Prefer Eq for value facts
-// ("blocker_count is 0"), Then for boolean predicates
-// ("sign-off is rejected").
+// while the code asserts 1987.
+//
+// EQUALITY RULE (strict on type, canonical on value): after dereferencing
+// non-nil pointers on both sides, got and want must have the SAME dynamic type
+// AND the same canonical rendering (renderValue: float shortest form, maps
+// key-sorted, errors via Error()). So Eq("x", 1, 1.0) FAILS (int vs float64),
+// as do two distinct struct types that happen to render alike.
+// CONVENIENCE FOR CONSTANTS: Go erases "untyped constant" at runtime, so a
+// want whose type is a predeclared default constant type (bool, int, rune/
+// int32, float64, string) is converted to got's type when got's basic kind is
+// in the same family (bool; any int/uint kind; float32/float64; string) and
+// the conversion is lossless (round-trips; no overflow/truncation). Hence
+// Eq("year", BirthYear(1987), 1987) and Eq("kind", Kind("a"), "a") pass, while
+// int vs float never converts across families. On mismatch it reports via
+// t.Errorf (non-fatal, like Then) including label, both renderings and types.
+// Prefer Eq for value facts ("blocker_count is 0"), Then for boolean
+// predicates ("sign-off is rejected").
 func (s *Scenario) Eq(label string, got, want any) bool {
 	s.t.Helper()
+	s.ensureWhen()
+	g, w := derefValue(got), derefValue(want)
+	w = coerceConst(g, w)
 	gotS, wantS := renderValue(got), renderValue(want)
-	equal := gotS == wantS
+	equal := reflect.TypeOf(g) == reflect.TypeOf(w) && renderValue(g) == renderValue(w)
 	if !equal {
-		s.t.Errorf("hotamspec: Eq(%q) failed for %s (%s): got %s, want %s", label, s.reqID, s.title, gotS, wantS)
+		s.t.Errorf("hotamspec: Eq(%q) failed for %s (%s): got %s (%T), want %s (%T)", label, s.reqID, s.title, gotS, g, wantS, w)
 	}
 	s.steps = append(s.steps, Step{Kind: StepThen, Desc: label + " " + gotS, Passed: equal})
 	return equal
+}
+
+// derefValue unwraps non-nil pointers (repeatedly), mirroring renderValue.
+func derefValue(v any) any {
+	for v != nil {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() != reflect.Ptr || rv.IsNil() {
+			break
+		}
+		v = rv.Elem().Interface()
+	}
+	return v
+}
+
+// constFamily classifies a basic kind for constant coercion; "" = none.
+func constFamily(k reflect.Kind) string {
+	switch k {
+	case reflect.Bool:
+		return "bool"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return "int"
+	case reflect.Float32, reflect.Float64:
+		return "float"
+	case reflect.String:
+		return "string"
+	}
+	return ""
+}
+
+// coerceConst converts want to got's type when want is of a predeclared
+// default constant type, got is a same-family basic kind of a different type,
+// and the conversion is lossless; otherwise returns want unchanged.
+func coerceConst(got, want any) any {
+	if got == nil || want == nil {
+		return want
+	}
+	gt, wt := reflect.TypeOf(got), reflect.TypeOf(want)
+	if gt == wt || wt.PkgPath() != "" {
+		return want
+	}
+	switch wt {
+	case reflect.TypeOf(false), reflect.TypeOf(0), reflect.TypeOf(int32(0)),
+		reflect.TypeOf(0.0), reflect.TypeOf(""):
+	default:
+		return want
+	}
+	fam := constFamily(gt.Kind())
+	if fam == "" || fam != constFamily(wt.Kind()) {
+		return want
+	}
+	cv := reflect.ValueOf(want).Convert(gt)
+	if cv.Convert(wt).Interface() != want {
+		return want
+	}
+	return cv.Interface()
 }
 
 // Value records a bare fact for narration -- an intermediate or final value
@@ -433,6 +539,7 @@ func (s *Scenario) Eq(label string, got, want any) bool {
 // lazily), so what gets narrated is exactly the value AS OF this call, never
 // re-evaluated later.
 func (s *Scenario) Value(key string, v any) {
+	s.ensureWhen()
 	s.steps = append(s.steps, Step{Kind: StepValue, Values: []Fact{{Key: key, Value: renderValue(v)}}})
 }
 

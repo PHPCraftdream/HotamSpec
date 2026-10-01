@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -308,6 +309,104 @@ func TestScenario_Eq_DescIsGotNotWant(t *testing.T) {
 	s.Eq("born", 1987, 1990)
 	if got := s.Steps()[0].Desc; got == "born 1990" {
 		t.Errorf("Eq step Desc = %q -- rendered want instead of got", got)
+	}
+}
+
+type birthYear int
+type kindStr string
+type pointA struct{ X, Y int }
+type pointB struct{ X, Y int }
+
+// TestScenario_Eq_TypeStrictness: Eq requires identical dynamic type (after
+// pointer deref) plus identical rendering; untyped-constant convenience
+// converts want to got's same-family named type only when lossless.
+func TestScenario_Eq_TypeStrictness(t *testing.T) {
+	n := 5
+	cases := []struct {
+		name      string
+		got, want any
+		ok        bool
+	}{
+		{"int_vs_float_literal_fails", 1, 1.0, false},
+		{"float_vs_int_literal_fails", 1.0, 1, false},
+		{"int_vs_int_passes", 1, 1, true},
+		{"named_int_vs_int_literal_passes", birthYear(1987), 1987, true},
+		{"named_int_vs_int_literal_mismatch_fails", birthYear(1987), 1990, false},
+		{"named_string_vs_string_passes", kindStr("a"), "a", true},
+		{"named_string_vs_int_fails", kindStr("1"), 1, false},
+		{"int64_vs_int_literal_passes", int64(7), 7, true},
+		{"uint8_overflow_literal_fails", uint8(44), 300, false},
+		{"uint_negative_literal_fails", uint(1), -1, false},
+		{"named_int_vs_float_literal_fails", birthYear(1), 1.0, false},
+		{"typed_named_vs_other_named_fails", birthYear(1), kindStr("1"), false},
+		{"struct_same_type_passes", pointA{1, 2}, pointA{1, 2}, true},
+		{"struct_mismatched_types_fail", pointA{1, 2}, pointB{1, 2}, false},
+		{"pointer_deref_passes", &n, 5, true},
+		{"nil_nil_passes", nil, nil, true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ft := &fakeT{}
+			s := NewScenario(ft, "R-example", "example")
+			if got := s.Eq("v", c.got, c.want); got != c.ok {
+				t.Fatalf("Eq(%#v, %#v) = %v, want %v (errors=%v)", c.got, c.want, got, c.ok, ft.errors)
+			}
+			if c.ok != (len(ft.errors) == 0) {
+				t.Fatalf("errors=%v, ok=%v", ft.errors, c.ok)
+			}
+			if st := s.Steps()[0]; st.Passed != c.ok {
+				t.Fatalf("step Passed=%v, want %v", st.Passed, c.ok)
+			}
+		})
+	}
+}
+
+// TestWithWhen_RendersLikeExplicitWhen: a default When yields exactly the
+// steps an explicit When placed before the first Then would.
+func TestWithWhen_RendersLikeExplicitWhen(t *testing.T) {
+	explicit := NewScenario(&fakeT{}, "R-example", "example")
+	explicit.Given("g", "k", 1)
+	explicit.When("init")
+	explicit.Then("a", true)
+	explicit.Eq("n", 3, 3)
+
+	def := NewScenario(&fakeT{}, "R-example", "example", WithWhen("init"))
+	def.Given("g", "k", 1)
+	def.Then("a", true)
+	def.Eq("n", 3, 3)
+
+	if !reflect.DeepEqual(explicit.Steps(), def.Steps()) {
+		t.Fatalf("WithWhen steps differ:\nexplicit=%+v\ndefault =%+v", explicit.Steps(), def.Steps())
+	}
+	if n := len(def.Steps()); n != 4 {
+		t.Fatalf("steps = %d, want 4", n)
+	}
+}
+
+// TestWithWhen_ExplicitWhenWins: explicit When suppresses the default (no
+// duplicate), and WithWhen inserts only once.
+func TestWithWhen_ExplicitWhenWins(t *testing.T) {
+	s := NewScenario(&fakeT{}, "R-example", "example", WithWhen("default"))
+	s.When("explicit")
+	s.Then("a", true)
+	s.Then("b", true)
+	var whens []string
+	for _, st := range s.Steps() {
+		if st.Kind == StepWhen {
+			whens = append(whens, st.Desc)
+		}
+	}
+	if !reflect.DeepEqual(whens, []string{"explicit"}) {
+		t.Fatalf("whens = %v, want [explicit]", whens)
+	}
+}
+
+// TestWithWhen_NotAppliedWithoutOption: plain scenarios record no When.
+func TestWithWhen_NotAppliedWithoutOption(t *testing.T) {
+	s := NewScenario(&fakeT{}, "R-example", "example")
+	s.Then("a", true)
+	if len(s.Steps()) != 1 {
+		t.Fatalf("steps = %+v, want only the Then", s.Steps())
 	}
 }
 
