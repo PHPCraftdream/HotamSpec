@@ -254,6 +254,12 @@ hotam scaffold-registrydump --domain domains/main  # write spec/registrydump/mai
 hotam sync-domain --domain domains/main            # dry-run: preview Go->graph diff; --confirm-hash <hex> to write
 ```
 
+Under `discipline: "full"` in the manifest, the Claim of any requirement with
+`verified_by` entries can be left empty in `spec/requirements.go` — it is
+derived automatically from the verified_by test's recorded scenario title
+(and a hand-written Claim for such a requirement is ignored, with a NOTE
+printed by `sync-domain`).
+
 Declaring `requirements_authority: "code"` then locks `apply-proposal`/`land`
 out of hand-authoring Requirement/Rejection proposals for that domain — the
 Go registry is the only authority, mirroring how the framework's own

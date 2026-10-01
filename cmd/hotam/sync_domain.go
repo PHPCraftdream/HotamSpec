@@ -118,8 +118,29 @@ func cmdSyncDomain(args []string) error {
 	// sees this call do nothing at all (DeriveClaimsFromScenarios' own
 	// top-of-function honest no-op) -- sync-domain's cost/behavior for such
 	// a domain is completely unchanged by this task.
+	//
+	// Because the derivation overwrites reg IN PLACE, the registry's own
+	// hand-authored Claim is snapshotted first: for every requirement whose
+	// authored Claim is non-empty and differs from what was derived, an
+	// output-only NOTE is emitted (dry-run AND confirm mode) telling the
+	// author their text was ignored -- the note never feeds SyncGraph, the
+	// gates, or the diff-hash (task: output-only author guidance).
+	registryClaims := map[string]string{}
+	for _, r := range reg.All() {
+		registryClaims[r.ID] = r.Claim
+	}
 	specRoot := gate.SpecRootForGraph(before)
-	selfspec.DeriveClaimsFromScenarios(reg, specRoot, before.SelfHosting, before.Discipline)
+	derivedIDs := selfspec.DeriveClaimsFromScenarios(reg, specRoot, before.SelfHosting, before.Discipline)
+	var claimNotes []string
+	if before.Discipline == loader.DisciplineFull {
+		sort.Strings(derivedIDs)
+		for _, id := range derivedIDs {
+			if registryClaims[id] == "" {
+				continue
+			}
+			claimNotes = append(claimNotes, fmt.Sprintf("NOTE %s: registry Claim ignored — under discipline:\"full\" the claim is derived from the scenario title; leave Claim empty in spec/requirements.go", id))
+		}
+	}
 
 	report, err := selfspec.SyncGraph(after, reg, syncToday)
 	if err != nil {
@@ -137,9 +158,9 @@ func cmdSyncDomain(args []string) error {
 	out := syncOut(*asJSON)
 
 	if *confirmHash == "" {
-		renderDomainSyncDryRun(out, report, diffHash, gateReport, gateErr)
+		renderDomainSyncDryRun(out, report, diffHash, gateReport, gateErr, claimNotes)
 		if *asJSON {
-			return printJSON(newSyncDomainResult(false, report, diffHash, gateReport, gateErr, nil))
+			return printJSON(newSyncDomainResult(false, report, diffHash, gateReport, gateErr, nil, claimNotes))
 		}
 		return nil
 	}
@@ -159,7 +180,7 @@ func cmdSyncDomain(args []string) error {
 		return fmt.Errorf("sync-domain: refusing to write: %w", gateErr)
 	}
 
-	return runSyncDomainWrite(domainDir, gp, before, after, report, diffHash, syncToday, *reason, ackOpts, out, *asJSON)
+	return runSyncDomainWrite(domainDir, gp, before, after, report, diffHash, syncToday, *reason, ackOpts, out, *asJSON, claimNotes)
 }
 
 // --- Gate 0: registry dump (the structural difference from sync-self) ---
@@ -440,7 +461,7 @@ func domainClaimForConfront(reg *registry.Registry[ontology.Requirement], entry 
 // own contracts, not from anything self-hosting-specific), so this function
 // reuses rollbackSyncSelf directly rather than duplicating it under a new
 // name.
-func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, report *selfspec.SyncReport, diffHash, today, reason string, ackOpts landAckOptions, out *os.File, asJSON bool) error {
+func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, report *selfspec.SyncReport, diffHash, today, reason string, ackOpts landAckOptions, out *os.File, asJSON bool, claimNotes []string) error {
 	claudeMDPath := resolveClaudeMDPath(domainDir, "")
 	snapshot, err := snapshotGraphFiles(domainDir)
 	if err != nil {
@@ -466,6 +487,9 @@ func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, rep
 	if err := loader.WriteLock(gp, note); err != nil {
 		rerr := rollbackLand(domainDir, snapshot, claudeMDPath, today)
 		return rolledBackError("write lock failed", err, rerr)
+	}
+	for _, n := range claimNotes {
+		fmt.Fprintln(out, n)
 	}
 	fmt.Fprintf(out, "synced %d changed, %d added requirement(s) into %s\n", changed, added, relPathForDisplay(gp))
 
@@ -499,7 +523,7 @@ func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, rep
 
 	fmt.Fprintln(out, "sync-domain landed: graph synced, docs regenerated, 0 violations")
 	if asJSON {
-		return printJSON(newSyncDomainResult(true, report, diffHash, nil, nil, violations))
+		return printJSON(newSyncDomainResult(true, report, diffHash, nil, nil, violations, claimNotes))
 	}
 	return nil
 }
@@ -564,7 +588,7 @@ func appendDomainSyncAckHistory(graphPath string, report *selfspec.SyncReport, t
 // --- dry-run render (byte-identical SHAPE to sync-self's renderSyncDryRun)
 // ---
 
-func renderDomainSyncDryRun(out *os.File, report *selfspec.SyncReport, diffHash string, gateReport *domainSyncGateReport, gateErr error) {
+func renderDomainSyncDryRun(out *os.File, report *selfspec.SyncReport, diffHash string, gateReport *domainSyncGateReport, gateErr error, claimNotes []string) {
 	fmt.Fprintln(out, "hotam sync-domain — DRY RUN (default mode; pass --confirm-hash <hex> to write)")
 	fmt.Fprintln(out)
 	if len(report.Entries) == 0 {
@@ -598,6 +622,9 @@ func renderDomainSyncDryRun(out *os.File, report *selfspec.SyncReport, diffHash 
 	} else {
 		fmt.Fprintln(out, "  [9 append-only] clear")
 	}
+	for _, n := range claimNotes {
+		fmt.Fprintln(out, n)
+	}
 	fmt.Fprintln(out)
 	fmt.Fprintf(out, "diff-hash: %s\n", diffHash)
 }
@@ -613,9 +640,10 @@ type syncDomainResult struct {
 	GateReport *domainSyncGateReport      `json:"gate_report,omitempty"`
 	GateError  string                     `json:"gate_error,omitempty"`
 	Violations []invariants.Violation     `json:"violations,omitempty"`
+	Notes      []string                   `json:"notes,omitempty"`
 }
 
-func newSyncDomainResult(landed bool, report *selfspec.SyncReport, diffHash string, gateReport *domainSyncGateReport, gateErr error, violations []invariants.Violation) *syncDomainResult {
+func newSyncDomainResult(landed bool, report *selfspec.SyncReport, diffHash string, gateReport *domainSyncGateReport, gateErr error, violations []invariants.Violation, notes []string) *syncDomainResult {
 	added, changed := countSyncKinds(report)
 	res := &syncDomainResult{
 		Landed:     landed,
@@ -625,6 +653,7 @@ func newSyncDomainResult(landed bool, report *selfspec.SyncReport, diffHash stri
 		Entries:    report.Entries,
 		GateReport: gateReport,
 		Violations: violations,
+		Notes:      notes,
 	}
 	if gateErr != nil {
 		res.GateError = gateErr.Error()

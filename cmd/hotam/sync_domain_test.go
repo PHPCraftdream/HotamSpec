@@ -703,7 +703,7 @@ func TestDomainRegistryFromSubprocess_DuplicateIDIsClearError(t *testing.T) {
 // primarily a compile-time/shape guard for the --json flag.
 func TestSyncDomainResult_JSONShape(t *testing.T) {
 	report := &selfspec.SyncReport{Entries: []selfspec.SyncReportEntry{{ID: "R-fixture-one", Kind: selfspec.SyncKindAdded}}}
-	res := newSyncDomainResult(true, report, "deadbeef", nil, nil, nil)
+	res := newSyncDomainResult(true, report, "deadbeef", nil, nil, nil, nil)
 	data, err := json.Marshal(res)
 	if err != nil {
 		t.Fatalf("marshal syncDomainResult: %v", err)
