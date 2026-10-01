@@ -3,8 +3,8 @@ package methodology
 var Requirement = Sections.MustRegister("§Requirement", Section{
 	Slug:  "§Requirement",
 	Kind:  ONTOLOGY,
-	Canon: "A business requirement as a node in the tension graph — a claim the system shall satisfy.",
-	Narrative: "A Requirement is a claim the system shall satisfy, written machine-checkable where possible and otherwise " +
+	Canon: "A requirement as executable code — an atomic object with a method, whose scenario test generates its text; a claim the system shall satisfy.",
+	Narrative: "A Requirement is an atomic object with a method that does exactly what it says; the scenario test that runs the method (the hotamspec recorder) is also the generator of its text, so one run proves the behavior and emits a minimal sentence that mirrors back into the same code. As a graph node it is a claim the system shall satisfy, written machine-checkable where possible and otherwise " +
 		"EARS-style ('the system shall ...'). It is NOT a truth: it changes, it contradicts its siblings, and it rests on " +
 		"assumptions that can die. The contradiction itself never lives here; it lives on the Conflict connector node (§Conflict).",
 	Why: "Relations are typed tuple-of-id fields (not a generic graph): refines and depends_on are the SUPPORTIVE " +
@@ -71,7 +71,7 @@ var Stakeholder = Sections.MustRegister("§Stakeholder", Section{
 var Invariants = Sections.MustRegister("§Invariants", Section{
 	Slug:  "§Invariants",
 	Kind:  DISCIPLINE,
-	Canon: "Structural form of the tension graph (the check_* layer).",
+	Canon: "Structural rules over the requirement store (the check_* layer): requirements and any held conflicts stay well-formed.",
 	Narrative: "These are the spec-stack layer-2 invariants: the SHAPE the graph must always hold, regardless of how " +
 		"many requirements contradict each other. A green run does NOT mean 'no contradictions'; contradictions are expected " +
 		"and welcome. Green means the contradictions are WELL-FORMED: every conflict has an axis, a context and a resolver; " +
@@ -86,7 +86,7 @@ var Invariants = Sections.MustRegister("§Invariants", Section{
 var Graph = Sections.MustRegister("§Graph", Section{
 	Slug:  "§Graph",
 	Kind:  PLUMBING,
-	Canon: "The tension graph store and its traversal helpers.",
+	Canon: "The requirement store (with its conflict bookkeeping) and its traversal helpers.",
 	Narrative: "The store IS the code: a frozen TensionGraph holding tuples of Axes, Stakeholders, Assumptions, " +
 		"Requirements and Conflicts; edges are tuple-of-id fields on those objects; traversal is the plain functions " +
 		"below. No database, no RDF — the graph instance the invariants, the generator and the harness all read is the one " +
@@ -304,8 +304,8 @@ var Context = Sections.MustRegister("§Context", Section{
 	Kind:  PLUMBING,
 	Canon: "The operator's working-context fullness measurement — MEASURED from a runtime stamp, never guessed.",
 	Narrative: "§Context is the measurement of how full the operator's working context is, read from a runtime stamp " +
-		"(spec/.runtime/context.json written by the context_producer). It is the first cipher of the three-cipher pulse " +
-		"(top action / debt / context) re-injected each turn so the operator is never lost. It is MEASURED, never guessed: " +
+		"(historically spec/.runtime/context.json written by the Python context_producer hook, removed in f61a574 and now Planned-only). " +
+		"It is the third cipher of the three-cipher pulse (top action / debt / context), rendered into LIVE-STATE. It is MEASURED, never guessed: " +
 		"the framework measures only if the local stdin payload honestly carries ctx_pct.",
 	Why: "WHY measured, not guessed (R-measure-context-size): a guessed context figure is theater — it lets the operator " +
 		"claim 'I have room' without evidence. Measuring from a runtime stamp keeps the cipher an honest vital sign and " +

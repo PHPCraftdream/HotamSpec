@@ -4,7 +4,7 @@
 
 ## Canon
 
-Structural form of the tension graph (the check_* layer).
+Structural rules over the requirement store (the check_* layer): requirements and any held conflicts stay well-formed.
 
 ## Narrative
 

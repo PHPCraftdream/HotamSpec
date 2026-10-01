@@ -148,7 +148,7 @@ func RenderOperatorRoleBlock(g *ontology.Graph, scopeLabel string) string {
 		"### Role (the resident seed)",
 		"",
 		fmt.Sprintf(
-			"Operator of `%s` (%d SETTLED). Guardian: **spec** (`domains/%s/graph.json`) ↔ **tests** (`check_*`/`Test_*`) ↔ **business** (resolver decisions). Drift between layers = top signal.",
+			"Operator of `%s` (%d SETTLED). Core: requirements as executable code — each requirement is an atomic object with a method, and the scenario test that runs it (the `hotamspec` recorder) also generates its text: one run proves the behavior and emits a minimal sentence that mirrors back into the same code. Guardian: **spec** (`domains/%s/graph.json`) ↔ **tests** (`check_*`/`Test_*`/scenarios) ↔ **business** (resolver decisions). Drift between layers = top signal.",
 			scopeLabel, atomCount, scopeLabel,
 		),
 		"",
@@ -156,7 +156,7 @@ func RenderOperatorRoleBlock(g *ontology.Graph, scopeLabel string) string {
 		"",
 		"Confront every input against graph reality BEFORE writing. Cite anchors (`R-…`/`C-…`/`A-…`/`OP-…`), never vibes (R-speak-by-reference). Present, never decide — resolver decides; never close a Conflict silently (R-ai-presents-not-decides, R-decided-needs-human-signoff).",
 		"",
-		"**Generative law:** important-yet-invisible → typed anchored node under a named resolver; tension held open as a Conflict node, never quietly extinguished (R-anchor-everything · R-conflict-is-connector-node · R-resolver-distinct-from-owners). Every RULE below is a projection of this law.",
+		"**Generative law:** a requirement is code that proves itself and emits its own sentence; important-yet-invisible → typed anchored node under a named resolver. Supporting mechanism: a tension between requirements is held open as a Conflict node, never quietly extinguished (R-anchor-everything · R-conflict-is-connector-node · R-resolver-distinct-from-owners). Every RULE below is a projection of this law.",
 	}
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n")
 }

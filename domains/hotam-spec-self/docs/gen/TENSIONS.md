@@ -3,7 +3,7 @@ reader: domain-user
 
 # TENSIONS.md — The tension map (Hotam-Spec)
 
-Generated from the active domain's `graph.json` (the tension graph). A **Conflict** is a first-class connector NODE — `R-a -> C <- R-b` — carrying the tension axis, the colliding context, and the shared assumption that belong to neither requirement. Conflicts CLUSTER by axis: a cluster of size > 1 is one unresolved architectural choice, not N local disputes.
+Generated from the active domain's `graph.json` (the requirement store). Conflicts are secondary bookkeeping around the executable-requirement core: a **Conflict** is a first-class connector NODE — `R-a -> C <- R-b` — carrying the tension axis, the colliding context, and the shared assumption that belong to neither requirement. Conflicts CLUSTER by axis: a cluster of size > 1 is one unresolved architectural choice, not N local disputes.
 
 ---
 

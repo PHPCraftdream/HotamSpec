@@ -12,4 +12,4 @@ Planned — methodology surface only; no Go command exists for it yet; invoking 
 
 ## Purpose
 
-Not implemented. Historically: emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.
+Not implemented (the Python hook was removed in f61a574). Historically: emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.

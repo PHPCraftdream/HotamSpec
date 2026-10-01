@@ -7,12 +7,12 @@ type glossaryTerm struct {
 }
 
 var glossaryTerms = []glossaryTerm{
-	{Slug: "§Requirement", Kind: "SECTION", Definition: "The requirement node — a claim the system shall satisfy."},
+	{Slug: "§Requirement", Kind: "SECTION", Definition: "The requirement — an atomic object with a method whose scenario generates its text; a claim the system shall satisfy."},
 	{Slug: "§Conflict", Kind: "SECTION", Definition: "The first-class connector NODE between requirements, carrying axis+context+resolver."},
 	{Slug: "§Assumption", Kind: "SECTION", Definition: "A belief with its own lifecycle (HOLDS/UNCERTAIN/DEAD)."},
 	{Slug: "§Axis", Kind: "SECTION", Definition: "A controlled-vocabulary entry naming a tension dimension."},
 	{Slug: "§Stakeholder", Kind: "SECTION", Definition: "Accountability facet: who owns a requirement or resolvers a conflict."},
-	{Slug: "§Invariants", Kind: "SECTION", Definition: "Structural form of the tension graph (check_* functions)."},
+	{Slug: "§Invariants", Kind: "SECTION", Definition: "Structural rules over the requirement store (check_* functions)."},
 	{Slug: "§Graph", Kind: "SECTION", Definition: "The TensionGraph container + traversal + loader."},
 	{Slug: "§Lifecycle", Kind: "SECTION", Definition: "The generic state-machine value-type — keystone for Requirement.status / Conflict.lifecycle / future Operator/Process lifecycles."},
 	{Slug: "§Operator", Kind: "SECTION", Definition: "The acting facet of a Stakeholder — owns a sub-domain, carries a context budget, and runs the closed loop."},

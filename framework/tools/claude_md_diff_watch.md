@@ -12,4 +12,4 @@ Planned — methodology surface only; no Go command exists for it yet; invoking 
 
 ## Purpose
 
-Not implemented. Historically: auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.
+Not implemented (the Python hook was removed in f61a574). Historically: auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.

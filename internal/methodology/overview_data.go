@@ -97,7 +97,7 @@ Package structure (module = ontology section / methodology chapter):
   graph       — Graph container + content loader + traversal helpers
                 (no business data here; internal/loader reads domains/<name>/graph.json).
   invariants  — structural graph invariants (check_* functions returning the
-                violation list): the form of the tension graph that must always
+                violation list): the form of the requirement graph that must always
                 hold (a resolverless conflict, a dangling member, an OPEN with no
                 question — all FAIL here).
 

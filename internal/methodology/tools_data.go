@@ -209,7 +209,7 @@ func init() {
 	Tools.MustRegister("attention_hook", Tool{
 		Command:  "attention_hook",
 		Canon:    "§Attention",
-		Purpose:  "Not implemented. Historically: the Claude adapter that injects the attention list into context.",
+		Purpose:  "Not implemented (the Python hook was removed in f61a574). Historically: the Claude adapter that injects the attention list into context.",
 		Status:   Planned,
 		Claim:    "the Claude adapter: inject the attention list into context.",
 		Enforcer: "",
@@ -236,7 +236,7 @@ func init() {
 	Tools.MustRegister("claude_md_diff_watch", Tool{
 		Command:  "claude_md_diff_watch",
 		Canon:    "§Operator",
-		Purpose:  "Not implemented. Historically: auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.",
+		Purpose:  "Not implemented (the Python hook was removed in f61a574). Historically: auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.",
 		Status:   Planned,
 		Claim:    "auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.",
 		Enforcer: "",
@@ -263,7 +263,7 @@ func init() {
 	Tools.MustRegister("context_producer", Tool{
 		Command:  "context_producer",
 		Canon:    "§Context",
-		Purpose:  "Not implemented. Historically: the producer half of the context cipher, writing a runtime context snapshot.",
+		Purpose:  "Not implemented (the Python hook was removed in f61a574). Historically: the producer half of the context cipher, writing a runtime context snapshot.",
 		Status:   Planned,
 		Claim:    "the producer half of the context cipher, writing a runtime context.json snapshot.",
 		Enforcer: "",
@@ -308,7 +308,7 @@ func init() {
 	Tools.MustRegister("emit_cipher", Tool{
 		Command:  "emit_cipher",
 		Canon:    "§Operator",
-		Purpose:  "Not implemented. Historically: emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.",
+		Purpose:  "Not implemented (the Python hook was removed in f61a574). Historically: emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.",
 		Status:   Planned,
 		Claim:    "emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.",
 		Enforcer: "",

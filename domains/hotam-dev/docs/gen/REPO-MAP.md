@@ -11,15 +11,15 @@ reader: (unresolved-reader)
 - `internal/ontology/axis.go` — controlled vocabulary of tension dimensions.
 - `internal/ontology/conflict.go` — the first-class connector NODE, a held property of the discipline (not its headline; J1, commit b2c58c8).
 - `internal/ontology/entity.go` — domain-declared business concept with its own lifecycle.
-- `internal/ontology/graph.go` — the tension graph store and its traversal helpers.
-- `internal/ontology/graph_traversal.go` — traversal helpers over the tension graph.
+- `internal/ontology/graph.go` — the requirement store (with conflict bookkeeping) and its traversal helpers.
+- `internal/ontology/graph_traversal.go` — traversal helpers over the requirement store.
 - `internal/ontology/lifecycle.go` — the generic state-machine value-type (framework keystone).
 - `internal/ontology/operator.go` — the acting facet of a Stakeholder (M20: NEW TYPE).
 - `internal/ontology/process.go` — opt-in behavioral aspect (M12).
-- `internal/ontology/requirement.go` — a business requirement as a node in the tension graph.
+- `internal/ontology/requirement.go` — a requirement: an atomic object with a method whose scenario generates its text.
 - `internal/ontology/signoff.go` — the frozen provenance record of a human resolver decision.
 - `internal/ontology/stakeholder.go` — who owns requirements and resolvers conflicts.
-- `internal/invariants/` — structural form of the tension graph (the check_* layer).
+- `internal/invariants/` — structural rules over the requirement store (the check_* layer).
 - `internal/diagnose/` — the operator's next-action diagnosis (what_now equivalent).
 - `internal/proposal/` — structured operator-→-resolver change proposals + the mechanical apply writer.
 - `internal/loader/` — reads a domain's graph.json into an in-memory Graph.

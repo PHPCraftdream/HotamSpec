@@ -4,7 +4,7 @@
 
 ## Canon
 
-The tension graph store and its traversal helpers.
+The requirement store (with its conflict bookkeeping) and its traversal helpers.
 
 ## Narrative
 

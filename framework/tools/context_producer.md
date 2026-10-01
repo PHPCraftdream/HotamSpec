@@ -12,4 +12,4 @@ Planned — methodology surface only; no Go command exists for it yet; invoking 
 
 ## Purpose
 
-Not implemented. Historically: the producer half of the context cipher, writing a runtime context snapshot.
+Not implemented (the Python hook was removed in f61a574). Historically: the producer half of the context cipher, writing a runtime context snapshot.

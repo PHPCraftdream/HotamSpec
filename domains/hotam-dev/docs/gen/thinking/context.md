@@ -8,7 +8,7 @@ The operator's working-context fullness measurement — MEASURED from a runtime 
 
 ## Narrative
 
-§Context is the measurement of how full the operator's working context is, read from a runtime stamp (spec/.runtime/context.json written by the context_producer). It is the first cipher of the three-cipher pulse (top action / debt / context) re-injected each turn so the operator is never lost. It is MEASURED, never guessed: the framework measures only if the local stdin payload honestly carries ctx_pct.
+§Context is the measurement of how full the operator's working context is, read from a runtime stamp (historically spec/.runtime/context.json written by the Python context_producer hook, removed in f61a574 and now Planned-only). It is the third cipher of the three-cipher pulse (top action / debt / context), rendered into LIVE-STATE. It is MEASURED, never guessed: the framework measures only if the local stdin payload honestly carries ctx_pct.
 
 ## Why
 

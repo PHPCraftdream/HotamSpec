@@ -37,18 +37,18 @@ These 21 are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — runni
 These 27 are registered in the methodology registry (`internal/methodology/tools_data.go`) as future-work surface. Invoking any of them as `hotam <name>` fails with "unknown command". Their per-tool `.md` files exist for design-continuity reference only.
 
 - [`hotam attention`](attention.md) — Not implemented. Historically: the agent-agnostic CLI over the attention core.
-- [`hotam attention-hook`](attention_hook.md) — Not implemented. Historically: the Claude adapter that injects the attention list into context.
+- [`hotam attention-hook`](attention_hook.md) — Not implemented (the Python hook was removed in f61a574). Historically: the Claude adapter that injects the attention list into context.
 - [`hotam audit-atomicity`](audit_atomicity.md) — Not implemented. Historically: surfaces Requirements with compound claims and check_* functions with compound conditions, both structural signals for decomposition.
 - [`hotam audit-tensions`](audit_tensions.md) — Not implemented. Historically: the generative-audit tool, a deterministic, LLM-free shortlist of latent-connector suspects.
-- [`hotam claude-md-diff-watch`](claude_md_diff_watch.md) — Not implemented. Historically: auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.
+- [`hotam claude-md-diff-watch`](claude_md_diff_watch.md) — Not implemented (the Python hook was removed in f61a574). Historically: auto-injects the diff of CLAUDE.md since the operator's last turn into session context via a UserPromptSubmit hook.
 - [`hotam closure`](closure.md) — Not implemented. Historically: per-action verify — did the proposal remove its diagnosis?
 - [`hotam context`](context.md) — Not implemented. Historically: the operator's working-context measurement (reader + CLI dispatcher).
-- [`hotam context-producer`](context_producer.md) — Not implemented. Historically: the producer half of the context cipher, writing a runtime context snapshot.
+- [`hotam context-producer`](context_producer.md) — Not implemented (the Python hook was removed in f61a574). Historically: the producer half of the context cipher, writing a runtime context snapshot.
 - [`hotam create-agent`](create_agent.md) — Not implemented. Historically: scaffolds domains/<domain>/agents/<name>/ as a self-contained sub-operator directory with its own CLAUDE.md, scope, tools/, agents/, and README.md.
 - [`hotam create-axis`](create_axis.md) — Not implemented. Historically: scaffolds a new Axis into the active domain's controlled-vocabulary.
 - [`hotam create-domain`](create_domain.md) — Not implemented. Historically: scaffolds domains/<name>/ as a self-contained business domain with a manifest, graph.json, tools/, agents/director/, docs/gen/, and CLAUDE.md.
 - [`hotam create-entity-type`](create_entity_type.md) — Not implemented. Historically: scaffolds an EntityType declaration into the active domain's graph via apply-proposal.
-- [`hotam emit-cipher`](emit_cipher.md) — Not implemented. Historically: emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.
+- [`hotam emit-cipher`](emit_cipher.md) — Not implemented (the Python hook was removed in f61a574). Historically: emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.
 - [`hotam gate-status`](gate_status.md) — Not implemented. Historically: reads the runtime land-log and answers the commit-boundary question.
 - [`hotam invoke-agent`](invoke_agent.md) — Not implemented. Historically: invokes a sub-agent by loading its CLAUDE.md as the operator-prompt and printing it to stdout.
 - [`hotam mark-revisit-evaluated`](mark_revisit_evaluated.md) — Not implemented. Historically: records that a DECIDED conflict's revisit_marker was evaluated.

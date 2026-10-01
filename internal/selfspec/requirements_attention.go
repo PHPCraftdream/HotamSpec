@@ -42,8 +42,8 @@ var _ = Requirements.MustRegister("R-attention-claude-adapter", ontology.Require
 	ID:             "R-attention-claude-adapter",
 	Claim:          "The committed sensorium generator shall wire the Claude attention adapter onto UserPromptSubmit, and that adapter shall delegate to the attention core rather than re-implement sensing.",
 	Owner:          "framework-author",
-	Status:         "SETTLED",
-	Why:            "Resolver verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn: a thin UserPromptSubmit hook that calls the attention core's collect() and prints the rendered list to stdout (which the host injects into context). The committed, portable sensorium generator wires it so a fresh clone gets the pulse with zero edits (R-sensorium-committed). Not yet implemented: setup-hooks and the attention adapter are Planned (previously implemented as tools/setup_hooks.py wiring tools/attention_hook.py, guarded by tests/test_attention_claude_adapter.py). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84.",
+	Status:         "REJECTED",
+	Why:            "REJECTED — the Claude UserPromptSubmit adapter (tools/attention_hook.py, wired by tools/setup_hooks.py) no longer exists: commit f61a574 removed the Python hooks from the committed .claude/settings.json, and R-sensorium-committed (the generator it refined) is REJECTED for the same reason. The agent-agnostic core requirements (R-attention-agent-agnostic-core, R-attention-registry) stay; a future platform adapter would be a new requirement. — (was: resolver verdict 2026-07-03 'at the seam make an API for Claude': a thin UserPromptSubmit hook calling the attention core's collect() and printing the rendered list to stdout.)",
 	Assumptions:    []string{"A-text-grounded-in-models"},
 	Relations:      []ontology.Relation{{Kind: "refines", Target: "R-sensorium-committed"}},
 	Enforcement:    "PROSE",
@@ -52,10 +52,9 @@ var _ = Requirements.MustRegister("R-attention-claude-adapter", ontology.Require
 	Enforceability: "ENFORCEABLE",
 	Summary:        "",
 	CreatedAt:      "2026-07-04",
-	SettledAt:      "2026-07-12",
+	SettledAt:      "",
 	SourceRefs:     []string{},
 	DeclOrder:      254,
-	BlockedOn:      "blocked on the attention_hook tool + setup_hooks tool (Planned) + the internal/attention package (absent)",
 })
 
 var _ = Requirements.MustRegister("R-attention-registry", ontology.Requirement{

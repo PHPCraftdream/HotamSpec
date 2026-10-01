@@ -15,12 +15,12 @@ listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here.
 ## Sections (§-anchors)
 | slug | definition |
 |---|---|
-| `§Requirement` | The requirement node — a claim the system shall satisfy. |
+| `§Requirement` | The requirement — an atomic object with a method whose scenario generates its text; a claim the system shall satisfy. |
 | `§Conflict` | The first-class connector NODE between requirements, carrying axis+context+resolver. |
 | `§Assumption` | A belief with its own lifecycle (HOLDS/UNCERTAIN/DEAD). |
 | `§Axis` | A controlled-vocabulary entry naming a tension dimension. |
 | `§Stakeholder` | Accountability facet: who owns a requirement or resolvers a conflict. |
-| `§Invariants` | Structural form of the tension graph (check_* functions). |
+| `§Invariants` | Structural rules over the requirement store (check_* functions). |
 | `§Graph` | The TensionGraph container + traversal + loader. |
 | `§Lifecycle` | The generic state-machine value-type — keystone for Requirement.status / Conflict.lifecycle / future Operator/Process lifecycles. |
 | `§Operator` | The acting facet of a Stakeholder — owns a sub-domain, carries a context budget, and runs the closed loop. |

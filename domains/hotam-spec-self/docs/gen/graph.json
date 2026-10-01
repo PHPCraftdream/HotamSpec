@@ -8815,7 +8815,7 @@
       "assumptions": [
         "A-bootstrap-self-applies"
       ],
-      "claim": "Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.",
+      "claim": "Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the core idea (requirements as executable code: an atomic object with a method whose scenario test generates its text), the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.",
       "enforced_by": [
         "TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw"
       ],
@@ -8841,6 +8841,11 @@
           "at": "2026-10-01",
           "decided_by": "",
           "summary": "field Claim: Root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology. -> Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology."
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Claim: Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology. -> Under the full gen profile (the self-hosting domains; the lightweight consumer profile omits this block), root CLAUDE.md shall contain a generated OPERATOR-ROLE sentinel block stating the operator's scope, the core idea (requirements as executable code: an atomic object with a method whose scenario test generates its text), the guardian-of-consistency role across spec, tests, and business intent, and the single generative law of the methodology.; field Why: Phase 2 of the crystal redesign (task #8): the operator's identity — guardian of spec↔tests↔business consistency under one generative law (everything important-yet-invisible becomes a typed anchored node under a resolver; tension is held, never quietly extinguished) — must be the FIRST resident content of the crystal. Generated (not hand-written template prose) to keep R-root-claude-md-is-sentinel-only true in claim, not only in test; parameterized by the active domain and SETTLED-atom count so the same seed narrows for future sub-operators (R-sub-agent-crystal-triad). ENFORCED 2026-07-13: TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw in internal/generator/claudemd_sentinel_test.go mechanically verifies this claim against the generated crystal on the fixture graph. -> Phase 2 of the crystal redesign (task #8): the operator's identity — requirements as executable code (each requirement an atomic object with a method; the scenario test that runs it also generates its text), guarded as spec↔tests↔business consistency under one generative law (a requirement proves itself and emits its own sentence; everything important-yet-invisible becomes a typed anchored node under a resolver; tension between requirements is a supporting mechanism, held open as a Conflict node and never quietly extinguished) — must be the FIRST resident content of the crystal. Generated (not hand-written template prose) to keep R-root-claude-md-is-sentinel-only true in claim, not only in test; parameterized by the active domain and SETTLED-atom count so the same seed narrows for future sub-operators (R-sub-agent-crystal-triad). ENFORCED 2026-07-13: TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw in internal/generator/claudemd_sentinel_test.go mechanically verifies this claim against the generated crystal on the fixture graph."
         }
       ],
       "id": "R-crystal-carries-role-seed",
@@ -8851,7 +8856,7 @@
       "source_refs": [],
       "status": "SETTLED",
       "verified_by": [],
-      "why": "Phase 2 of the crystal redesign (task #8): the operator's identity — guardian of spec↔tests↔business consistency under one generative law (everything important-yet-invisible becomes a typed anchored node under a resolver; tension is held, never quietly extinguished) — must be the FIRST resident content of the crystal. Generated (not hand-written template prose) to keep R-root-claude-md-is-sentinel-only true in claim, not only in test; parameterized by the active domain and SETTLED-atom count so the same seed narrows for future sub-operators (R-sub-agent-crystal-triad). ENFORCED 2026-07-13: TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw in internal/generator/claudemd_sentinel_test.go mechanically verifies this claim against the generated crystal on the fixture graph."
+      "why": "Phase 2 of the crystal redesign (task #8): the operator's identity — requirements as executable code (each requirement an atomic object with a method; the scenario test that runs it also generates its text), guarded as spec↔tests↔business consistency under one generative law (a requirement proves itself and emits its own sentence; everything important-yet-invisible becomes a typed anchored node under a resolver; tension between requirements is a supporting mechanism, held open as a Conflict node and never quietly extinguished) — must be the FIRST resident content of the crystal. Generated (not hand-written template prose) to keep R-root-claude-md-is-sentinel-only true in claim, not only in test; parameterized by the active domain and SETTLED-atom count so the same seed narrows for future sub-operators (R-sub-agent-crystal-triad). ENFORCED 2026-07-13: TestRenderOperatorRoleBlock_CarriesScopeGuardianLaw in internal/generator/claudemd_sentinel_test.go mechanically verifies this claim against the generated crystal on the fixture graph."
     },
     {
       "assumptions": [
@@ -10526,7 +10531,7 @@
       "assumptions": [
         "A-python-stack"
       ],
-      "claim": "The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse.",
+      "claim": "The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action.",
       "enforced_by": [
         "TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse"
       ],
@@ -10547,6 +10552,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: Before this atom the root LIVE-STATE cipher diagnosed only the PINNED self-host domain, so a business domain's DETECTED conflict (e.g. hotam-dev C-ec…→Before this atom the root LIVE-STATE cipher diagnosed only the PINNED self-host domain, so a business domain's DETECTED conflict (e.g. hotam-dev C-ec…; enforcement: PROSE→ENFORCED; enforced_by: []→[TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse]"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Claim: The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action, and emit_cipher shall surface the aggregate open-action count of all non-pinned domains in the injected pulse. -> The root CLAUDE.md DOMAIN-MAP block shall carry, for every domain, an 'open actions' line stating that domain's open-action count and top action.; field Why: Before this atom the root LIVE-STATE cipher diagnosed only the PINNED self-host domain, so a business domain's DETECTED conflict (e.g. hotam-dev C-ec1ec532 on axis speed-vs-verification) was INVISIBLE from the root crystal and the banner 'every contradiction is visible' was false at the altitude of the whole repo. gen_spec._domain_pulse runs what_now.diagnose per domain into the DOMAIN-MAP (the first eye); emit_cipher._other_domains_open sums the non-pinned domains' open actions into the pulse (the second eye). Both are generated, so they cannot drift from real graph state (R-deterministic-generation). Refines R-domain-map-generated. ENFORCED 2026-07-13: TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. This enforcement covers only the DOMAIN-MAP open-actions pulse line; the claim's 'emit_cipher' wording is separately-tracked stale phrasing from the Python era (no Go emit_cipher mechanism exists) and is not asserted here. -> Before this atom the root LIVE-STATE cipher diagnosed only the PINNED self-host domain, so a business domain's DETECTED conflict (e.g. hotam-dev C-ec1ec532 on axis speed-vs-verification) was INVISIBLE from the root crystal and the banner 'every contradiction is visible' was false at the altitude of the whole repo. gen_spec._domain_pulse runs what_now.diagnose per domain into the DOMAIN-MAP (the first eye); emit_cipher._other_domains_open sums the non-pinned domains' open actions into the pulse (the second eye). Both are generated, so they cannot drift from real graph state (R-deterministic-generation). Refines R-domain-map-generated. ENFORCED 2026-07-13: TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. The claim's former second clause (emit_cipher surfacing the aggregate in an injected pulse) was dropped: the Python emit_cipher hook was removed (commit f61a574) and no Go emit_cipher mechanism exists."
         }
       ],
       "id": "R-domain-map-shows-pulse",
@@ -10557,7 +10567,7 @@
       "source_refs": [],
       "status": "SETTLED",
       "verified_by": [],
-      "why": "Before this atom the root LIVE-STATE cipher diagnosed only the PINNED self-host domain, so a business domain's DETECTED conflict (e.g. hotam-dev C-ec1ec532 on axis speed-vs-verification) was INVISIBLE from the root crystal and the banner 'every contradiction is visible' was false at the altitude of the whole repo. gen_spec._domain_pulse runs what_now.diagnose per domain into the DOMAIN-MAP (the first eye); emit_cipher._other_domains_open sums the non-pinned domains' open actions into the pulse (the second eye). Both are generated, so they cannot drift from real graph state (R-deterministic-generation). Refines R-domain-map-generated. ENFORCED 2026-07-13: TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. This enforcement covers only the DOMAIN-MAP open-actions pulse line; the claim's 'emit_cipher' wording is separately-tracked stale phrasing from the Python era (no Go emit_cipher mechanism exists) and is not asserted here."
+      "why": "Before this atom the root LIVE-STATE cipher diagnosed only the PINNED self-host domain, so a business domain's DETECTED conflict (e.g. hotam-dev C-ec1ec532 on axis speed-vs-verification) was INVISIBLE from the root crystal and the banner 'every contradiction is visible' was false at the altitude of the whole repo. gen_spec._domain_pulse runs what_now.diagnose per domain into the DOMAIN-MAP (the first eye); emit_cipher._other_domains_open sums the non-pinned domains' open actions into the pulse (the second eye). Both are generated, so they cannot drift from real graph state (R-deterministic-generation). Refines R-domain-map-generated. ENFORCED 2026-07-13: TestRenderDomainMapBlock_EntryCarriesOpenActionsPulse in internal/generator/claudemd_coverage_test.go mechanically verifies this claim against the generated crystal on the fixture graph. The claim's former second clause (emit_cipher surfacing the aggregate in an injected pulse) was dropped: the Python emit_cipher hook was removed (commit f61a574) and no Go emit_cipher mechanism exists."
     },
     {
       "assumptions": [],
@@ -10924,6 +10934,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "blocked_on: →blocked on the setup_hooks tool (Planned in internal/methodology/tools_data.go)"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Status: SETTLED -> REJECTED; field Why: Not yet implemented: setup-hooks is Planned in methodology.Tools, and the adapter tools it would wire (attention-hook, claude-md-diff-watch, context-producer, emit-cipher) are all Planned as well. The committed-portable-sensorium generator does not exist: a committed .claude/settings.json exists in the repo, but it is not produced by a setup tool and does not carry the full sensorium hook enumeration. (Historical note: the original generator was tools/setup_hooks.py, which produced the committed project settings.json so that a fresh clone got the pulse and the graph-guard rather than starting blind.) The original WHY stands: hooks that live only in the personal git-ignored settings.local.json leave a fresh clone with no pulse and no graph-guard. PROSE (not ENFORCED): no enforcer exists. -> REJECTED — the Python hooks this described (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, Stop context_producer) ran spec/tools/*.py, which no longer exist; commit f61a574 removed them from the committed .claude/settings.json (now an empty object), and setup-hooks plus all four adapter tools are Planned-only in methodology.Tools. No successor requirement: the framework no longer ships a committed hook sensorium, and the generated crystal (LIVE-STATE pulse, R-three-cipher-pulse-structurally-injected) is the in-bounds way to start a fresh clone oriented. — (was: hooks that live only in the personal git-ignored settings.local.json leave a fresh clone with no pulse and no graph-guard; the generator was tools/setup_hooks.py.); field SettledAt: 2026-07-12 -> ; field BlockedOn: blocked on the setup_hooks tool (Planned in internal/methodology/tools_data.go) -> "
         }
       ],
       "id": "R-sensorium-committed",
@@ -10932,9 +10947,9 @@
       "owner": "framework-author",
       "review_after": "2027-01-12",
       "source_refs": [],
-      "status": "SETTLED",
+      "status": "REJECTED",
       "verified_by": [],
-      "why": "Not yet implemented: setup-hooks is Planned in methodology.Tools, and the adapter tools it would wire (attention-hook, claude-md-diff-watch, context-producer, emit-cipher) are all Planned as well. The committed-portable-sensorium generator does not exist: a committed .claude/settings.json exists in the repo, but it is not produced by a setup tool and does not carry the full sensorium hook enumeration. (Historical note: the original generator was tools/setup_hooks.py, which produced the committed project settings.json so that a fresh clone got the pulse and the graph-guard rather than starting blind.) The original WHY stands: hooks that live only in the personal git-ignored settings.local.json leave a fresh clone with no pulse and no graph-guard. PROSE (not ENFORCED): no enforcer exists."
+      "why": "REJECTED — the Python hooks this described (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, Stop context_producer) ran spec/tools/*.py, which no longer exist; commit f61a574 removed them from the committed .claude/settings.json (now an empty object), and setup-hooks plus all four adapter tools are Planned-only in methodology.Tools. No successor requirement: the framework no longer ships a committed hook sensorium, and the generated crystal (LIVE-STATE pulse, R-three-cipher-pulse-structurally-injected) is the in-bounds way to start a fresh clone oriented. — (was: hooks that live only in the personal git-ignored settings.local.json leave a fresh clone with no pulse and no graph-guard; the generator was tools/setup_hooks.py.)"
     },
     {
       "assumptions": [],
@@ -11351,6 +11366,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "blocked_on: →blocked on the attention_hook tool + setup_hooks tool (Planned) + the internal/attention package (absent)"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "field Status: SETTLED -> REJECTED; field Why: Resolver verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn: a thin UserPromptSubmit hook that calls the attention core's collect() and prints the rendered list to stdout (which the host injects into context). The committed, portable sensorium generator wires it so a fresh clone gets the pulse with zero edits (R-sensorium-committed). Not yet implemented: setup-hooks and the attention adapter are Planned (previously implemented as tools/setup_hooks.py wiring tools/attention_hook.py, guarded by tests/test_attention_claude_adapter.py). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84. -> REJECTED — the Claude UserPromptSubmit adapter (tools/attention_hook.py, wired by tools/setup_hooks.py) no longer exists: commit f61a574 removed the Python hooks from the committed .claude/settings.json, and R-sensorium-committed (the generator it refined) is REJECTED for the same reason. The agent-agnostic core requirements (R-attention-agent-agnostic-core, R-attention-registry) stay; a future platform adapter would be a new requirement. — (was: resolver verdict 2026-07-03 'at the seam make an API for Claude': a thin UserPromptSubmit hook calling the attention core's collect() and printing the rendered list to stdout.); field SettledAt: 2026-07-12 -> ; field BlockedOn: blocked on the attention_hook tool + setup_hooks tool (Planned) + the internal/attention package (absent) -> "
         }
       ],
       "id": "R-attention-claude-adapter",
@@ -11359,9 +11379,9 @@
       "owner": "framework-author",
       "review_after": "2026-08-12",
       "source_refs": [],
-      "status": "SETTLED",
+      "status": "REJECTED",
       "verified_by": [],
-      "why": "Resolver verdict (2026-07-03): 'at the seam make an API for Claude'. The universal core needs a Claude-specific seam that injects the attention list into the agent's context each turn: a thin UserPromptSubmit hook that calls the attention core's collect() and prints the rendered list to stdout (which the host injects into context). The committed, portable sensorium generator wires it so a fresh clone gets the pulse with zero edits (R-sensorium-committed). Not yet implemented: setup-hooks and the attention adapter are Planned (previously implemented as tools/setup_hooks.py wiring tools/attention_hook.py, guarded by tests/test_attention_claude_adapter.py). settled_at RESTORED 2026-07-13 from git HEAD 9af0176 (pre-corruption value) after a mutate.go bug this session silently reset it on content-only updates; see task #84."
+      "why": "REJECTED — the Claude UserPromptSubmit adapter (tools/attention_hook.py, wired by tools/setup_hooks.py) no longer exists: commit f61a574 removed the Python hooks from the committed .claude/settings.json, and R-sensorium-committed (the generator it refined) is REJECTED for the same reason. The agent-agnostic core requirements (R-attention-agent-agnostic-core, R-attention-registry) stay; a future platform adapter would be a new requirement. — (was: resolver verdict 2026-07-03 'at the seam make an API for Claude': a thin UserPromptSubmit hook calling the attention core's collect() and printing the rendered list to stdout.)"
     },
     {
       "assumptions": [],

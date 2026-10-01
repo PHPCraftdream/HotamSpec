@@ -4,11 +4,11 @@
 
 ## Canon
 
-A business requirement as a node in the tension graph — a claim the system shall satisfy.
+A requirement as executable code — an atomic object with a method, whose scenario test generates its text; a claim the system shall satisfy.
 
 ## Narrative
 
-A Requirement is a claim the system shall satisfy, written machine-checkable where possible and otherwise EARS-style ('the system shall ...'). It is NOT a truth: it changes, it contradicts its siblings, and it rests on assumptions that can die. The contradiction itself never lives here; it lives on the Conflict connector node (§Conflict).
+A Requirement is an atomic object with a method that does exactly what it says; the scenario test that runs the method (the hotamspec recorder) is also the generator of its text, so one run proves the behavior and emits a minimal sentence that mirrors back into the same code. As a graph node it is a claim the system shall satisfy, written machine-checkable where possible and otherwise EARS-style ('the system shall ...'). It is NOT a truth: it changes, it contradicts its siblings, and it rests on assumptions that can die. The contradiction itself never lives here; it lives on the Conflict connector node (§Conflict).
 
 ## Why
 

@@ -181,7 +181,7 @@ Package structure (module = ontology section / methodology chapter):
   graph       — Graph container + content loader + traversal helpers
                 (no business data here; internal/loader reads domains/<name>/graph.json).
   invariants  — structural graph invariants (check_* functions returning the
-                violation list): the form of the tension graph that must always
+                violation list): the form of the requirement graph that must always
                 hold (a resolverless conflict, a dangling member, an OPEN with no
                 question — all FAIL here).
 
@@ -242,9 +242,9 @@ WHY assumptions are first-class (not prose inside a requirement): conflicts and 
 
 ### 5. §Requirement — the requirement node — `hotam_spec.requirement`
 
-Canon: §Requirement — A business requirement as a node in the tension graph — a claim the system shall satisfy.
+Canon: §Requirement — A requirement as executable code — an atomic object with a method, whose scenario test generates its text; a claim the system shall satisfy.
 
-A Requirement is a claim the system shall satisfy, written machine-checkable where possible and otherwise EARS-style ('the system shall ...'). It is NOT a truth: it changes, it contradicts its siblings, and it rests on assumptions that can die. The contradiction itself never lives here; it lives on the Conflict connector node (§Conflict).
+A Requirement is an atomic object with a method that does exactly what it says; the scenario test that runs the method (the hotamspec recorder) is also the generator of its text, so one run proves the behavior and emits a minimal sentence that mirrors back into the same code. As a graph node it is a claim the system shall satisfy, written machine-checkable where possible and otherwise EARS-style ('the system shall ...'). It is NOT a truth: it changes, it contradicts its siblings, and it rests on assumptions that can die. The contradiction itself never lives here; it lives on the Conflict connector node (§Conflict).
 
 WHY Relations are typed tuple-of-id fields (not a generic graph): refines and depends_on are the SUPPORTIVE non-adversarial edges. A contradiction is deliberately NOT among them — you cannot express a conflict as a Requirement field, because a conflict belongs to neither requirement. This is the structural enforcement of 'conflict is a node, not an edge'.
 
@@ -258,7 +258,7 @@ WHY a node, not an edge: an edge conflicts_with holds nothing — remove it and 
 
 ### 7. §Graph — the store, the loader, and traversal — `hotam_spec.graph`
 
-Canon: §Graph — The tension graph store and its traversal helpers.
+Canon: §Graph — The requirement store (with its conflict bookkeeping) and its traversal helpers.
 
 The store IS the code: a frozen TensionGraph holding tuples of Axes, Stakeholders, Assumptions, Requirements and Conflicts; edges are tuple-of-id fields on those objects; traversal is the plain functions below. No database, no RDF — the graph instance the invariants, the generator and the harness all read is the one assembled by the loader. CONTENT-FREE FRAMEWORK: this module ships ZERO business data; real domains populate domains/<name>/graph.json, loaded by internal/loader into an internal/ontology.Graph.
 
@@ -290,7 +290,7 @@ WHY a behavioral aspect: before §Process the ontology could only express static
 
 ### 11. §Invariants — structural form — `hotam_spec.invariants`
 
-Canon: §Invariants — Structural form of the tension graph (the check_* layer).
+Canon: §Invariants — Structural rules over the requirement store (the check_* layer): requirements and any held conflicts stay well-formed.
 
 These are the spec-stack layer-2 invariants: the SHAPE the graph must always hold, regardless of how many requirements contradict each other. A green run does NOT mean 'no contradictions'; contradictions are expected and welcome. Green means the contradictions are WELL-FORMED: every conflict has an axis, a context and a resolver; no edge dangles; every open hole states its question; every decision justifies itself. A conflict that is invisible (resolverless, axis-less) is the one thing forbidden.
 
