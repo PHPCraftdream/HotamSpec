@@ -258,7 +258,7 @@ func consumerClosingSection(domainName string) []string {
 	return []string{
 		"## About Hotam-Spec",
 		"",
-		"**Hotam-Spec** is executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded.",
+		"**Hotam-Spec** is a framework for writing requirements as executable code: each requirement is an atomic object with a method, and the test that runs it is also the generator of its text — one run proves the behavior and emits a minimal sentence that mirrors back into the same code.",
 		"",
 		"This file covers this domain's own requirement roster only. For the framework itself:",
 		"",

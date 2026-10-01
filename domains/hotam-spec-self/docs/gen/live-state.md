@@ -2,6 +2,6 @@
 
 - **top action:** [P3] CONFLICT_STALLED on `C-d20cf537` — conflict 'C-d20cf537' on axis 'reviewability-vs-code-authority' is DETECTED with no resolver movement; resolver 'framework-reviewer' must ACKNOWLEDGE it
 - **debt:** 183/259 SETTLED ENFORCED · 6 DRAFT · 0 OPEN · 40 closeable debt (ENFORCEABLE, still PROSE/STRUCTURAL)
-- **graph:** 333 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 23547 chars (headroom 126453)
+- **graph:** 333 nodes (req+conflict+assumption); OP-director budget 150000 chars (CRYSTAL_CHARS measure) — resident crystal 23545 chars (headroom 126455)
 - **crystal:** OK — under 130000 char warn threshold (host cap 150000)
 - context: UNMEASURED — measuring working-context requires host cooperation the framework will not touch (R-work-within-launch-dir); it measures only if the local stdin payload honestly carries ctx_pct — R-unmeasured-cipher-names-host-boundary

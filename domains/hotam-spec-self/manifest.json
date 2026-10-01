@@ -1,6 +1,6 @@
 {
   "self_hosting": true,
-  "purpose": "The methodology modeling itself — Hotam-Spec about itself as a tension graph.",
+  "purpose": "Hotam-Spec describing itself — its own requirements written as executable code.",
   "goals": [
     "burn down SETTLED-unenforced to zero",
     "atomize all compound check_*",
@@ -12,8 +12,8 @@
     {
       "question": "What is this project (purpose)?",
       "keywords": [
-        "methodology modeling itself",
-        "tension graph"
+        "describing itself",
+        "requirements written as executable code"
       ]
     },
     {

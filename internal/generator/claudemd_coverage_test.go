@@ -1015,7 +1015,7 @@ func TestRenderClaudeMDFromTemplate_SubstitutesPlaceholdersPreservesRest(t *test
 	// every other template line preserved verbatim
 	for _, want := range []string{
 		"# CLAUDE.md — Hotam-Spec framework",
-		"**Hotam-Spec** — executable memory and discipline for a human + LLM-agent fleet: understand, evolve, protect, and support a shared model over time. Contradictory requirements are one of its properties — held open as tension-graph nodes, never silently discarded. License: MIT OR Apache-2.0.",
+		"**Hotam-Spec** — requirements as executable code: each requirement is an atomic object with a method, and the test that runs it is also the generator of its text — one run proves the behavior and emits a minimal sentence that mirrors back into the same code. License: MIT OR Apache-2.0.",
 		"<!-- Anything you write below this line survives every regeneration verbatim. Use this space for durable notes, reminders, or context that the generator should never touch. -->",
 	} {
 		if !strings.Contains(out, want) {

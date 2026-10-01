@@ -1,14 +1,42 @@
 # HotamSpec
 
-A Go implementation of the Hotam-Spec methodology — a discipline for working
-with conflicting business requirements modeled as a **tension graph**.
-Contradictory requirements are not a bug but a property of the model: they are
-kept open as `Conflict` nodes, never silently discarded.
+HotamSpec is a framework for writing requirements as executable code.
 
-The repository ships `hotam`, a CLI that reads a domain's `graph.json`, applies
-typed proposals, regenerates documentation from the executable model, and
-diagnoses the next correct action — making drift between spec, tests, and
-business decisions structurally visible.
+A requirement is not prose that code later tries to match. It becomes an
+atomic object with a method that does exactly what the requirement says. The
+test that exercises the method is also the generator of the requirement's
+text: one run both proves the behavior and emits the sentence describing it.
+
+The generated text is deliberately minimal — just enough to be mirrored back
+into the same code: from the sentence you can find or rewrite the method; from
+the method you can reconstruct the sentence.
+
+```go
+s := hotamspec.NewScenario(t, "R-signoff-zero-blockers", "Sign-off requires zero blockers")
+s.Given("a package with one outstanding blocker")
+err := p.SignOff()
+s.When("SignOff is called")
+s.Then("sign-off is rejected", errors.Is(err, ErrHasBlockers))
+```
+
+`hotam gen-spec --spec` runs the test and renders, under
+`R-signoff-zero-blockers` in `SPEC.md`:
+
+```markdown
+**Sign-off requires zero blockers**
+
+- Given a package with one outstanding blocker
+- When SignOff is called
+- Then sign-off is rejected — **held**
+```
+
+The text appears only for a passing run. A plain `go test` stays pure asserts.
+
+The `hotam` CLI keeps the bookkeeping around this core: the requirement
+registry (`graph.json`), links from each requirement to the code that
+implements it and the test that proves it, structural checks, and generated
+docs. Conflicting requirements are kept open as explicit `Conflict` nodes,
+never silently dropped.
 
 > Background: an earlier Python prototype of this methodology lives in the git
 > history (it was superseded by this Go implementation, which is now the
