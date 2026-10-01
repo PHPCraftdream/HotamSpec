@@ -46,7 +46,7 @@ func TestAllViolationsForProposalGate_ExcludesComparesOnDiskProjectionChecks(t *
 	}
 	candidates := []Invariant{onDiskProjectionProbe, ordinaryProbe}
 
-	all := runViolations(g, candidates)
+	all := runViolations(g, candidates, "")
 	if !hasCheckName(all, "zz_test_probe_on_disk_projection") {
 		t.Errorf("the unfiltered engine must still report the ComparesOnDiskProjection probe (it must stay a full signal for all-violations/status/diagnose, mirroring AllViolations's own unfiltered candidate list)")
 	}
@@ -61,7 +61,7 @@ func TestAllViolationsForProposalGate_ExcludesComparesOnDiskProjectionChecks(t *
 		}
 		gatedCandidates = append(gatedCandidates, inv)
 	}
-	gated := runViolations(g, gatedCandidates)
+	gated := runViolations(g, gatedCandidates, "")
 	if hasCheckName(gated, "zz_test_probe_on_disk_projection") {
 		t.Errorf("the AllViolationsForProposalGate-equivalent filtered candidate list must EXCLUDE the ComparesOnDiskProjection probe")
 	}

@@ -548,7 +548,7 @@ func runSyncSelfWrite(domainDir, gp string, before, after *ontology.Graph, repor
 	}
 	fmt.Fprintf(out, "regenerated %d doc(s)\n", len(written))
 
-	violations, err := allViolations(domainDir)
+	violations, err := allViolationsAsOf(domainDir, today)
 	if err != nil {
 		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return rolledBackError("violation check failed to run", err, rerr)

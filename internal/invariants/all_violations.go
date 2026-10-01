@@ -2,6 +2,7 @@ package invariants
 
 import (
 	"sync"
+	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
@@ -39,7 +40,22 @@ var frameworkScopedInvariantNames = map[string]struct{}{
 // DOMAIN-MAP pulse lines) without ever calling back into AllViolations for
 // the same graph.
 func AllViolations(g *ontology.Graph) []Violation {
-	return runViolations(g, All.All())
+	return runViolations(g, All.All(), time.Now().Format("2006-01-02"))
+}
+
+// AllViolationsAsOf is AllViolations with an EXPLICIT as-of date threaded
+// into the post-process phase: every PostProcessCheckAsOf-aware check
+// renders its on-disk projection AS OF the given date instead of the real
+// wall clock. Its one caller class is the post-write invariant check in
+// cmd/hotam's land/sync-self/sync-domain: those commands generate their docs
+// with their own --today flag, so the crystal comparison must use the SAME
+// date or a pinned past --today would report the just-written (correct) file
+// as stale whenever date-dependent lines (freshness/overdue pulse signals)
+// differ between --today and the real date. Ordinary callers (`hotam
+// all-violations`, status, diagnose) keep using AllViolations and the real
+// date, unchanged.
+func AllViolationsAsOf(g *ontology.Graph, today string) []Violation {
+	return runViolations(g, All.All(), today)
 }
 
 // AllViolationsForProposalGate is the SAME two-phase run as AllViolations,
@@ -107,7 +123,7 @@ func AllViolationsExcludingDiskProjection(g *ontology.Graph) []Violation {
 		}
 		filtered = append(filtered, inv)
 	}
-	return runViolations(g, filtered)
+	return runViolations(g, filtered, time.Now().Format("2006-01-02"))
 }
 
 // PriorToPostProcessViolations returns EXACTLY the violation set
@@ -148,14 +164,14 @@ func PriorToPostProcessViolations(g *ontology.Graph) []Violation {
 		}
 		ordinary = append(ordinary, inv)
 	}
-	return runViolations(g, ordinary)
+	return runViolations(g, ordinary, "") // today is unused: no PostProcessCheck runs in phase 1 only
 }
 
 // runViolations is the shared two-phase engine behind AllViolations and
 // AllViolationsForProposalGate: candidates is the already-filtered
 // (IsDelegator/frameworkScoped/ComparesOnDiskProjection as applicable)
 // invariant list to run against g.
-func runViolations(g *ontology.Graph, candidates []Invariant) []Violation {
+func runViolations(g *ontology.Graph, candidates []Invariant, today string) []Violation {
 	var ordinary, postProcess []Invariant
 	for _, inv := range candidates {
 		if inv.IsDelegator {
@@ -201,6 +217,10 @@ func runViolations(g *ontology.Graph, candidates []Invariant) []Violation {
 			wg2.Add(1)
 			go func(idx int, in Invariant) {
 				defer wg2.Done()
+				if in.PostProcessCheckAsOf != nil {
+					postResults[idx] = in.PostProcessCheckAsOf(g, phase1, today)
+					return
+				}
 				postResults[idx] = in.PostProcessCheck(g, phase1)
 			}(i, inv)
 		}

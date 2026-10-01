@@ -12,27 +12,17 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
-// claudeMDCurrentTestToday is used as the --today value everywhere this test
-// file calls genSpec/cmdLand, kept equal to time.Now() (NOT a fixed pinned
-// date like most other cmd/hotam fixtures use) for exactly one reason:
-// checkDomainClaudeMDCurrentReal itself has no --today input at all (it is
-// invoked generically via Invariant.PostProcessCheck, a signature with no
-// date parameter) and therefore always sources today from time.Now()
-// internally (see claude_md_current_wiring.go's own doc comment for why
-// this is a deliberate, accepted design choice: freshness/OVERDUE lines
-// embedded in LIVE-STATE are supposed to reflect real calendar time, exactly
-// like a stale "last generated N days ago" banner would be). A test that
-// pins genSpec's OWN --today to a fixed past date while
-// checkDomainClaudeMDCurrentReal computes its comparison target against the
-// REAL current date would introduce a spurious day-boundary mismatch
-// unrelated to what each test actually means to prove — using time.Now()
-// consistently here keeps every fixture's render and the check's own render
-// on the same calendar day, matching how a real operator would actually use
-// `hotam gen-spec --claude-md` followed shortly by `hotam all-violations`.
-// Also used by every cmdLand test whose project carries a crystal
-// convention: land's own post-gen-spec all-violations runs this check, so a
-// pinned past --today drifts into a false violation once real calendar time
-// moves a freshness/pulse signal (observed 2026-10-01 vs pinned 2026-07-14).
+// claudeMDCurrentTestToday is used as the --today value in tests that pair a
+// genSpec/cmdLand write with a PLAIN all-violations comparison afterwards:
+// plain allViolations still runs check_domain_claude_md_current against the
+// real wall clock (only land/sync-self/sync-domain's own post-write check is
+// as-of their --today — see allViolationsAsOf), so such a test must render
+// its fixture with the real current date too or the two sides of the
+// comparison disagree. Pure post-write checks (land's internal one) no
+// longer need this: they inherit the command's --today, which is why the
+// pinned-past regression test in land_test.go
+// (TestCmdLand_AutoCrystal_PinnedPastTodaySucceeds) can and does use a fixed
+// date instead of this variable.
 var claudeMDCurrentTestToday = time.Now().Format("2006-01-02")
 
 // findClaudeMDCurrentViolations filters vs down to just
@@ -193,7 +183,7 @@ func TestCheckDomainClaudeMDCurrent_NoOpWhenDomainDirEmpty(t *testing.T) {
 	// allViolations, which needs a real *ontology.Graph the loader
 	// populated) since this package already imports both invariants and the
 	// check function.
-	if got := checkDomainClaudeMDCurrentReal(&ontology.Graph{}, nil); len(got) != 0 {
+	if got := checkDomainClaudeMDCurrentReal(&ontology.Graph{}, nil, ""); len(got) != 0 {
 		t.Fatalf("expected no violations for a graph with no DomainDir, got %v", got)
 	}
 }

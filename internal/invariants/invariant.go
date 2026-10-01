@@ -66,6 +66,18 @@ type Invariant struct {
 	// AllViolations. See internal/generator/claudemd.go's ViolationsOverride
 	// doc comment for the render-side half of this mechanism.
 	PostProcessCheck func(*ontology.Graph, []Violation) []Violation
+
+	// PostProcessCheckAsOf, when non-nil, is the AS-OF variant of
+	// PostProcessCheck: AllViolationsAsOf (cmd/hotam's post-land/post-sync
+	// write path) runs it in phase 2 with the CALLER'S --today date threaded
+	// through, so a date-sensitive check (check_domain_claude_md_current's
+	// fresh CLAUDE.md render embeds freshness/overdue pulse signals derived
+	// from today) renders AS OF the same date the write path just generated
+	// its files with — not the real wall clock. When nil, phase 2 falls back
+	// to PostProcessCheck (which always uses the real current date), so a
+	// future PostProcessCheck that does not care about as-of dates needs to
+	// declare only PostProcessCheck and is still run by both entry points.
+	PostProcessCheckAsOf func(g *ontology.Graph, prior []Violation, today string) []Violation
 }
 
 var All = registry.New[Invariant]()

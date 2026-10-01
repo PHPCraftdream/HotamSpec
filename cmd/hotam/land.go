@@ -172,7 +172,7 @@ func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) 
 	}
 	fmt.Fprintf(landOut(asJSON), "regenerated %d doc(s)\n", len(written))
 
-	violations, err := allViolations(domainDir)
+	violations, err := allViolationsAsOf(domainDir, today)
 	if err != nil {
 		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return nil, rolledBackError("violation check failed to run", err, rerr)
@@ -404,7 +404,7 @@ func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today strin
 	}
 	fmt.Fprintf(landOut(asJSON), "regenerated %d doc(s)\n", len(written))
 
-	violations, err := allViolations(domainDir)
+	violations, err := allViolationsAsOf(domainDir, today)
 	if err != nil {
 		rerr := rollbackSyncSelf(domainDir, snapshot, specSnapshot, specPresent, claudeMDPath, today)
 		return nil, rolledBackError("violation check failed to run", err, rerr)

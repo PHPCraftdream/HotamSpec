@@ -51,7 +51,15 @@ func mustGetInvariant(name string) invariants.Invariant {
 // Claim, Rule, Why, ComparesOnDiskProjection) exactly as
 // internal/invariants/claude_md_current.go declared them.
 func withCheckDomainClaudeMDCurrent(inv invariants.Invariant) *invariants.Invariant {
-	inv.PostProcessCheck = checkDomainClaudeMDCurrentReal
+	inv.PostProcessCheck = func(g *ontology.Graph, prior []invariants.Violation) []invariants.Violation {
+		return checkDomainClaudeMDCurrentReal(g, prior, time.Now().Format("2006-01-02"))
+	}
+	// AsOf variant: AllViolationsAsOf (land/sync-self/sync-domain's post-write
+	// check) threads the command's own --today through, so the fresh render is
+	// computed AS OF the same date genSpec just wrote the crystal with —
+	// otherwise a pinned past --today reports the just-written file as stale
+	// whenever date-dependent lines (freshness/overdue pulse signals) differ.
+	inv.PostProcessCheckAsOf = checkDomainClaudeMDCurrentReal
 	return &inv
 }
 
@@ -90,7 +98,7 @@ func withCheckDomainClaudeMDCurrent(inv invariants.Invariant) *invariants.Invari
 //     already had at that path before ever adopting `hotam gen-spec
 //     --claude-md`) — comparing it against a generated template would be
 //     comparing two unrelated things, not detecting staleness.
-func checkDomainClaudeMDCurrentReal(g *ontology.Graph, priorViolations []invariants.Violation) []invariants.Violation {
+func checkDomainClaudeMDCurrentReal(g *ontology.Graph, priorViolations []invariants.Violation, today string) []invariants.Violation {
 	if g.DomainDir == "" {
 		return nil
 	}
@@ -120,7 +128,6 @@ func checkDomainClaudeMDCurrentReal(g *ontology.Graph, priorViolations []invaria
 	repoRoot := repoRootForDomain(g.DomainDir)
 	domainGraphs := map[string]*ontology.Graph{domainName: g}
 	consumer := loader.ResolveGenProfile(graphPathForDomain(g.DomainDir)) == loader.GenProfileConsumer
-	today := time.Now().Format("2006-01-02")
 
 	// selfCrystalPath == claudeMDPath: this check just confirmed a real file
 	// exists at claudeMDPath (the os.ReadFile above succeeded), so the

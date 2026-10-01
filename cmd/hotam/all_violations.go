@@ -130,3 +130,16 @@ func allViolations(domainDir string) ([]invariants.Violation, error) {
 	}
 	return invariants.AllViolations(g), nil
 }
+
+// allViolationsAsOf is allViolations with the caller's as-of date threaded
+// into the post-process phase (see invariants.AllViolationsAsOf). Its callers
+// are the post-write invariant checks in land/sync-self/sync-domain, which
+// generate their docs with their own --today and must verify against the SAME
+// date, not the wall clock.
+func allViolationsAsOf(domainDir, today string) ([]invariants.Violation, error) {
+	g, err := loadDomainGraph(domainDir)
+	if err != nil {
+		return nil, err
+	}
+	return invariants.AllViolationsAsOf(g, today), nil
+}

@@ -1238,3 +1238,60 @@ func TestCmdLandBatch_FreshDisciplineFullProject_DoesNotRollBack(t *testing.T) {
 		t.Error("docs/gen/SPEC.md still carries the empty-graph notice after batch land (it was not re-rendered)")
 	}
 }
+
+// TestCmdLand_AutoCrystal_PinnedPastTodaySucceeds is the regression test for
+// the post-land invariant check's as-of date defect: `hotam land` generates
+// its crystal with its OWN --today, but check_domain_claude_md_current used
+// to render its comparison target against the REAL wall clock — so a pinned
+// PAST --today whose date-dependent lines (freshness/OVERDUE review signals
+// shifting the DOMAIN-MAP "open actions" count) differ from today's real
+// date made the post-write check report the JUST-WRITTEN (correct-for-its-
+// date) crystal as stale and roll the whole land back. With the fix, land's
+// post-write check runs as-of the same --today via allViolationsAsOf and the
+// land succeeds. FAILS on the pre-fix code.
+func TestCmdLand_AutoCrystal_PinnedPastTodaySucceeds(t *testing.T) {
+	t.Parallel()
+	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
+
+	stale := []byte("STALE-PINNED-PAST-BASELINE\n")
+	for _, name := range []string{"CLAUDE.md", "AGENTS.md", "GEMINI.md"} {
+		if err := os.WriteFile(filepath.Join(projectRoot, name), stale, 0o644); err != nil {
+			t.Fatalf("write stale %s: %v", name, err)
+		}
+	}
+
+	proposalPath := filepath.Join(t.TempDir(), "proposal.json")
+	proposalJSON := `{
+		"kind": "Requirement",
+		"id": "R-land-pinned-past-today",
+		"claim": "land keeps its post-write invariant check on the same --today it rendered the crystal with",
+		"owner": "framework-author",
+		"status": "DRAFT",
+		"why": "as-of post-land check coverage"
+	}`
+	if err := os.WriteFile(proposalPath, []byte(proposalJSON), 0o644); err != nil {
+		t.Fatalf("write proposal: %v", err)
+	}
+
+	// 2026-07-14 is far enough in the past that the copied hotam-spec-self
+	// fixture's review freshness signals differ from today's real date — the
+	// exact condition that used to produce the false stale-crystal violation.
+	if err := cmdLand([]string{
+		"--domain", domainDir,
+		"--today", "2026-07-14",
+		proposalPath,
+	}); err != nil {
+		t.Fatalf("cmdLand with pinned past --today rolled back: %v", err)
+	}
+
+	claude, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read post-land CLAUDE.md: %v", err)
+	}
+	if string(claude) == string(stale) {
+		t.Fatal("CLAUDE.md was NOT regenerated — still the stale baseline")
+	}
+	if !strings.Contains(string(claude), "# CLAUDE.md — Hotam-Spec framework") {
+		t.Errorf("CLAUDE.md does not carry the crystal header — not a real render")
+	}
+}
