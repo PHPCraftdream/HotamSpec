@@ -228,8 +228,18 @@ s := hotamspec.NewScenario(t, "R-brd-integrity-zero-blockers", "BRD sign-off req
 s.Given("a BRD package with one outstanding blocker", "rule_id", "ac-orphan")
 s.When("SignOffP_G3 is called")
 s.Then("sign-off is rejected with ErrBrdHasBlockers", errors.Is(err, ErrBrdHasBlockers))
+s.Eq("blocker_count is", p.BlockerCount(), 1)
 s.Value("blocker_count", p.BlockerCount())
 ```
+
+Выбор между `Then` и `Eq` — по природе факта: `Eq(label, got, want)` — для
+фактов-ЗНАЧЕНИЙ («blocker_count is 1»): ассертит равенство через канонический
+`renderValue` обеих сторон и записывает `StepThen` с desc = `label + " " +
+renderValue(got)` — значение в тексте приходит из ИСПОЛНЕНИЯ, а не из руки
+автора (нельзя написать «born 1990» в тексте, пока код ассертит 1987); при
+несовпадении зовёт `t.Errorf` (non-fatal, как `Then`), называя label, got и
+want. `Then(desc, cond)` — для булевых предикатов («sign-off is rejected»),
+где значения в тексте нет.
 
 Обычный `go test` — ЧИСТЫЕ АССЕРТЫ: `Then` зовёт `t.Errorf` ровно как руко-написанный тест
 (удаление всех вызовов `hotamspec.*` кроме `Then` ничего не ломает — рекордер строгий надмножество

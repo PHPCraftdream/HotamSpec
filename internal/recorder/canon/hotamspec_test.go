@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -196,6 +197,117 @@ func TestPairsToFacts_PreservesOrderNotSorted(t *testing.T) {
 		if f != want[i] {
 			t.Errorf("facts[%d] = %+v, want %+v (order must be call order, not sorted)", i, f, want[i])
 		}
+	}
+}
+
+// TestScenario_Eq_PassingRecordsGotValue proves Eq's core contract: on a
+// passing comparison no error is reported, the recorded step is a StepThen
+// with Passed=true, and its Desc embeds renderValue(got) -- the value from
+// EXECUTION, not the author's hand. The desc assertion is deliberately
+// written against got: asserting the rendered want instead would pass even
+// if Eq rendered want by mistake, which is exactly the author-lies-in-text
+// hazard Eq exists to close.
+func TestScenario_Eq_PassingRecordsGotValue(t *testing.T) {
+	ft := &fakeT{}
+	s := NewScenario(ft, "R-example", "example scenario")
+	ok := s.Eq("birth year is", 1987, 1987)
+	if !ok {
+		t.Fatalf("Eq returned false for equal values")
+	}
+	if len(ft.errors) != 0 || ft.fatal_ {
+		t.Fatalf("fakeT recorded a failure for an equal Eq: errors=%v fatal=%q", ft.errors, ft.fatal)
+	}
+	steps := s.Steps()
+	if len(steps) != 1 {
+		t.Fatalf("Steps() len = %d, want 1", len(steps))
+	}
+	if steps[0].Kind != StepThen || !steps[0].Passed {
+		t.Fatalf("Eq step = %+v, want Kind=then Passed=true", steps[0])
+	}
+	if want := "birth year is 1987"; steps[0].Desc != want {
+		t.Errorf("Eq step Desc = %q, want %q (rendered got, not want-literal prose)", steps[0].Desc, want)
+	}
+}
+
+// TestScenario_Eq_FailingReportsErrorfWithGotAndWant proves the failing
+// branch: Eq returns false, calls t.Errorf exactly once (non-fatal, no
+// Fatalf), and the message names the label plus BOTH renderings. The
+// recorded desc still shows got (the executed value), with Passed=false.
+func TestScenario_Eq_FailingReportsErrorfWithGotAndWant(t *testing.T) {
+	ft := &fakeT{}
+	s := NewScenario(ft, "R-example", "example scenario")
+	ok := s.Eq("born", 1987, 1990)
+	if ok {
+		t.Fatalf("Eq returned true for unequal values")
+	}
+	if len(ft.errors) != 1 {
+		t.Fatalf("fakeT.errors len = %d, want 1 (Eq must call Errorf on mismatch)", len(ft.errors))
+	}
+	if ft.fatal_ {
+		t.Errorf("Eq must be non-fatal (Errorf, not Fatalf), got fatal=%q", ft.fatal)
+	}
+	msg := ft.errors[0]
+	for _, part := range []string{"born", "1987", "1990"} {
+		if !strings.Contains(msg, part) {
+			t.Errorf("Eq error message %q missing %q", msg, part)
+		}
+	}
+	steps := s.Steps()
+	if len(steps) != 1 || steps[0].Passed {
+		t.Fatalf("Steps() = %+v, want one Then step with Passed=false", steps)
+	}
+	if want := "born 1987"; steps[0].Desc != want {
+		t.Errorf("Eq step Desc = %q, want %q (desc must show got even on failure)", steps[0].Desc, want)
+	}
+}
+
+// TestScenario_Eq_CanonicalRendering proves got/want go through renderValue:
+// float uses the shortest round-trippable form, maps are key-sorted, pointers
+// are dereferenced (never a 0x address) -- and rendering BOTH sides through
+// the same canonical form makes map-literal inequality (same content, Go's
+// randomized iteration) not a false mismatch.
+func TestScenario_Eq_CanonicalRendering(t *testing.T) {
+	n := 7
+	m := map[string]int{"zebra": 1, "apple": 2}
+	cases := []struct {
+		name  string
+		got   any
+		want  any
+		label string
+		desc  string
+	}{
+		{"float_shortest", 1.0 / 3.0, 1.0 / 3.0, "ratio", "ratio 0.3333333333333333"},
+		{"float32", float32(1.5), float32(1.5), "scale", "scale 1.5"},
+		{"map_sorted", m, map[string]int{"apple": 2, "zebra": 1}, "counts", "counts map[apple:2 zebra:1]"},
+		{"pointer_deref", &n, 7, "depth", "depth 7"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ft := &fakeT{}
+			s := NewScenario(ft, "R-example", "example scenario")
+			if !s.Eq(c.label, c.got, c.want) {
+				t.Fatalf("Eq(%v, %v) returned false", c.got, c.want)
+			}
+			if len(ft.errors) != 0 {
+				t.Fatalf("unexpected errors: %v", ft.errors)
+			}
+			if got := s.Steps()[0].Desc; got != c.desc {
+				t.Errorf("Eq step Desc = %q, want %q", got, c.desc)
+			}
+		})
+	}
+}
+
+// TestScenario_Eq_DescIsGotNotWant is the anti-self-deception check: if Eq
+// rendered want (instead of got) into the desc, the failing-case assertion
+// "born 1987" would fail -- i.e. the desc contract above is load-bearing,
+// not vacuous.
+func TestScenario_Eq_DescIsGotNotWant(t *testing.T) {
+	ft := &fakeT{}
+	s := NewScenario(ft, "R-example", "example scenario")
+	s.Eq("born", 1987, 1990)
+	if got := s.Steps()[0].Desc; got == "born 1990" {
+		t.Errorf("Eq step Desc = %q -- rendered want instead of got", got)
 	}
 }
 

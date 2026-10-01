@@ -17,6 +17,7 @@ s.Given("a package with one outstanding blocker")
 err := p.SignOff()
 s.When("SignOff is called")
 s.Then("sign-off is rejected", errors.Is(err, ErrHasBlockers))
+s.Eq("blockers outstanding:", p.BlockerCount(), 1)
 ```
 
 `hotam gen-spec --spec` runs the test and renders, under
@@ -28,7 +29,11 @@ s.Then("sign-off is rejected", errors.Is(err, ErrHasBlockers))
 - Given a package with one outstanding blocker
 - When SignOff is called
 - Then sign-off is rejected — **held**
+- Then blockers outstanding: 1 — **held**
 ```
+
+The `1` comes from execution (`Eq` records the rendered `got`), not from the
+author's hand, so a value in the text cannot drift from the code it mirrors.
 
 The text appears only for a passing run. A plain `go test` stays pure asserts.
 

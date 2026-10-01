@@ -404,6 +404,29 @@ func (s *Scenario) Then(desc string, cond bool) bool {
 	return cond
 }
 
+// Eq asserts got == want and records the outcome with the VALUE taken from
+// execution, not from the author's hand: the recorded StepThen's Desc is
+// `label + " " + renderValue(got)`, so the narrated number/string is whatever
+// the code actually produced -- an author cannot write "born 1990" in the text
+// while the code asserts 1987. got and want are each canonically rendered via
+// renderValue (the same map-order/float-format/pointer-dereference treatment
+// the rest of this file gives values); the comparison itself is on the
+// RENDERED strings, so two values that render identically are equal here by
+// construction. On mismatch it reports via t.Errorf (non-fatal, like Then)
+// including the label and both renderings. Prefer Eq for value facts
+// ("blocker_count is 0"), Then for boolean predicates
+// ("sign-off is rejected").
+func (s *Scenario) Eq(label string, got, want any) bool {
+	s.t.Helper()
+	gotS, wantS := renderValue(got), renderValue(want)
+	equal := gotS == wantS
+	if !equal {
+		s.t.Errorf("hotamspec: Eq(%q) failed for %s (%s): got %s, want %s", label, s.reqID, s.title, gotS, wantS)
+	}
+	s.steps = append(s.steps, Step{Kind: StepThen, Desc: label + " " + gotS, Passed: equal})
+	return equal
+}
+
 // Value records a bare fact for narration -- an intermediate or final value
 // worth showing in the generated prose -- without itself asserting
 // anything. v is canonically rendered via renderValue at call time (not
