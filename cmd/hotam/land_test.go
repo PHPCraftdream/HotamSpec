@@ -565,7 +565,7 @@ func TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD(t *testing.T) {
 	// Capture the pre-apply debt line from docs/gen (rendered WITHOUT touching
 	// the crystal) so the freshness assertion below is robust to whatever the
 	// fixture's current DRAFT count is.
-	if _, _, err := genSpec(domainDir, "", "2026-07-14", "", false); err != nil {
+	if _, _, err := genSpec(domainDir, "", claudeMDCurrentTestToday, "", false); err != nil {
 		t.Fatalf("baseline genSpec: %v", err)
 	}
 	baselineLS, err := os.ReadFile(filepath.Join(domainDir, "docs", "gen", "live-state.md"))
@@ -589,7 +589,7 @@ func TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD(t *testing.T) {
 
 	if err := cmdLand([]string{
 		"--domain", domainDir,
-		"--today", "2026-07-14",
+		"--today", claudeMDCurrentTestToday,
 		proposalPath,
 	}); err != nil {
 		t.Fatalf("cmdLand: %v", err)
@@ -767,7 +767,7 @@ func TestCmdLand_AutoCrystal_IdempotentAcrossGenspec(t *testing.T) {
 
 	if err := cmdLand([]string{
 		"--domain", domainDir,
-		"--today", "2026-07-14",
+		"--today", claudeMDCurrentTestToday,
 		proposalPath,
 	}); err != nil {
 		t.Fatalf("cmdLand: %v", err)
@@ -784,7 +784,7 @@ func TestCmdLand_AutoCrystal_IdempotentAcrossGenspec(t *testing.T) {
 	if resolved == "" {
 		t.Fatal("resolveClaudeMDPath returned empty despite seeded CLAUDE.md")
 	}
-	if _, _, err := genSpec(domainDir, resolved, "2026-07-14", "", false); err != nil {
+	if _, _, err := genSpec(domainDir, resolved, claudeMDCurrentTestToday, "", false); err != nil {
 		t.Fatalf("second genSpec: %v", err)
 	}
 	second, err := os.ReadFile(filepath.Join(projectRoot, "CLAUDE.md"))
@@ -889,7 +889,7 @@ func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
 	// --claude-md.
 	if err := cmdLand([]string{
 		"--domain", secondDomainDir,
-		"--today", "2026-07-14",
+		"--today", claudeMDCurrentTestToday,
 		proposalPath,
 	}); err != nil {
 		t.Fatalf("cmdLand: %v", err)
@@ -966,7 +966,7 @@ func TestCmdLand_AutoCrystal_WhenLandingDomainIsActive(t *testing.T) {
 
 	if err := cmdLand([]string{
 		"--domain", activeDomainDir,
-		"--today", "2026-07-14",
+		"--today", claudeMDCurrentTestToday,
 		proposalPath,
 	}); err != nil {
 		t.Fatalf("cmdLand: %v", err)
@@ -1019,7 +1019,7 @@ func TestCmdLand_AutoCrystal_SingleDomainNoMarker(t *testing.T) {
 
 	if err := cmdLand([]string{
 		"--domain", domainDir,
-		"--today", "2026-07-14",
+		"--today", claudeMDCurrentTestToday,
 		proposalPath,
 	}); err != nil {
 		t.Fatalf("cmdLand: %v", err)

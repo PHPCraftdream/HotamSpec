@@ -146,7 +146,7 @@ func TestCmdLand_OmittedDomainUsesMarkerTier3(t *testing.T) {
 	}
 
 	if err := cmdLand([]string{
-		"--today", "2026-07-14",
+		"--today", claudeMDCurrentTestToday,
 		proposalPath,
 	}); err != nil {
 		t.Fatalf("cmdLand without --domain should resolve via the tier-3 marker, got error: %v", err)

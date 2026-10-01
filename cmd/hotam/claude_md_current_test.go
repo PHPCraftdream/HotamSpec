@@ -29,6 +29,10 @@ import (
 // consistently here keeps every fixture's render and the check's own render
 // on the same calendar day, matching how a real operator would actually use
 // `hotam gen-spec --claude-md` followed shortly by `hotam all-violations`.
+// Also used by every cmdLand test whose project carries a crystal
+// convention: land's own post-gen-spec all-violations runs this check, so a
+// pinned past --today drifts into a false violation once real calendar time
+// moves a freshness/pulse signal (observed 2026-10-01 vs pinned 2026-07-14).
 var claudeMDCurrentTestToday = time.Now().Format("2006-01-02")
 
 // findClaudeMDCurrentViolations filters vs down to just
