@@ -292,6 +292,10 @@ func TestCrystalLinks_FullProfileStillReferencesThinkingDir(t *testing.T) {
 // back to the bare form made this test fail with exactly that missing path;
 // re-applying the fix made it pass again.
 func TestCrystalLinks_RealDomainRecentlyRejectedFooterReferencesExistOnDisk(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 
 	const graphPath = "../../domains/hotam-spec-self/graph.json"

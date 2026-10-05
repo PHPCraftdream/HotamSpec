@@ -15,6 +15,10 @@ import (
 )
 
 func TestCollectEmptySelfExecutingGraphKeepsSiblingEvidenceAndFreshFindingIdentity(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the evidence collection pipeline over full fixture domains; skipped in -short")
+	}
+
 	root := t.TempDir()
 	writeEvidenceFixture(t, root, "mismatch-v1", "request-v1", "spec-v1")
 	graph := &ontology.Graph{DomainDir: root, SelfExecutingAtoms: true}
@@ -185,6 +189,10 @@ func TestFailingSibling(t *testing.T) {
 }
 
 func TestCollectConcurrentDomainsKeepEvidenceLocal(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the evidence collection pipeline over full fixture domains; skipped in -short")
+	}
+
 	type outcome struct {
 		name   string
 		report Report
@@ -233,6 +241,10 @@ func TestCollectConcurrentDomainsKeepEvidenceLocal(t *testing.T) {
 	}
 }
 func TestCollectRuleCasesPreservesRawBytesBitsAbsenceAndCompositionIdentity(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the evidence collection pipeline over full fixture domains; skipped in -short")
+	}
+
 	root := t.TempDir()
 	writeCase := func(relative, content string) {
 		path := filepath.Join(root, filepath.FromSlash(relative))
@@ -442,6 +454,10 @@ func TestCases(t *testing.T) {
 	}
 }
 func TestSharedCaseInfersPrimaryAtomsBeforeAndAfterGraphSync(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the evidence collection pipeline over full fixture domains; skipped in -short")
+	}
+
 	root := t.TempDir()
 	write := func(relative, contents string) {
 		path := filepath.Join(root, filepath.FromSlash(relative))

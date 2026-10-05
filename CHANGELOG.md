@@ -16,6 +16,22 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Tests
+
+- New fast test layer: ~100 slow tests (real-domain crystal/gen-spec renders,
+  compile-cache binary builds, `go build`/`go test` subprocess tests, e2e)
+  now carry `testing.Short()` skip gates with explicit reasons, so `go test
+  -short ./...` / `make test-fast` runs in about a minute (excluding
+  cmd/hotam's sync-self round-trip tests, which still run under `-short`);
+  the full `go test ./...` mode is unchanged and still runs everything.
+
+- All-violations cost profile measured and documented: the three most
+  expensive invariants are check_scenario_executes_impl (~10s
+  scenario-test-binary compiles), check_verified_by_test_passes (~6s
+  verified_by `go test` subprocess runs, deliberately 2-worker-capped), and
+  check_spec_md_current (~6s full SPEC.md re-render); phase-1 fan-out already
+  overlaps them, warm-cache wall ~2s. No semantic changes.
+
 ### Commands
 
 - New `hotam upgrade [--domain <path>] [--today YYYY-MM-DD]`: the one-shot

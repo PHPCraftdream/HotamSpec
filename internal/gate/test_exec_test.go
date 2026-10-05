@@ -105,6 +105,10 @@ func RequireComplete(fields int) error {
 // a fresh `go test -v` run's non-deterministic elapsed-time text
 // (go test's summary embeds e.g. "(0.00s)") into Output on a cache MISS.
 func TestRunVerifiedByTest_RealPassingTest_Passes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/passmod", "model", passingImplSrc, passingTestSrc)
 	first := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
@@ -140,6 +144,10 @@ func TestRunVerifiedByTest_RealPassingTest_Passes(t *testing.T) {
 // simplification) would wrongly return the stale PASSED result for the
 // second call -- exactly the false-clean outcome @fh finding F1 reported.
 func TestRunVerifiedByTest_MUTATION_CacheInvalidatesOnImplChange(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/mutatemod", "model", passingImplSrc, passingTestSrc)
 
@@ -169,6 +177,10 @@ func TestRunVerifiedByTest_MUTATION_CacheInvalidatesOnImplChange(t *testing.T) {
 }
 
 func TestRunVerifiedByTest_CompileFailure_ReportsCompileFailedNotPanic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/badsyntaxmod", "model", uncompilableImplSrc, passingTestSrc)
 	result := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
@@ -679,6 +691,10 @@ func TestRequireComplete_UsesPolicy(t *testing.T) {
 // second call MUST actually re-execute and report Passed=false, not silently
 // replay the stale cached PASS.
 func TestRunVerifiedByTest_MUTATION_NEW2_SiblingPackageChangeInvalidatesCache(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root, _, policyImplPath := writeModelPolicyFixture(t, "example.com/new2mod")
 
@@ -934,6 +950,10 @@ func TestRequireComplete_MeetsEmbeddedThreshold(t *testing.T) {
 // the file that determines the verdict change at all). Post-fix the digest
 // must move, forcing a real re-run that reports Passed=false.
 func TestRunVerifiedByTest_MUTATION_NEW4_EmbeddedNonGoFileChangeInvalidatesCache(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root, thresholdPath := writeEmbedThresholdFixture(t, "example.com/new4mod", "model", "3\n")
 
@@ -1188,6 +1208,10 @@ func TestRequireComplete_ScenarioRecorded(t *testing.T) {
 // the implemented_by package/file, proving the SAME run that produced (a)
 // and (b) also exercised RequireComplete's lines.
 func TestRunVerifiedByTestRecording_RealScenario_AssertPlusArtifactPlusCoverage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	const modulePath = "example.com/recordmod"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
 
@@ -1304,6 +1328,10 @@ func hasNonZeroCoverageCount(cover string) bool {
 // own) must produce byte-identical artifact JSON both times -- proven here by
 // sha256, and the exact byte comparison too.
 func TestRunVerifiedByTestRecording_Deterministic_TwoRunsByteIdentical(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	const modulePath = "example.com/determinismmod"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
 
@@ -1347,6 +1375,10 @@ func sha256Hex(b []byte) string {
 // record an artifact normally, with CoverProfile left nil (no -coverprofile
 // flag passed at all), when the caller does not ask for coverage.
 func TestRunVerifiedByTestRecording_NoCoverPkg_SkipsCoverageCleanly(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	const modulePath = "example.com/nocovermod"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
 
@@ -1387,6 +1419,10 @@ func TestRunVerifiedByTestRecording_NoCoverPkg_SkipsCoverageCleanly(t *testing.T
 // at a private root removes the shared namespace entirely, so any
 // survivor found there is unambiguously attributable to this call.
 func TestRunVerifiedByTestRecording_TmpDirCleanedUpAfterReturn(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	const modulePath = "example.com/tmpcleanupmod"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
 
@@ -1543,6 +1579,10 @@ func TestRequireComplete_ScenarioRecorded(t *testing.T) {
 // requirement than the one being rendered is filtered out, not silently
 // rendered into the wrong requirement's SPEC.md section.
 func TestRecordVerifiedByEntry_F6_FiltersMismatchedReqID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	const modulePath = "example.com/f6reqidcheck"
 	// Use the same impl source as the recording fixture, but a test that
 	// records under "R-different-req" instead of "R-citing-req".
@@ -1565,6 +1605,10 @@ func TestRecordVerifiedByEntry_F6_FiltersMismatchedReqID(t *testing.T) {
 // recorded artifact names the SAME requirement as the one being rendered
 // passes through normally.
 func TestRecordVerifiedByEntry_F6_KeepsMatchingReqID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	const modulePath = "example.com/f6reqmatch"
 	testSrc := strings.ReplaceAll(scenarioTestSrc(modulePath), "R-example-recording", "R-citing-req")
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", testSrc)
@@ -1684,6 +1728,10 @@ func TestTestExecTimeout_DefaultAndEnvOverride(t *testing.T) {
 // step succeeds under its own 180s compileTimeout ctx even though the execution
 // ctx is 300ms, so the result is an execution-timeout Err, not a compile error.
 func TestRunVerifiedByTest_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	t.Setenv(testExecTimeoutEnv, "300ms")
 
@@ -1708,6 +1756,10 @@ func TestRunVerifiedByTest_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t *testing.
 // the record-mode twin of the plain-mode test above (task #352): the same
 // honest-Err contract holds for RunVerifiedByTestRecording's execution path.
 func TestRunVerifiedByTestRecording_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
 	t.Setenv(testExecTimeoutEnv, "300ms")
 
 	const modulePath = "example.com/exectimeoutrec"

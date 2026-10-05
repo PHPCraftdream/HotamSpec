@@ -12,6 +12,10 @@ import (
 // implemented_by, so the "signatures" key must appear. Not parallel:
 // captureStdout mutates process-global os.Stdout.
 func TestCmdBrief_JSONIncludesEvidenceKeys(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the full command pipeline against a scaffolded domain; skipped in -short")
+	}
+
 	domainDir := copySelfDomain(t)
 	stdout := captureStdout(t, func() {
 		if err := cmdBrief([]string{"--json", "--domain", domainDir, "--today", "2026-07-30", "R-no-hand-edit-graph"}); err != nil {

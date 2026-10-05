@@ -127,6 +127,10 @@ func TestBuildTensions_ByteIdenticalToFixture(t *testing.T) {
 // panic. It is the "does not fall over on real data" complement to the
 // byte-identity contract, which now lives on the small fixture graph.
 func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders every generated doc against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	g := loadDomainGraph(t)
 
@@ -178,6 +182,10 @@ func TestGenSpec_SmokeOnRealDomain(t *testing.T) {
 // none panics. The explicit per-call recover guard turns a panic (the framework
 // "falling over on real data") into a named failure rather than a bare crash.
 func TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders every generated doc against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	g := loadDomainGraph(t)
 	repoRoot := t.TempDir()

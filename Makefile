@@ -46,8 +46,11 @@ test-other:
 # cmd/hotam/*_e2e_test.go) and skips -race, so this is the fastest possible
 # "did I obviously break something" signal. NOT a substitute for `check`
 # before pushing.
+# Timeout headroom note: the sync-self round-trip tests (TestCmdSyncSelf_*)
+# still run under -short and inflate wall time on a loaded machine (measured
+# 4-8 minutes total under load, ~1 minute without them).
 test-fast:
-	go test -timeout 5m -short ./...
+	go test -timeout 10m -short ./...
 
 vet:
 	go vet ./...

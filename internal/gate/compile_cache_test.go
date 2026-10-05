@@ -59,6 +59,10 @@ func TestIsNegative_RejectsZero(t *testing.T) {
 // counter (a direct miss-counter, not wall-clock) keeps the test
 // deterministic and CI-stable regardless of host load.
 func TestCompileCache_TwoTestsSamePackage_OneCompile(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds real test binaries through the compile cache; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/samepkg", "model", twoTestImplSrc, twoTestTestSrc)
 
@@ -101,6 +105,10 @@ func TestCompileCache_TwoTestsSamePackage_OneCompile(t *testing.T) {
 // without the compile cache, two recording calls would each spawn their
 // own full `go test -run` subprocess. With it, the compile happens once.
 func TestCompileCache_TwoTestsSamePackage_Recording_AlsoDeduplicates(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds real test binaries through the compile cache; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	const modulePath = "example.com/samepkgrec"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", `
@@ -159,6 +167,10 @@ func TestRequireComplete_ScenarioRecorded_Second(t *testing.T) {
 // independently. Two separate package directories under one module, two
 // RunVerifiedByTest calls, two compiles.
 func TestCompileCache_TwoTestsDifferentPackages_TwoCompiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds real test binaries through the compile cache; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/diffpkg\n\ngo 1.21\n"), 0o644); err != nil {
@@ -233,6 +245,10 @@ func TestIsPositive_RejectsZero(t *testing.T) {
 // unobservable. Importing both and calling both ensures the profile has
 // real entries to compare).
 func TestCompileCache_DifferentCoverPkg_DifferentBinaries(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds real test binaries through the compile cache; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	const modulePath = "example.com/coverpkg"
 	root := t.TempDir()
@@ -339,6 +355,10 @@ func TestCallsBothCoverPkgs(t *testing.T) {
 // shape exactly -- same fixture, same assertions, same diagnostic quality
 // the caller sees, just driven through the new compile-step classification.
 func TestCompileCache_CompileFailure_StillClassifiedCorrectly(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds real test binaries through the compile cache; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/compilefail", "model", uncompilableImplSrc, passingTestSrc)
 
@@ -391,6 +411,10 @@ func TestCompileCache_CompileFailure_StillClassifiedCorrectly(t *testing.T) {
 // hotam-compile-* tmp directory survives the cleanup, and the in-memory
 // cache is empty so a subsequent call would recompile from scratch.
 func TestCompileCache_Cleanup_RemovesAllBinaries(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds real test binaries through the compile cache; skipped in -short")
+	}
+
 	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/cleanupmod", "model", passingImplSrc, passingTestSrc)
 
@@ -463,6 +487,10 @@ func TestCompileCache_Cleanup_RemovesAllBinaries(t *testing.T) {
 // pins the cross-cache-state byte-identity the compile cache specifically
 // must not disturb).
 func TestCompileCache_RecordingResult_ByteIdentical_AfterCacheReset(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds real test binaries through the compile cache; skipped in -short")
+	}
+
 	const modulePath = "example.com/byteid"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
 

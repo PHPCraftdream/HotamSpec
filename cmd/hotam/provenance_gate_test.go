@@ -212,6 +212,10 @@ func TestProvenanceGate_RequireProvenance_CompleteProvenanceLands_LandBatch(t *t
 // on coalesce-preserve semantics) — the UPDATE must SUCCEED because the
 // simulated post-merge result still carries the earlier provenance.
 func TestProvenanceGate_UpdateOmittingProvenancePreservesIt_Land(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := setupProvenanceTestDomain(t, true)
 

@@ -83,6 +83,10 @@ func writeAuthoredSpecFixtures(t *testing.T, domainDir string) {
 // path: an UPDATE proposal carrying implemented_by and verified_by lands both
 // on the target requirement.
 func TestApply_Requirement_SetImplementedByAndVerifiedBy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies requirements with verified_by links through the full apply pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	writeAuthoredSpecFixtures(t, filepath.Dir(path))
@@ -207,6 +211,10 @@ func TestApply_Requirement_VerifiedByClearSentinelMixedWithRealFails(t *testing.
 // CREATE path (mirror of EnforcedBy on CREATE): a brand-new requirement may
 // declare its authored-code links at creation.
 func TestApply_Requirement_CreateCarriesImplementedByAndVerifiedBy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies requirements with verified_by links through the full apply pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	path := writeTempGraph(t, baseGraph())
 	writeAuthoredSpecFixtures(t, filepath.Dir(path))

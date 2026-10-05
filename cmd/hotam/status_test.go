@@ -133,6 +133,10 @@ func TestBuildStatusReport_MatchesWhatNowDueAllViolations(t *testing.T) {
 // consistency guarantee holds on production-shaped data, not just the
 // small synthetic fixture.
 func TestBuildStatusReport_MatchesOnRealDomain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the full command pipeline against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	g, err := loadDomainGraph(domainDir)
@@ -251,6 +255,10 @@ func TestStatusReport_JSONRoundTrips(t *testing.T) {
 // against the real hotam-spec-self domain without error, and that status
 // always exits nil (never gates) exactly like due/inspect/confront.
 func TestCmdStatus_SmokeNoPanicOnRealDomain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the full command pipeline against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	err := cmdStatus([]string{"--domain", domainDir, "--today", "2026-07-12"})
@@ -261,6 +269,10 @@ func TestCmdStatus_SmokeNoPanicOnRealDomain(t *testing.T) {
 
 // TestCmdStatus_JSONFlagNoPanic verifies the --json branch also runs clean.
 func TestCmdStatus_JSONFlagNoPanic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the full command pipeline against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	err := cmdStatus([]string{"--domain", domainDir, "--today", "2026-07-12", "--json"})

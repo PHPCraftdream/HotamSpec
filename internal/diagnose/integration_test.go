@@ -9,6 +9,10 @@ import (
 const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
 
 func TestDiagnoseSignals_RealGraphNoPanic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("loads the real hotam-spec-self graph and renders full diagnosis; skipped in -short")
+	}
+
 	t.Parallel()
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {
@@ -28,6 +32,10 @@ func TestDiagnoseSignals_RealGraphNoPanic(t *testing.T) {
 }
 
 func TestTopAction_RealGraph(t *testing.T) {
+	if testing.Short() {
+		t.Skip("loads the real hotam-spec-self graph and renders full diagnosis; skipped in -short")
+	}
+
 	t.Parallel()
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {

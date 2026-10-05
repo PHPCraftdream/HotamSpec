@@ -22,6 +22,10 @@ import (
 // where tier 4's defaultDomainName resolves), with no HOTAM_DOMAIN env and no
 // active_domain marker, so resolveDomain("") must land on that same fixture.
 func TestCmdApplyProposal_OmittedDomainFallsThroughActiveDomainChain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies a proposal with full gen-spec regeneration and reverification; skipped in -short")
+	}
+
 	// Not t.Parallel(): t.Setenv (HOTAM_SPEC_PROJECT_ROOT/HOTAM_DOMAIN) must
 	// not race with other tests mutating the same process-global env vars.
 	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
@@ -64,6 +68,10 @@ func TestCmdApplyProposal_OmittedDomainFallsThroughActiveDomainChain(t *testing.
 // 4-tier active-domain chain instead of hard-erroring on a premature
 // "--domain is required" check.
 func TestCmdLand_OmittedDomainFallsThroughActiveDomainChain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	// Not t.Parallel(): t.Setenv must not race with other env-mutating tests.
 	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	t.Setenv(paths.EnvProjectRoot, projectRoot)
@@ -114,6 +122,10 @@ func TestCmdLand_OmittedDomainFallsThroughActiveDomainChain(t *testing.T) {
 // marker recording a domain NAME other than the legacy default must steer
 // land to that domain even though --domain was never passed.
 func TestCmdLand_OmittedDomainUsesMarkerTier3(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	// Not t.Parallel(): t.Setenv must not race with other env-mutating tests.
 	projectRoot := t.TempDir()
 	domainDir := filepath.Join(projectRoot, "domains", "marked-domain")

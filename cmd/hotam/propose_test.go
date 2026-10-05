@@ -240,6 +240,10 @@ func TestCmdPropose_ValidationFails_NoFileWritten(t *testing.T) {
 // regenerate docs, and leave 0 violations — mirroring `hotam land`'s pipeline
 // (and proving the shared landProposalFile function works).
 func TestCmdPropose_Land_AppliesRegeneratesReverifies(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies a proposal with full gen-spec regeneration and reverification; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	outPath := filepath.Join(t.TempDir(), "req-land.json")
@@ -927,6 +931,10 @@ func TestCmdPropose_Conflict_ConstructsValidJSON(t *testing.T) {
 // regenerate docs. Axis has no interaction with other nodes (no member/resolver
 // checks), so a fresh slug is sufficient.
 func TestCmdPropose_Axis_Land_AppliesRegeneratesReverifies(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies a proposal with full gen-spec regeneration and reverification; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	outPath := filepath.Join(t.TempDir(), "axis-land.json")
@@ -956,6 +964,10 @@ func TestCmdPropose_Axis_Land_AppliesRegeneratesReverifies(t *testing.T) {
 // test for the assumption kind. Assumption has no interaction with other nodes
 // (only an id-uniqueness check), so a fresh A-id is sufficient.
 func TestCmdPropose_Assumption_Land_AppliesRegeneratesReverifies(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies a proposal with full gen-spec regeneration and reverification; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	outPath := filepath.Join(t.TempDir(), "asmp-land.json")
@@ -993,6 +1005,10 @@ func TestCmdPropose_Assumption_Land_AppliesRegeneratesReverifies(t *testing.T) {
 // DECIDED(...) initial lifecycle (a human decision already recorded) — exactly
 // the shape the --ack-conflict escape hatch (task #147) expects to cite.
 func TestCmdPropose_Conflict_Land_AppliesRegeneratesReverifies(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies a proposal with full gen-spec regeneration and reverification; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	outPath := filepath.Join(t.TempDir(), "conf-land.json")

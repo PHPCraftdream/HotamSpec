@@ -3,6 +3,10 @@ package generator
 import "testing"
 
 func TestGenerator_DoubleRegenerateIsIdentical(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders every generated doc against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	g := loadDomainGraph(t)
 	pairs := []struct {

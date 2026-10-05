@@ -99,6 +99,10 @@ func TestEmptyTitle(t *testing.T) {
 `
 
 func TestCheckScenarioQuality_FiresOnEmptyTitle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	modulePath := "example.com/emptytitlemod"
 	src := sprintfSrc(scenarioQualityEmptyTitleSrc, modulePath)
@@ -130,6 +134,10 @@ func TestMismatchedReqID(t *testing.T) {
 `
 
 func TestCheckScenarioQuality_FiresOnMismatchedReqID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	modulePath := "example.com/mismatchmod"
 	src := sprintfSrc(scenarioQualityMismatchedReqIDSrc, modulePath)
@@ -161,6 +169,10 @@ func TestNoThen(t *testing.T) {
 `
 
 func TestCheckScenarioQuality_FiresOnZeroThenSteps(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	modulePath := "example.com/nothenmod"
 	src := sprintfSrc(scenarioQualityNoThenSrc, modulePath)
@@ -192,6 +204,10 @@ func TestUnordered(t *testing.T) {
 `
 
 func TestCheckScenarioQuality_FiresOnUnorderedBehavioralSteps(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	modulePath := "example.com/unorderedmod"
 	src := sprintfSrc(scenarioQualityUnorderedSrc, modulePath)
@@ -211,6 +227,10 @@ func TestCheckScenarioQuality_FiresOnUnorderedBehavioralSteps(t *testing.T) {
 // Given/Then in any relative order, or even Then before Given, must NOT fire
 // rule 4, only rules 1-3 still apply (and all three are satisfied here).
 func TestCheckScenarioQuality_DeclarativeExemptFromOrdering(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	const src = `package model
 
@@ -254,6 +274,10 @@ func TestCompliant(t *testing.T) {
 `
 
 func TestCheckScenarioQuality_GreenForFullyCompliantScenario(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	modulePath := "example.com/compliantmod"
 	src := sprintfSrc(scenarioQualityCompliantSrc, modulePath)
@@ -276,6 +300,10 @@ func TestCheckScenarioQuality_GreenForFullyCompliantScenario(t *testing.T) {
 // compliant, is itself COMPLIANT overall (OR-across-entries, mirroring
 // anyVerifiedByEntryHasScenario's own semantics).
 func TestCheckScenarioQuality_ORAcrossEntries_OneBadOneGoodIsCompliant(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	const src = `package model
 
@@ -319,6 +347,10 @@ func TestGoodOne(t *testing.T) {
 // a domain that has NOT opted into scenario_authority:"quality" sees ZERO
 // violations regardless of how bare/malformed its recorded scenarios are.
 func TestCheckScenarioQuality_NoOpWithoutTrigger(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	modulePath := "example.com/notriggermod"
 	src := sprintfSrc(scenarioQualityEmptyTitleSrc, modulePath)
@@ -339,6 +371,10 @@ func TestCheckScenarioQuality_NoOpWithoutTrigger(t *testing.T) {
 // check_settled_requires_scenario is the check responsible for "has no
 // scenario at all", not this one.
 func TestCheckScenarioQuality_NoOpWhenNoScenarioAtAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	const plainTestSrc = `package model
 
@@ -365,6 +401,10 @@ func TestPlainNoScenario(t *testing.T) {
 // TestCheckScenarioQuality_NoOpForNonSettled proves the check only evaluates
 // SETTLED requirements.
 func TestCheckScenarioQuality_NoOpForNonSettled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	modulePath := "example.com/draftmod"
 	src := sprintfSrc(scenarioQualityEmptyTitleSrc, modulePath)
@@ -418,6 +458,10 @@ func sprintfSrc(tmpl, modulePath string) string {
 // two sequential calls against an unchanged fixture both succeed and agree,
 // which is the caller-visible half of the guarantee this check depends on.
 func TestCheckScenarioQuality_CompileCacheReused(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	modulePath := "example.com/cachereusemod"
 	src := sprintfSrc(scenarioQualityCompliantSrc, modulePath)

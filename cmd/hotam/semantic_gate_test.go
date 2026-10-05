@@ -132,6 +132,10 @@ func TestSemanticGate_UnresolvedFormalConflictBlocksWithoutLexicalEvidence(t *te
 	}
 }
 func TestSemanticGate_UnrelatedAckCannotOverrideMatchingCarrier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := setupGateTestDomain(t)
 	gp := graphPathForDomain(domainDir)

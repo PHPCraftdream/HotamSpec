@@ -507,6 +507,10 @@ func TestCheckEnforcedRequiresEnforcerOrAuthoredLink_SkipsNonSettledOrNonEnforce
 const hotamDevGraphPath = "../../domains/hotam-dev/graph.json"
 
 func TestAuthoredLinkChecks_RealHotamSpecSelfGraph_ZeroViolations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs AllViolations against the real hotam-spec-self graph; skipped in -short")
+	}
+
 	t.Parallel()
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {
@@ -621,6 +625,10 @@ func TestCheckEnforcedNamesInvariant_FiresWhenAuthoredPathAlsoEmpty(t *testing.T
 // infrastructure violation ("no go.mod found"), which would defeat the
 // point of this being the FULL-sweep zero-violations acceptance test.
 func TestAuthoredOnlyEnforcedRequirement_PassesFullAllViolations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs AllViolations against the real hotam-spec-self graph; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := writeAuthoredSpecFixture(t, "spec/model/risk.go", authoredRiskModelSrc)
 	if err := os.WriteFile(filepath.Join(domainDir, "go.mod"), []byte("module prat-spec\n\ngo 1.21\n"), 0o644); err != nil {
@@ -736,6 +744,10 @@ func TestArithmetic_TwoPlusTwoIsFour(t *testing.T) {
 // layer -- not silently, which is exactly the property this test is here to
 // guard.
 func TestStructuralFloorDoesNotCatchSemanticMismatch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs AllViolations against the real hotam-spec-self graph; skipped in -short")
+	}
+
 	t.Parallel()
 	// Recursion-guard gate: THIS test is itself the verified_by target of
 	// R-structural-floor-vs-mirror-audit, so the outer `all-violations` run

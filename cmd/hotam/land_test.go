@@ -25,6 +25,10 @@ import (
 // against without hand-building a synthetic graph that would need to
 // satisfy all ~47 invariants from scratch.
 func TestCmdLand_AppliesRegeneratesAndVerifies(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
@@ -158,6 +162,10 @@ func TestCmdLand_InvalidProposalAppliesNothing(t *testing.T) {
 // This test would FAIL if the rollback were removed: graph.json would still
 // hold the new node, byte-differ from the pre-land baseline.
 func TestCmdLand_GenSpecFailure_RollsBackGraphJSON(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
@@ -262,6 +270,10 @@ func TestCmdLand_GenSpecFailure_RollsBackGraphJSON(t *testing.T) {
 // This would FAIL if rollbackLand skipped the genSpec re-run: the docs would
 // still reflect the new graph (the direct genSpec below) instead of baseline.
 func TestRollbackLand_RestoresFilesAndRegeneratesDocs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
@@ -547,6 +559,10 @@ func TestResolveClaudeMDPath(t *testing.T) {
 // resolveClaudeMDPath does not exist and the stale sentinel bytes survive land
 // untouched (this test FAILS on the pre-fix code).
 func TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 
@@ -631,6 +647,10 @@ func TestCmdLand_AutoCrystal_WhenProjectRootHasClaudeMD(t *testing.T) {
 // writes into bare/isolated domains. Without the fix this passes trivially;
 // it must KEEP passing with the fix.
 func TestCmdLand_NoAutoCrystal_WhenNoProjectRootConvention(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	// Deliberately create NO CLAUDE.md and NO marker at projectRoot.
@@ -742,6 +762,10 @@ func TestCmdLand_ExplicitClaudeMD_OverridesAutoDetect(t *testing.T) {
 // has hit rune-count fixpoint drift before (see ComputeCrystalCharCountFixpoint
 // in gen_spec.go); a regression would make two consecutive renders differ.
 func TestCmdLand_AutoCrystal_IdempotentAcrossGenspec(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	// Seed a crystal so resolveClaudeMDPath arms the auto-write.
@@ -843,6 +867,10 @@ func addSecondDomain(t *testing.T, projectRoot, domainName string) string {
 // new default fires; the root-untouched assertions above prove it is not a
 // root hijack.
 func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	// copySelfDomainUnderRoot scaffolds the FIRST domain as
 	// "hotam-spec-self"; that is the name recorded as active_domain below.
@@ -935,6 +963,10 @@ func TestCmdLand_NoAutoCrystal_WhenLandingDomainIsNotActive(t *testing.T) {
 // proves the fix's "matches the active domain" branch actually fires, not
 // just the single-domain unambiguous shortcut.
 func TestCmdLand_AutoCrystal_WhenLandingDomainIsActive(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, activeDomainDir := copyNonSelfHostingDomainUnderRoot(t)
 	addSecondDomain(t, projectRoot, "second")
@@ -1247,6 +1279,10 @@ func TestCmdLandBatch_FreshDisciplineFullProject_DoesNotRollBack(t *testing.T) {
 // post-write check runs as-of the same --today via allViolationsAsOf and the
 // land succeeds. FAILS on the pre-fix code.
 func TestCmdLand_AutoCrystal_PinnedPastTodaySucceeds(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 

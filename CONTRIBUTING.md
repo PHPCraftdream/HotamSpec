@@ -23,6 +23,17 @@ All changes to a domain graph (`domains/*/graph.json`) go through `hotam apply-p
 4. Regenerate docs: `hotam gen-spec --domain <path>`.
 5. Verify: `hotam all-violations --domain <path>` -- exit code 1 means at least one structural invariant broke; fix before committing.
 
+### Test layers
+
+- Iterate with the fast layer: `go test -short ./...` (or `make test-fast`).
+  Slow tests (full-domain renders, compile-cache builds, `go build`/`go test`
+  subprocesses, e2e) skip themselves under `-short` via a `testing.Short()`
+  gate with an explicit reason — copy that idiom for any new slow test so the
+  fast layer stays fast.
+- Before pushing, run the full suite: `make check` (build + gofmt + vet +
+  `go test -race -timeout 30m ./...`). Full mode runs every test; `-short`
+  changes nothing there.
+
 ### Code style
 
 - **Go**: formatted with `gofmt` (or `go fmt ./...`); keep `go vet ./...` clean.

@@ -157,6 +157,10 @@ func TestCheckSpecMDCurrent_NoOpWhenSpecMDAbsent(t *testing.T) {
 // control: a SPEC.md that IS exactly what gate.BuildSpecFromRows(g,
 // gate.CollectSpecRows(g)) currently produces must pass clean.
 func TestCheckSpecMDCurrent_OK_WhenFreshlyGenerated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("generates SPEC.md through the real gen pipeline for comparison; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := writeSpecMDFixtureModule(t)
 	g := specMDFixtureGraph(domainDir)
@@ -175,6 +179,10 @@ func TestCheckSpecMDCurrent_OK_WhenFreshlyGenerated(t *testing.T) {
 // confirm it goes green again -- proving this is a live content comparison,
 // not a one-shot flag.
 func TestCheckSpecMDCurrent_MUTATION_HandEditedFiresThenClears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("generates SPEC.md through the real gen pipeline for comparison; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := writeSpecMDFixtureModule(t)
 	g := specMDFixtureGraph(domainDir)
@@ -218,6 +226,10 @@ func TestCheckSpecMDCurrent_MUTATION_HandEditedFiresThenClears(t *testing.T) {
 // as if the file were created as a placeholder but never actually
 // regenerated.
 func TestCheckSpecMDCurrent_FiresWhenEmptyFile(t *testing.T) {
+	if testing.Short() {
+		t.Skip("generates SPEC.md through the real gen pipeline for comparison; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := writeSpecMDFixtureModule(t)
 	g := specMDFixtureGraph(domainDir)

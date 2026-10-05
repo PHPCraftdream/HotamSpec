@@ -300,11 +300,33 @@ silently targets an unexpected domain.
 
 ## Tests
 
+Full suite (everything, including e2e, real-domain renders, and subprocess tests):
+
 ```bash
-go test ./...
+go test -timeout 30m ./...
 go vet ./...
 go test -race ./...
 ```
+
+Fast layer (same tests; the slow ones skip themselves under `-short`):
+
+```bash
+go test -short ./...
+```
+
+Tests that scaffold full domains, render the whole crystal/docs pipeline,
+build real test binaries, or spawn real `go build`/`go test` subprocesses
+carry a `testing.Short()` gate at the top with an explicit reason, e.g.:
+
+```go
+if testing.Short() {
+    t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+}
+```
+
+so they always run in the full suite and only skip under `-short`. Note:
+cmd/hotam's sync-self round-trip tests (`TestCmdSyncSelf_*`) do not skip
+under `-short` yet and currently dominate the fast layer's wall time.
 
 ## Repository structure
 

@@ -6,7 +6,7 @@ This domain's `docs/gen/` output was produced by an engine build with the
 content fingerprint below. If the current engine's fingerprint differs, the
 generated docs may be stale — regenerate via `hotam gen-spec --domain <path>`.
 
-**Engine content fingerprint:** `bf5d5b2d12f9edfb`
+**Engine content fingerprint:** `a85c00e2f9b56c90`
 
 The fingerprint is a deterministic sha256 content-hash over the three
 generator-relevant engine packages (`internal/generator`,

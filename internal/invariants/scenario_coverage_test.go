@@ -100,6 +100,10 @@ func TestNewRisk_RejectsMissingOwner(t *testing.T) {
 // the coverage-proof gate -- not merely the AST/pass-fail checks that predate
 // it -- is what closes this forge vector.
 func TestCheckScenarioExecutesImpl_ForgedTest_NeverCallsImpl_Fires(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := writeCoverageFixture(t, "forgedmod", coverageFixtureImplSrc, coverageFixtureForgedTestSrc)
 
@@ -132,6 +136,10 @@ func TestCheckScenarioExecutesImpl_ForgedTest_NeverCallsImpl_Fires(t *testing.T)
 // clean; otherwise the check would be trivially "always red" rather than
 // actually discriminating covered from uncovered.
 func TestCheckScenarioExecutesImpl_RealTest_CallsImpl_DoesNotFire(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := writeCoverageFixture(t, "realmod", coverageFixtureImplSrc, coverageFixtureRealTestSrc)
 
@@ -282,6 +290,10 @@ func TestCheckScenarioExecutesImpl_F1_TypeOnlyImplementedBy_Fires(t *testing.T) 
 // the method was executed. This is the non-regression case for the mixed
 // citation pattern.
 func TestCheckScenarioExecutesImpl_F1_MixedTypeAndMethod_DoesNotFire(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := writeCoverageFixtureWithDiscipline(t, "mixedtypemethodmod",
 		coverageFixtureImplSrc, coverageFixtureRealTestSrc, "full")
@@ -360,6 +372,10 @@ func TestCheckScenarioExecutesImpl_F1_TypeOnly_SoftDiscipline_NoOp(t *testing.T)
 // checkScenarioExecutesImpl call, unlike the pre-fix per-call cache which was
 // discarded (garbage collected) the moment the first call returned.
 func TestCoverageRunCache_ReusedAcrossSeparateAllViolationsCalls(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	ResetCoverageRunCacheForTest()
 	domainDir := writeCoverageFixture(t, "reusemod", coverageFixtureImplSrc, coverageFixtureRealTestSrc)
 
@@ -438,6 +454,10 @@ func TestCoverageRunCache_ReusedAcrossSeparateAllViolationsCalls(t *testing.T) {
 // forgery this whole check exists to prevent (checkScenarioExecutesImpl's
 // own COST doc comment: "there is no cheaper AST-only substitute").
 func TestCoverageRunCache_ContentChangeInvalidatesAndGetsFreshResult(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+
 	ResetCoverageRunCacheForTest()
 	domainDir := writeCoverageFixture(t, "mutatecoveragemod", coverageFixtureImplSrc, coverageFixtureRealTestSrc)
 

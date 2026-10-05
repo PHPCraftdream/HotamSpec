@@ -250,6 +250,10 @@ func TestValidate_Scenario(t *testing.T) {
 `
 
 func TestBrief_EvidenceScenario_PassingNarrative(t *testing.T) {
+	if testing.Short() {
+		t.Skip("derives a brief through the scenario narrative pipeline; skipped in -short")
+	}
+
 	// NOT t.Parallel() -- this test runs a real go test subprocess.
 	modulePath := "example.com/scenmod"
 	domainDir := writeEvidenceDomain(t, modulePath, map[string]string{

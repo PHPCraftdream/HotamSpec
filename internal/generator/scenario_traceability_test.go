@@ -107,6 +107,10 @@ func TestBuildTraceability_ScenarioColumnIsASTOnly(t *testing.T) {
 // of asserting an overlay renders correctly, it now asserts no such overlay
 // exists to render.
 func TestBuildTraceability_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spawns real `go test` subprocesses to prove output invariance; skipped in -short")
+	}
+
 	root := writeSpecFixtureModule(t)
 	g := scenarioFixtureGraph(root)
 
@@ -180,6 +184,10 @@ func TestBuildCoverage_ScenarioRatchet_ASTOnlyByDefault(t *testing.T) {
 // because BuildCoverage no longer accepts or consumes that data at all --
 // the ratchet counter is always the AST-only signal.
 func TestBuildCoverage_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spawns real `go test` subprocesses to prove output invariance; skipped in -short")
+	}
+
 	root := writeSpecFixtureModule(t)
 	g := scenarioFixtureGraph(root)
 

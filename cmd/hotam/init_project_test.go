@@ -356,6 +356,10 @@ func TestCmdInitProject_RequireProvenanceDefaultOff(t *testing.T) {
 // BORN FULLY OBLIGATED contract (task #273/W6.2) must not regress just
 // because the flag now exists.
 func TestCmdInitProject_DisciplineDefaultFull(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the full command pipeline against a scaffolded domain; skipped in -short")
+	}
+
 	t.Parallel()
 
 	dir := t.TempDir()
@@ -476,6 +480,10 @@ func TestCmdInitProject_DisciplineFlagRejectsBogusValue(t *testing.T) {
 // is written before scaffoldRegistrydump runs), so spec/registrydump/main.go
 // already marshals Stakeholders.All() — no manual re-run needed.
 func TestInitProject_SyncReadySeedsOwnerAndEnvelope(t *testing.T) {
+	if testing.Short() {
+		t.Skip("scaffolds a full domain and renders the crystal via genSpec; skipped in -short")
+	}
+
 	t.Parallel()
 
 	projDir := t.TempDir()

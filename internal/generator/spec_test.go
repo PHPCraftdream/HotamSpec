@@ -151,6 +151,10 @@ func specFixtureGraph(domainDir string) *ontology.Graph {
 // its ACTUAL Given/When/Then/Value narrative rendered, sourced from a real,
 // currently-passing `go test` run (not invented text).
 func TestBuildSpec_NarratesRealScenario(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spawns real `go test` subprocesses to prove output invariance; skipped in -short")
+	}
+
 	root := writeSpecFixtureModule(t)
 	g := specFixtureGraph(root)
 
@@ -178,6 +182,10 @@ func TestBuildSpec_NarratesRealScenario(t *testing.T) {
 // hotamspec, so BuildSpec must say so honestly rather than inventing a
 // narrative or silently omitting the requirement.
 func TestBuildSpec_HonestNoScenario(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spawns real `go test` subprocesses to prove output invariance; skipped in -short")
+	}
+
 	root := writeSpecFixtureModule(t)
 	g := specFixtureGraph(root)
 
@@ -195,6 +203,10 @@ func TestBuildSpec_HonestNoScenario(t *testing.T) {
 // R-spec-no-carrier is listed in its own honest section, never silently
 // dropped and never blurred together with the narrated/no-scenario buckets.
 func TestBuildSpec_HonestNoVerifiedBy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spawns real `go test` subprocesses to prove output invariance; skipped in -short")
+	}
+
 	root := writeSpecFixtureModule(t)
 	g := specFixtureGraph(root)
 
@@ -228,6 +240,10 @@ func TestBuildSpec_EmptyGraph(t *testing.T) {
 // sorted Given/Value keys, canonical float/pointer/map rendering, no time/
 // random capture) survives all the way through to the rendered Markdown.
 func TestBuildSpec_ByteIdenticalAcrossRuns(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spawns real `go test` subprocesses to prove output invariance; skipped in -short")
+	}
+
 	root := writeSpecFixtureModule(t)
 	g := specFixtureGraph(root)
 
@@ -244,6 +260,10 @@ func TestBuildSpec_ByteIdenticalAcrossRuns(t *testing.T) {
 // accidental changes to its rendering shape (heading text, ordering, fact
 // formatting) fail with a line-level diff instead of silently drifting.
 func TestBuildSpec_ByteIdenticalToGolden(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spawns real `go test` subprocesses to prove output invariance; skipped in -short")
+	}
+
 	root := writeSpecFixtureModule(t)
 	g := specFixtureGraph(root)
 

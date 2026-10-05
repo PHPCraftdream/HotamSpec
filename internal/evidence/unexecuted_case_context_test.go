@@ -10,6 +10,10 @@ import (
 )
 
 func TestUnexecutedCaseFindingTracksProfileWithoutInventingMeasurement(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the evidence collection pipeline over full fixture domains; skipped in -short")
+	}
+
 	root := t.TempDir()
 	model := filepath.Join(root, "spec", "model")
 	if err := os.MkdirAll(model, 0o755); err != nil {

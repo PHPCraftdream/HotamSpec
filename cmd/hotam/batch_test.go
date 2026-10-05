@@ -24,6 +24,10 @@ func writeBatchProposal(t *testing.T, dir, name, content string) {
 // nodes, and (3) regenerate docs/gen exactly once so the rendered docs
 // reflect the post-batch graph.
 func TestCmdLand_Batch_AppliesRegeneratesAndVerifies(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
@@ -205,6 +209,10 @@ func TestCmdLand_Batch_EmptyDirFails(t *testing.T) {
 // TestCmdApplyProposal_Batch proves the low-level apply-proposal command
 // also supports --batch (applies the graph without regenerating docs).
 func TestCmdApplyProposal_Batch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies a proposal with full gen-spec regeneration and reverification; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	batchDir := t.TempDir()
@@ -248,6 +256,10 @@ func TestCmdApplyProposal_Batch(t *testing.T) {
 // TestCmdLand_AppliesRegeneratesAndVerifies already covers this; this is a
 // focused regression guard for the flag-parsing path specifically.)
 func TestCmdLand_SingleRegression(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	proposalPath := filepath.Join(t.TempDir(), "proposal.json")

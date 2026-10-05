@@ -17,6 +17,10 @@ import (
 // convergence path is exercised against the real CRYSTAL_CHARS graph in
 // TestComputeCrystalCharCountFixpoint_RealDomainGraph.
 func TestComputeCrystalCharCountFixpoint_Converges(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the multi-pass crystal char-count fixpoint render; skipped in -short")
+	}
+
 	t.Parallel()
 	g := loadFixtureGraph(t)
 	repoRoot := t.TempDir()
@@ -53,6 +57,10 @@ func TestComputeCrystalCharCountFixpoint_Converges(t *testing.T) {
 // in the rendered "resident crystal N chars" line. This is the property CI's
 // regen-idempotency check (.github/workflows/ci.yml) depends on.
 func TestComputeCrystalCharCountFixpoint_RealDomainGraph(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders every generated doc against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	g := loadDomainGraph(t)
 	repoRoot := t.TempDir()

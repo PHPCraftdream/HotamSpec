@@ -270,6 +270,10 @@ func copySelfDomainManifestSansOrientationFAQ(t *testing.T, dst string) {
 // now). This test's job is narrower: prove genSpec's file-writing contract
 // (which files, non-empty) holds against a real, large domain graph.
 func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copySelfDomainUnderRoot(t)
 
@@ -349,6 +353,10 @@ func TestGenSpec_SmokeWritesByteIdenticalFiles(t *testing.T) {
 }
 
 func TestWhatNow_SmokeNoPanic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the full command pipeline against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	out, err := whatNow(domainDir, 20, "2026-07-12")
@@ -361,6 +369,10 @@ func TestWhatNow_SmokeNoPanic(t *testing.T) {
 }
 
 func TestAllViolations_SmokeNoPanic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs the full command pipeline against the real hotam-spec-self domain; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	violations, err := allViolations(domainDir)
@@ -570,6 +582,10 @@ func indexOf(haystack, needle string) int {
 }
 
 func TestGenSpec_CrystalCharCountIsRenderedFixpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 
@@ -633,6 +649,10 @@ func TestGenSpec_CrystalCharCountIsRenderedFixpoint(t *testing.T) {
 // which is exactly why CI's regen-idempotency check (regen twice, diff) was
 // red. This reproduces that exact two-pass-over-one-tree scenario.
 func TestGenSpec_CrystalFixpointConvergesAcrossRuns(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	claudeMDPath := filepath.Join(t.TempDir(), "CLAUDE.md")
@@ -704,6 +724,10 @@ func TestGenSpec_CrystalFixpointConvergesAcrossRuns(t *testing.T) {
 // than the committed crystal) would show a spurious byte diff purely from
 // the embedded date, independent of any real graph drift.
 func TestGenSpec_SameTodayIsByteIdenticalIncludingCrystal(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDirA := copySelfDomain(t)
 	domainDirB := copySelfDomain(t)

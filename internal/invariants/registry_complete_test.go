@@ -59,6 +59,10 @@ func TestRegistryComplete_BatchEInvariantsHaveNonEmptyWhy(t *testing.T) {
 }
 
 func TestRegistryComplete_AllViolationsOnRealGraphDoesNotPanic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("runs AllViolations against the real hotam-spec-self graph; skipped in -short")
+	}
+
 	t.Parallel()
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {

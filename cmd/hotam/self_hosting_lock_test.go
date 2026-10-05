@@ -117,6 +117,10 @@ func TestCmdLand_SelfHosting_RejectionRefused(t *testing.T) {
 // on the manifest flag, not on some other property of the fixture (its
 // size, its real anchors, etc).
 func TestCmdLand_NonSelfHosting_RequirementStillLands(t *testing.T) {
+	if testing.Short() {
+		t.Skip("lands against a full domain with gen-spec regeneration; skipped in -short")
+	}
+
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 

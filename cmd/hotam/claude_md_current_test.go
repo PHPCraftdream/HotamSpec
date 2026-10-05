@@ -48,6 +48,10 @@ func findClaudeMDCurrentViolations(vs []invariants.Violation) []invariants.Viola
 // old apply-proposal pre/post-mutation diff bug this same task's item #3
 // separately fixes for a different call path).
 func TestCheckDomainClaudeMDCurrent_FreshCrystalPasses(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copySelfDomainUnderRoot(t)
 	// Adopt the crystal convention (a marker file is enough — see
@@ -80,6 +84,10 @@ func TestCheckDomainClaudeMDCurrent_FreshCrystalPasses(t *testing.T) {
 // flag, mirroring TestCheckSpecMDCurrent_MUTATION_HandEditedFiresThenClears's
 // shape for SPEC.md.
 func TestCheckDomainClaudeMDCurrent_StaleGeneratedPartFires(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copySelfDomainUnderRoot(t)
 	if err := os.WriteFile(filepath.Join(projectRoot, ".hotam-spec-project"), []byte("{}"), 0o644); err != nil {
@@ -144,6 +152,10 @@ func TestCheckDomainClaudeMDCurrent_StaleGeneratedPartFires(t *testing.T) {
 // trigger a violation, since the template's own documented contract
 // (generator.DurableNotesMarkerLine) invites exactly that.
 func TestCheckDomainClaudeMDCurrent_DurableNotesTailIgnored(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copySelfDomainUnderRoot(t)
 	if err := os.WriteFile(filepath.Join(projectRoot, ".hotam-spec-project"), []byte("{}"), 0o644); err != nil {
@@ -194,6 +206,10 @@ func TestCheckDomainClaudeMDCurrent_NoOpWhenDomainDirEmpty(t *testing.T) {
 // returns "" in that state (crystalConventionExists is false), so there is
 // nothing this check could even compare against.
 func TestCheckDomainClaudeMDCurrent_NoOpWhenCrystalConventionAbsent(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	_, domainDir := copySelfDomainUnderRoot(t)
 	// Deliberately create NO CLAUDE.md and NO marker at the project root.
@@ -213,6 +229,10 @@ func TestCheckDomainClaudeMDCurrent_NoOpWhenCrystalConventionAbsent(t *testing.T
 // disk at all) is ALSO an honest no-op — nothing has gone stale, the crystal
 // simply does not exist yet.
 func TestCheckDomainClaudeMDCurrent_NoOpWhenCrystalNeverGenerated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copySelfDomainUnderRoot(t)
 	if err := os.WriteFile(filepath.Join(projectRoot, ".hotam-spec-project"), []byte("{}"), 0o644); err != nil {
@@ -248,6 +268,10 @@ func TestCheckDomainClaudeMDCurrent_NoOpWhenCrystalNeverGenerated(t *testing.T) 
 // proposal introduced a NEW violation" and refused to land. This test proves
 // `hotam land` on such a domain now succeeds.
 func TestApplyProposal_FreshCrystalAndSpecMDNoLongerFalselyBlocked(t *testing.T) {
+	if testing.Short() {
+		t.Skip("applies a proposal with full gen-spec regeneration and reverification; skipped in -short")
+	}
+
 	t.Parallel()
 	projectRoot, domainDir := copyNonSelfHostingDomainUnderRoot(t)
 	if err := os.WriteFile(filepath.Join(projectRoot, ".hotam-spec-project"), []byte("{}"), 0o644); err != nil {

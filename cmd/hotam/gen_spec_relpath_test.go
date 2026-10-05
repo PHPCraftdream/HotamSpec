@@ -21,6 +21,10 @@ import (
 // can). check_spec_md_current is an ORDINARY check (not post-process), so it
 // IS part of genSpec's activeViolations that feed these two projections.
 func TestGenSpec_LiveStateAndAgentContextRelativizeAbsPaths(t *testing.T) {
+	if testing.Short() {
+		t.Skip("renders the full hotam-spec-self crystal/docs pipeline; skipped in -short")
+	}
+
 	projectRoot, domainDir := copySelfDomainUnderRoot(t)
 	// Flip the copied domain to discipline:full so check_spec_md_current's
 	// missing-SPEC.md branch fires (P1 STRUCTURE — outranking the self
