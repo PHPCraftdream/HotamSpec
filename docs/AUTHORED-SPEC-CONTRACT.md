@@ -933,3 +933,19 @@ semantic review decisions, not claims of structural conformance.
   proposed diff/hash, then use the printed hash with `--confirm-hash` to
   synchronize `graph.json`. Do not hand-edit that graph.
 
+## 14. Dogfood-пилот: атомы в самохостинге (P1-1, дизайн)
+
+1. **Текущее состояние.** Пайплайн атомов (`internal/gate/atom_source.go`, `internal/gate/spec_build.go`, `internal/selfspec/atom_derive.go`) жёстко привязан к consumer-раскладке: (а) `newAtomSourceIndex` требует `spec/go.mod` отдельного модуля и выводит `RecorderImportPath` как `<module>/hotamspec`; (б) обход методов-субъектов идёт только по `spec/model/`; (в) `discoverSnapshotModelTests` ищет тесты только в `spec/model/`; (г) фильтр каталогов в `discoverAtomsFromSnapshot` пропускает только `spec/model*`. Самохостинг-домен `domains/hotam-spec-self` не имеет ни `spec/`, ни собственного модуля: его код живёт в корневом модуле репозитория (`internal/...`), а `specRoot` графа — каталог домена. Поэтому `self_executing_atoms: true` в его манифесте сегодня не работает; принцип доказан только на consumer-доменах (фикстура `internal/gate/atom_pipeline_test.go`, spec-модуль со `spec/model`).
+
+2. **Минимальный дизайн включения** (оценка ~300–450 строк с тестами, выходит за бюджет пилота — здесь зафиксирован, не реализован):
+   - Манифест: новое поле `self_executing_atom_packages: ["internal/localization", ...]` — явный список пакетов корневого модуля; при его наличии `newAtomSourceIndex` читает корневой `go.mod`, а `RecorderImportPath` задаётся явно в манифесте (для репозитория — `internal/recorder/canon`, пакет `hotamspec`).
+   - Обход субъектов и обнаружение тестов расширяются с `spec/model` на список пакетов; фильтр каталогов discovery и `discoverSnapshotModelTests` обобщаются на этот список.
+   - Ссылки `implemented_by`/`verified_by` остаются в формате `file:symbol` относительно корня модуля; resolving-инварианты (`check_fact_method_has_phrase` и др.) переиспользуют тот же `AtomSourceIndex` и не требуют отдельной доработки.
+   - Синхронизация: `hotam sync-self` перед `SyncGraph` объединяет реестр ручных литералов `selfspec.Requirements` с результатом `selfspec.DiscoverAtoms*` (атомы добавляются, переопределения по `implemented_by[0]` — как в `sync-domain`); dry-run + `--confirm-hash` без изменений. Замена ручного требования атомом — старое в REJECTED с `replaces` (граф append-only).
+
+3. **Пилотная подсистема — `internal/localization`** (`Supported`, `Lookup`): чистые функции, наблюдаемые значения, ноль зависимостей от онтологии; `Supported` — готовый bool-атом с `not:`-фразой, `Lookup` — атом значения («Lookup „х“ для „ru“ — перевод.»).
+
+4. **Разделение классов требований фреймворка:**
+   - **Атомы (Fact/Holds)** — требования о чистых методах с наблюдаемым значением: инварианты предметных типов, справочники, локализация, имена/форматирование. Требование = метод + одна строка теста, текст выводится из исполнения.
+   - **Инварианты `check_*`** — требования о САМОМ ГРАФЕ и его проекциях: well-formedness узлов, разрешимость ссылок, детерминизм генерации, байт-идентичность SPEC.md. Их субъект — не возвращаемое значение метода, а структурное свойство хранилища; они остаются hand-written в `internal/diagnose`/`internal/invariants` с `enforced_by` в графе самохостинга.
+   - **PROSE-требования процесса** (медиация, роли, порядок волн) не переводятся ни в атомы, ни в check_*: их «исполнение» — поведение агента, доказуемое только сценарием или зеркальным аудитом.
