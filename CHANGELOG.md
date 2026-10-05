@@ -2872,3 +2872,12 @@ with another agent) informed how later tasks in this wave were verified.
   `DEFERRED` and a later `SIGNED` entry at the same stage
   (`GateSignoffBatch.mutate` only ever appends) — fixed to count the last
   `State` per Requirement per stage.
+- **REJECTED history in multilingual domains**: `claim_texts` is no longer
+  required for REJECTED requirements when a second language is enabled — a
+  single historical formulation (Claim and/or a claim_texts language subset)
+  is accepted, projections (HISTORY/CLAUDE per language) show the historical
+  wording as is without a missing-translation failure, and switching
+  `default_language` no longer invalidates REJECTED history. For all other
+  requirements, sync-domain/sync-self now derive an empty `Claim` from
+  `claim_texts[default_language]` before validation (both set and diverging
+  remains an error).

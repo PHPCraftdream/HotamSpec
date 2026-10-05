@@ -110,6 +110,14 @@ func SyncGraph(g *ontology.Graph, reg *registry.Registry[ontology.Requirement], 
 			// unreachable: id came from reg itself.
 			continue
 		}
+		// Derive Claim from claim_texts[default_language] on a LOCAL COPY
+		// (reg is shared — mutating it is never allowed) BEFORE branching and
+		// before StructuralFieldDiffs, so the derivation is itself captured in
+		// the CHANGED FieldDiffs/History summary, and a created ADDED node
+		// already carries a consistent Claim/claim_texts pair for
+		// downstream loader.ValidateGraph exact-match validation.
+		derived := deriveClaimFromDefaultLanguage(*entry, g.DefaultLanguage)
+		entry = &derived
 
 		idx, found := indexByID[id]
 		if !found {
@@ -156,6 +164,22 @@ func SyncGraph(g *ontology.Graph, reg *registry.Registry[ontology.Requirement], 
 	}
 
 	return report, nil
+}
+
+// deriveClaimFromDefaultLanguage returns entry with Claim derived from
+// ClaimTexts[defaultLanguage] when the entry carries no Claim of its own.
+// Requirements authored in the multilingual style keep the claim only in
+// claim_texts[default_language]; deriving Claim here lets downstream
+// exact-match validation (loader.ValidateGraph) see a consistent pair.
+// REJECTED requirements are left untouched: a rejected requirement must not
+// resurface an authoritative claim. Callers must pass a COPY (reg is shared)
+// or a freshly built value — the original entry is never mutated.
+func deriveClaimFromDefaultLanguage(entry ontology.Requirement, defaultLanguage string) ontology.Requirement {
+	if entry.Claim == "" && entry.Status != ontology.StatusREJECTED &&
+		defaultLanguage != "" && strings.TrimSpace(entry.ClaimTexts[defaultLanguage]) != "" {
+		entry.Claim = entry.ClaimTexts[defaultLanguage]
+	}
+	return entry
 }
 
 // summarizeSyncFieldDiffs renders diffs (StructuralFieldDiffs' result) into

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/registry"
 )
 
 // syncFixtureReq returns a structural-only ontology.Requirement, matching
@@ -300,5 +301,116 @@ func TestSyncGraph_UnregisteredNodeUntouchedAndNotInReport(t *testing.T) {
 	}
 	if len(found.History) != 0 {
 		t.Errorf("unregistered node History = %+v, want untouched (empty)", found.History)
+	}
+}
+
+// TestSyncGraphDerivesClaimFromDefaultLanguageClaimText proves the landing
+// path (SyncGraph, unlike MergeIntoGraph) derives Claim from
+// claim_texts[default_language] when the registry entry carries no Claim:
+// (a) an ADDED node must already satisfy loader.ValidateGraph's exact-match
+// pair, (b) a CHANGED node must not have its Claim clobbered back to empty,
+// and (c) a REJECTED entry keeps Claim empty. Uses a synthetic registry (the
+// package-global one cannot take throwaway IDs — see withTempRegistration).
+func TestSyncGraphDerivesClaimFromDefaultLanguageClaimText(t *testing.T) {
+	reg := registry.New[ontology.Requirement]()
+	added := syncFixtureReq("R-sync-derive-added")
+	added.Claim = ""
+	added.ClaimTexts = map[string]string{"ru": "утверждение added", "en": "added claim"}
+	changed := syncFixtureReq("R-sync-derive-changed")
+	changed.Claim = ""
+	changed.ClaimTexts = map[string]string{"ru": "утверждение changed"}
+	rejected := syncFixtureReq("R-sync-derive-rejected")
+	rejected.Claim = ""
+	rejected.Status = ontology.StatusREJECTED
+	rejected.ClaimTexts = map[string]string{"ru": "историческая"}
+	reg.MustRegister(added.ID, added)
+	reg.MustRegister(changed.ID, changed)
+	reg.MustRegister(rejected.ID, rejected)
+
+	g := &ontology.Graph{
+		DefaultLanguage: "ru",
+		Requirements: []ontology.Requirement{
+			// CHANGED case: stale Claim must be replaced by the derived one.
+			{
+				ID:     changed.ID,
+				Claim:  "stale claim, must be replaced",
+				Status: ontology.StatusSETTLED,
+				History: []ontology.HistoryEntry{
+					{At: "2020-01-01", Summary: "some earlier event"},
+				},
+			},
+		},
+	}
+
+	report, err := SyncGraph(g, reg, "2026-07-23")
+	if err != nil {
+		t.Fatalf("SyncGraph: %v", err)
+	}
+
+	var node *ontology.Requirement
+	for i := range g.Requirements {
+		if g.Requirements[i].ID == added.ID {
+			node = &g.Requirements[i]
+			break
+		}
+	}
+	if node == nil {
+		t.Fatalf("SyncGraph did not create a node for %q", added.ID)
+	}
+	// (a) ADDED: Claim derived from claim_texts[default_language].
+	if node.Claim != added.ClaimTexts["ru"] {
+		t.Errorf("ADDED node Claim = %q, want %q (default language ru)", node.Claim, added.ClaimTexts["ru"])
+	}
+
+	node = nil
+	for i := range g.Requirements {
+		if g.Requirements[i].ID == changed.ID {
+			node = &g.Requirements[i]
+			break
+		}
+	}
+	if node == nil {
+		t.Fatalf("SyncGraph did not update node for %q", changed.ID)
+	}
+	// (b) CHANGED: stale Claim replaced by the derived one, not emptied.
+	if node.Claim != changed.ClaimTexts["ru"] {
+		t.Errorf("CHANGED node Claim = %q, want %q (derived from default language ru)", node.Claim, changed.ClaimTexts["ru"])
+	}
+
+	node = nil
+	for i := range g.Requirements {
+		if g.Requirements[i].ID == rejected.ID {
+			node = &g.Requirements[i]
+			break
+		}
+	}
+	if node == nil {
+		t.Fatalf("SyncGraph did not create a node for %q", rejected.ID)
+	}
+	// (c) REJECTED: no derivation — Claim stays empty.
+	if node.Claim != "" {
+		t.Errorf("REJECTED node Claim = %q, want empty (no derivation for rejected)", node.Claim)
+	}
+
+	// SyncReport integrity: ADDED for the two created nodes, CHANGED for the
+	// pre-existing one, each keyed correctly.
+	wantKinds := map[string]SyncKind{
+		added.ID:    SyncKindAdded,
+		changed.ID:  SyncKindChanged,
+		rejected.ID: SyncKindAdded,
+	}
+	kinds := map[string]SyncKind{}
+	for _, e := range report.Entries {
+		kinds[e.ID] = e.Kind
+	}
+	for id, want := range wantKinds {
+		kind, ok := kinds[id]
+		if !ok {
+			t.Errorf("SyncReport: missing entry for %q", id)
+			continue
+		}
+		if kind != want {
+			t.Errorf("SyncReport entry for %q: Kind = %q, want %q", id, kind, want)
+		}
 	}
 }

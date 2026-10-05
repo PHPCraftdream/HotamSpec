@@ -621,6 +621,17 @@ hashes. Switching only the render locale does not alter identity, verdict,
 coverage or finding review; source edits still follow the content-addressed
 identity rules.
 
+REJECTED history is exempt from multilingual claim coverage: its wording is
+historical, so `claim_texts` is optional for a REJECTED requirement in a
+multilingual domain — a single historical formulation (`Claim` and/or a
+`claim_texts` subset over the declared languages) is accepted without full
+language coverage or a `Claim` exact match, and switching `default_language`
+does not invalidate REJECTED history. Projections show the historical wording
+as is for every locale, without substituting the default language and without
+a missing-translation failure. For all other requirements, `sync-domain` /
+`sync-self` derive an empty `Claim` from `claim_texts[default_language]`
+before validation; if both are set and differ, that remains an error.
+
 For multiple languages HotamSpec renders `docs/gen/SPEC.<lang>.md` and
 `docs/gen/spec/<lang>/<pkg>.md`. Other generated human-readable views use the
 same language suffix; each index links to shards in its own locale. Machine

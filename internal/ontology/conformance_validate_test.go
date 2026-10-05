@@ -174,3 +174,65 @@ func TestObservedValueDistinguishesAbsentPayloadFromExplicitEmpty(t *testing.T) 
 		t.Fatal("typed value decoder accepted a null text payload as absent")
 	}
 }
+
+func TestValidateConformanceAllowsREJECTEDWithoutFullTranslations(t *testing.T) {
+	g := &Graph{
+		Languages:       []string{"ru", "en"},
+		DefaultLanguage: "ru",
+		Requirements: []Requirement{
+			// Historical wording only — no claim_texts at all.
+			{ID: "R-old", Claim: "Историческая формулировка", Status: StatusREJECTED},
+			// Partial claim_texts with a language subset and no primary text:
+			// the REJECTED wording is historical, so neither full coverage nor
+			// the Claim match is required.
+			{
+				ID: "R-partial", Claim: "Русская историческая формулировка", Status: StatusREJECTED,
+				ClaimTexts: LocalizedText{"ru": "Русская историческая формулировка"},
+			},
+			{
+				ID: "R-mismatch", Claim: "Русская формулировка", Status: StatusREJECTED,
+				ClaimTexts: LocalizedText{"en": "English historical wording"},
+			},
+		},
+	}
+	var issues = ValidateConformance(g)
+	for _, issue := range issues {
+		t.Errorf("unexpected issue for REJECTED history: %+v", issue)
+	}
+}
+
+func TestValidateConformanceStillRequiresClaimTextsForActiveRequirements(t *testing.T) {
+	g := &Graph{
+		Languages:       []string{"ru", "en"},
+		DefaultLanguage: "ru",
+		Requirements: []Requirement{
+			{ID: "R-active", Claim: "Active", Status: StatusDRAFT},
+		},
+	}
+	found := false
+	for _, issue := range ValidateConformance(g) {
+		if issue.ID == "R-active" && strings.Contains(issue.Message, "claim_texts is required") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("active requirement without claim_texts was not rejected in a multilingual domain")
+	}
+}
+
+func TestValidateConformanceREJECTEDSurvivesDefaultLanguageSwitch(t *testing.T) {
+	base := func(defaultLanguage string) *Graph {
+		return &Graph{
+			Languages:       []string{"ru", "en"},
+			DefaultLanguage: defaultLanguage,
+			Requirements: []Requirement{
+				{ID: "R-old", Claim: "Историческая формулировка", Status: StatusREJECTED},
+			},
+		}
+	}
+	for _, dl := range []string{"ru", "en"} {
+		if issues := ValidateConformance(base(dl)); len(issues) != 0 {
+			t.Errorf("default_language %q: unexpected issues for REJECTED history: %+v", dl, issues)
+		}
+	}
+}

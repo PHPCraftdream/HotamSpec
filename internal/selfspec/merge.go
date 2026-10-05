@@ -77,6 +77,10 @@ func MergeIntoGraph(g *ontology.Graph, reg *registry.Registry[ontology.Requireme
 		merged.Evidence = existing.Evidence
 		merged.History = existing.History
 		merged.GateSignoffs = existing.GateSignoffs
+		// Authored in the new multilingual style: claim lives only in
+		// claim_texts[default_language]; derive Claim so downstream
+		// exact-match validation sees a consistent pair.
+		merged = deriveClaimFromDefaultLanguage(merged, g.DefaultLanguage)
 		g.Requirements[idx] = merged
 	}
 	return nil

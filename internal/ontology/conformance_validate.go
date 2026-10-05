@@ -259,8 +259,11 @@ func ValidateConformance(g *Graph) []ConformanceIssue {
 }
 
 func validateClaimTexts(g *Graph, r Requirement, declared map[string]struct{}, defaultLanguage string, add func(string, string, string, ...any)) {
+	// REJECTED history fixes one historical wording; translating it must not
+	// be mandatory, and switching default_language must not invalidate it.
+	rejected := r.Status == StatusREJECTED
 	if r.ClaimTexts == nil {
-		if g.Languages != nil && len(g.Languages) > 1 {
+		if !rejected && g.Languages != nil && len(g.Languages) > 1 {
 			add(r.ID, "language", "claim_texts is required for every requirement in a multilingual domain")
 		}
 		return
@@ -283,7 +286,7 @@ func validateClaimTexts(g *Graph, r Requirement, declared map[string]struct{}, d
 			}
 		}
 	}
-	if g.Languages != nil {
+	if g.Languages != nil && !rejected {
 		for _, language := range g.Languages {
 			text, ok := r.ClaimTexts[language]
 			if !ok || strings.TrimSpace(text) == "" {
@@ -291,7 +294,7 @@ func validateClaimTexts(g *Graph, r Requirement, declared map[string]struct{}, d
 			}
 		}
 	}
-	if defaultLanguage != "" {
+	if defaultLanguage != "" && !rejected {
 		primary, ok := r.ClaimTexts[defaultLanguage]
 		if !ok {
 			add(r.ID, "language", "claim_texts has no primary text for default_language %q", defaultLanguage)

@@ -359,3 +359,34 @@ func TestMergeIntoGraph_DeepCopiesConformanceMetadata(t *testing.T) {
 }
 
 func stringPointer(value string) *string { return &value }
+
+func TestMergeIntoGraphDerivesClaimFromDefaultLanguageClaimText(t *testing.T) {
+	reg := registry.New[ontology.Requirement]()
+	reg.MustRegister("R-derived", ontology.Requirement{
+		ID:         "R-derived",
+		ClaimTexts: ontology.LocalizedText{"ru": "Русская формулировка", "en": "English formulation"},
+	})
+	reg.MustRegister("R-rejected", ontology.Requirement{
+		ID:         "R-rejected",
+		Status:     ontology.StatusREJECTED,
+		ClaimTexts: ontology.LocalizedText{"ru": "Историческая формулировка"},
+	})
+	g := &ontology.Graph{
+		DefaultLanguage: "ru",
+		Requirements: []ontology.Requirement{
+			{ID: "R-derived", Claim: "stale-graph-claim"},
+			{ID: "R-rejected"},
+		},
+	}
+	if err := MergeIntoGraph(g, reg); err != nil {
+		t.Fatalf("MergeIntoGraph: %v", err)
+	}
+	if got := g.Requirements[0].Claim; got != "Русская формулировка" {
+		t.Fatalf("Claim was not derived from claim_texts[default_language]: %q", got)
+	}
+	// REJECTED keeps its historical wording untouched: no derivation, and an
+	// empty Claim stays empty.
+	if got := g.Requirements[1].Claim; got != "" {
+		t.Fatalf("REJECTED Claim was derived/modified: %q", got)
+	}
+}

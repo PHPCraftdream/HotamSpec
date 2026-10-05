@@ -110,6 +110,17 @@ func requirementClaim(g *ontology.Graph, r ontology.Requirement) string {
 	if claim, ok := r.ClaimTexts[language]; ok && strings.TrimSpace(claim) != "" {
 		return claim
 	}
+	// REJECTED history shows the historical wording as is — no substitution,
+	// no missing-translation failure when only some languages were authored.
+	if r.Status == ontology.StatusREJECTED {
+		if strings.TrimSpace(r.Claim) != "" {
+			return r.Claim
+		}
+		if claim, ok := r.ClaimTexts[g.DefaultLanguage]; ok && strings.TrimSpace(claim) != "" {
+			return claim
+		}
+		return ""
+	}
 	panic(&localization.MissingTranslation{
 		Language: language,
 		Template: "Requirement.ClaimTexts",
