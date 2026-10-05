@@ -58,7 +58,7 @@ so a consumer with a different CWD than the framework install gets their
 own domains/ resolved. The change is the source-of-root swap only;
 agent-resolution/prompt-composition/scaffold-template logic is unchanged.
 Concrete-need trigger: the consumer scenario (HotamSpec installed from
-PyPI/git, working in D:/ai_dev/prat) requires domains/ to resolve to the
+PyPI/git, working in внешний prat-каталог) requires domains/ to resolve to the
 consumer repo, not the framework install path.
 
 UPDATE (Portability W4, 2026-07-09): tools/spawn_agent.py re-hashed again --

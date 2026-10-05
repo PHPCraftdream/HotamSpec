@@ -257,7 +257,7 @@ func TestCheckAuthoredProseSnapshot_FiresOnManifestGoalsPreTask329Shape(t *testi
 // TestCheckAuthoredProseSnapshot_TrueNegativeOnRealPostTask329GpsmSmGoals is
 // the true-negative counterpart: gpsm-sm's REAL, CURRENT (post-#329-reworded)
 // goals text — copied verbatim from
-// D:\ai_dev\prat\PRAT-hotam\domains\gpsm-sm\manifest.json (read-only
+// the external PRAT-hotam repo's domains/gpsm-sm/manifest.json (read-only
 // inspection performed during this task, per its constraints) — must NOT
 // fire. The rewording replaced the hardcoded tally+date with a pointer to
 // the live DOMAIN-MAP/FAQ projection, exactly the fix this check exists to
@@ -298,7 +298,7 @@ func TestCheckAuthoredProseSnapshot_FiresOnManifestCharter(t *testing.T) {
 // TestCheckAuthoredProseSnapshot_TrueNegativeOnRealGpsmSmAndPratCharters is
 // the true-negative counterpart for charter: both real consumer manifests'
 // charter text this task validated against
-// (D:\ai_dev\prat\PRAT-hotam\domains\gpsm-sm\manifest.json and
+// (the external PRAT-hotam repo's domains/gpsm-sm/manifest.json and
 // domains\prat\manifest.json, read-only) — durable "what kind of thing this
 // domain is" descriptions, no dates, no tallies — must NOT fire.
 func TestCheckAuthoredProseSnapshot_TrueNegativeOnRealGpsmSmAndPratCharters(t *testing.T) {

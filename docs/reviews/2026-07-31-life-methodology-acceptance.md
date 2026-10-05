@@ -2,7 +2,7 @@
 
 Task #401/W3.1's real-world acceptance test of the whole W0-W2 engine wave (docs/PLAN-code-authority-completion.md),
 executed as two sequential sub-tasks: #404 (build the vertical slice) and #405 (this report — the cold-start
-evaluation). Domain: `D:\ai_dev\prat\life\domains\life`, a separate repository from the HotamSpec engine.
+evaluation). Domain: `внешний репозиторий life`, домен `domains/life`, a separate repository from the HotamSpec engine.
 
 ## Verdict: all 6 acceptance criteria PASS, several by a wide margin.
 
@@ -34,7 +34,7 @@ them. Committed in the `life` repository as `26de6e6`.
 own companion artifacts, `.scratch/life-eval-405-questions.md` / `-answer-key.md` in the HotamSpec repo, not
 committed — working notes), so grading could not be post-hoc rationalized. A genuinely fresh evaluation
 subject was launched (`crush run`, a brand-new session with zero prior context of this conversation or the
-domain's design), pointed only at `D:\ai_dev\prat\life`, instructed to answer using only the generated
+domain's design), pointed only at `внешний репозиторий life`, instructed to answer using only the generated
 `docs/gen/*.md` surface and the `./hotam` CLI, explicitly forbidden from reading `graph.json` directly or
 `spec/` wholesale, and asked to self-report its own tool-call count and token estimate per question.
 

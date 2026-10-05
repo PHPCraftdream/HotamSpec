@@ -26,12 +26,9 @@ func TestExternal_Use_SwitchesActiveDomain(t *testing.T) {
 	}
 	// Not t.Parallel(): mutates TMP/TEMP (process-global) via t.Setenv.
 
-	// Clean temp roots outside both the repo and the user's home directory (same
+	// Clean temp root outside both the repo and the user's home directory (same
 	// marker-isolation discipline as TestExternal_InitProject).
-	cleanTmp := filepath.FromSlash("D:/ai_dev/_clean_tmp")
-	if st, err := os.Stat(cleanTmp); err != nil || !st.IsDir() {
-		t.Skipf("clean tmp root %s unavailable (%v) — required for marker-isolation on this host", cleanTmp, err)
-	}
+	cleanTmp := cleanTmpRoot(t)
 	t.Setenv("TMP", cleanTmp)
 	t.Setenv("TEMP", cleanTmp)
 
@@ -119,10 +116,7 @@ func TestExternal_Use_RefusesWhenDomainMissing(t *testing.T) {
 	if testing.Short() {
 		t.Skip("external e2e: builds a real binary + spawns child processes; skipped in -short")
 	}
-	cleanTmp := filepath.FromSlash("D:/ai_dev/_clean_tmp")
-	if st, err := os.Stat(cleanTmp); err != nil || !st.IsDir() {
-		t.Skipf("clean tmp root %s unavailable (%v) — required for marker-isolation on this host", cleanTmp, err)
-	}
+	cleanTmp := cleanTmpRoot(t)
 	t.Setenv("TMP", cleanTmp)
 	t.Setenv("TEMP", cleanTmp)
 

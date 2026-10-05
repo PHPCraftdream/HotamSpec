@@ -31,13 +31,10 @@ func TestExternal_InitProject(t *testing.T) {
 	// t.Setenv to steer os.MkdirTemp at a clean root, and env-mutating tests
 	// are inherently serial.
 
-	// Clean temp roots outside both the repo and the user's home directory, so this
-	// developer's stray home-dir markers (.claude/CLAUDE.md/domains) cannot
-	// mask a CWD-resolution bug. os.MkdirTemp reads TMP/TEMP via os.TempDir.
-	cleanTmp := filepath.FromSlash("D:/ai_dev/_clean_tmp")
-	if st, err := os.Stat(cleanTmp); err != nil || !st.IsDir() {
-		t.Skipf("clean tmp root %s unavailable (%v) — required for marker-isolation on this host", cleanTmp, err)
-	}
+	// Clean temp root outside both the repo and the user's home directory, so
+	// stray home-dir markers (.claude/CLAUDE.md/domains) cannot mask a
+	// CWD-resolution bug. os.MkdirTemp reads TMP/TEMP via os.TempDir.
+	cleanTmp := cleanTmpRoot(t)
 	t.Setenv("TMP", cleanTmp)
 	t.Setenv("TEMP", cleanTmp)
 
@@ -126,10 +123,14 @@ func TestExternal_InitProject(t *testing.T) {
 		"enforceability":   "INHERENTLY_PROSE",
 		"last_reviewed_at": "2026-07-13",
 		"review_after":     "2027-01-09",
+		// R-review-mark-carries-evidence: freshness stamps require evidence.
+		"evidence": []string{"e2e fixture seed — mirrors initDomain's retired auto-seed"},
 	})
 	if out, err := runAt(workDir, "land", requirementProposal, "--domain", domainDir, "--today", "2026-07-13"); err != nil {
 		t.Fatalf("land seed requirement failed: %v\nOUTPUT:\n%s", err, out)
 	}
+	// Landing the seed changed the graph; regen happens further down, just
+	// before the freshness gate.
 
 	// (2) Project-root marker exists.
 	marker := filepath.Join(projDir, ".hotam-spec-project")
@@ -216,7 +217,15 @@ func TestExternal_InitProject(t *testing.T) {
 		t.Errorf("full-profile docs/gen file count = %d must exceed consumer count = %d", fullFiles, consumerFiles)
 	}
 
-	// (4) Scaffolded domain is invariant-clean immediately.
+	// (4) Scaffolded domain is invariant-clean immediately. Regenerate the
+	// root crystal first: landing the seed changed the graph, and the (3c)
+	// one-off --profile full run above renders the crystal in full mode,
+	// while check_domain_claude_md_current re-renders with the manifest's
+	// consumer profile. No --today: all-violations re-renders with
+	// time.Now(), so the crystal must be written as-of the real date.
+	if out, err := runAt(workDir, "gen-spec", "--domain", domainDir); err != nil {
+		t.Fatalf("gen-spec regen before all-violations failed: %v\nOUTPUT:\n%s", err, out)
+	}
 	avOut, err := runAt(workDir, "all-violations", "--domain", domainDir)
 	if err != nil {
 		t.Fatalf("all-violations against scaffolded domain failed: %v\nOUTPUT:\n%s", err, avOut)

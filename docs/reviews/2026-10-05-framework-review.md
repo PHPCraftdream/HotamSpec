@@ -30,7 +30,7 @@
 ## P0
 
 ### P0-1. Локальные пути машины в репозитории
-Новые `docs/PLAN-atomic-conformance-spec.md` и `docs/PLAN-atomic-multilingual-spec.md` содержат `D:/dev/ktav-lang` (3 места). Исторические — в `docs/checkpoints/**`, `docs/reviews/**`, `CHANGELOG.md` (пути вида `D:\…`, `C:\Users\…`). Нарушает правило «не писать частные пути машины в репозиторий».
+Новые `docs/PLAN-atomic-conformance-spec.md` и `docs/PLAN-atomic-multilingual-spec.md` содержали абсолютный путь до внешнего репозитория ktav-lang (3 места). Исторические — в `docs/checkpoints/**`, `docs/reviews/**`, `CHANGELOG.md` (пути вида `D:\…`, `C:\Users\…`). Нарушает правило «не писать частные пути машины в репозиторий».
 **Сделать:** заменить на относительные или описательные ссылки («исходник спецификации Ktav»); добавить проверку (тест или pre-commit), которая ищет абсолютные пути Windows/home в отслеживаемых файлах.
 
 ## P1

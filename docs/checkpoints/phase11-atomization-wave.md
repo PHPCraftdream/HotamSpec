@@ -153,7 +153,7 @@ fcacdd9 feat(P10c): crystallize deferred architecture as DRAFT/OPEN — record, 
 ## Resume hint for next session
 
 1. Read this checkpoint.
-2. `cd D:/dev/HotamSpec/spec && uv run pytest -q` (expect 256 passed).
+2. `cd репозиторий HotamSpec/spec && uv run pytest -q` (expect 256 passed).
 3. `uv run python tools/what_now.py | head -20` — read top action.
 4. Read CLAUDE.md's LIVE-STATE block (the auto-generated three-cipher pulse).
 5. Skim `docs/methodology/atoms/` (the 4 generated atomized topic docs).

@@ -346,6 +346,36 @@ func repoRootForTest(t *testing.T) string {
 	}
 }
 
+// cleanTmpRoot returns a clean temp root for marker-isolation: either the
+// HOTAM_CLEAN_TMP env path (verbatim; skipped if not a dir) or os.TempDir(),
+// but only if that lies outside both the user's home directory and the repo
+// root — otherwise the test would risk colliding with stray home/repo markers.
+func cleanTmpRoot(t *testing.T) string {
+	t.Helper()
+	if env := os.Getenv("HOTAM_CLEAN_TMP"); env != "" {
+		if st, err := os.Stat(env); err != nil || !st.IsDir() {
+			t.Skipf("HOTAM_CLEAN_TMP=%s is not an existing directory (%v)", env, err)
+		}
+		return env
+	}
+	tmp := os.TempDir()
+	abs, err := filepath.Abs(tmp)
+	if err != nil {
+		t.Skipf("os.TempDir %s not resolvable: %v", tmp, err)
+	}
+	abs = filepath.Clean(abs)
+	unsafe := "os.TempDir is inside home/repo; set HOTAM_CLEAN_TMP to a clean temp root outside both"
+	if home, err := os.UserHomeDir(); err != nil {
+		t.Skipf("user home unknown: %v; %s", err, unsafe)
+	} else if isInsideForTest(abs, filepath.Clean(home)) {
+		t.Skipf("%s (%s)", unsafe, abs)
+	}
+	if isInsideForTest(abs, repoRootForTest(t)) {
+		t.Skipf("%s (%s)", unsafe, abs)
+	}
+	return abs
+}
+
 func isInsideForTest(child, parent string) bool {
 	rel, err := filepath.Rel(parent, child)
 	if err != nil {

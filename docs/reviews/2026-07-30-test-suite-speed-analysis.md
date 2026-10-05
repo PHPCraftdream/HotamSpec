@@ -6,9 +6,9 @@ measurement taken today, a measurement read out of a prior session's artifacts u
 
 Artifacts produced by this investigation (both under `.scratch/`, untracked):
 
-- `D:\ai_dev\prat\HotamSpec\.scratch\cpu-395-allviol.prof` — fresh CPU profile, today,
+- `.scratch/cpu-395-allviol.prof` (в репозитории HotamSpec) — fresh CPU profile, today,
   post-`0933ddb`, post-#393/#394.
-- `D:\ai_dev\prat\HotamSpec\.scratch\hotam-395.test.exe` — the matching test binary
+- `.scratch/hotam-395.test.exe` (в репозитории HotamSpec) — the matching test binary
   (needed to symbolize the profile above).
 
 Prior-wave commits read in full before starting, so nothing here re-proposes them:
@@ -24,7 +24,7 @@ subprocess tests, `-vet=off` in the compile cache) and `9cda1f2`
 
 ### 1.1 Compiling the repo's own test binaries is ~1% of the suite. The build cache is fine.
 
-Measured today, warm cache, `D:\ai_dev\prat\HotamSpec`:
+Measured today, warm cache, `репозиторий HotamSpec`:
 
 ```
 go build ./...                                 3.6 s
@@ -32,7 +32,7 @@ go test ./... -run '^ZZZ_NoSuchTest$' -count=1 5.6 s   (20 test binaries built, 
                                                         started, zero tests executed)
 ```
 
-`GOCACHE=D:\system_artefact\go-build`, `GOFLAGS=-mod=mod`, `GOMAXPROCS` unset,
+`GOCACHE=внешний каталог сборки Go`, `GOFLAGS=-mod=mod`, `GOMAXPROCS` unset,
 `nproc = 16`. No `go clean` is invoked anywhere in `Makefile` or
 `.github/workflows/`.
 

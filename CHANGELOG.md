@@ -187,7 +187,7 @@ gate).
   invalidate on every unrelated commit) stamped into `docs/gen/ENGINE-VERSION.md`, with an
   unconditional freshness check.
 - **W3 — prove it on a real vertical slice (#404-#405, replacing the original umbrella task #401).**
-  Founded the `life` domain (a separate repository, `D:\ai_dev\prat\life`) with 7 objects, one real
+  Founded the `life` domain (a separate external repository, `life`) with 7 objects, one real
   Lifecycle, one port+mock, 7 requirements with real scenarios — the first real domain to opt into
   `discipline:"full"` plus both of this wave's new triggers — then ran a genuinely fresh cold-start
   AI evaluation (15 pre-written questions, pre-written answer key, zero prior context). Result: 14/15
@@ -1155,7 +1155,7 @@ with another agent) informed how later tasks in this wave were verified.
 
 ### Investigated (task #368, no code change)
 - **Test suite wall-clock time** — measured, not guessed, on an idle machine (16 cores,
-  GOCACHE=`D:\system_artefact\go-build`), both hypotheses this task set out to test came back
+  GOCACHE=`внешний каталог сборки Go`), both hypotheses this task set out to test came back
   negative, so no refactor was made:
   - **`cmd/hotam -short` vs full**: `-short` (skips the 48 real-subprocess tests) = 349.1s,
     full = 449.6s — only ~22% savings, below the ~30% threshold this task set as the bar for

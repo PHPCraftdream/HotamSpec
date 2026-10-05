@@ -14,7 +14,7 @@ import (
 //
 // Matching is exact-prefix on a path boundary: the candidate occurrence must
 // start at a non-path character (or the start of text) and be followed by a
-// separator, so a root of D:\dev\proj never mangles D:\dev\proj2\file. Both
+// separator, so a root of C:\proj never mangles C:\proj2\file. Both
 // Windows (\\) and POSIX (/) separators are handled, in the root and in the
 // text, independently.
 func rewriteRepoAbsPaths(root, text string) string {
@@ -64,7 +64,7 @@ func replaceRootPrefixedPaths(text, root string) string {
 			return b.String()
 		}
 		// Left boundary: the match must not continue a longer path token
-		// (e.g. ...xD:\dev\proj\... or a sibling like D:\dev\proj-2 whose
+		// (e.g. ...xC:\proj\... or a sibling like C:\proj-2 whose
 		// prefix happens to equal root).
 		if i > 0 && isPathTokenChar(text[i-1]) {
 			b.WriteString(text[:i+1])
@@ -74,7 +74,7 @@ func replaceRootPrefixedPaths(text, root string) string {
 		rest := text[i+len(root):]
 		// Right boundary: only rewrite when a separator follows, i.e. a
 		// path UNDER the root; the bare root itself (or a directory whose
-		// name merely extends root, like D:\dev\proj2) is left as-is.
+		// name merely extends root, like C:\proj2) is left as-is.
 		if len(rest) == 0 || (rest[0] != '/' && rest[0] != '\\') {
 			b.WriteString(text[:i+len(root)])
 			text = rest

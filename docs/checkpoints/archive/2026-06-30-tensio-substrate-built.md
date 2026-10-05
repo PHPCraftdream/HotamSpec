@@ -2,9 +2,9 @@
 
 ## Session summary
 
-We built **Hotam-Spec** from scratch in `D:\dev\HotamSpec` — an executable methodology
+We built **Hotam-Spec** from scratch in `репозиторий HotamSpec` — an executable methodology
 for the lifecycle of contradictory business requirements, modeled as a tension
-graph; the inverse of the dev-coin (`D:\dev\dev-coin`) blockchain spec from
+graph; the inverse of the dev-coin (`внешний репозиторий dev-coin`) blockchain spec from
 which it borrows the docs-as-code machinery. Core ontology is frozen dataclasses
 (`Requirement`, `Conflict`, `Assumption`, `Axis`, `Stakeholder`) under
 `spec/src/hotam_spec/`; the centerpieces are the `what_now` harness ("agent is never
@@ -53,7 +53,7 @@ check, U5 cross-anchor interim); **Batch B** sequential framework-touching
 aspect). Waiting on user ratification of the sheet before executing.
 
 Files studied this session (verified, not guessed): all of
-`D:\dev\HotamSpec\spec\src\hotam_spec\*.py`, `spec/tools/{what_now,gen_spec}.py`,
+`spec/src/hotam_spec/*.py` репозитория HotamSpec, `spec/tools/{what_now,gen_spec}.py`,
 `spec/tests/*.py`, `spec/tests/fixtures/seed.py`, `spec/content/graph.py`,
 `CLAUDE.md`, `README.md`, `docs/methodology/README.md`,
 `docs/development/ROADMAP.md`; and from dev-coin: `spec/src/hotam/params.py`,

@@ -10,7 +10,7 @@
 `domains/hotam-dev/graph.py`, `README.md`, `docs/QUICKSTART-CONSUMER.md`,
 `docs/reviews/lens-4-roi.md`, `docs/reviews/2026-07-09-simplification-backlog.md` (J1–J3),
 `domains/hotam-spec-self/docs/gen/UNENFORCED.md`, `spec/pyproject.toml`,
-план стьюарда `D:/ai_dev/prat/PLAN-hotamspec-adoption.md` (прочитан как контекст, не исполнялся).
+план стьюарда `внешний prat-каталог/PLAN-hotamspec-adoption.md` (прочитан как контекст, не исполнялся).
 
 ---
 
