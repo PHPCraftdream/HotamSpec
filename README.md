@@ -6,55 +6,52 @@ declared, to real test executions. The framework checks structural contracts;
 it does not infer semantic completeness from matching words or a passing
 fixture corpus.
 
-The ordinary `Fact` path remains a simple one-language value fact: its method
-doc phrase and actual executed value derive the claim. Explicit rule/case atoms
-keep one method-level norm while recording different inputs, expectations and
-observations as cases. Multilingual prose is authored beside that same method;
-language views share one graph and execution snapshot.
+## Quick start
 
-Declare `languages` and, for multilingual output, `default_language` in the
-manifest; mark translations with the single `>>>>> lang=<code>` syntax. Current
-service locales are `en`/`ru`/`zh`, with no fallback. Rule/case recording uses
-its own `conformance.rule_cases` permission; automatic method discovery needs
-both that setting and `self_executing_atoms: true`. Neither implies the other's
-obligations. The quickstart and authored contract document the complete rules.
+Build the CLI from a clone of this repo (there is no published `@latest`
+package yet — see [Install](#install)):
 
-Opt a domain into `"self_executing_atoms": true` in its manifest:
-
-```go
-// birth year
-func (h Human) BirthYear() BirthYear { return h.born }
-
-func TestBirthYear(t *testing.T) {
-    hotamspec.Fact(t, Init().BirthYear, BirthYear(1987))
-}
+```bash
+go build -o bin/hotam ./cmd/hotam
 ```
 
-`hotam sync-domain` derives **Birth year — 1987.**, its method/test links,
-and the default ID `R-human-birth-year` from this legacy value-fact pair. The
-registry holds only REJECTED entries and explicit overrides; lifecycle defaults
-come from the manifest's `atom_defaults`. Explicit rule/case atoms instead keep
-the authored doc phrase as the norm and attach per-case inputs and results.
+One end-to-end consumer path (verified in full in the
+[consumer quickstart](docs/QUICKSTART-CONSUMER.md)):
 
-`hotamspec.Holds(t, predicate, evidence...)` checks bool relations using
-already executed `Fact` evidence. Pass `hotamspec.Expect(false)` for a false
-relation. `NewScenario` remains available for multi-step scenarios, and
-domains that have not opted in keep their existing scenario contracts.
+1. `hotam init-project my-project` — scaffolds base domain `main` under
+   `domains/main` with the named `"profile": "atoms"` manifest (discipline
+   full + requirements-as-code + self-executing atoms), an empty graph, and a
+   `spec/` Go module.
+2. Write a method with a doc phrase, and a one-line test:
+   `hotamspec.Fact(t, Init().BirthYear, BirthYear(1987))`.
+3. `hotam sync-domain --domain domains/main` — dry-run by default (prints a
+   diff-hash), then re-run with `--confirm-hash <hash>` to land it.
+4. `hotam gen-spec --domain domains/main --spec` — regenerate the docs.
+5. `hotam all-violations --domain domains/main` → `0 violations — graph clean`.
 
-In the one-language layout, `SPEC.md` indexes `docs/gen/spec/<pkg>.md` pages
-in source order. A multilingual layout provides one `SPEC.<lang>.md` index
-and `spec/<lang>/<pkg>.md` shards per language. Consumer crystals apply the
-6000-character budget to one view and expose package links/counters when needed.
-Package recording uses native `go test -json` caching with replayable
-stdout artifacts, not a separate disk verdict cache.
+The generated claim (e.g. **"Birth year — 1987."**) is derived from the
+method's doc phrase plus the executed value — never hand-written. Change the
+value in the method and the test, re-run, and the text follows. See
+[QUICKSTART-CONSUMER.md](docs/QUICKSTART-CONSUMER.md) for the full verified
+walkthrough.
 
-See the [consumer quickstart](docs/QUICKSTART-CONSUMER.md#self-executing-atoms-per-domain-opt-in)
-for the plain one-language path and its
-[multilingual and rule-case guide](docs/QUICKSTART-CONSUMER.md#multilingual-and-rule-case-atoms).
-The complete authoring and evidence contract is in
-[AUTHORED-SPEC-CONTRACT.md §13](docs/AUTHORED-SPEC-CONTRACT.md#13-atomic-multilingual-and-conformance-specifications).
-Claims describe authored norms, not automatic semantic proof: translation
-parity and declared conformance inventory are structural checks only.
+Beyond that happy path, the same quickstart covers each of these (or see
+[AUTHORED-SPEC-CONTRACT.md §13](docs/AUTHORED-SPEC-CONTRACT.md#13-atomic-multilingual-and-conformance-specifications)):
+
+- Bool relations via `hotamspec.Holds(t, predicate, evidence...)`, with
+  `hotamspec.Expect(false)` and `// not:` doc lines — see the quickstart's
+  [Bool relations](docs/QUICKSTART-CONSUMER.md#bool-relations-holds).
+- Multi-step narratives via `hotamspec.NewScenario` (`.Given`/`.When`/`.Then`) —
+  see [Multi-step scenarios](docs/QUICKSTART-CONSUMER.md#multi-step-scenarios).
+- Multilingual atoms via `>>>>> lang=` doc blocks (`en`/`ru`/`zh`) — see the
+  quickstart's
+  [Multilingual atoms](docs/QUICKSTART-CONSUMER.md#multilingual-atoms).
+- Rule/case atoms via `hotamspec.WithCase` (requires `conformance.rule_cases`
+  in the manifest) — see
+  [Rule/case atoms (WithCase)](docs/QUICKSTART-CONSUMER.md#rulecase-atoms-withcase).
+- Inspecting failures with `hotam evidence` / `hotam findings` without
+  publishing a false passing SPEC — see
+  [Evidence and findings](docs/QUICKSTART-CONSUMER.md#evidence-and-findings).
 
 The `hotam` CLI keeps the bookkeeping around this core: the requirement
 registry (`graph.json`), links from each requirement to the code that
