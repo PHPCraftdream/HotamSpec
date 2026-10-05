@@ -50,7 +50,7 @@ func TestAtomClaimFreshnessSeparatesEvidenceFromRelation(t *testing.T) {
  }
  `)
 	fact := ontology.Requirement{ID: "R-custom-year", Claim: "Год рождения — 1987.", ImplementedBy: []string{"spec/model/human.go:Human.Year"}, VerifiedBy: []string{"spec/model/human_test.go:TestAdult", "spec/model/human_test.go:TestYearAgain"}}
-	relation := ontology.Requirement{ID: "R-custom-adult", Claim: "Взрослый — true. Год рождения — 1987.", ImplementedBy: []string{"spec/model/human.go:Human.Adult", "spec/model/human.go:Human.Year"}, VerifiedBy: []string{"spec/model/human_test.go:TestAdult"}}
+	relation := ontology.Requirement{ID: "R-custom-adult", Claim: "Взрослый.", ImplementedBy: []string{"spec/model/human.go:Human.Adult", "spec/model/human.go:Human.Year"}, VerifiedBy: []string{"spec/model/human_test.go:TestAdult"}}
 	g := &ontology.Graph{DomainDir: root, SelfExecutingAtoms: true, Requirements: []ontology.Requirement{fact, relation}}
 	if got := checkOneSubjectPerFact(g); len(got) != 0 {
 		t.Fatalf("named bound-method value rejected: %v", got)
