@@ -113,6 +113,8 @@ func main() {
 		err = cmdVendorOntology(args)
 	case "scaffold-registrydump":
 		err = cmdScaffoldRegistrydump(args)
+	case "upgrade":
+		err = cmdUpgrade(args)
 	case "what-now":
 		err = cmdWhatNow(args)
 	case "apply-proposal":
@@ -231,6 +233,12 @@ Commands:
         AND an already-vendored spec/hotamontology (run vendor-ontology first).
         This is the domain-side half of the module-boundary bridge sync-domain
         uses to read a consumer domain's own Go-authored Requirement registry.
+  upgrade [--domain <path>] [--today YYYY-MM-DD]
+        After an engine upgrade: re-vendor recorder + ontology mirror,
+        refresh an engine-generated registrydump, regenerate docs + crystal,
+        then print all-violations. Skips (does not fail) domains that don't
+        vendor these; refuses to overwrite a hand-modified registrydump (no
+        engine banner).
   what-now [--domain <path>] [--limit N] [--today YYYY-MM-DD] [--json]
         Print top-N diagnosed signals (default 20). With --json, emit the
         underlying signal slice as machine-readable JSON.

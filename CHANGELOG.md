@@ -16,6 +16,21 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Commands
+
+- New `hotam upgrade [--domain <path>] [--today YYYY-MM-DD]`: the one-shot
+  post-engine-upgrade refresh for a consumer domain — re-vendors the recorder
+  and the ontology mirror (skipped, not failed, when the domain has no
+  spec/ Go module or never vendored them), refreshes an engine-generated
+  `spec/registrydump/main.go` only when it carries the do-not-edit banner (a
+  banner-less, hand-modified file is reported and left byte-identical),
+  regenerates docs + the project crystal via the same gen-spec pipeline
+  `hotam land` uses, re-rendering `docs/gen/SPEC.md` exactly when the domain
+  needs it (a committed SPEC.md exists or the manifest declares
+  discipline:"full"), then prints the final all-violations result
+  (informational — the exit code stays 0 unless a real error occurs).
+  Idempotent: a second run on an already-current domain rewrites nothing.
+
 ### SPEC generation polish
 
 - SPEC shard paths no longer double the `spec` segment: packages under the

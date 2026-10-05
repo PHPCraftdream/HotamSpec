@@ -254,6 +254,25 @@ failure. Finding review notes live separately from current observations and
 are not a test-verdict cache. See the
 [contract §12](AUTHORED-SPEC-CONTRACT.md#12-наблюдения-находки-и-источники).
 
+### After an engine upgrade: `hotam upgrade`
+
+When you pull a newer engine, a domain that vendors engine-generated Go files
+will start reporting staleness violations
+(`check_recorder_current`, `check_ontology_vendor_current`, stale
+`spec/registrydump/main.go`, stale generated docs/`CLAUDE.md`). One command
+refreshes all of them:
+
+```bash
+hotam upgrade --domain domains/main
+```
+
+It re-vendors the recorder and the ontology mirror, refreshes the
+engine-generated registrydump, regenerates `docs/gen/*` and the crystal, then
+prints the final `all-violations` result. Steps your domain doesn't use are
+skipped (not errors), and a hand-modified `spec/registrydump/main.go` (no
+engine banner) is reported and left untouched. Pass `--today YYYY-MM-DD` to
+pin the date embedded in the regenerated docs.
+
 ### Requirements as code reference
 
 The `"profile": "atoms"` manifest field is the named form of the
