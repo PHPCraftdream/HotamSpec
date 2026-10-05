@@ -593,6 +593,22 @@ auto-generated. Non-bool value-facts keep the `Фраза — значение.`
 `Holds`, the claim is only the predicate's phrase; evidence methods remain in
 the artifact and SPEC observations, never concatenated into the claim.
 
+Rendered values are localized the same way. In a multilingual domain, an
+executed value that matches a typed string constant of the subject method's
+return type is substituted with that constant's translation: the constant's
+doc comment carries the same `>>>>> lang=<code>` blocks, and each projection
+uses its own block text. Constant blocks follow the same strictness as
+method phrases: unknown, duplicate, empty or missing declared languages are
+errors with file/constant/line/language context. A matched string constant
+without any language blocks is itself an error ("string constant value
+without translation in a multilingual domain") — the English projection never
+silently contains Russian values. Values that must not be translated mark
+that intent with a single `>>>>> lang=*` block in the constant's doc; it must
+be the only block, and the raw value renders verbatim in every language.
+Numbers, bools (which keep their own `not:` semantics) and values with no
+matching constant are unchanged; in one-language domains nothing of this
+applies and constants need no blocks.
+
 The source index retains each language's phrase and source position. One
 `Requirement` keeps one ID, method/test links and relation graph. Its typed
 `ClaimTexts` (`claim_texts`, `ontology.LocalizedText`) carries the derived

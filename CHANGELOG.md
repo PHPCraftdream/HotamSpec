@@ -24,6 +24,12 @@ History predating this file is not backfilled — see `git log` and
   relation sits at its own call site, so evidence `Fact` calls nested in its
   arguments follow the relation.
 
+- Localized rendered atom VALUES: an executed value matching a typed string
+  constant of the method's return type is substituted per language from that
+  constant's `>>>>> lang=<code>` doc blocks (same strictness as phrases); a
+  matched string constant without blocks is an error in a multilingual domain,
+  and a single `>>>>> lang=*` block marks a verbatim, never-translated value.
+  One-language domains are unchanged.
 - Added authored `not:` negation phrases for bool atoms (including one per
   `>>>>> lang=<code>` block): bool `true` renders the bare phrase, `false`
   renders the negation, and a `false` verdict without a `not:` phrase is an

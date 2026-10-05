@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -77,13 +78,17 @@ func (a AtomArtifact) CaseDefinition(test string) (*ontology.CaseDefinition, err
 
 type AtomSource struct {
 	File, Symbol, Phrase string
-	Phrases              ontology.LocalizedText
-	PhrasePositions      map[string]token.Position
-	NotPhrases           ontology.LocalizedText
-	NotPositions         map[string]token.Position
-	Method               *ast.FuncDecl
-	Position             token.Position
-	DocPosition          token.Position
+	// PackagePath is the module-relative Go import path of the file that
+	// declares the method; PackageImports maps import names to import paths.
+	PackagePath     string
+	PackageImports  map[string]string
+	Phrases         ontology.LocalizedText
+	PhrasePositions map[string]token.Position
+	NotPhrases      ontology.LocalizedText
+	NotPositions    map[string]token.Position
+	Method          *ast.FuncDecl
+	Position        token.Position
+	DocPosition     token.Position
 }
 
 func (s AtomSource) Link() string { return s.File + ":" + s.Symbol }
@@ -91,6 +96,20 @@ func DecodeAtomArtifact(raw []byte) (AtomArtifact, error) {
 	var a AtomArtifact
 	err := json.Unmarshal(raw, &a)
 	return a, err
+}
+
+// atomValueConstant is a model package constant whose doc may carry
+// language blocks or a verbatim `>>>>> lang=*` marker.
+type atomValueConstant struct {
+	name         string
+	translations ontology.LocalizedText
+	verbatim     bool
+	isString     bool
+	position     token.Position
+}
+
+func (c atomValueConstant) untranslatedString() bool {
+	return c.isString && !c.verbatim && len(c.translations) == 0
 }
 
 // AtomSourceIndex is an invocation-local AST snapshot, never a verdict cache.
@@ -104,6 +123,7 @@ type AtomSourceIndex struct {
 	languages          []string
 	defaultLanguage    string
 	ruleCases          bool
+	constants          map[string]map[string]map[string]atomValueConstant
 }
 
 func NewAtomSourceIndex(specRoot string) (*AtomSourceIndex, error) {
@@ -160,6 +180,7 @@ func newAtomSourceIndex(specRoot string, languages []string, defaultLanguage str
 		byLink:             map[string][]AtomSource{},
 		RecorderImportPath: modulePath + "/hotamspec",
 		languages:          langs, defaultLanguage: defaultLanguage, ruleCases: ruleCases,
+		constants: map[string]map[string]map[string]atomValueConstant{},
 	}
 	fs := token.NewFileSet()
 	err = filepath.WalkDir(filepath.Join(specDir, "model"), func(path string, d os.DirEntry, walkErr error) error {
@@ -186,6 +207,51 @@ func newAtomSourceIndex(specRoot string, languages []string, defaultLanguage str
 			return err
 		}
 		for _, decl := range f.Decls {
+			if gd, ok := decl.(*ast.GenDecl); ok && gd.Tok == token.CONST {
+				for _, spec := range gd.Specs {
+					vs, ok := spec.(*ast.ValueSpec)
+					if !ok || len(vs.Values) != 1 {
+						continue
+					}
+					typeName := ""
+					if id, ok := vs.Type.(*ast.Ident); ok {
+						typeName = id.Name
+					}
+					lit, ok := vs.Values[0].(*ast.BasicLit)
+					if typeName == "" || !ok {
+						continue
+					}
+					value := lit.Value
+					isString := lit.Kind == token.STRING
+					if isString {
+						unquoted, err := strconv.Unquote(value)
+						if err != nil {
+							continue
+						}
+						value = unquoted
+					}
+					doc := vs.Doc
+					if doc == nil && gd.Lparen == token.NoPos {
+						doc = gd.Doc
+					}
+					name := ""
+					if len(vs.Names) > 0 {
+						name = vs.Names[0].Name
+					}
+					translations, verbatim, err := parseAtomValueDoc(name, rel, fs.Position(vs.Pos()).Line, atomCommentLines(doc, fs), langs)
+					if err != nil {
+						return err
+					}
+					if index.constants[packagePath] == nil {
+						index.constants[packagePath] = map[string]map[string]atomValueConstant{}
+					}
+					if index.constants[packagePath][typeName] == nil {
+						index.constants[packagePath][typeName] = map[string]atomValueConstant{}
+					}
+					index.constants[packagePath][typeName][value] = atomValueConstant{name: name, translations: translations, verbatim: verbatim, isString: isString, position: fs.Position(vs.Pos())}
+				}
+				continue
+			}
 			fn, ok := decl.(*ast.FuncDecl)
 			if !ok || fn.Recv == nil || len(fn.Recv.List) != 1 {
 				continue
@@ -207,6 +273,21 @@ func newAtomSourceIndex(specRoot string, languages []string, defaultLanguage str
 			source := AtomSource{
 				File: filepath.ToSlash(rel), Symbol: id.Name + "." + fn.Name.Name,
 				Method: fn, Position: fs.Position(fn.Pos()),
+				PackagePath: packagePath,
+			}
+			if len(f.Imports) > 0 {
+				source.PackageImports = map[string]string{}
+				for _, imp := range f.Imports {
+					path, err := strconv.Unquote(imp.Path.Value)
+					if err != nil {
+						continue
+					}
+					name := path[strings.LastIndex(path, "/")+1:]
+					if imp.Name != nil && imp.Name.Name != "_" && imp.Name.Name != "." {
+						name = imp.Name.Name
+					}
+					source.PackageImports[name] = path
+				}
 			}
 			if fn.Doc != nil {
 				source.DocPosition = fs.Position(fn.Doc.Pos())
@@ -528,6 +609,167 @@ func plainPhrases(lines []atomDocLine, source AtomSource, docText, language stri
 	}
 	return phrases, positions, ontology.LocalizedText{language: notPhrase}, notPositions, nil
 }
+func atomConstantError(file string, line int, name, language, reason string) error {
+	if language != "" {
+		return fmt.Errorf("%s:%d: constant %s language %q: %s", file, line, name, language, reason)
+	}
+	return fmt.Errorf("%s:%d: constant %s: %s", file, line, name, reason)
+}
+
+// parseAtomValueDoc parses a constant's doc comment for value translations.
+// Markers follow the phrase syntax; `>>>>> lang=*` marks a verbatim value that
+// is never translated. A plain doc yields no translations: in a multilingual
+// domain a matched string constant without them is rejected at derive time.
+func parseAtomValueDoc(name, file string, docLine int, lines []atomDocLine, languages []string) (ontology.LocalizedText, bool, error) {
+	fail := func(line int, language, reason string) error {
+		return atomConstantError(file, line, name, language, reason)
+	}
+	hasMarker := false
+	for _, line := range lines {
+		if strings.HasPrefix(strings.TrimSpace(line.text), ">>>>>") {
+			hasMarker = true
+			break
+		}
+	}
+	if !hasMarker {
+		return nil, false, nil
+	}
+	if len(languages) < 2 {
+		return nil, false, fail(docLine, "", "language markers require a multilingual languages configuration")
+	}
+	declared := make(map[string]bool, len(languages))
+	for _, language := range languages {
+		declared[language] = true
+	}
+	translations := ontology.LocalizedText{}
+	verbatim := false
+	current := ""
+	markerLine := 0
+	var block []string
+	finishBlock := func() error {
+		if current == "" {
+			return nil
+		}
+		if len(block) == 0 {
+			return fail(markerLine, current, "language block is empty")
+		}
+		translations[current] = strings.Join(block, " ")
+		return nil
+	}
+	for _, line := range lines {
+		text := strings.TrimSpace(line.text)
+		if !strings.HasPrefix(text, ">>>>>") {
+			if current == "" {
+				if text != "" {
+					return nil, false, fail(line.pos.Line, "", "text outside language blocks")
+				}
+				continue
+			}
+			if text == "" {
+				continue
+			}
+			if strings.HasPrefix(line.text, "not:") {
+				return nil, false, fail(line.pos.Line, current, "`not:` negation phrases do not apply to constant values")
+			}
+			block = append(block, text)
+			continue
+		}
+		if err := finishBlock(); err != nil {
+			return nil, false, err
+		}
+		if !strings.HasPrefix(text, ">>>>> lang=") {
+			return nil, false, fail(line.pos.Line, "", "invalid marker; expected exactly `>>>>> lang=<code>`")
+		}
+		language := strings.TrimPrefix(text, ">>>>> lang=")
+		if language == "*" {
+			if verbatim || len(translations) > 0 || current != "" {
+				return nil, false, fail(line.pos.Line, "*", "verbatim `lang=*` marker must be the only language block")
+			}
+			verbatim, markerLine, current, block = true, line.pos.Line, "", nil
+			continue
+		}
+		if verbatim {
+			return nil, false, fail(line.pos.Line, language, "verbatim `lang=*` marker must be the only language block")
+		}
+		if language == "" || strings.TrimSpace(language) != language || strings.ContainsAny(language, " \t/\\<>") {
+			return nil, false, fail(line.pos.Line, language, "invalid language code in marker")
+		}
+		if !declared[language] {
+			return nil, false, fail(line.pos.Line, language, "language marker is not declared in manifest")
+		}
+		if _, duplicate := translations[language]; duplicate || current == language {
+			return nil, false, fail(line.pos.Line, language, "duplicate language block")
+		}
+		current, markerLine, block = language, line.pos.Line, nil
+	}
+	if err := finishBlock(); err != nil {
+		return nil, false, err
+	}
+	if verbatim {
+		return nil, true, nil
+	}
+	for _, language := range languages {
+		if _, ok := translations[language]; !ok {
+			return nil, false, fail(docLine, language, "missing language block")
+		}
+	}
+	if len(translations) != len(languages) {
+		return nil, false, fail(docLine, "", "language blocks do not match declared languages")
+	}
+	return translations, false, nil
+}
+
+// returnTypeName names the method's sole return type when it is a plain
+// identifier; value-to-constant matching keys on this name.
+func (s AtomSource) returnTypeName() string {
+	typeName, _ := s.returnType()
+	return typeName
+}
+
+// returnType names the method's sole return type: a plain identifier yields
+// (name, ""), a selector `pkg.Type` yields (Type, pkg).
+func (s AtomSource) returnType() (typeName, pkgName string) {
+	if s.Method == nil || s.Method.Type == nil || s.Method.Type.Results == nil || len(s.Method.Type.Results.List) != 1 {
+		return "", ""
+	}
+	field := s.Method.Type.Results.List[0]
+	if len(field.Names) > 1 {
+		return "", ""
+	}
+	switch typ := field.Type.(type) {
+	case *ast.Ident:
+		return typ.Name, ""
+	case *ast.SelectorExpr:
+		if pkg, ok := typ.X.(*ast.Ident); ok {
+			return typ.Sel.Name, pkg.Name
+		}
+	}
+	return "", ""
+}
+
+// valueConstant resolves the constant for the subject's return type within
+// the subject's own model package. A selector return type `pkg.Type` resolves
+// through the subject file's imports to that model package's constants.
+func (index *AtomSourceIndex) valueConstant(source AtomSource, value string) (atomValueConstant, bool) {
+	typeName, pkgName := source.returnType()
+	if typeName == "" {
+		return atomValueConstant{}, false
+	}
+	packagePath := source.PackagePath
+	if pkgName != "" {
+		if source.PackageImports == nil {
+			return atomValueConstant{}, false
+		}
+		packagePath = source.PackageImports[pkgName]
+	}
+	byValue, ok := index.constants[packagePath]
+	if !ok {
+		return atomValueConstant{}, false
+	}
+	entry, ok := byValue[typeName][value]
+	return entry, ok
+}
+
 func normalizedAtomPhrase(phrase, language string) (string, error) {
 	punctuation := ".!?;:… "
 	if language == "zh" {
@@ -633,7 +875,10 @@ func (index *AtomSourceIndex) primaryLanguage() string {
 // Fact claims keep the phrase-plus-executed-value semantics, except bool
 // atoms: value "true" renders the bare phrase and "false" renders the
 // authored `not:` negation phrase; a false verdict without a `not:` phrase is
-// an error, never an auto-generated "не ..." wording.
+// an error, never an auto-generated "не ..." wording. In multilingual domains
+// an executed value matching a typed model string constant is translated via
+// that constant's language blocks; an untranslated matched string constant is
+// an error, while `>>>>> lang=*` marks a verbatim value.
 func (index *AtomSourceIndex) DeriveClaims(a AtomArtifact) (ontology.LocalizedText, error) {
 	if a.Mode != "fact" && a.Mode != "holds" && a.Mode != "rule" {
 		return nil, fmt.Errorf("unknown atom mode %q", a.Mode)
@@ -667,6 +912,14 @@ func (index *AtomSourceIndex) DeriveClaims(a AtomArtifact) (ontology.LocalizedTe
 			return nil, err
 		}
 		boolMethod := source.returnsBool()
+		hasValue := a.Mode != "rule"
+		boolValue := boolMethod && (step.Value == "true" || step.Value == "false")
+		if hasValue && !boolValue && len(index.languages) > 1 {
+			if entry, ok := index.valueConstant(source, step.Value); ok && entry.untranslatedString() {
+				where := entry.position
+				return nil, fmt.Errorf("%s:%d: constant %s: string constant value without translation in a multilingual domain", where.Filename, where.Line, entry.name)
+			}
+		}
 		for _, language := range languages {
 			phrase, ok := source.Phrases[language]
 			if !ok || strings.TrimSpace(phrase) == "" {
@@ -676,7 +929,13 @@ func (index *AtomSourceIndex) DeriveClaims(a AtomArtifact) (ontology.LocalizedTe
 			if boolMethod && step.Value == "false" && notPhrase == "" {
 				return nil, atomPhraseError(source, language, "bool atom evaluated to false without a `not:` negation phrase")
 			}
-			part, err := atomPhraseText(language, phrase, notPhrase, step.Value, a.Mode != "rule", boolMethod)
+			value := step.Value
+			if hasValue && !boolValue {
+				if entry, ok := index.valueConstant(source, step.Value); ok && !entry.verbatim && len(entry.translations) > 0 {
+					value = entry.translations[language]
+				}
+			}
+			part, err := atomPhraseText(language, phrase, notPhrase, value, hasValue, boolMethod)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", source.Link(), err)
 			}
