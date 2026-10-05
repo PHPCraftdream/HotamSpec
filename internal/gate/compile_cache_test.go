@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -402,6 +403,67 @@ func TestCompileCache_CompileFailure_StillClassifiedCorrectly(t *testing.T) {
 	secondCompiles := CompileInvocationCount() - beforeSecond
 	if secondCompiles != 0 {
 		t.Fatalf("expected ZERO additional compiles for a second call against an already-cached broken package, got %d", secondCompiles)
+	}
+}
+
+// TestSyncCompileCacheToHash_InvalidatesOnChangeOnly pins the helper's
+// contract directly at the compile-cache layer: syncing an UNCHANGED hash
+// must not drop cache entries (the next compileTestBinary for the same key
+// is still a hit), while syncing a CHANGED hash must (the next call for
+// the same key recompiles). Asserting on CompileInvocationCount keeps this
+// deterministic (a miss counter, not wall-clock).
+func TestSyncCompileCacheToHash_InvalidatesOnChangeOnly(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds a real test binary through the compile cache; skipped in -short")
+	}
+
+	ResetRunCacheForTest()
+	root := writeModuleFixture(t, "example.com/syncmod", "model", passingImplSrc, passingTestSrc)
+	pkgPattern, err := relativePackagePattern(root, filepath.Join(root, "model", "impl_test.go"))
+	if err != nil {
+		t.Fatalf("relativePackagePattern: %v", err)
+	}
+	ctx := context.Background()
+
+	before := CompileInvocationCount()
+	if bin := compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
+		t.Fatalf("initial compile: unexpected infra error: %v", bin.err)
+	}
+	if got := CompileInvocationCount() - before; got != 1 {
+		t.Fatalf("expected exactly 1 compile for the cold cache, got %d", got)
+	}
+
+	h1, err := hashPackageInputs(root, filepath.Join(root, "model"))
+	if err != nil {
+		t.Fatalf("hashPackageInputs: %v", err)
+	}
+	syncCompileCacheToHash(root, h1)
+	syncCompileCacheToHash(root, h1)
+
+	if bin := compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
+		t.Fatalf("post-sync compile: unexpected infra error: %v", bin.err)
+	}
+	if got := CompileInvocationCount() - before; got != 1 {
+		t.Fatalf("expected NO recompile after syncing an unchanged hash (cache must not drop), got %d compiles", got)
+	}
+
+	if err := os.WriteFile(filepath.Join(root, "model", "impl.go"), []byte(guttedImplSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile gutted impl.go: %v", err)
+	}
+	h2, err := hashPackageInputs(root, filepath.Join(root, "model"))
+	if err != nil {
+		t.Fatalf("hashPackageInputs (after mutation): %v", err)
+	}
+	if h1 == h2 {
+		t.Fatalf("expected the mutation to change the module hash")
+	}
+	syncCompileCacheToHash(root, h2)
+
+	if bin := compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
+		t.Fatalf("post-mutation compile: unexpected infra error: %v", bin.err)
+	}
+	if got := CompileInvocationCount() - before; got != 2 {
+		t.Fatalf("expected exactly 1 recompile after syncing a changed hash (stale entry must be dropped), got %d total compiles", got)
 	}
 }
 

@@ -66,12 +66,13 @@ import (
 // mid-run -- it does, for `hotam land`'s pipeline specifically (the
 // proposal-apply gate hashes moduleRoot BEFORE writing graph.json/graph.
 // lock/generated docs, then a post-write verification pass hashes it
-// again -- a genuine mismatch). When that happens, RunVerifiedByTest's own
-// verdict-cache hash check (not a hash carried by THIS cache's key) notices
-// the mismatch and calls invalidateCompileCacheForModule, which drops this
-// cache's in-memory entries for that module so the next compileTestBinary
-// call misses and recompiles from the CURRENT source -- see that
-// function's doc comment for why the drop is map-only (no os.Remove of the
+// again -- a genuine mismatch). The invalidation trigger is now
+// syncCompileCacheToHash, which BOTH RunVerifiedByTest and
+// RunVerifiedByTestRecording call right after each computes
+// hashPackageInputs: a hash change between two calls in one process drops
+// the module's entries via invalidateCompileCacheForModule, so the next
+// compileTestBinary call misses and recompiles from the CURRENT source --
+// see that function's doc comment for why the drop is map-only (no os.Remove of the
 // binary file) and why doCompileTestBinary's per-compile-unique filenames
 // (compileBinaryName) make that safe under concurrent execs. Outside of
 // invalidation, the cache is PROCESS-LIFETIME: ResetRunCacheForTest (the
@@ -161,6 +162,15 @@ var (
 	// collide with a binary still referenced by an in-flight exec, so it
 	// is deliberately never reset, even by resetCompileCacheForTest.
 	compileBinarySeq int64
+
+	// compileModuleHashMu + compileModuleHash remember, per cleaned
+	// moduleRoot, the last whole-module content hash (a hashPackageInputs
+	// digest) the compile cache was last synced against -- the memory
+	// behind syncCompileCacheToHash. A mutex+map (not a sync.Map) mirrors
+	// perFileHashCache's own reasoning: one coarse read+compare+store per
+	// verified_by/recording call, not fine-grained per-key traffic.
+	compileModuleHashMu sync.Mutex
+	compileModuleHash   = map[string]string{}
 )
 
 // compileInFlightCall is one in-progress compile that other goroutines
@@ -228,7 +238,8 @@ func CleanupCompileCache() {
 // compiled binaries from disk, and resets the invocation counter -- so a
 // test that mutates source mid-process and re-invokes RunVerifiedByTest
 // observes a fresh compile rather than a stale cached binary built from
-// the pre-mutation source.
+// the pre-mutation source. It also clears the module-hash memory
+// syncCompileCacheToHash keeps (compileModuleHash).
 func resetCompileCacheForTest() {
 	compileCache.Range(func(k, v any) bool {
 		compileCache.Delete(k)
@@ -236,6 +247,9 @@ func resetCompileCacheForTest() {
 	})
 	removeCompileTmpDir()
 	atomic.StoreInt64(&compileInvocations, 0)
+	compileModuleHashMu.Lock()
+	compileModuleHash = map[string]string{}
+	compileModuleHashMu.Unlock()
 }
 
 // removeCompileTmpDir deletes compileTmpDir (if created) and resets the
@@ -251,14 +265,14 @@ func removeCompileTmpDir() {
 }
 
 // invalidateCompileCacheForModule drops EVERY compile cache entry whose
-// key carries the given moduleRoot. Called by RunVerifiedByTest on a
-// verdict-cache hash mismatch (its existing content-hash mechanism --
-// hashPackageInputs hashes the WHOLE module, so a hash change means ANY
-// cached binary for that module could be stale, not just the one for the
-// named package).
+// key carries the given moduleRoot. Its only caller is
+// syncCompileCacheToHash, which both verified_by execution paths invoke
+// right after hashing moduleRoot (a hashPackageInputs digest hashes the
+// WHOLE module, so a hash change means ANY cached binary for that module
+// could be stale, not just the one for the named package).
 //
-// This is the compile cache's ONLY invalidation path, and it IS reached in
-// production: `hotam land`'s pipeline runs the proposal-apply gate (which
+// This is the compile cache's ONLY invalidation path, and its production
+// trigger is unchanged in effect: `hotam land`'s pipeline runs the proposal-apply gate (which
 // calls RunVerifiedByTest, hashing moduleRoot BEFORE any writes) and THEN
 // writes graph.json/graph.lock/generated docs into that same moduleRoot,
 // so a subsequent verification pass within the SAME process hashes AFTER
@@ -284,11 +298,10 @@ func removeCompileTmpDir() {
 // CleanupCompileCache/removeCompileTmpDir wiping the whole compileTmpDir
 // at true process exit -- by which point no exec can still be in flight.
 //
-// RunVerifiedByTestRecording has NO content hash and therefore does NOT
-// call this function directly, but it shares the SAME compileCache map
-// that this function mutates, so a concurrent recording call against the
-// same moduleRoot is exposed to the same race and benefits from the same
-// map-only-deletion safety.
+// RunVerifiedByTestRecording participates in the same mechanism indirectly:
+// it shares the SAME compileCache map that this function mutates, so a
+// concurrent recording call against the same moduleRoot is exposed to the
+// same race and benefits from the same map-only-deletion safety.
 func invalidateCompileCacheForModule(moduleRoot string) {
 	cleaned := filepath.Clean(moduleRoot)
 	var toDelete []compileCacheKey
@@ -302,6 +315,39 @@ func invalidateCompileCacheForModule(moduleRoot string) {
 	for _, k := range toDelete {
 		compileCache.Delete(k)
 	}
+}
+
+// syncCompileCacheToHash is the compile cache's content-sync entry point.
+// BOTH verified_by execution paths -- RunVerifiedByTest and
+// RunVerifiedByTestRecording -- call it right after computing the module's
+// content hash (hashPackageInputs). It remembers the last hash seen per
+// moduleRoot and, when the hash CHANGED since the previous call in this
+// process, drops every compile cache entry for that module via
+// invalidateCompileCacheForModule, so no stale pre-mutation binary is
+// served after the change.
+//
+// This closes the recording path's gap: RunVerifiedByTestRecording has no
+// verdict cache whose hash-mismatch branch could invalidate (the plain
+// path's only trigger before this helper), so a module whose source
+// changed between two recording calls in one process used to keep getting
+// the pre-mutation binary for the rest of the process lifetime. Detection
+// is now direct on the hash itself, independent of verdict bookkeeping.
+//
+// The FIRST call for a module records the hash and never invalidates: a
+// cold process holds no stale entries. invalidateCompileCacheForModule is
+// exec-safe (map-entry-only deletion, see its doc comment) and touches no
+// state compileModuleHashMu guards, so calling it under the lock cannot
+// deadlock. Two goroutines racing with different hashes collapse to
+// "invalidate, then remember whichever hash wins the store" --
+// invalidation is idempotent, so either interleaving is correct.
+func syncCompileCacheToHash(moduleRoot, hash string) {
+	cleaned := filepath.Clean(moduleRoot)
+	compileModuleHashMu.Lock()
+	defer compileModuleHashMu.Unlock()
+	if prev, ok := compileModuleHash[cleaned]; ok && prev != hash {
+		invalidateCompileCacheForModule(cleaned)
+	}
+	compileModuleHash[cleaned] = hash
 }
 
 // compileTestBinary returns a *compiledBinary for the given (moduleRoot,

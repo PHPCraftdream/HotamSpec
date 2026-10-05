@@ -534,6 +534,12 @@ type RecordingResult struct {
 // either way (holding b014a63's fix): the tmp directory this function
 // creates is deleted before it returns, on every return path, success or
 // failure.
+//
+// Although this function has no verdict cache, it DOES hash the module
+// (hashPackageInputs) and sync the shared compile cache against that hash
+// via syncCompileCacheToHash -- so a source change between two recording
+// calls in one process invalidates the module's stale compiled binaries
+// instead of serving a pre-mutation binary. See compile_cache.go.
 func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) RecordingResult {
 	if inRecursionGuard() {
 		return RecordingResult{TestRunResult: TestRunResult{
@@ -555,6 +561,16 @@ func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) R
 	if !ok {
 		return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("no go.mod found walking up from %s -- cannot determine which Go module owns %s", absPkgDir, path)}}
 	}
+
+	// The recording path has no verdict cache, so without this sync the
+	// shared compile cache would never invalidate here; hash errors are
+	// infrastructure failures, same classification as RunVerifiedByTest's
+	// identical step. See syncCompileCacheToHash.
+	hash, err := hashPackageInputs(moduleRoot, absPkgDir)
+	if err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("could not hash package inputs for %s: %w", absPkgDir, err)}}
+	}
+	syncCompileCacheToHash(moduleRoot, hash)
 
 	pattern, err := relativePackagePattern(moduleRoot, path)
 	if err != nil {
@@ -1203,6 +1219,10 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 	if err != nil {
 		return TestRunResult{Err: fmt.Errorf("could not hash package inputs for %s: %w", absPkgDir, err)}
 	}
+	// Sync the compile cache against this hash: if the module changed since
+	// the last sync (from either execution path), its stale compiled
+	// binaries are dropped there. See syncCompileCacheToHash.
+	syncCompileCacheToHash(moduleRoot, hash)
 
 	key := cacheKey{pkgDir: absPkgDir, testName: testName}
 	if cached, ok := runCache.Load(key); ok {
@@ -1213,29 +1233,12 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 		// Hash mismatch: the module's content changed since this verdict
 		// was cached (hashPackageInputs hashes the whole module -- any
 		// *.go / non-.go file edit, anywhere under moduleRoot, moves the
-		// hash). The verdict cache entry is stale, AND so is any compiled
-		// .test binary the compile cache (compile_cache.go) holds for
-		// this module -- a binary built from the pre-mutation source
-		// would silently mask the change the verdict cache just detected.
-		// Drop every compile cache entry for this module before
-		// re-running, so runGoTest's compileTestBinary call below
-		// recompiles from the CURRENT (post-mutation) source. This is the
-		// compile cache's ONLY invalidation path, and it IS reached in
-		// production: `hotam land`'s pipeline hashes moduleRoot in the
-		// proposal-apply gate BEFORE writing graph.json/graph.lock/
-		// generated docs, then a post-write verification pass hashes it
-		// again within the SAME process -- a genuine mid-run mismatch, not
-		// just a mutation-test artifact. Because other goroutines may be
-		// concurrently executing an already-cached (now-stale) binary for
-		// this same module at the moment this fires (runViolations runs
-		// invariants in parallel), invalidateCompileCacheForModule is
-		// deliberately exec-safe: it drops only the in-memory map entries,
-		// never os.Remove-ing the binary file out from under a concurrent
-		// exec, and doCompileTestBinary gives every fresh compile a
-		// never-reused filename so a post-invalidation recompile cannot
-		// overwrite a path a concurrent holder is mid-exec against either.
-		// See invalidateCompileCacheForModule's doc comment.
-		invalidateCompileCacheForModule(moduleRoot)
+		// hash). This branch now only skips the stale VERDICT; compile-cache
+		// invalidation happens unconditionally at the syncCompileCacheToHash
+		// call above, which fires whenever the module hash changed since the
+		// last sync (for any cacheKey) -- a superset of this branch's old
+		// trigger, which additionally required THIS key to hold a stale
+		// entry. See syncCompileCacheToHash.
 	}
 
 	// SINGLEFLIGHT (anti-stampede): several goroutines in THIS process can

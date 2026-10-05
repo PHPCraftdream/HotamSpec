@@ -1173,6 +1173,24 @@ type errStub struct{}
 func (errStub) Error() string { return "not complete" }
 `
 
+// guttedScenarioImplSrc is the recording-path mutation fixture: the same
+// package as scenarioImplSrc, but RequireComplete gutted to always return
+// nil, so TestRequireComplete_ScenarioRecorded's Then step ("an error is
+// returned") FAILS when the test binary is rebuilt from the mutated source
+// -- and still PASSES when a stale pre-mutation binary is (wrongly) served.
+const guttedScenarioImplSrc = `package model
+
+func RequireComplete(fields int) error {
+	return nil
+}
+
+var errNotComplete = errStub{}
+
+type errStub struct{}
+
+func (errStub) Error() string { return "not complete" }
+`
+
 // scenarioTestSrc is the verified_by test: a real hotamspec.Scenario-based
 // test (Given/When/Then/Value), calling the REAL RequireComplete symbol
 // (imported from the sibling model package) so both the recorder's record-
@@ -1392,6 +1410,54 @@ func TestRunVerifiedByTestRecording_NoCoverPkg_SkipsCoverageCleanly(t *testing.T
 	}
 	if result.CoverProfile != nil {
 		t.Errorf("expected CoverProfile=nil when coverPkgFile is empty, got %d bytes", len(result.CoverProfile))
+	}
+}
+
+// TestRunVerifiedByTestRecording_MUTATION_SourceChangeInvalidatesCompileCache
+// is the recording-path mirror of
+// TestRunVerifiedByTest_MUTATION_CacheInvalidatesOnImplChange: two
+// RunVerifiedByTestRecording calls in ONE process, with the implementation
+// file mutated in between and NO ResetRunCacheForTest in between. The
+// compile cache (compile_cache.go) keys binaries by (moduleRoot,
+// pkgPattern, coverPkgPattern) with no content hash, and
+// RunVerifiedByTestRecording has no verdict cache whose hash check could
+// invalidate it -- so without a module-hash sync on the recording path, the
+// second call is served the STALE pre-mutation binary and wrongly reports
+// Passed=true. The second recording must instead observe the mutated
+// source and report a real test failure (Passed=false, CompileFailed=false).
+func TestRunVerifiedByTestRecording_MUTATION_SourceChangeInvalidatesCompileCache(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
+	}
+
+	ResetRunCacheForTest()
+	const modulePath = "example.com/recmutatemod"
+	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
+
+	before := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	if before.Err != nil {
+		t.Fatalf("first recording: unexpected infra error: %v\noutput:\n%s", before.Err, before.Output)
+	}
+	if !before.Passed {
+		t.Fatalf("first recording: expected Passed=true, got %+v\noutput:\n%s", before.TestRunResult, before.Output)
+	}
+
+	implPath := filepath.Join(root, "model", "impl.go")
+	if err := os.WriteFile(implPath, []byte(guttedScenarioImplSrc), 0o644); err != nil {
+		t.Fatalf("WriteFile gutted impl.go: %v", err)
+	}
+
+	// Deliberately NO ResetRunCacheForTest here: the defect under test is
+	// that the recording path never invalidates the shared compile cache.
+	after := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	if after.Err != nil {
+		t.Fatalf("second recording: unexpected infra error: %v\noutput:\n%s", after.Err, after.Output)
+	}
+	if after.CompileFailed {
+		t.Fatalf("second recording: expected a real test failure after gutting the implementation, not a compile failure, got %+v\noutput:\n%s", after.TestRunResult, after.Output)
+	}
+	if after.Passed {
+		t.Fatalf("second recording: expected Passed=false after mutating impl.go between two recordings in one process -- a stale pre-mutation compiled binary was served; got %+v\noutput:\n%s", after.TestRunResult, after.Output)
 	}
 }
 

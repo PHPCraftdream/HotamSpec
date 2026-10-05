@@ -16,6 +16,17 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Fixed
+
+- The binary compile cache is now invalidated on the record-mode path too:
+  both RunVerifiedByTest and RunVerifiedByTestRecording hash the module
+  (hashPackageInputs) and drop the module's stale compiled test binaries
+  when the hash changed mid-process, via the new shared
+  syncCompileCacheToHash helper; previously only RunVerifiedByTest's
+  verdict-cache mismatch could invalidate, so a source change between two
+  RunVerifiedByTestRecording calls in one process could execute a stale
+  pre-mutation binary.
+
 ### Tests
 
 - New fast test layer: ~100 slow tests (real-domain crystal/gen-spec renders,
