@@ -318,6 +318,11 @@ func resolveRequirementsAuthorityCode(graphPath string) bool {
 	if err := json.Unmarshal(data, &m); err != nil {
 		return false
 	}
+	if m.RequirementsAuthority == "" {
+		if d, ok := profileJSONDefault(data, "requirements_authority"); ok {
+			_ = json.Unmarshal([]byte(d), &m.RequirementsAuthority)
+		}
+	}
 	return m.RequirementsAuthority == RequirementsAuthorityCode
 }
 
@@ -520,6 +525,11 @@ func ResolveGenProfile(graphPath string) string {
 	if err := json.Unmarshal(data, &m); err != nil {
 		return GenProfileFull
 	}
+	if m.GenProfile == "" {
+		if d, ok := profileJSONDefault(data, "gen_profile"); ok {
+			_ = json.Unmarshal([]byte(d), &m.GenProfile)
+		}
+	}
 	switch m.GenProfile {
 	case GenProfileConsumer, GenProfileFull:
 		return m.GenProfile
@@ -611,6 +621,11 @@ func ResolveDiscipline(graphPath string) string {
 	}
 	if err := json.Unmarshal(data, &m); err != nil {
 		return ""
+	}
+	if m.Discipline == "" {
+		if d, ok := profileJSONDefault(data, "discipline"); ok {
+			_ = json.Unmarshal([]byte(d), &m.Discipline)
+		}
 	}
 	if m.Discipline == DisciplineFull {
 		return DisciplineFull

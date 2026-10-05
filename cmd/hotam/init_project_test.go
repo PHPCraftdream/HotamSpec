@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
@@ -141,11 +142,10 @@ func readManifestGenProfile(t *testing.T, manifestPath string) string {
 
 // TestInitAndInitProject_DefaultToSameGenProfile proves the R8-e fix: bare
 // `hotam init` (initDomain) and `hotam init-project` (initProject) both
-// default to the SAME gen-spec profile (consumer) in their scaffolded
-// manifests. Before the fix, initDomain wrote no gen_profile field at all
-// (silently resolving to "full" via ResolveGenProfile's absent-field
-// fallback), while initProject wrote "consumer" — two different defaults for
-// two onboarding paths with no flag or message explaining the divergence.
+// default to the SAME gen-spec profile (consumer). initDomain writes the
+// gen_profile field directly; initProject now names the "atoms" profile and
+// the consumer gen profile comes from its expansion at load — asserted here
+// through internal/loader.LoadManifest, not raw JSON.
 func TestInitAndInitProject_DefaultToSameGenProfile(t *testing.T) {
 	t.Parallel()
 
@@ -161,7 +161,12 @@ func TestInitAndInitProject_DefaultToSameGenProfile(t *testing.T) {
 	if _, err := initProject(projDir, "main", "2026-07-14", false, true); err != nil {
 		t.Fatalf("initProject: %v", err)
 	}
-	projProfile := readManifestGenProfile(t, filepath.Join(projDir, "domains", "main", "manifest.json"))
+	projManifestPath := filepath.Join(projDir, "domains", "main", "manifest.json")
+	projLoaded, err := loader.LoadManifest(projManifestPath)
+	if err != nil {
+		t.Fatalf("LoadManifest %s: %v", projManifestPath, err)
+	}
+	projProfile := projLoaded.GenProfile
 
 	// (3) Both must be "consumer" and equal.
 	if bareProfile != "consumer" {
@@ -172,6 +177,73 @@ func TestInitAndInitProject_DefaultToSameGenProfile(t *testing.T) {
 	}
 	if bareProfile != projProfile {
 		t.Errorf("init and init-project default to different profiles: init=%q init-project=%q", bareProfile, projProfile)
+	}
+}
+
+// TestInitProject_ManifestAtomsProfile pins the P1-3 init-project contract:
+// the default scaffold writes "profile": "atoms" (not the scattered
+// discipline/requirements_authority/self_executing_atoms/gen_profile flags),
+// and loading the manifest through internal/loader expands it to the
+// born-obligated flag set. Composing --require-provenance must not disturb
+// the profile.
+func TestInitProject_ManifestAtomsProfile(t *testing.T) {
+	t.Parallel()
+
+	projDir := t.TempDir()
+	if _, err := initProject(projDir, "main", "2026-07-14", false, true); err != nil {
+		t.Fatalf("initProject: %v", err)
+	}
+	manifestPath := filepath.Join(projDir, "domains", "main", "manifest.json")
+	data, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("read manifest: %v", err)
+	}
+	var raw struct {
+		Profile               string `json:"profile"`
+		Discipline            string `json:"discipline"`
+		RequirementsAuthority string `json:"requirements_authority"`
+		SelfExecutingAtoms    bool   `json:"self_executing_atoms"`
+		GenProfile            string `json:"gen_profile"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("unmarshal manifest: %v", err)
+	}
+	if raw.Profile != loader.ProfileAtoms {
+		t.Errorf("manifest profile = %q, want \"atoms\"; manifest:\n%s", raw.Profile, data)
+	}
+	for name, got := range map[string]string{
+		"discipline":             raw.Discipline,
+		"requirements_authority": raw.RequirementsAuthority,
+		"gen_profile":            raw.GenProfile,
+	} {
+		if got != "" {
+			t.Errorf("manifest must not carry scattered flag %s (got %q); the atoms profile supplies it", name, got)
+		}
+	}
+	if raw.SelfExecutingAtoms {
+		t.Errorf("manifest must not carry scattered self_executing_atoms flag; the atoms profile supplies it")
+	}
+
+	// Load-level: profile expands to the full atoms flag set.
+	loaded, err := loader.LoadManifest(manifestPath)
+	if err != nil {
+		t.Fatalf("LoadManifest: %v", err)
+	}
+	if loaded.Discipline != loader.DisciplineFull || loaded.RequirementsAuthority != loader.RequirementsAuthorityCode || !loaded.SelfExecutingAtoms || loaded.GenProfile != loader.GenProfileConsumer {
+		t.Errorf("atoms profile expansion mismatch: discipline=%q authority=%q selfExecutingAtoms=%v genProfile=%q", loaded.Discipline, loaded.RequirementsAuthority, loaded.SelfExecutingAtoms, loaded.GenProfile)
+	}
+
+	// --discipline "" escape hatch stays profile-free.
+	softDir := t.TempDir()
+	if _, err := initProject(softDir, "soft", "2026-07-14", false, false); err != nil {
+		t.Fatalf("initProject --discipline empty: %v", err)
+	}
+	softData, err := os.ReadFile(filepath.Join(softDir, "domains", "soft", "manifest.json"))
+	if err != nil {
+		t.Fatalf("read soft manifest: %v", err)
+	}
+	if strings.Contains(string(softData), "\"profile\"") {
+		t.Errorf("--discipline \"\" manifest must not carry a profile field:\n%s", softData)
 	}
 }
 
@@ -247,10 +319,14 @@ func TestCmdInitProject_RequireProvenanceFlag(t *testing.T) {
 		t.Errorf("base domain manifest.json require_provenance = false, want true")
 	}
 
-	// gen_profile must survive unchanged (consumer), proving the
-	// require_provenance write did not clobber initDomain's own default.
-	if gotProfile := readManifestGenProfile(t, manifestPath); gotProfile != "consumer" {
-		t.Errorf("base domain manifest gen_profile = %q after --require-provenance, want \"consumer\" (must not be clobbered)", gotProfile)
+	// gen_profile must resolve to consumer (via the atoms profile), proving
+	// the require_provenance write did not disturb the profile.
+	loaded, err := loader.LoadManifest(manifestPath)
+	if err != nil {
+		t.Fatalf("LoadManifest %s: %v", manifestPath, err)
+	}
+	if loaded.GenProfile != "consumer" {
+		t.Errorf("base domain manifest gen_profile = %q after --require-provenance, want \"consumer\" (must not be clobbered)", loaded.GenProfile)
 	}
 }
 
@@ -273,10 +349,12 @@ func TestCmdInitProject_RequireProvenanceDefaultOff(t *testing.T) {
 }
 
 // TestCmdInitProject_DisciplineDefaultFull proves the --discipline flag's
-// default (no flag passed) reproduces the pre-flag behavior byte-for-byte:
-// "discipline": "full" in the manifest, spec/go.mod + spec/hotamspec/hotamspec.go
-// vendored, and docs/gen/SPEC.md rendered — the BORN FULLY OBLIGATED contract
-// (task #273/W6.2) must not regress just because the flag now exists.
+// default (no flag passed) reproduces the pre-flag behavior: the "atoms"
+// profile in the manifest (expanding, at load, to discipline:"full" +
+// requirements_authority:"code"), spec/go.mod +
+// spec/hotamspec/hotamspec.go vendored, and docs/gen/SPEC.md rendered — the
+// BORN FULLY OBLIGATED contract (task #273/W6.2) must not regress just
+// because the flag now exists.
 func TestCmdInitProject_DisciplineDefaultFull(t *testing.T) {
 	t.Parallel()
 
@@ -286,12 +364,20 @@ func TestCmdInitProject_DisciplineDefaultFull(t *testing.T) {
 	}
 
 	domainDir := filepath.Join(dir, "domains", defaultInitProjectDomain)
-	manifestData, err := os.ReadFile(filepath.Join(domainDir, "manifest.json"))
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	manifestData, err := os.ReadFile(manifestPath)
 	if err != nil {
 		t.Fatalf("read manifest.json: %v", err)
 	}
-	if !strings.Contains(string(manifestData), `"discipline": "full"`) {
-		t.Errorf("default cmdInitProject manifest.json missing \"discipline\": \"full\", got:\n%s", manifestData)
+	if !strings.Contains(string(manifestData), `"profile": "atoms"`) {
+		t.Errorf("default cmdInitProject manifest.json missing \"profile\": \"atoms\", got:\n%s", manifestData)
+	}
+	loaded, err := loader.LoadManifest(manifestPath)
+	if err != nil {
+		t.Fatalf("LoadManifest: %v", err)
+	}
+	if loaded.Discipline != loader.DisciplineFull || loaded.RequirementsAuthority != loader.RequirementsAuthorityCode {
+		t.Errorf("atoms profile must resolve to discipline:full + requirements_authority:code, got discipline=%q authority=%q", loaded.Discipline, loaded.RequirementsAuthority)
 	}
 	for _, rel := range []string{
 		filepath.Join("spec", "go.mod"),
@@ -305,12 +391,10 @@ func TestCmdInitProject_DisciplineDefaultFull(t *testing.T) {
 		t.Errorf("default cmdInitProject should render docs/gen/SPEC.md: %v", err)
 	}
 
-	// Requirements-in-code from birth: authority declared, ontology mirror +
+	// Requirements-in-code from birth: authority resolved via the atoms
+	// profile (asserted above through LoadManifest), ontology mirror +
 	// registrydump vendored, empty registry written, and the whole spec/
 	// module compiles.
-	if !strings.Contains(string(manifestData), `"requirements_authority": "code"`) {
-		t.Errorf("default cmdInitProject manifest.json missing requirements_authority: code, got:\n%s", manifestData)
-	}
 	for _, rel := range []string{
 		filepath.Join("spec", "hotamontology", "requirement.go"),
 		filepath.Join("spec", "hotamontology", "registry.go"),

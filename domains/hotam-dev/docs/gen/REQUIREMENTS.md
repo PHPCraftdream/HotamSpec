@@ -59,6 +59,8 @@ Projected from the tool registry, one entry per tool whose first doc line matche
 - **R-tool-create-entity-type** — *scaffolds an EntityType declaration into the active domain's graph via apply_proposal.* [STRUCTURAL·tool · §Entity] [enforcer: `test_tool_create_entity_type`]
 - **R-tool-due** — *advisory report of OVERDUE and NEVER-REVIEWED SETTLED requirements; never gates, exit code always 0.* [STRUCTURAL·tool · §Requirement] [enforcer: (none)]
 - **R-tool-emit-cipher** — *emits the three-cipher pulse (top action / debt / context) directly from the active domain's graph.* [STRUCTURAL·tool · §Operator] [enforcer: (none)]
+- **R-tool-evidence** — *collects fresh source-to-method-to-test evidence and preserves observed discrepancies alongside passing proof without changing the source graph.* [STRUCTURAL·tool · §Requirement] [enforcer: (none)]
+- **R-tool-findings** — *lets a human inspect observed findings and record explicit review notes separately without inferring semantic blame or changing proof payloads.* [STRUCTURAL·tool · §Requirement] [enforcer: (none)]
 - **R-tool-gate** — *T1 tiered LAND gate: select a targeted enforcer subset instead of the full suite.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_gate`]
 - **R-tool-gate-status** — *read the runtime land-log.jsonl and answer the commit-boundary question.* [STRUCTURAL·tool · §Closure] [enforcer: `test_tool_gate_status`]
 - **R-tool-gen-spec** — *regenerates docs/gen/ from the executable model (methodology + graph), making drift structurally impossible.* [STRUCTURAL·tool · §Generator] [enforcer: (none)]

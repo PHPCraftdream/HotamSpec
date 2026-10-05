@@ -223,6 +223,18 @@ type DomainManifest struct {
 	// (discipline:"full"/claim_authority:"scenario"/public_surface_
 	// authority:"linked" were already spent before this check existed).
 	ScenarioAuthority string `json:"scenario_authority,omitempty"`
+
+	// Profile is the optional named-profile opt-in (ProfileAtoms, task P1-3).
+	// A non-empty recognized name bundles a default set of the independent
+	// behavior flags above (discipline, requirements_authority,
+	// self_executing_atoms, gen_profile); any flag EXPLICITLY set in the
+	// manifest overrides the profile's value, and an unknown name is a
+	// LoadManifest error. Expansion happens in ONE place (expandManifestProfile
+	// in internal/loader/profile.go, applied inside LoadManifest), so every
+	// consumer keeps seeing ordinary resolved flags. omitempty: manifests
+	// without the field round-trip byte-identically.
+	Profile string `json:"profile,omitempty"`
+
 	// SpecificationSources pins external or authored specification bytes by
 	// stable identity, declared version, relative path, and SHA-256.
 	// Relative paths resolve from the consumer domain directory, or from the
@@ -264,6 +276,9 @@ func LoadManifest(path string) (*DomainManifest, error) {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	if err := dec.Decode(&m); err != nil {
 		return nil, fmt.Errorf("load manifest: decode %s: %w", path, err)
+	}
+	if err := expandManifestProfile(&m, data); err != nil {
+		return nil, fmt.Errorf("load manifest: profile %s: %w", path, err)
 	}
 	if err := validateDomainManifest(&m); err != nil {
 		return nil, fmt.Errorf("load manifest: validate %s: %w", path, err)

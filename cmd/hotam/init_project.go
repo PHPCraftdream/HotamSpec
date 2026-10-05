@@ -33,7 +33,9 @@ const defaultInitProjectDomain = "main"
 // the scaffolded base domain is immediately (a) "parent": null in its
 // manifest.json (it is the root of the new external project, within the
 // framework's own hierarchy — see W6.1's manifest.parent mechanism), (b)
-// "discipline": "full" in its manifest.json, UNCONDITIONALLY — not an opt-in
+// the "atoms" profile in its manifest.json (expanding, at load, to
+// discipline:"full" + requirements_authority:"code" +
+// self_executing_atoms:true), UNCONDITIONALLY — not an opt-in
 // flag the way --require-provenance is, because a brand-new project has no
 // prior soft-discipline history to migrate FROM ("у новых проектов нет
 // миграционного окна, обязанность действует с рождения" — no migration
@@ -179,17 +181,18 @@ func initProject(dir, domainName, today string, requireProvenance bool, discipli
 		return nil, err
 	}
 
-	// (2b) initDomain already writes gen_profile: consumer and "parent": null
-	// into the manifest (R8-e: unified with init-project's own historical
-	// default; "parent": null per W6.1/D6 — this base domain has no parent
-	// WITHIN the framework's own hierarchy, it IS the root of the new
-	// external project). This step layers "discipline": "full" into the SAME
-	// composed manifest write when disciplineFull is true (the default —
-	// PLAN-scenario-generated-spec.md §2 D6, task W6.2: "init-project создаёт
-	// под-проект СРАЗУ с discipline: full ... у новых проектов нет
-	// миграционного окна, обязанность действует с рождения" — a brand-new
-	// project has no prior soft-discipline history to migrate FROM, so there
-	// is nothing to opt into by default). `--discipline ""` (disciplineFull
+	// (2b) initDomain already writes "parent": null into the manifest (D6 —
+	// this base domain has no parent WITHIN the framework's own hierarchy,
+	// it IS the root of the new external project). When disciplineFull is
+	// true (the default — PLAN-scenario-generated-spec.md §2 D6, task W6.2:
+	// "init-project создаёт под-проект СРАЗУ с discipline: full ... у новых
+	// проектов нет миграционного окна, обязанность действует с рождения"),
+	// the composed write names the "atoms" profile instead of the scattered
+	// equivalent flags: at load, internal/loader expands it to
+	// discipline:"full" + requirements_authority:"code" +
+	// self_executing_atoms:true + gen_profile:"consumer" — exactly the
+	// born-obligated, Fact/Holds-enabled default a new project needs.
+	// `--discipline ""` (disciplineFull
 	// false) is an explicit escape hatch, added after dogfooding a
 	// business domain (life, task-adjacent to #340-352) that wanted NO
 	// framework code sitting in it before any real content existed — the
@@ -204,9 +207,9 @@ func initProject(dir, domainName, today string, requireProvenance bool, discipli
 	// skipping this block here matches bare `hotam init`'s output exactly.
 	manifestPath := filepath.Join(domainDir, "manifest.json")
 	if disciplineFull || requireProvenance {
-		manifest := "{\"self_hosting\": false, \"gen_profile\": \"consumer\", \"parent\": null"
+		manifest := "{\"self_hosting\": false, \"parent\": null"
 		if disciplineFull {
-			manifest += ", \"discipline\": \"full\", \"requirements_authority\": \"code\""
+			manifest += ", \"profile\": \"atoms\""
 		}
 		if requireProvenance {
 			manifest += ", \"require_provenance\": true"
@@ -254,6 +257,14 @@ func initProject(dir, domainName, today string, requireProvenance bool, discipli
 			return written, fmt.Errorf("vendor recorder into %s: %w", domainDir, err)
 		}
 		written = append(written, recorderPath)
+
+		// (ii-b) The atoms profile turns self_executing_atoms on from birth,
+		// and the atom checks scan <domainDir>/spec/model — create the (for
+		// now empty) directory so a freshly-scaffolded domain stays
+		// all-violations-clean before any model is authored.
+		if err := os.MkdirAll(filepath.Join(domainDir, "spec", "model"), 0o755); err != nil {
+			return written, fmt.Errorf("create spec/model: %w", err)
+		}
 
 		// (iii) Requirements-in-code from birth: vendored ontology mirror,
 		// the registrydump bridge, and an empty spec/requirements.go (the

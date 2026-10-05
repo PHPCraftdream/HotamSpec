@@ -56,11 +56,12 @@ hotam init-project .
 
 This creates `domains/main/graph.json` (a genuinely EMPTY graph -- 0 nodes;
 task #364 retired the earlier auto-seeded Stakeholder `owner` + Requirement
-`R-domain-exists`), `domains/main/manifest.json` (`discipline: "full"`,
-`requirements_authority: "code"`, defaulted to the consumer gen-spec
-profile), `domains/main/spec/` (a Go module + the vendored `hotamspec`
-recorder, the `hotamontology` mirror, `registrydump`, and an empty
-`requirements.go`), `domains/main/docs/gen/` (`SPEC.md`), and the root
+`R-domain-exists`), `domains/main/manifest.json` (`"profile": "atoms"` — the
+named profile that expands, at load, to `discipline: "full"`,
+`requirements_authority: "code"`, `self_executing_atoms: true` and the
+consumer gen-spec profile), `domains/main/spec/` (a Go module + the vendored
+`hotamspec` recorder, the `hotamontology` mirror, `registrydump`, and an
+empty `requirements.go`), `domains/main/docs/gen/` (`SPEC.md`), and the root
 crystal. Pass `--discipline ""` instead to get a domain without `spec/`
 scaffolding whose requirements go through the JSON proposals of section 4.
 Inspect what it made you:
@@ -320,14 +321,29 @@ via `hotam sync-self`). See the root [README](../README.md) for the full
 
 ## Self-executing atoms (per-domain opt-in)
 
-Use this path for the legacy, one-language value-fact contract: the method's
-doc phrase combines with its real executed value. It requires no language
-configuration or rule/case metadata. The separate guide below covers
-multilingual phrase blocks and explicitly declared rule/case atoms.
+The recommended way to turn atoms on for a consumer domain is the named
+profile in its `manifest.json` — one field instead of several scattered
+flags:
 
 ```json
 {
+  "profile": "atoms"
+}
+```
+
+At load this expands to `discipline: "full"`,
+`requirements_authority: "code"`, `self_executing_atoms: true` and the
+consumer gen-spec profile. An explicitly set flag always wins over the
+profile's default, and an unknown profile name is a load error. The
+per-flag equivalent — for a domain that cannot use the profile — is the
+scattered form:
+
+```json
+{
+  "discipline": "full",
+  "requirements_authority": "code",
   "self_executing_atoms": true,
+  "gen_profile": "consumer",
   "atom_defaults": {
     "owner": "alice",
     "status": "SETTLED",
@@ -337,6 +353,14 @@ multilingual phrase blocks and explicitly declared rule/case atoms.
   }
 }
 ```
+
+(An existing domain that already carries the scattered flags keeps working
+unchanged; the `profile` field is optional everywhere.)
+
+Use this path for the legacy, one-language value-fact contract: the method's
+doc phrase combines with its real executed value. It requires no language
+configuration or rule/case metadata. The separate guide below covers
+multilingual phrase blocks and explicitly declared rule/case atoms.
 
 The owner must exist in the graph or the domain's Stakeholders registry.
 Vendor the current recorder with `hotam vendor-recorder --domain domains/main`.
@@ -417,9 +441,12 @@ empty or missing blocks are errors, not a reason to guess a language or fall
 back to another translation. Changing `default_language` changes the primary
 claim/view, not atom identity or verdict.
 
-For automatic `sync-domain` method discovery, the manifest must declare
-`requirements_authority: "code"`, `self_executing_atoms: true` and
-`conformance.rule_cases: true`. `requirements_authority` selects the Go-to-graph
+For automatic `sync-domain` method discovery of `Fact`/`Holds` atoms, the
+manifest must declare `requirements_authority: "code"` and
+`self_executing_atoms: true` — both supplied by the `"profile": "atoms"`
+manifest field (see above). `conformance.rule_cases` is required ONLY for
+`WithCase` semantics; it is NOT needed for method discovery or plain fact
+recording. `requirements_authority` selects the Go-to-graph
 source; `self_executing_atoms` enables atom discovery; `rule_cases` permits
 explicit rule/case semantics. `self_executing_atoms` alone preserves legacy
 `Fact`/`Holds` behavior and does not permit rule cases; `rule_cases` alone does

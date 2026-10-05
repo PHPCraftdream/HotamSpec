@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 )
 
 // TestExternal_InitProjectBornObligated is the end-to-end proof for the W6.2
@@ -14,7 +16,7 @@ import (
 // `hotam init-project <dir>` must scaffold a base domain that is IMMEDIATELY,
 // with zero manual follow-up:
 //
-//   - "discipline": "full" in its manifest.json (unconditional, not gated
+//   - "profile": "atoms" in its manifest.json (unconditional, not gated
 //     behind a flag — D6: "у новых проектов нет миграционного окна,
 //     обязанность действует с рождения");
 //   - "parent": null in its manifest.json (the domain is the root of the
@@ -93,7 +95,7 @@ func TestExternal_InitProjectBornObligated(t *testing.T) {
 		t.Errorf("init-project output missing confirmation:\n%s", out)
 	}
 
-	// (2a) manifest.json carries "discipline": "full" — unconditional, no
+	// (2a) manifest.json carries "profile": "atoms" — unconditional, no
 	// --discipline flag was passed.
 	manifestPath := filepath.Join(domainDir, "manifest.json")
 	manifestData, err := os.ReadFile(manifestPath)
@@ -101,8 +103,27 @@ func TestExternal_InitProjectBornObligated(t *testing.T) {
 		t.Fatalf("manifest.json not read: %v", err)
 	}
 	manifestBody := string(manifestData)
-	if !strings.Contains(manifestBody, `"discipline": "full"`) {
-		t.Errorf("init-project's scaffolded manifest.json must carry \"discipline\": \"full\" unconditionally, got:\n%s", manifestBody)
+	if !strings.Contains(manifestBody, `"profile": "atoms"`) {
+		t.Errorf("init-project's scaffolded manifest.json must carry \"profile\": \"atoms\" unconditionally, got:\n%s", manifestBody)
+	}
+	for _, scattered := range []string{"discipline", "requirements_authority", "self_executing_atoms", "gen_profile"} {
+		if strings.Contains(manifestBody, scattered) {
+			t.Errorf("init-project's scaffolded manifest.json must express discipline/authority/atoms/gen_profile via the \"atoms\" profile, not scattered flags; found %q in:\n%s", scattered, manifestBody)
+		}
+	}
+
+	// (2a-bis) the manifest LOADS through internal/loader, and the profile
+	// expands to the born-obligated flag set — the load-level contract, not
+	// just the raw JSON shape.
+	loaded, err := loader.LoadManifest(manifestPath)
+	if err != nil {
+		t.Fatalf("LoadManifest on scaffolded manifest.json: %v", err)
+	}
+	if loaded.Profile != loader.ProfileAtoms {
+		t.Errorf("loaded manifest Profile = %q, want %q", loaded.Profile, loader.ProfileAtoms)
+	}
+	if loaded.Discipline != loader.DisciplineFull || loaded.RequirementsAuthority != loader.RequirementsAuthorityCode || !loaded.SelfExecutingAtoms || loaded.GenProfile != loader.GenProfileConsumer {
+		t.Errorf("atoms profile did not expand to the born-obligated flag set: discipline=%q authority=%q selfExecutingAtoms=%v genProfile=%q", loaded.Discipline, loaded.RequirementsAuthority, loaded.SelfExecutingAtoms, loaded.GenProfile)
 	}
 
 	// (2b) manifest.json carries "parent": null — this base domain is the

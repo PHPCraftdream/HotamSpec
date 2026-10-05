@@ -15,12 +15,14 @@ This file is the compact entry point for an agent session — target < 15KB. It 
 ## Top actions (what-now, top 10)
 
 - [P0] REFLECTION on `enforcement-gradient` — 6 SETTLED requirements are closeable now (ENFORCEABLE, no feature blocker, still PROSE/STRUCTURAL) — claimed but not guaranteed, soft context-debt. See docs/gen/UNENFORCED.md.
+- [P1] STRUCTURE on `domains/hotam-dev` — [check_domain_claude_md_current] domains/hotam-dev/CLAUDE.md's generated portion (everything up to and including the durable-notes marker line) does not match what a fresh `hotam gen-spec --claude-md` run produces right now -- it is either stale (the domain's graph, requirements, or debt/pulse state changed since the crystal was last regenerated) or was edited by hand despite its own do-not-edit banner; content BELOW the marker line (durable notes) is never compared and is safe. Re-run `hotam gen-spec --domain domains/hotam-dev --claude-md domains/hotam-dev/CLAUDE.md` to regenerate it.
+- [P1] STRUCTURE on `domains/hotam-dev` — [check_engine_docs_fingerprint_current] domains/hotam-dev/docs/gen/ENGINE-VERSION.md was stamped by engine fingerprint 1939045382c7d208, but the current engine's fingerprint is 2b3015f702fc9c52 -- the engine that produced this domain's generated docs is not the engine you have now; run `hotam gen-spec --domain domains/hotam-dev` to regenerate
 - [P5] LATENT_CONNECTOR on `A-runtime-logs-append-only` — [HEURISTIC, for AI review] assumption(s) A-runtime-logs-append-only shared by 5 requirements (R-host-spawn-leaves-trace, R-land-leaves-trace, R-spawn-logged, R-t1-gate-is-default, R-wave-lands-atomically) with no mediating Conflict node — review the cluster as ONE item: consider splitting the assumption or materializing a connector (9 pair(s); detail: docs/gen/TENSIONS.md)
 - [P5] LATENT_CONNECTOR on `A-single-resolver-session` — [HEURISTIC, for AI review] assumption(s) A-single-resolver-session shared by 5 requirements (R-commit-follows-review, R-push-only-on-request, R-wave-lands-atomically, R-wave-strictly-sequential, R-worktree-parallel-permitted) with no mediating Conflict node — review the cluster as ONE item: consider splitting the assumption or materializing a connector (9 pair(s); detail: docs/gen/TENSIONS.md)
 
 ## Status counters
 
-SETTLED 9 · DRAFT 0 · REJECTED 0 · OVERDUE 0 (as of 2026-10-01)
+SETTLED 9 · DRAFT 0 · REJECTED 0 · OVERDUE 0 (as of 2026-10-05)
 
 ## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)
 
@@ -40,22 +42,22 @@ SETTLED 9 · DRAFT 0 · REJECTED 0 · OVERDUE 0 (as of 2026-10-01)
 ## docs/gen/ file index (which files do I actually need to read?)
 
 MANDATORY (named directly in this domain's CLAUDE.md boot text — read essentially every session):
-- `AGENT-CONTEXT.md` (this file) — compact boot digest.
+- `domains/hotam-dev/docs/gen/AGENT-CONTEXT.md` (this file) — compact boot digest.
 - `domains/hotam-dev/docs/gen/REQUIREMENTS.md` — full requirement roster (LOCATE step).
 - `domains/hotam-dev/docs/gen/TENSIONS.md` — conflict clusters (LOCATE step).
 - `domains/hotam-dev/docs/gen/UNENFORCED.md` — enforcement-gap detail behind the top-action line.
 - `domains/hotam-dev/docs/gen/FRAMEWORK-INVARIANTS.md` — framework-internal atoms behind the Constitution index.
 
 REFERENCE (load on demand for a specific task, not at boot):
-- `domains/hotam-dev/docs/gen/CONSTITUTION.md`, `REPO-MAP.md` — narrative expansions of sections already summarized above.
+- `domains/hotam-dev/docs/gen/CONSTITUTION.md`, `domains/hotam-dev/docs/gen/REPO-MAP.md` — narrative expansions of sections already summarized above.
 - `framework/GLOSSARY.md` — methodology controlled vocabulary (project-shared).
-- `domains/hotam-dev/docs/gen/atoms-operator.md`, `atoms-substrate.md`, `atoms-discipline.md`, `atoms-check.md` — per-category atom detail.
+- `domains/hotam-dev/docs/gen/atoms-operator.md`, `domains/hotam-dev/docs/gen/atoms-substrate.md`, `domains/hotam-dev/docs/gen/atoms-discipline.md`, `domains/hotam-dev/docs/gen/atoms-check.md` — per-category atom detail.
 - `domains/hotam-dev/docs/gen/live-state.md` — the same pulse this file's Live-state section already carries, standalone.
 - `domains/hotam-dev/docs/gen/OPEN.md` — open-question detail behind the OPEN status.
-- `domains/hotam-dev/docs/gen/thinking/<slug>.md` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.
+- `docs/gen/thinking/<slug>.md` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.
 - `framework/tools/INDEX.md` — entry point for the tool-docs directory: splits the registry into Implemented (real commands) vs Planned (methodology surface only).
 - `framework/tools/<tool>.md` — one purpose doc per tool, loaded only when working with that tool.
 
 ARCHIVAL (historical/self-contained — read only when investigating past decisions, never at boot):
 - `domains/hotam-dev/docs/gen/HISTORY.md` — REJECTED + DECIDED change-log; anti-relitigation lookup only.
-- `domains/hotam-dev/docs/gen/graph.json` — read-only regenerated snapshot of this domain's graph.json, kept byte-identical by R-drift-structurally-impossible for archival/portability; no tool reads it back.
+- `domains/hotam-dev/graph.json` — read-only regenerated snapshot of this domain's graph.json, kept byte-identical by R-drift-structurally-impossible for archival/portability; no tool reads it back.
