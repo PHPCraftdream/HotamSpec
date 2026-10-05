@@ -16,6 +16,124 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### Atomic multilingual and conformance specifications
+
+- Added opt-in `languages` / `default_language` views with authored per-method
+  `>>>>> lang=<code>` phrase blocks, localized claim maps and a single shared
+  graph. Plain one-language comments and `Fact` behavior remain unchanged;
+  multilingual phrases require exact declared-language coverage and never
+  fall back to another locale.
+- Added explicit rule/case recording: `WithCase` keeps one authored rule norm
+  while independent test inputs and expectations identify stable cases.
+  Case descriptors keep those oracle values separate from typed actual
+  observations; text, bytes, booleans, scalars and diagnostics retain exact values.
+- Added source-clause inventories, `MUST`/`SHOULD`/`MAY`, applicability,
+  profiles, scoped precedence and composition provenance. The conformance audit
+  reports structural issues relative to declarations; corpus pass, profile
+  qualification and cross-language parity do not claim semantic completeness
+  or automatic implementation blame.
+- Automatic method discovery and rule-case permission remain separate opt-ins:
+  `self_executing_atoms` enables the scan, while `conformance.rule_cases`
+  enables the new case semantics. Neither activates the other's obligations.
+- Localized document bundles use one execution/evidence/review snapshot,
+  stage rendered outputs before publication, and remove only obsolete
+  generator-owned files. Explicit locale and conformance fields activate their
+  own freshness/audit checks rather than inheriting duties from older opt-ins.
+- Added canonical self-hosted carriers for
+  `check_language_bundle_complete`, `check_language_outputs_current` and
+  `check_conformance_audit`, and updated the author contract, quickstart,
+  proposal reference and README for the preserved plain path and new fields.
+- Atom checks share the publication snapshot, including implementation-subject
+  proof and compatible shared-case `verified_by`. A live three-locale consumer
+  executes its three cases exactly three times.
+- Preserve explicit empty selection lists through evidence JSON round-trips;
+  deduplicate shared-case audit findings and count each discrepancy once.
+  Report-only requirement summaries retain every observed case.
+- Correct localized output resolution for conventional `domains/<name>` roots.
+  Source/catalog and authored-collision refusals occur before any bundle write;
+  locale add/remove and single/multilingual transitions preserve authored files.
+- Proposal previews decode into independent graph collections. Sync previews
+  use the current date when unpinned rather than introducing a 1970 history stamp.
+- Unexecuted case findings retain declared profile/composition fingerprints
+  without fabricated measurements. Changing that profile invalidates its
+  corresponding review identity while unrelated profiles remain unchanged.
+
+### Structured evidence, findings, source links and confrontation confidence
+
+- Added `hotam evidence --json --write`: a fresh, deterministic report of
+  successful and failing observations, including opted-in atoms before their
+  first successful graph sync. Negative output is saved before nonzero exit;
+  it does not mutate graph state or publish false passing normative text.
+- Recorder `WithInput`, `WithContext`, `Observe`, and `Observed` preserve real
+  input/actual/expected/verdict detail. Nested failures fail the real test even
+  when its outer summary matches the expectation; methods execute once.
+- Added `hotam findings list|show|review`. Human classification and rationale
+  live separately from immutable observations and do not transfer to changed
+  content-addressed finding IDs. No new persistent test-verdict cache.
+- Added typed manifest specification sources, Requirement SourceLinks and
+  authored Coverage qualifications. SHA/anchor checks and qualification
+  invariants activate through their own explicit fields; they do not infer
+  semantic completeness or manufacture versions.
+- Coverage distinguishes verified evidence, discrepancies, unsupported
+  recommendations, profile-qualified unreachable branches and unverified
+  obligations. Observed failures take precedence over authored qualifications.
+- Opposite-marker words now produce advisory lexical suspicion. Exact authored
+  links strengthen relatedness; only an explicit unresolved Conflict carrier
+  can block proposal/sync writes pending a recorded decision. Ack citations
+  must cover the actual carrier, and lexical hits do not create ack history.
+- Retired incidental wiring/count/source-text tests rather than re-pinning
+  them. Strict proposal decoding uses real rejection tests as its carrier;
+  the tool-projection wiring claim is honestly STRUCTURAL, not a copy-only
+  test advertised as behavioral ENFORCED proof.
+- Retired the test-only numeric debt pins instead of bumping their ceilings
+  after exposing the old copy-only tool projection proof as STRUCTURAL.
+  Debt classification remains tested; unverified obligations remain visible.
+  Replaced the plumbing document snapshot with a behavioral partition guard:
+  settled business/plumbing obligations are neither misplaced nor lost, and
+  DRAFT obligations are not published as settled.
+- Live smoke verified a failed nested year comparison plus a successful
+  sibling, immutable human review, source drift, coverage qualification
+  precedence and advisory unrelated only/any hits. Ktav remains paused;
+  its source/backend and existing findings report were not resumed or patched.
+- Final verification: `go vet ./...` and `go test -timeout 30m ./...` passed
+  (22 packages OK, 2 without tests). Self-hosting sync regenerated 105 docs
+  with zero violations. The final built CLI also preserved the complete
+  source/method/test/observation trace and refused a valid proposal naming an
+  unresolved formal carrier without changing its graph.
+
+### Self-executing atoms (2026-10-01)
+
+- Added per-domain `self_executing_atoms` opt-in and `atom_defaults` lifecycle
+  metadata; existing scenario domains retain their contracts.
+- Added recorder `Fact`, `Holds`, `Evidence`, and `Expect(false)`. Bound method
+  identities survive pointer/generic receivers; anonymous and free functions
+  are rejected. Renamed the old key/value pair type to `ValueFact`.
+- `sync-domain` recursively discovers model tests, derives claims from method
+  doc phrases and executed values, derives method/test links and relation
+  evidence dependencies, and applies explicit registry exceptions. Method
+  renames require retained REJECTED entries rather than dropping graph history.
+- Added structural phrase, single-expression value-method, and single-subject
+  Fact invariants. Atom claim freshness compares repeated observations without
+  duplicating the claim; contradictory observations remain violations.
+- Atom recording uses package-level native `go test -json` caching and
+  replayable stdout artifacts; no new disk verdict cache. Source ASTs are
+  indexed once per invocation. SPEC.md becomes a source-ordered package index
+  with shards; freshness checks verify the index and all shards.
+- Oversized consumer crystals expose package links and counters instead of
+  an omitted requirement list. Updated Fact/Holds change workflow and guides.
+- Verified Human migration, zero violations, and 1987 → 1988 propagation into
+  SPEC and CLAUDE by editing only Init and the expected test value; restored
+  1987 afterward. Proved native cache replay and independent package
+  invalidation. Preserved the old #23 worktree: its uncommitted changes include
+  a separate compiled-binary invalidation idea as well as the rejected disk
+  verdict-cache implementation.
+- Final verification: `go vet ./...`, full engine
+  `go test -timeout 30m ./...`, and Human `go test ./...` passed. Anchored the
+  three new enforcers through their own self-hosted requirement and projected
+  it with `sync-self`; no orphan-enforcer exemption was introduced. Regression
+  coverage also accepts named bound-method values and explicitly instantiated
+  `Fact[int]` calls.
+
 ### Wave summary — code-authority-completion (tasks #388-#402, #404-#405)
 
 Full plan: `docs/PLAN-code-authority-completion.md`. Individual task entries below carry the full

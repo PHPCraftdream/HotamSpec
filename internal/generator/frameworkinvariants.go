@@ -194,20 +194,21 @@ func BuildFrameworkInvariants(g *ontology.Graph, domainName string) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
-	rosterPath := "domains/" + domainName + "/docs/gen/REQUIREMENTS.md"
+	rosterPath := localizedDomainDocPath(g, domainName, "REQUIREMENTS.md")
+	unenforcedPath := localizedDomainDocPath(g, domainName, "UNENFORCED.md")
 
-	lines := []string{Banner, ReaderHeaderLine("FRAMEWORK_INVARIANTS", g), ""}
-	lines = append(lines, "# FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)")
+	lines := []string{localizedBanner(g), ReaderHeaderLine("FRAMEWORK_INVARIANTS", g), ""}
+	lines = append(lines, serviceText(g, "# FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"))
 	lines = append(lines, "")
-	lines = append(lines, "Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of its SETTLED requirements are internal guarantees of the framework's own machinery (Entity/Agent/Domain/Process/Operator-internals/Lifecycle-keystone/Generator/bijection/anchor mechanics/CLAUDE.md machinery), not business claims the operator mediates as reality. This index holds exactly those framework-internal atoms, relocated out of the root CLAUDE.md CONSTITUTION index (R-constitution-separates-plumbing, Phase 3, task #9).")
+	lines = append(lines, serviceText(g, "Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of its SETTLED requirements are internal guarantees of the framework's own machinery (Entity/Agent/Domain/Process/Operator-internals/Lifecycle-keystone/Generator/bijection/anchor mechanics/CLAUDE.md machinery), not business claims the operator mediates as reality. This index holds exactly those framework-internal atoms, relocated out of the root CLAUDE.md CONSTITUTION index (R-constitution-separates-plumbing, Phase 3, task #9)."))
 	lines = append(lines, "")
-	lines = append(lines, "> Full claim + WHY + assumptions: `"+rosterPath+"` (roster) · enforcement detail: `domains/"+domainName+"/docs/gen/UNENFORCED.md`.")
-	lines = append(lines, "> Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE.")
-	lines = append(lines, "> No atom here changed status by this relocation — every id below is (and remains) SETTLED in the graph; only ITS RENDER LOCATION moved.")
+	lines = append(lines, serviceText(g, "> Full claim + WHY + assumptions: `%s` (roster) · enforcement detail: `%s`.", rosterPath, unenforcedPath))
+	lines = append(lines, serviceText(g, "> Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE."))
+	lines = append(lines, serviceText(g, "> No atom here changed status by this relocation — every id below is (and remains) SETTLED in the graph; only ITS RENDER LOCATION moved."))
 	lines = append(lines, "")
 
 	if len(settled) == 0 {
-		lines = append(lines, "_No framework-plumbing SETTLED requirements yet._")
+		lines = append(lines, serviceText(g, "_No framework-plumbing SETTLED requirements yet._"))
 	} else {
 		groups := map[string][]ontology.Requirement{}
 		for _, r := range settled {
@@ -229,10 +230,10 @@ func BuildFrameworkInvariants(g *ontology.Graph, domainName string) string {
 			catOrder = append(catOrder, "Other")
 		}
 		for _, cat := range catOrder {
-			lines = append(lines, "**"+cat+"**")
+			lines = append(lines, "**"+serviceText(g, cat)+"**")
 			lines = append(lines, "")
 			for _, r := range groups[cat] {
-				lines = append(lines, constitutionIndexLine(r.ID, r.Claim, r.Enforcement))
+				lines = append(lines, constitutionIndexLine(r.ID, requirementClaim(g, r), r.Enforcement))
 			}
 			lines = append(lines, "")
 		}
@@ -240,7 +241,7 @@ func BuildFrameworkInvariants(g *ontology.Graph, domainName string) string {
 
 	toolReqs := ScanToolRequirements()
 	if len(toolReqs) > 0 {
-		lines = append(lines, "**Tool-derived requirements**")
+		lines = append(lines, serviceText(g, "**Tool-derived requirements**"))
 		lines = append(lines, "")
 		for _, tr := range toolReqs {
 			lines = append(lines, constitutionIndexLine(tr.ID, tr.Claim, "STRUCTURAL"))

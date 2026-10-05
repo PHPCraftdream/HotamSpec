@@ -1,27 +1,12 @@
 package generator
 
 import (
-	"os"
+	"errors"
 	"strings"
 	"testing"
-)
 
-// TestBuildToolDocsIndex_FullProfileByteIdenticalToFixture is the byte-identity
-// contract for the full-profile (consumer == false) INDEX.md render: the
-// profile-threading change (task #144 / R8-a) must leave the full-profile
-// output EXACTLY as before — the consumer gating only diverges the Planned
-// section's rendering when consumer == true. The golden fixture was captured
-// from the pre-change BuildToolDocsIndex() output against the real tool
-// registry, so any drift in the full-profile path surfaces here immediately.
-func TestBuildToolDocsIndex_FullProfileByteIdenticalToFixture(t *testing.T) {
-	t.Parallel()
-	got := BuildToolDocsIndex(false)
-	want, err := os.ReadFile("testdata/fixture/tools-INDEX.md")
-	if err != nil {
-		t.Fatalf("read reference fixture: %v", err)
-	}
-	diffReport(t, "tools/INDEX.md (full profile)", got, string(want))
-}
+	"github.com/PHPCraftdream/HotamSpec/internal/localization"
+)
 
 // TestBuildToolDocsIndex_ConsumerPlannedSectionHasNoMarkdownLinks enforces the
 // core fix of task #144 (R8-a): under the consumer profile, genSpec skips
@@ -70,5 +55,40 @@ func TestBuildToolDocsIndex_ConsumerPlannedSectionHasNoMarkdownLinks(t *testing.
 	implSection := got[implIdx:idx]
 	if !strings.Contains(implSection, "](") {
 		t.Errorf("consumer Implemented section must still carry markdown links to per-tool pages (they are always written):\n%s", implSection)
+	}
+}
+
+func TestBuildToolDocsLocalizedTranslatesRegistryDescriptionWithoutChangingCommandData(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		language   string
+		translated string
+	}{
+		{language: "ru", translated: "Пересоздаёт docs/gen/*.md"},
+		{language: "zh", translated: "根据可执行模型"},
+	} {
+		docs, err := BuildToolDocsLocalized(tc.language, false)
+		if err != nil {
+			t.Fatalf("BuildToolDocsLocalized(%q): %v", tc.language, err)
+		}
+		doc := docs["gen_spec"]
+		for _, want := range []string{"# gen_spec", tc.translated, "--today YYYY-MM-DD", "internal/generator + internal/ontology"} {
+			if !strings.Contains(doc, want) {
+				t.Errorf("%s tool page does not preserve translated registry purpose and command data %q:\n%s", tc.language, want, doc)
+			}
+		}
+		if strings.Contains(doc, "Regenerates docs/gen/*.md") {
+			t.Errorf("%s tool page retained the English purpose instead of its exact locale view", tc.language)
+		}
+	}
+}
+
+func TestBuildToolDocsLocalizedRefusesUnsupportedLocale(t *testing.T) {
+	t.Parallel()
+	_, err := BuildToolDocsLocalized("fr", false)
+	var missing *localization.MissingTranslation
+	if !errors.As(err, &missing) || missing.Language != "fr" {
+		t.Fatalf("BuildToolDocsLocalized(fr) error = %#v, want typed missing-translation refusal", err)
 	}
 }

@@ -271,24 +271,25 @@ slice (не map — map-order hazard закрыт структурно), зна�
 `strconv.FormatFloat` 'g' -1, pointer разыменовывается — никогда адрес, error через `.Error()`),
 никакого wall-clock/random в артефакте.
 
-### 8.2 SPEC.md — генерируемый нормативный текст (W1.3)
+### 8.2 Legacy one-language `SPEC.md` — scenario-generated narrative (W1.3)
 
-`SPEC.md` — единственная проекция, требующая РЕАЛЬНОГО прогона тестов: `hotam gen-spec --spec`
-исполняет каждый `verified_by` через сабпроцесс `go test` (`gate.RunVerifiedByTestRecording`),
-по разу на запись, и рендерит тело спеки из записанных сценариев (`gate.BuildSpec`/
-`BuildSpecFromRows`). Поэтому `gen-spec` по умолчанию её НЕ пишет — каждый существующий вызов
-остаётся таким же быстрым и byte-identical, как до этой волны; генерация нормативного текста
-opt-in per run. Тело под каждым требованием = claim (из `graph.json`) + Given/When/Then/Value-
-нарратив реального прогона. Уточнение о границе «ручного текста»: файлы `docs/gen/` МЕХАНИЧЕСКИ
-регенерируются `gen-spec` и не правятся по месту, но их нормативное тело — это АВТОРСКИЙ prose
-(поля `Claim`/`Why`/`Context`, написанные руками в `graph.json` и спроецированные дословно);
-сгенерирована лишь СТРУКТУРА (таблицы, ID, статусы, кросс-ссылки, счётчики), не сам текст.
-Измерено (задача #402): авторский prose — ~12% объёма `docs/gen/*.md` на «тощем» домене (hotam-dev)
-и ~49% на self-hosting-домене (hotam-spec-self); один авторский `Claim` — ~54% `REQUIREMENTS.md`
-(hotam-spec-self). SPEC.md — единственная проекция, чьё тело ДОПОЛНЯЕТСЯ машинно-сгенерированным
-сценарным нарративом; прочий нормативный текст в `docs/gen/` — проекция авторских полей.
-`graph.json` остаётся бухгалтерией (id, короткий claim, статус); SPEC.md — производная проекция,
-никогда первоисточник (подтверждается D2).
+This subsection describes the existing one-language `NewScenario` path.
+Multilingual atom views and explicit rule/case rendering are specified in §13.
+For this legacy path, `hotam gen-spec --spec` executes each `verified_by` test
+through `go test` (`gate.RunVerifiedByTestRecording`) and builds the scenario
+narrative with `gate.BuildSpec` / `BuildSpecFromRows`. By default, `gen-spec`
+does not write this `SPEC.md`; generation is opt-in per run. Under each
+requirement the narrative combines the graph claim with the real recorded
+Given/When/Then/Value steps.
+
+The `docs/gen/` files are mechanically regenerated, not hand-edited, but their
+ordinary normative prose is authored `Claim`/`Why`/`Context` projected from
+the graph. Only their structure (tables, IDs, statuses, links and counters) is
+generated. Prior measurements (task #402) found authored prose at ~12% of
+`docs/gen/*.md` on hotam-dev and ~49% on hotam-spec-self; one authored claim
+was ~54% of self-hosted `REQUIREMENTS.md`. In this legacy path, `SPEC.md` is
+the projection augmented by machine-recorded scenario steps; it is a derived
+view, never the source of truth.
 
 ### 8.2.1 Путь requirements-as-code: оцифровка вместо prose
 
@@ -301,16 +302,17 @@ opt-in per run. Тело под каждым требованием = claim (и�
 дописывается кодом, а заменённый/снятый факт уходит в `REJECTED` с `replaces` (граф append-only).
 `Signoff.verbatim` на этом пути не используется.
 
-### 8.3 Гейты обязательности (W2.1–W2.4) — честный NO-OP до opt-ина
+### 8.3 Scenario-proof and freshness gates (W2.1–W2.4) — independent triggers
 
-Четыре инварианта закрывают «текст без прогона» и соблазн свернуть семантику в движок. Каждый —
-честный NO-OP, пока домен не объявил `"discipline": "full"` в `manifest.json` (one-way,
-per-domain флип в ТОМ ЖЕ коммите, что завершает миграцию домена; никаких долгоживущих
-opt-out-флагов — `TestCheckSettledRequiresScenario_NoOpWithoutDisciplineFull` кодирует этот контракт):
+Four invariants govern the legacy scenario-generated path. The scenario/model
+obligations use the domain's explicit `discipline: "full"` trigger;
+`check_spec_md_current` instead owns freshness when the legacy `SPEC.md` is
+present. No check borrows a different check's trigger.
 
-- **`check_settled_requires_scenario`** (W2.1) — в `discipline: full` домене каждое SETTLED
-  требование обязано нести `implemented_by` + `verified_by` + сценарий. Без `discipline: full`
-  (умолчание, и каждый домен сегодня) — NO-OP.
+- **`check_settled_requires_scenario`** (W2.1) — in a `discipline: full`
+  domain, each SETTLED requirement without an engine `enforced_by` carrier
+  must have `implemented_by`, `verified_by` and at least one scenario-narrated
+  test. Without `discipline: full` this obligation is a no-op.
 - **`check_scenario_executes_impl`** (W2.2) — coverage-proof: движок гоняет `verified_by`-тест с
   `-coverprofile` и проверяет, что строки `implemented_by`-символа исполнены ИМЕННО этим тестом
   (>0 покрытых statement'ов) — закрывает главный вектор форжинга артефакта тестом, не зовущим
@@ -329,7 +331,62 @@ coverage-proof, byte-identical SPEC.md), зеркальный аудит сер�
 инвариантов графа (`internal/invariants`). Миграция домена на `discipline: full` — ratchet:
 остаточное «inherently prose» видно в `COVERAGE.md`, не прячется тихим исключением.
 
-## 9. История: переход от gen-code
+## 9. Самоисполняемые атомы
+
+Домен включает режим явно: `"self_executing_atoms": true` в `manifest.json`.
+Существующий сценарный режим других доменов не меняется; `NewScenario` остаётся
+для многошаговых сценариев.
+
+Атом — именованный метод без аргументов. Метод значения содержит один `return`
+с одним выражением. Его фраза — первая строка doc-комментария; заголовок метода
+вроде `BirthYear —` в эту фразу не включается. Текст требования выводится из
+фразы и реально исполненного значения: «Год рождения — 1987.».
+
+Здесь описан legacy одноязычный Fact-режим; языковые блоки и rule/case режим
+описаны в §13.
+
+```go
+// год рождения
+func (h Human) BirthYear() BirthYear { return h.born }
+
+func TestBirthYear(t *testing.T) {
+    hotamspec.Fact(t, Init().BirthYear, BirthYear(1987))
+}
+```
+
+`Fact` исполняет переданный метод один раз, проверяет значение и возвращает
+`Evidence`. Замыкания, анонимные и свободные функции не являются субъектами.
+В артефакте сохраняются нормализованный `Subject` метода и исполненное значение;
+суффикс `-fm`, указатель получателя и параметры generic-типа не меняют идентичность.
+
+Отношение — отдельный `bool`-метод; оно проверяется через
+`Holds(t, predicate, evidence...)`. Доказательства — результаты `Fact`, не
+повторные исполнения методов. По умолчанию ожидается `true`; отрицательное
+отношение проверяется с `hotamspec.Expect(false)` без анонимной обёртки.
+В методе отношения разрешены ветвления.
+
+ID по умолчанию — `R-<receiver-kebab>-<method-kebab>`; явное переопределение
+в реестре сопоставляется по методу в `implemented_by`. Остальные ссылки
+выводятся: `implemented_by` — объединение субъектов, `verified_by` — исполнивший
+их тест. `atom_defaults` манифеста задаёт owner, status, why, created_at и
+settled_at; owner по умолчанию берётся из director, status — SETTLED.
+Реестр хранит только REJECTED и исключения. Переименование с новым выводимым
+ID требует явного REJECTED старого требования и `replaces` у нового.
+Несовпадающий ручной заголовок не подменяет выведенный текст, а является ошибкой.
+
+Пакеты поддоменов находятся в `spec/model/<sub>/`; обход рекурсивный.
+Порядок выводится из позиции метода в исходниках, ручной `DeclOrder` не нужен.
+`docs/gen/SPEC.md` — индекс пакетных страниц `docs/gen/spec/<pkg>.md`.
+Если inline-требования consumer-кристалла превышают 6000 символов, вместо
+пустоты выводятся ссылки на пакеты со счётчиками.
+
+Запись производится пакетным `go test -json`: родной кэш Go переигрывает
+канонические артефакты из stdout для неизменённых пакетов, изменённые пакеты
+исполняются заново. Собственного дискового кэша вердиктов нет.
+Проверки фразы, атомарности и единственного субъекта структурные;
+семантическое доказательство остаётся за зеркальным аудитом (§6).
+
+## История: переход от gen-code
 
 Ранняя версия этого контракта (`GEN-CODE-CONTRACT.md`, git-история сохраняет полный текст)
 описывала `hotam gen-code` — генератор, порождавший Go-модели/lifecycle-методы/тесты ИЗ графа
@@ -391,6 +448,430 @@ R-domain-overview-projection, а не молча оставить пробел.
    gate-order, что у `sync-self`). `requirements_authority: "code"` затем блокирует
    `apply-proposal`/`land` от ручного авторинга Requirement/Rejection для этого домена.
 
+For this authorized code projection, the engine uses
+`loader.LoadGraphForCodeProjection(path)`, gated to self-hosting or
+`requirements_authority: "code"`. Ordinary `loader.LoadGraph` remains strict.
+It retains strict wire, manifest and core-graph validation, deferring only
+stale Requirement-conformance checks. After the source-to-graph projection,
+callers must run `loader.ValidateGraph` before `loader.WriteGraph` persists it.
+
 Self-hosting-домен `hotam-spec-self` использует ту же механику через `sync-self` (его Go-registry —
 `internal/selfspec/requirements_*.go`, §self-hosting lock). Направление ВСЕГДА Go→graph (код —
 первоисточник), никогда graph→Go: это тот же принцип «authored spec, не генератор кода», что и §9.
+
+## 12. Наблюдения, находки и источники
+
+`hotam evidence --domain <path> --json --write` executes checks and saves one
+shared `docs/gen/evidence.json` plus `EVIDENCE.md` and `FINDINGS.md` views;
+localized bundles use the corresponding language-suffixed views. This reports
+observations, not graph mutation or publication of a successful normative
+SPEC. On discrepancy, files are still saved before nonzero exit. A passing
+test remains visible when a sibling in the package fails. Atom-domain reports
+also collect real `spec/model` artifacts before the first successful
+`sync-domain`, when the graph may still be empty.
+
+`Fact` records actual/expected. `WithInput(value)` and
+`WithContext(ArtifactContext{Implementation, ImplementationVersion,
+SpecVersion, Profile, Target, Operation, Producer, Components})` add explicit
+input and caller-supplied context; versions and components are never guessed.
+`Target`, `Operation` and `Producer` distinguish selection/provenance. The
+runtime `Components` list is separately recorded from manifest compositions;
+only values actually supplied by the producer are stored, in deterministic
+order.
+
+`Observed(value, Observe(name, input, actual, expected)...)` remains the
+generic nested-summary API. `Bytes`, `Text`, `Integer`, `Float64Bits`,
+`Scalar`, `Diagnostic` and `Object` create exact typed payloads for raw
+observations. The method runs once; `Fact` compares the underlying value and
+preserves the nested comparisons. A failed nested comparison makes the real
+`testing.T` fail even when its summary matches `want`.
+
+В `manifest.json` список `specification_sources` задаёт объекты
+`{id, path, version, sha256}`. Относительный path считается от домена,
+для self-hosting — от его Go module root. Абсолютный path задаётся явно.
+Версия — авторская декларация; SHA-256 проверяется по фактическим байтам.
+`Requirement.SourceLinks` содержит `{source_id, anchor}`; anchor — существующий
+Markdown heading или диапазон `Lx-Ly`/`Lx`. Проверка существования и хэша
+структурная: она не доказывает, что метод семантически покрывает пункт.
+Старые свободные `SourceRefs` не превращаются в подтверждённые источники.
+
+Отчёт различает `verified`, `discrepancy`, `unsupported_recommendation`,
+`unreachable`, `unverified`. Первые два состояния вычисляются из исполнения.
+Авторская `Coverage`-декларация содержит status/rationale/profile; для
+unreachable нужны обоснование, профиль и source links, для неподдерживаемой
+рекомендации — обоснование и source links. Такая декларация не подавляет
+реально наблюдённое расхождение. Неисполненное или недоступное — не verified.
+
+Finding preserves the norm, method, test, case, comparison, profile, target,
+producer and component provenance with a content-addressed ID. Its initial
+status is unreviewed: the framework does not decide whether the specification,
+model or implementation is at fault. `hotam findings list|show|review` stores
+separate human review in `docs/reviews/finding-reviews.json`. Review requires
+kind (`specification_issue`, `model_issue`, `implementation_issue`,
+`needs_review`), status (`open`, `resolved`), rationale and decision-ref. It
+does not change observations or verdicts. Locale selection does not affect
+finding identity or transfer a review; source/case changes follow the existing
+fingerprint rules. This is not a verdict cache.
+
+`confront` обозначает лексические совпадения как `lexical_suspicion`;
+общие implementation/source links или Relations усиливают их до
+`linked_suspicion`, но не устанавливают противоречие. `formal_conflict`
+возникает из явного unresolved Conflict carrier, перечисляющего оба
+требования. Только такой carrier блокирует запись без зафиксированного
+решения; opposite-marker слова сами по себе не блокируют и не порождают
+ложную acknowledgement history.
+
+
+## 13. Atomic multilingual and conformance specifications
+
+This section extends the plain authored-spec path without replacing it. One
+graph, requirement identity, source index, test snapshot, evidence store and
+review store serve every language. Language views and multiple cases are not
+separate requirement copies. Structural presence, case execution and corpus
+pass do not establish semantic equivalence, exhaustive input coverage or
+complete conformance.
+
+### 13.1 Language and source-text contract
+
+`manifest.json` may declare `languages`, `default_language` and
+`conformance`. Their Go fields are `loader.DomainManifest.Languages`,
+`DefaultLanguage` and `Conformance`. The resolved `Graph` carries
+`Languages`, `DefaultLanguage`, `RenderLanguage` and `Conformance` as
+invocation-local state; `RenderLanguage` is a view on the shared graph, not a
+second graph.
+
+- Without `languages`, the existing one-language mode and output names remain
+  unchanged. A one-code list is also one-language mode; its default may be
+  omitted or equal that sole code. Plain doc comments remain valid.
+- A multi-language list must be non-empty, unique, path-safe, supported and
+  paired with a `default_language` in the list. The current service catalog
+  supports `en`, `ru` and `zh`. Unsupported or invalid codes are errors;
+  generators do not choose an OS/terminal/doc-language guess.
+- A fixed service-template key missing from a selected locale is a typed
+  missing-translation error. There is no English fallback. Catalogs cover
+  framework/tool descriptions and fixed rendering templates only; authored
+  claims, history, review rationale, quotes, SDK output, code and identifiers
+  remain authored or raw.
+
+For multilingual atoms the sole comment syntax is `>>>>> lang=<code>` in the
+method's Go doc comment. Each declared language has exactly one non-empty
+phrase block; malformed markers, text outside blocks, unknown/duplicate codes,
+empty blocks or a missing declared language are errors with file/method/line/
+language context. A plain unmarked phrase is not a multilingual fallback. Do
+not add alternate tags, IDs,
+headings, tables, templates or translation dictionaries to ordinary method
+comments.
+
+The source index retains each language's phrase and source position. One
+`Requirement` keeps one ID, method/test links and relation graph. Its typed
+`ClaimTexts` (`claim_texts`, `ontology.LocalizedText`) carries the derived
+claim for every declared language. A rule claim is its authored doc norm; a
+value-fact claim combines the doc phrase with the executed value. `Claim` is
+mechanically the `default_language` entry, not a second manual translation or
+fallback. In single-language payloads, absent localized fields stay absent. Editing a
+non-default translation is preserved in source→graph diffs and confirmation
+hashes. Switching only the render locale does not alter identity, verdict,
+coverage or finding review; source edits still follow the content-addressed
+identity rules.
+
+For multiple languages HotamSpec renders `docs/gen/SPEC.<lang>.md` and
+`docs/gen/spec/<lang>/<pkg>.md`. Other generated human-readable views use the
+same language suffix; each index links to shards in its own locale. Machine
+data (`graph.json`, `evidence.json`, review storage) is shared. The standard
+`CLAUDE.md` uses the default language; additional localized boot views are
+`CLAUDE.<lang>.md`, without a duplicate default-language copy.
+
+Within a multilingual bundle, other emitted views use the language suffix in
+`docs/gen/<NAME>.<lang>.md`. URI/code identifiers and shared machine-data files
+are never translated.
+
+The output inventory is shared by rendering, freshness and cleanup. Every
+view and shard is rendered before publication; a config/translation/render
+error does not publish a partial new bundle. Existing recovery mechanisms
+apply, but multi-file publication is not a filesystem-wide atomic snapshot.
+On language add/remove, reverse transition or default change, only obsolete
+generator-owned files are removed; authored files and durable review notes are
+never cleanup targets.
+`check_language_bundle_complete` owns source-language block completeness and
+`check_language_outputs_current` owns localized-output freshness whenever a
+language list is explicitly declared, including one code (where legacy
+filenames remain unchanged). It compares generated localized docs and
+language-aware boot crystals. It requires the full SPEC index/shard bundle in
+multilingual mode; an explicit single locale follows the existing/legacy SPEC
+promise. EVIDENCE/FINDINGS views are freshness-checked only when the shared
+`docs/gen/evidence.json` or a known evidence view is already materialized; the
+check does not make running `hotam evidence --write` a new obligation. The
+legacy `check_spec_md_current` and `check_domain_claude_md_current` are no-ops
+for explicit languages. This post-processing checker reuses the phase-one
+violation/evidence snapshot, not a second source or test execution. Legacy
+opt-ins do not activate either language obligation.
+
+### 13.2 Rule atoms, cases and execution
+
+`atom_kind` absent/empty preserves legacy fact mode; only an explicit `"rule"`
+selects stable authored norm semantics. Neither a `bool` method nor a large
+number of tests changes the kind implicitly. The ordinary `Fact`/`Holds`
+contract continues to derive a value fact from phrase plus real value and
+rejects conflicting values for one fact ID. In rule mode the authored doc
+phrase is the stable norm; per-case values belong to case/evidence records and
+never rewrite that norm.
+
+`Requirement`'s optional JSON fields are `claim_texts`, `atom_kind`, `cases`,
+`clause_links`, `strength`, `applicability` and `precedence` (all omitted when
+empty).
+
+`conformance.rule_cases: true` permits recorder rule/case mode; it is
+independent of language configuration and older triggers, and does not enable
+a scan of every model method. `self_executing_atoms` remains the explicit atom
+discovery trigger. A domain using automatic `sync-domain` rule discovery must
+declare both; neither one alone grants the other's behavior. `WithCase` on
+`Fact` or `Holds` selects the authored-rule mode, retains the bound method's
+requirement ID, and requires a non-empty case ID. Graph-aware processing
+rejects the case mode when `rule_cases` is not enabled. Explicit graph
+`CaseDefinition` declarations trigger their own conformance audit without
+implicitly scanning methods. No new assertion DSL or per-case graph copy is
+introduced.
+
+`CaseContext` carries `ID`, `AtomIDs`, `Profile`, `Target`, `Operation`,
+`Producer`, `Fixtures`, `Conditions`, `Sides` and `Selection`. It also accepts
+optional runtime-only `Expected *TypedValue`, a shared oracle for a case that
+compares multiple properties.
+
+The persistent `CaseDefinition` includes typed `Input` and `Expected` as
+independent case/oracle values plus selection metadata. Its file-qualified
+`Test` link is derived from a real execution and addresses that case only; it
+is not a `Requirement.VerifiedBy` alias and does not mark the atom verified.
+Explicit graph/report cases may use a `CaseDefinition.Test` reference without
+scanning model packages. Normal test-driven discovery projects `WithInput` and
+the test's explicit `want`/`Expect` into a new case descriptor; these are
+authored test data, never derived from SUT actual. A registry/proposal may
+declare a case descriptor directly, but if so recorded declarations must
+agree; discovery reports mismatch and does not overwrite explicit values.
+
+The recorder `CaseContext` omits `Test` and `Input`: it obtains the test
+identity from the real test/subtest and records `case_input` from the supplied
+input. Its runtime `Expected` is omitted from the case object and deep-copied
+only to the artifact's root `case_expected`; when absent, that root value comes
+from `Fact`'s explicit `want` or `Holds`' `Expect`, never from actual output.
+Each observation's `RawExpected` remains its own property-comparison
+expectation, not the shared oracle. Runtime `case_input` / `case_expected` are
+separate from the authored `CaseDefinition.Input` / `.Expected` metadata.
+
+The pipeline associates the descriptor with the bound method's requirement
+identity; optional `AtomIDs` allow one shared case to address additional
+atoms. `Operation`, `Target` and `Producer` are explicit selection/provenance,
+not inferred from a result. Reusing one case ID with conflicting metadata is
+an error; compatible evidence can share one descriptor and one parse/
+execution.
+Explicitly compatible cases tied to the same file-qualified test justify
+shared `verified_by` without inventing a `Relations` edge. Atom execution
+checks reuse the invocation snapshot and require a passing recorded method
+subject matching each implementation link; legacy scenarios retain their
+test-specific coverage proof.
+
+
+Cases can link several `AtomIDs`, while one atom can have many cases. Keep
+independent conditions as separate atoms when each is independently
+checkable. Case ID is stable across languages and actual results. Test,
+input, expectation, profile, target, producer, fixture and composition changes
+remain addressable in diff/fingerprint/evidence; they do not mint language
+copies of the normative atom.
+
+### 13.3 Source-clause inventory and corpus
+
+`ConformanceConfig` has independent fields `RuleCases`, `Clauses`, `Profiles`
+and `Compositions`. Rule recording is activated by `RuleCases`; clauses,
+profiles and compositions bring only the checks for their own declared data.
+Enabling `languages` does not make any of those inventories mandatory, and
+legacy opt-ins do not activate them.
+
+Each `SourceClause` has stable `ID`, `SourceLinks`, `Sides`, `Strength` and
+optional `Applicability`. A `ClauseLink` on a requirement identifies
+`ClauseID` and `Side`; the mapping is many-to-many. Source links remain typed
+references to manifest-declared `{id, path, version, sha256}` pins and real
+anchors. Their byte/hash/version/anchor checks establish source identity and
+traceability, not semantic correspondence or a complete list of norms.
+Clause IDs are authored stable keys, not heading text, translation, method
+name or line count. Explicit sides prevent a passing happy path from standing
+for conditions it did not exercise.
+
+`CaseDefinition.Fixtures` carries `FixtureRef{ID, Category, Path, Role,
+SHA256, RawBytes}`. All five string fields and `RawBytes` are required;
+`SHA256` is 64 hexadecimal characters, and `RawBytes` is an explicit wire
+boolean serialized as `false` or `true` (`true` marks raw-byte input). `Role`
+is `input`, `expected`, `canonical`, `error` or `extra`.
+Relative paths resolve from the domain specification root; an absolute path
+must be explicit. The digest is checked against exact file bytes.
+`corpus.Read(root, ref)` reads and validates the reference without interpreting
+categories, decoding an unknown file format, or running a second test language.
+Raw-byte fixtures stay bytes before UTF-8 processing; categories are generic
+domain data, not Ktav-specific engine enums. A fixture is provenance/evidence,
+never an independent requirement or compliance by itself.
+
+### 13.4 Typed observations and exact comparison
+
+Readable `Input`/`Actual`/`Expected` strings remain projections. Typed
+`ontology.ObservedValue` distinguishes `text`, `bytes`, `bool`, `integer`,
+`float`, `object`, `null` and `diagnostic`; `Fields` contain typed nested
+values. `kind: "bool"` requires the typed JSON `bool` payload (`Bool *bool`):
+a non-nil pointer preserves `false`, while an absent payload is not false.
+Boolean values are not encoded in `Text` or `ScalarKind`. Bytes carry an
+encoding and exact base64 payload; integers are decimal strings; binary64
+`FloatBits` are 16 hexadecimal IEEE-754 bits. Diagnostic data keeps `Code`,
+optional `Class`/`Reason`/one-based `Line` and optional half-open byte
+`Span{Start, End}`.
+
+At the recorder boundary the raw-payload mirror is `hotamspec.TypedValue`,
+including `Bool *bool` with the same `bool` JSON field and absent-versus-false
+semantics. It is distinct from the existing generic
+`hotamspec.ObservedValue[V]` summary wrapper, and `Observed(value,
+observations...)` remains unchanged. `Bytes([]byte)`, `Text(string)`,
+`Integer(string)`, `Float64Bits(float64)`, `Scalar(kind string, value any)`,
+`Diagnostic(DiagnosticValue)` and `Object(map[string]TypedValue)` construct
+typed raw values; `Scalar("bool", false)` uses `Bool`, not text. Raw
+observations supplement, not replace, readable values.
+Missing fields stay absent, distinct from zero, empty or null. In particular,
+invalid UTF-8 is never round-tripped through a replacement-character string.
+
+Typed equality is exact structural identity: no implicit tolerance,
+normalization or coercion. `Float64Bits` distinguishes signed zero and NaN
+payloads; Integer and Text are different types. Error code/class/reason,
+line and byte span are distinct fields. Only record positions and properties
+the producer actually supplied; do not invent diagnostics or an ordering for
+map data that transport did not preserve.
+
+### 13.5 Strength, applicability, profiles and precedence
+
+`Strength` expresses authored `MUST`, `SHOULD` or `MAY`, not an execution
+verdict. `Applicability{Operations, Profiles, Features}` is evaluated from
+the declared selected operation/case/profile context: non-empty classes are
+ANDed, values within Operations or Profiles are ORed, and every declared
+Feature is required. Empty applicability is universal. Do not derive it from
+a failed output. A non-applicable selection is reported as such, not as
+verified or unreachable.
+
+`Profile` has stable `ID`, `Operations`, `Features`, `IntegerMin`,
+`IntegerMax`, `FloatDomain`, `Rounding`, optional `PreservesOrder` and
+string-valued `Capabilities`. Profile/capability declarations describe
+selection context, not an observed implementation result. Authored
+`unsupported_recommendation`, `unreachable` and `unverified` qualifications
+require rationale; unsupported/unreachable also require source links, and
+unreachable requires an explicit profile. They do not erase observed
+discrepancy.
+
+`PrecedenceLink{Target, Scope, Applicability}` is a distinct typed ordering
+relation. It is not method/source file order and is not `depends_on`. A
+strict cycle within a declared scope is structurally invalid. The priority
+norm itself still needs an atom, and a behavioral priority finding requires
+an actually observed competition witness: matched conditions and selected
+branch are preserved only when the producer recorded them. A happy path for
+each branch separately does not prove which rule wins when several match.
+No backend trace is invented.
+
+### 13.6 Composition, audit and reports
+
+`Composition{ID, Components}` describes a selected implementation
+composition. Each `Component` carries `ID`, free declared non-empty `Role`,
+`Version`, `SHA256` and `Measured`. Runtime evidence separately records
+caller-supplied `ArtifactContext.Target`, `.Operation`, `.Producer` and
+`.Components []Component`; the recorder stores only the component metadata
+actually passed by the test and orders that list deterministically. Manifest
+declarations do not fabricate runtime measurements. A direct SDK target and
+an adapter-adjusted/composed target remain distinct observations. A mismatch
+or missing measurement is reported; no component is automatically blamed.
+
+`ontology.ValidateConformance(g)` validates declaration structure.
+`conformance.Audit(g, executions)` reports structural assessments relative to
+the explicit clause/profile/case/composition inventory. The report distinguishes
+clause decomposition/source/sides, atoms/methods, cases/execution/verdict,
+profile qualifications, precedence and component provenance. Its issue IDs
+include `clause_missing_decomposition`, `clause_missing_side`,
+`clause_missing_source`, `atom_missing_method`, `atom_missing_cases`,
+`case_missing_execution`, `case_unverified`, `case_discrepancy`,
+`case_target_mismatch`, `case_profile_mismatch`, `case_metadata_conflict`,
+`source_unverified`, `profile_not_applicable`, `profile_unsupported`,
+`profile_unreachable`, `profile_unverified`, `precedence_cycle`,
+`precedence_unwitnessed`, `precedence_discrepancy`, `composition_unmeasured`
+and `composition_fingerprint_changed`. A real failure/discrepancy takes
+precedence over applicability and authored qualifications.
+
+The named self-hosted structural carriers are `check_language_bundle_complete`
+(source-language block completeness, only when more than one language is
+declared), `check_language_outputs_current` (the complete expected localized
+output bundle whenever a language list is explicitly declared) and
+`check_conformance_audit` (declared rule/case/conformance data through
+structural validation and the audit API). That audit is triggered only by
+`conformance.rule_cases`, declared conformance clauses/profiles/compositions,
+or requirement `atom_kind`, `cases`, `clause_links`, `strength`,
+`applicability` or `precedence` fields. `check_language_outputs_current` is the
+stable postprocess registry hook in `internal/invariants/language_freshness.go`;
+the actual document comparison is wired by
+`cmd/hotam/language_freshness_wiring.go:checkLanguageOutputsCurrentReal`.
+The postprocessor shares phase-one violation/evidence state, and localized
+checks own their outputs rather than inheriting duties from old opt-ins.
+`hotam all-violations` reports invariant violations and
+`hotam evidence --json --write` emits observations/audit data without making a
+failed execution green. `RequirementResult` and findings retain
+`ClaimTexts`/`AtomKind` and case/profile/target/producer/typed values in one
+shared evidence model. Locale selection does not change raw comparisons or
+finding identity; changed source or case data continues to follow normal
+fingerprint/review rules.
+
+No check in this contract proves that a translation has the same meaning as
+another, that an inventory contains every natural-language norm, that a
+corpus is exhaustive, that passing observed cases prove universal behavior,
+or that a particular implementation layer is to blame. Those are human
+semantic review decisions, not claims of structural conformance.
+
+### 13.7 Implemented API and command boundaries
+
+- `gate.NewAtomSourceIndex(specRoot)` preserves the legacy/plain one-language
+  meaning. `gate.NewAtomSourceIndexForGraph(g)` returns a graph-configured
+  index using invocation-local languages, source root and `Conformance.RuleCases`.
+  `(*gate.AtomSourceIndex).Resolve(subject)` returns an `AtomSource` with
+  legacy `Phrase`, localized `Phrases`, per-language `PhrasePositions`, AST
+  method and source positions. `(*gate.AtomSourceIndex).DeriveClaims(artifact)`
+  returns `(ontology.LocalizedText, error)`; `DeriveClaim` returns the selected
+  primary/default phrase. `selfspec.DiscoverAtoms` scans with
+  `self_executing_atoms`; rule artifacts additionally require
+  `conformance.rule_cases`. Each source package is recorded once regardless
+  of locale count.
+- Exported `gate.AtomArtifact` decodes recorder `req_id`, `test`, `mode`,
+  `title`, `verdict` and `steps`, plus `Case *AtomCaseContext` and typed
+  `CaseInput` / `CaseExpected`. `AtomArtifact.CaseDefinition(fileQualifiedTest)`
+  projects declared recorder metadata, input and independent expected value;
+  it never uses the SUT actual as an oracle.
+- `gate.CollectAtomExecutionSnapshot(g)` collects package runs, source data and
+  case tests once. Discovery, SPEC rows, evidence and atom checks consume that
+  snapshot; adding a locale does not execute the package again.
+  `gate.CollectSpecRowsFromSnapshot(g, snapshot)` derives shared rows;
+  `gate.CollectSpecRows(g)` remains the standalone convenience path.
+  `gate.BuildSpecFromRowsForLanguage(g, rows, language)` strictly renders one
+  view without execution. `gate.BuildSpecDocumentsFromRows(g, rows)` renders
+  all locale views from those rows and returns a path/content map or error.
+  The legacy `gate.BuildSpecFromRows(g, rows) string` retains its signature
+  and panics with the original render error rather than returning fallback or
+  empty content. `generator.BuildLocalizedDocuments(g, domainName, repoRoot,
+  today)` returns the other localized document paths/content. `docbundle.NewLayout`
+  centralizes safe names for documents, SPEC indexes/shards, crystals and
+  owned-output cleanup.
+  Localized renderer keys under `docs/gen/` are domain-relative; keys under
+  `framework/` are project-relative. `docbundle.ResolveOutputPath` confines both
+  inventories and rejects separately published paths; publication refuses
+  authored destination content before writing the bundle.
+- The localization leaf exposes `localization.Supported(language)`,
+  `localization.Text(language, sourceTemplate, args...)` and
+  `localization.Lookup(language, sourceTemplate)`. `Lookup` returns a typed
+  `*localization.MissingTranslation`; strict bundle builders convert missing
+  fixed keys into errors. These APIs translate fixed service/catalog text
+  only, never completed documents or authored data.
+- `ontology.ValidateConformance(g)` validates declaration structure;
+  `conformance.Audit(g, executions)` assesses recorded cases relative to the
+  explicit inventory; `corpus.Read(root, ref)` validates and reads exact
+  fixture bytes. `hotam evidence --json --write` exposes observations/audit
+  reports; `hotam all-violations` exposes structural invariant failures.
+- Self-hosted carriers live in the hand-maintained `internal/selfspec`
+  registry. Project them with `hotam sync-self` in dry-run mode, inspect the
+  proposed diff/hash, then use the printed hash with `--confirm-hash` to
+  synchronize `graph.json`. Do not hand-edit that graph.
+

@@ -32,6 +32,8 @@ import "github.com/PHPCraftdream/HotamSpec/internal/methodology"
 // already registered by the time this runs.
 func init() {
 	wireToolRun("gen_spec", cmdGenSpec)
+	wireToolRun("evidence", cmdEvidence)
+	wireToolRun("findings", cmdFindings)
 	wireToolRun("what_now", cmdWhatNow)
 	wireToolRun("apply_proposal", cmdApplyProposal)
 	wireToolRun("gate", cmdGate)
@@ -57,10 +59,7 @@ func init() {
 // wireToolRun patches the Run field of the already-registered Tool named
 // name, leaving every other field (Command, Canon, Purpose, Status) exactly
 // as tools_data.go declared it. It panics (via registry.Update) if name was
-// never registered — a mismatch here is a wiring bug (an Implemented tool renamed
-// or removed in tools_data.go without updating this file, or vice versa),
-// and TestToolWiring_EveryImplementedToolHasRun in tool_wiring_test.go exists to
-// catch the inverse mistake: an Implemented tool that this file forgot to wire.
+// never registered, catching a registry/wiring name mismatch.
 func wireToolRun(name string, run func(args []string) error) {
 	tool, ok := methodology.Tools.Get(name)
 	if !ok {

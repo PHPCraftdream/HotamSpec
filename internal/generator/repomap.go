@@ -52,23 +52,23 @@ func RepoMapMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, frameworkDocs []GenDocEntry, decisionsWritten, entitiesWritten, tensionsWritten, pipelineWritten, modelsWritten bool, consumer bool) string {
-	lines := []string{Banner, ReaderHeaderLine("REPO_MAP", g), ""}
-	lines = append(lines, "# REPO-MAP.md — Repository file index (Hotam-Spec)")
+	lines := []string{localizedBanner(g), ReaderHeaderLine("REPO_MAP", g), ""}
+	lines = append(lines, serviceText(g, "# REPO-MAP.md — Repository file index (Hotam-Spec)"))
 	lines = append(lines, "")
 	if !consumer {
-		lines = append(lines, repoMapFrameworkBodyContent)
+		lines = append(lines, repoMapFrameworkBodyContentForLanguage(g.RenderLanguage))
 		lines = append(lines, "")
 	}
-	lines = append(lines, renderRepoMapToolsSection())
+	lines = append(lines, renderRepoMapToolsSectionLocalized(g.RenderLanguage))
 	lines = append(lines, "")
 
-	lines = append(lines, "**Domain content** (`domains/"+domainName+"/`)")
+	lines = append(lines, serviceText(g, "**Domain content** (`domains/%s/`)", domainName))
 	lines = append(lines, "")
-	lines = append(lines, "- `domains/"+domainName+"/graph.json` — "+domainGraphPyRole(domainName))
-	lines = append(lines, "- `domains/"+domainName+"/manifest.json` — manifest of domain '"+domainName+"'.")
+	lines = append(lines, "- `domains/"+domainName+"/graph.json` — "+domainGraphPyRoleLocalized(g.RenderLanguage, domainName))
+	lines = append(lines, "- `domains/"+domainName+"/manifest.json` — "+serviceText(g, "manifest of domain '%s'.", domainName))
 	lines = append(lines, "")
 
-	lines = append(lines, "**Generated docs** (`domains/"+domainName+"/docs/gen/`)")
+	lines = append(lines, serviceText(g, "**Generated docs** (`domains/%s/docs/gen/`)", domainName))
 	lines = append(lines, "")
 	sortedDocs := make([]GenDocEntry, len(genDocs))
 	copy(sortedDocs, genDocs)
@@ -77,19 +77,19 @@ func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, f
 		lines = append(lines, "- `domains/"+domainName+"/docs/gen/"+d.Filename+"` — "+mdTitle(d.Content))
 	}
 	if !decisionsWritten {
-		lines = append(lines, "- `domains/"+domainName+"/docs/gen/DECISIONS.md` — _(not written: M-registry empty)_")
+		lines = append(lines, serviceText(g, "- `domains/%s/docs/gen/DECISIONS.md` — _(not written: M-registry empty)_", domainName))
 	}
 	if !entitiesWritten {
-		lines = append(lines, "- `domains/"+domainName+"/docs/gen/ENTITIES.md` — _(not written: no entity_types declared)_")
+		lines = append(lines, serviceText(g, "- `domains/%s/docs/gen/ENTITIES.md` — _(not written: no entity_types declared)_", domainName))
 	}
 	if !tensionsWritten {
-		lines = append(lines, "- `domains/"+domainName+"/docs/gen/TENSIONS.md` — _(not written: no conflict or axis nodes)_")
+		lines = append(lines, serviceText(g, "- `domains/%s/docs/gen/TENSIONS.md` — _(not written: no conflict or axis nodes)_", domainName))
 	}
 	if !pipelineWritten {
-		lines = append(lines, "- `domains/"+domainName+"/docs/gen/PIPELINE.md` — _(not written: no process nodes)_")
+		lines = append(lines, serviceText(g, "- `domains/%s/docs/gen/PIPELINE.md` — _(not written: no process nodes)_", domainName))
 	}
 	if !modelsWritten {
-		lines = append(lines, "- `domains/"+domainName+"/docs/gen/MODELS.md` — _(not written: no authored spec/ model files)_")
+		lines = append(lines, serviceText(g, "- `domains/%s/docs/gen/MODELS.md` — _(not written: no authored spec/ model files)_", domainName))
 	}
 
 	// Framework reference section (task #357): project-shared self-
@@ -103,7 +103,7 @@ func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, f
 	// the one top-level file (GLOSSARY.md) plus a pointer to the tools/ subdir.
 	if len(frameworkDocs) > 0 {
 		lines = append(lines, "")
-		lines = append(lines, "**Framework reference (project-shared)** (`framework/`)")
+		lines = append(lines, serviceText(g, "**Framework reference (project-shared)** (`framework/`)"))
 		lines = append(lines, "")
 		sortedFw := make([]GenDocEntry, len(frameworkDocs))
 		copy(sortedFw, frameworkDocs)

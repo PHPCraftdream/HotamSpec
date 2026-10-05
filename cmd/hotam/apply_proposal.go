@@ -17,30 +17,18 @@ import (
 // It is the lower-level counterpart to `hotam land`, which wraps the same apply
 // in a snapshot/gen-spec/all-violations pipeline.
 //
-// The semantic-conflict gate runs in TWO halves. On the single-file path,
-// semanticConflictGate runs BEFORE applyProposalValue (refuses on a blocking
-// hit unless --ack-conflict / --decision-ref overrides), mirroring
-// landProposalValue's placement so a refusal leaves the graph untouched. On
-// the --batch path, the BLOCKING half runs INSIDE
-// internal/proposal.ApplyBatch via an injected proposal.ConflictChecker
-// (batchConflictChecker, built here in cmd/hotam using diagnose.IsBlockingHit,
-// since internal/proposal cannot import internal/diagnose directly —
-// R-core-periphery-import-ratchet): each ProposedRequirement is confronted
-// against the rolling in-memory graph and ANY blocking hit aborts the ENTIRE
-// batch atomically. The OVERRIDE
-// half (--ack-conflict / --decision-ref) does NOT run in batch mode: those
-// flags are per-proposal, but batch mode has no per-file flag mechanism — a
-// batch item that trips the blocking gate must be pulled out and applied
-// individually with an explicit ack (same rationale cmdLandBatch documents
-// for `hotam land --batch`). The batch confront-at-gate summary
-// (confrontBatchSummary) also still runs advisory-only.
+// A matching unresolved Conflict carrier is the only gate blocker. The
+// single-file path checks it before mutation and permits a recorded human
+// decision; batch mode uses the same candidate-ID/member-ID check atomically,
+// but has no per-item override. Lexical markers, shared subjects, source links,
+// and relations remain advisory.
 func cmdApplyProposal(args []string) error {
 	fs := newFlagSet("apply-proposal")
 	domain := fs.String("domain", "", "domain directory containing graph.json (default: active-domain chain — HOTAM_DOMAIN env, then .hotam-spec-project marker, then "+defaultDomainRel+")")
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
-	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal")
-	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History; for a real judgment-call decision, prefer a typed 'signoff' field on the ProposedRequirement/ProposedAssumptionRewrite itself (decided_by resolved against declared Stakeholders) — --decision-ref remains best for lighter mechanical acknowledgments")
+	ackConflict := fs.String("ack-conflict", "", "cite an unresolved Conflict whose members include the candidate requirement and a blocked member — overrides that formal blocker")
+	decisionRef := fs.String("decision-ref", "", "record a human decision reference to override a matching unresolved Conflict carrier; persisted in requirement History")
 	fs.Parse(args)
 
 	if *today == "" {
@@ -88,13 +76,9 @@ func cmdApplyProposal(args []string) error {
 	if err := confrontBeforeApply(domainDir, p, false); err != nil {
 		return err
 	}
-	// Semantic-conflict gate: refuse to apply a ProposedRequirement whose claim
-	// carries an opposite marker against an existing SETTLED requirement,
-	// unless the operator supplied --ack-conflict or --decision-ref. Runs BEFORE
-	// applyProposalValue so a refusal leaves the graph untouched, mirroring
-	// landProposalValue's placement. hadConflict gates appendAckHistory below:
-	// the audit trail is written only when a real conflict was detected, not
-	// merely because ack flags were passed (same guard as landProposalValue).
+	// Formal-conflict gate: refuse when an unresolved Conflict carrier names
+	// this candidate requirement and another member, unless a matching carrier
+	// citation or recorded decision overrides it. Lexical findings are advisory.
 	ackOpts := landAckOptions{AckConflict: *ackConflict, DecisionRef: *decisionRef}
 	hadConflict, err := semanticConflictGate(domainDir, p, ackOpts)
 	if err != nil {

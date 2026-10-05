@@ -56,14 +56,20 @@
 package hotamspec
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strconv"
+	"strings"
+	"sync"
 	"testing"
+	"unicode"
 )
 
 // T is the minimal subset of *testing.T the Scenario needs. Scenario is
@@ -143,15 +149,406 @@ type Step struct {
 	// Values is Given/Value's ordered key/value payload -- always in the
 	// order the caller passed them (see kv's doc comment for why this is a
 	// slice, not a map). Empty for When/Then.
-	Values []Fact
+	Values []ValueFact
 	// Passed is only meaningful for StepThen: whether the asserted condition
 	// held. Zero value (false) for every other Kind.
-	Passed bool
+	Passed       bool
+	Subject      string
+	Value        string
+	Input        string
+	HasInput     bool
+	Expected     string
+	HasExpected  bool
+	Observations []Observation
+	Context      *ArtifactContext
 }
 
-// Fact is one exported (key, canonically-rendered value) pair from a Given
+// Observation holds the readable projection and optional exact typed payload
+// for one real comparison made during a method execution.
+type Observation struct {
+	Name        string      `json:"name"`
+	Input       string      `json:"input,omitempty"`
+	Actual      string      `json:"actual"`
+	Expected    string      `json:"expected"`
+	Passed      bool        `json:"passed"`
+	RawInput    *TypedValue `json:"raw_input,omitempty"`
+	RawActual   *TypedValue `json:"raw_actual,omitempty"`
+	RawExpected *TypedValue `json:"raw_expected,omitempty"`
+}
+
+// FixtureRef mirrors the portable shared conformance fixture reference.
+type FixtureRef struct {
+	ID       string `json:"id"`
+	Category string `json:"category"`
+	Path     string `json:"path"`
+	Role     string `json:"role"`
+	SHA256   string `json:"sha256"`
+	RawBytes bool   `json:"raw_bytes"`
+}
+
+// ConditionEvidence records a condition actually observed by the producer.
+type ConditionEvidence struct {
+	Name    string `json:"name"`
+	Matched bool   `json:"matched"`
+}
+
+// SelectionEvidence records producer-observed matched branches and selection.
+type SelectionEvidence struct {
+	Matched  []string `json:"matched"`
+	Selected string   `json:"selected"`
+}
+
+// ByteSpan is a half-open byte range.
+type ByteSpan struct {
+	Start int `json:"start"`
+	End   int `json:"end"`
+}
+
+// DiagnosticValue contains only diagnostic fields supplied by its producer.
+type DiagnosticValue struct {
+	Code   string    `json:"code"`
+	Class  *string   `json:"class,omitempty"`
+	Reason *string   `json:"reason,omitempty"`
+	Line   *int      `json:"line,omitempty"`
+	Span   *ByteSpan `json:"span,omitempty"`
+}
+
+// TypedValue mirrors the portable observed-value schema. Bytes contains
+// base64 when Kind is "bytes".
+type TypedValue struct {
+	Kind       string                `json:"kind"`
+	Bool       *bool                 `json:"bool,omitempty"`
+	Text       *string               `json:"text,omitempty"`
+	Encoding   string                `json:"encoding,omitempty"`
+	Bytes      string                `json:"bytes,omitempty"`
+	ScalarKind string                `json:"scalar_kind,omitempty"`
+	Integer    string                `json:"integer,omitempty"`
+	FloatBits  string                `json:"float_bits,omitempty"`
+	Fields     map[string]TypedValue `json:"fields,omitempty"`
+	Diagnostic *DiagnosticValue      `json:"diagnostic,omitempty"`
+}
+
+// MarshalJSON preserves explicit empty byte and object payloads.
+func (value TypedValue) MarshalJSON() ([]byte, error) {
+	type plain TypedValue
+	wire := struct {
+		plain
+		Bytes  *string                `json:"bytes,omitempty"`
+		Fields *map[string]TypedValue `json:"fields,omitempty"`
+	}{plain: plain(value)}
+	if value.Kind == "bytes" || value.Bytes != "" {
+		wire.Bytes = &value.Bytes
+	}
+	if value.Fields != nil {
+		wire.Fields = &value.Fields
+	}
+	return json.Marshal(wire)
+}
+
+// CaseContext carries shared case metadata. Test and Input are recorder-derived;
+// Expected optionally supplies an independent oracle shared by property atoms.
+type CaseContext struct {
+	ID         string              `json:"id"`
+	AtomIDs    []string            `json:"atom_ids,omitempty"`
+	Profile    string              `json:"profile,omitempty"`
+	Target     string              `json:"target,omitempty"`
+	Fixtures   []FixtureRef        `json:"fixtures,omitempty"`
+	Conditions []ConditionEvidence `json:"conditions,omitempty"`
+	Sides      []string            `json:"sides,omitempty"`
+	Selection  *SelectionEvidence  `json:"selection,omitempty"`
+	Expected   *TypedValue         `json:"-"`
+	Operation  string              `json:"operation,omitempty"`
+	Producer   string              `json:"producer,omitempty"`
+}
+
+// Bytes records exact bytes as base64 without decoding them as text.
+func Bytes(value []byte) TypedValue {
+	return TypedValue{Kind: "bytes", Encoding: "base64", Bytes: base64.StdEncoding.EncodeToString(value)}
+}
+
+// Text records an exact string, including an explicitly empty string.
+func Text(value string) TypedValue {
+	return TypedValue{Kind: "text", Text: stringPointer(value), ScalarKind: "string"}
+}
+
+// Integer records an exact decimal integer string.
+func Integer(value string) TypedValue {
+	return TypedValue{Kind: "integer", Integer: value, ScalarKind: "integer"}
+}
+
+// Float64Bits records the exact IEEE754 binary64 bits, including signed zero
+// and NaN payload bits.
+func Float64Bits(value float64) TypedValue {
+	return TypedValue{Kind: "float", FloatBits: fmt.Sprintf("%016x", math.Float64bits(value)), ScalarKind: "float64"}
+}
+
+// Scalar records a primitive value with an explicit scalar kind. Known schema
+// kinds are text/string, bool, integer, float/float64, and null; other scalar
+// labels retain the same exact value under that label. Composite values panic
+// instead of being silently flattened to text.
+func Scalar(kind string, value any) TypedValue {
+	if value == nil {
+		if kind == "" || kind == "null" {
+			return TypedValue{Kind: "null"}
+		}
+		panic(fmt.Sprintf("hotamspec: Scalar(%q): nil does not match the declared scalar kind", kind))
+	}
+	rv := reflect.ValueOf(value)
+	typed := typedScalar(rv, kind)
+	valid := false
+	switch kind {
+	case "text", "string":
+		if typed.Kind == "text" {
+			typed.ScalarKind = "string"
+			valid = true
+		}
+	case "bool":
+		if typed.Kind == "bool" {
+			typed.ScalarKind = "bool"
+			valid = true
+		}
+	case "integer":
+		if text, ok := value.(string); ok {
+			return Integer(text)
+		}
+		if typed.Kind == "integer" {
+			typed.ScalarKind = "integer"
+			valid = true
+		}
+	case "float", "float64":
+		if typed.Kind == "float" {
+			typed.ScalarKind = "float64"
+			valid = true
+		}
+	case "null":
+		break
+	default:
+		typed.ScalarKind = kind
+		valid = true
+	}
+	if valid {
+		return typed
+	}
+	panic(fmt.Sprintf("hotamspec: Scalar(%q): value of type %T has an incompatible scalar kind", kind, value))
+}
+
+func typedScalar(value reflect.Value, scalarKind string) TypedValue {
+	switch value.Kind() {
+	case reflect.String:
+		text := value.String()
+		return TypedValue{Kind: "text", Text: &text, ScalarKind: scalarKind}
+	case reflect.Bool:
+		boolean := value.Bool()
+		return TypedValue{Kind: "bool", Bool: &boolean, ScalarKind: scalarKind}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return TypedValue{Kind: "integer", Integer: strconv.FormatInt(value.Int(), 10), ScalarKind: scalarKind}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return TypedValue{Kind: "integer", Integer: strconv.FormatUint(value.Uint(), 10), ScalarKind: scalarKind}
+	case reflect.Float32, reflect.Float64:
+		return TypedValue{Kind: "float", FloatBits: fmt.Sprintf("%016x", math.Float64bits(value.Float())), ScalarKind: scalarKind}
+	default:
+		panic(fmt.Sprintf("hotamspec: Scalar(%q): unsupported scalar type %T", scalarKind, value.Interface()))
+	}
+}
+
+// Diagnostic records structured producer-supplied diagnostic data.
+func Diagnostic(value DiagnosticValue) TypedValue {
+	return TypedValue{Kind: "diagnostic", Diagnostic: copyDiagnostic(&value)}
+}
+
+// Object records a defensive copy of typed object fields.
+func Object(fields map[string]TypedValue) TypedValue {
+	copy := make(map[string]TypedValue, len(fields))
+	for key, value := range fields {
+		copy[key] = cloneTypedValue(value)
+	}
+	return TypedValue{Kind: "object", Fields: copy}
+}
+
+func stringPointer(value string) *string { return &value }
+
+func copyDiagnostic(value *DiagnosticValue) *DiagnosticValue {
+	if value == nil {
+		return nil
+	}
+	copy := *value
+	if value.Class != nil {
+		class := *value.Class
+		copy.Class = &class
+	}
+	if value.Reason != nil {
+		reason := *value.Reason
+		copy.Reason = &reason
+	}
+	if value.Line != nil {
+		line := *value.Line
+		copy.Line = &line
+	}
+	if value.Span != nil {
+		span := *value.Span
+		copy.Span = &span
+	}
+	return &copy
+}
+
+func cloneTypedValue(value TypedValue) TypedValue {
+	copy := value
+	if value.Bool != nil {
+		boolean := *value.Bool
+		copy.Bool = &boolean
+	}
+	if value.Text != nil {
+		text := *value.Text
+		copy.Text = &text
+	}
+	if value.Fields != nil {
+		copy.Fields = make(map[string]TypedValue, len(value.Fields))
+		for key, field := range value.Fields {
+			copy.Fields[key] = cloneTypedValue(field)
+		}
+	}
+	copy.Diagnostic = copyDiagnostic(value.Diagnostic)
+	return copy
+}
+func cloneObservations(observations []Observation) []Observation {
+	copy := append([]Observation(nil), observations...)
+	for i := range copy {
+		copy[i].RawInput = cloneTypedValuePointer(copy[i].RawInput)
+		copy[i].RawActual = cloneTypedValuePointer(copy[i].RawActual)
+		copy[i].RawExpected = cloneTypedValuePointer(copy[i].RawExpected)
+	}
+	return copy
+}
+
+func cloneTypedValuePointer(value *TypedValue) *TypedValue {
+	if value == nil {
+		return nil
+	}
+	copy := cloneTypedValue(*value)
+	return &copy
+}
+
+func cloneCaseContext(value *CaseContext) *CaseContext {
+	if value == nil {
+		return nil
+	}
+	copy := *value
+	copy.AtomIDs = append([]string(nil), value.AtomIDs...)
+	copy.Fixtures = append([]FixtureRef(nil), value.Fixtures...)
+	copy.Conditions = append([]ConditionEvidence(nil), value.Conditions...)
+	copy.Sides = append([]string(nil), value.Sides...)
+	if value.Selection != nil {
+		selection := *value.Selection
+		if value.Selection.Matched != nil {
+			selection.Matched = append([]string{}, value.Selection.Matched...)
+		}
+		copy.Selection = &selection
+	}
+	copy.Expected = cloneTypedValuePointer(value.Expected)
+	return &copy
+}
+func observationsHaveRawValues(observations []Observation) bool {
+	for _, observation := range observations {
+		if observation.RawInput != nil || observation.RawActual != nil || observation.RawExpected != nil {
+			return true
+		}
+	}
+	return false
+}
+
+// Component is the local structural mirror of ontology.Component; Measured is
+// explicit even when false, and is never inferred from a declared version.
+type Component struct {
+	ID       string `json:"id"`
+	Role     string `json:"role"`
+	Version  string `json:"version,omitempty"`
+	SHA256   string `json:"sha256,omitempty"`
+	Measured bool   `json:"measured"`
+}
+
+// ArtifactContext carries explicitly supplied implementation and runtime
+// producer/target/component provenance for an observation.
+type ArtifactContext struct {
+	Implementation        string      `json:"implementation,omitempty"`
+	ImplementationVersion string      `json:"implementation_version,omitempty"`
+	SpecVersion           string      `json:"spec_version,omitempty"`
+	Profile               string      `json:"profile,omitempty"`
+	Target                string      `json:"target,omitempty"`
+	Operation             string      `json:"operation,omitempty"`
+	Producer              string      `json:"producer,omitempty"`
+	Components            []Component `json:"components,omitempty"`
+}
+
+func copyArtifactContext(ctx *ArtifactContext) *ArtifactContext {
+	if ctx == nil {
+		return nil
+	}
+	copy := *ctx
+	copy.Components = append([]Component(nil), ctx.Components...)
+	sort.Slice(copy.Components, func(i, j int) bool {
+		left, right := copy.Components[i], copy.Components[j]
+		if left.ID != right.ID {
+			return left.ID < right.ID
+		}
+		if left.Role != right.Role {
+			return left.Role < right.Role
+		}
+		if left.Version != right.Version {
+			return left.Version < right.Version
+		}
+		if left.SHA256 != right.SHA256 {
+			return left.SHA256 < right.SHA256
+		}
+		return !left.Measured && right.Measured
+	})
+	return &copy
+}
+
+type observedCarrier interface {
+	hotamObservation() (any, []Observation)
+}
+
+// ObservedValue wraps a method's return value together with comparisons made
+// during that same execution. TypedValue is the separate raw schema payload.
+type ObservedValue[V any] struct {
+	Value        V
+	Observations []Observation
+}
+
+func (o ObservedValue[V]) hotamObservation() (any, []Observation) {
+	return o.Value, cloneObservations(o.Observations)
+}
+
+// Observed binds method output to comparisons without executing the method.
+func Observed[V any](value V, nested ...Observation) ObservedValue[V] {
+	return ObservedValue[V]{Value: value, Observations: cloneObservations(nested)}
+}
+
+// Observe describes an actual comparison using Scenario.Eq's equality and
+// lossless-constant coercion rules. Fact reports a failed comparison to its
+// real testing.T when it receives it through Observed.
+func Observe(name string, input, actual, expected any) Observation {
+	if !hasTypedValue(input) && !hasTypedValue(actual) && !hasTypedValue(expected) {
+		passed := equalValues(actual, expected)
+		return Observation{
+			Name: name, Input: renderValue(input), Actual: renderValue(actual),
+			Expected: renderExpected(actual, expected), Passed: passed,
+		}
+	}
+	rawInput := typedValue(input)
+	rawActual := typedValue(actual)
+	rawExpected := typedValue(expected)
+	return Observation{
+		Name: name, Input: renderTypedValue(rawInput), Actual: renderTypedValue(rawActual),
+		Expected: renderTypedValue(rawExpected),
+		Passed:   reflect.DeepEqual(rawActual, rawExpected),
+		RawInput: &rawInput, RawActual: &rawActual, RawExpected: &rawExpected,
+	}
+}
+
+// ValueFact is one exported (key, canonically-rendered value) pair from a Given
 // or Value step.
-type Fact struct {
+type ValueFact struct {
 	Key   string
 	Value string
 }
@@ -166,8 +563,13 @@ type Scenario struct {
 	title string
 	steps []Step
 
-	defaultWhen string // WithWhen; "" = none
-	whenDone    bool   // explicit When seen, or default already resolved
+	defaultWhen  string // WithWhen; "" = none
+	whenDone     bool   // explicit When seen, or default already resolved
+	mode         string
+	fileSuffix   string
+	caseContext  *CaseContext
+	caseInput    *TypedValue
+	caseExpected *TypedValue
 }
 
 // Option configures NewScenario.
@@ -199,36 +601,34 @@ const RecordDirEnv = "HOTAM_RECORD_DIR"
 
 // Artifact is the canonical JSON shape written to
 // <HOTAM_RECORD_DIR>/<reqID>__<TestName>.json in record-mode -- one artifact
-// per Scenario instance (a single test function may construct more than one
-// Scenario, e.g. to narrate several sub-cases; each gets its own file, disambiguated by test name plus reqID). Field order here IS the
-// json.Marshal output order (Go's encoding/json marshals a struct's fields in
-// their declared order, never map order -- see ArtifactStep/ArtifactFact
-// below for the same guarantee extended to Values), which is what makes two
-// runs of the identical scenario produce byte-identical output: nothing in
-// this shape is a Go map, so there is no iteration-order hazard anywhere in
-// the marshaled tree.
+// per Scenario instance. Struct fields retain declaration order; the only
+// object maps in typed values have string keys, which encoding/json sorts.
+// Thus identical scenario inputs produce byte-identical JSON.
 type Artifact struct {
-	ReqID   string         `json:"req_id"`
-	Test    string         `json:"test"`
-	Title   string         `json:"title"`
-	Steps   []ArtifactStep `json:"steps"`
-	Verdict string         `json:"verdict"`
+	ReqID        string         `json:"req_id"`
+	Test         string         `json:"test"`
+	Title        string         `json:"title"`
+	Steps        []ArtifactStep `json:"steps"`
+	Verdict      string         `json:"verdict"`
+	Mode         string         `json:"mode,omitempty"`
+	Case         *CaseContext   `json:"case,omitempty"`
+	CaseInput    *TypedValue    `json:"case_input,omitempty"`
+	CaseExpected *TypedValue    `json:"case_expected,omitempty"`
 }
 
-// ArtifactStep is one Step's JSON projection. Kind/Desc/Values mirror Step's
-// own fields exactly (see Step's doc comment); Passed is omitted for
-// non-Then kinds by relying on Go's zero-value (false) rather than a
-// pointer/omitempty trick, since a plain `false` for a Given/When/Value step
-// is itself a deterministic, meaningful rendering (never present in the
-// source data to omit) -- an omitempty tag here would make the SAME
-// StepGiven step serialize differently depending on incidental struct-field
-// values, which is unnecessary risk for a shape that must stay
-// byte-identical run to run regardless of that kind of micro-optimization.
+// ArtifactStep is one Step's JSON projection. New detail fields are omitted
+// when unused so existing Given/When/Value artifacts retain their shape.
 type ArtifactStep struct {
-	Kind   StepKind       `json:"kind"`
-	Desc   string         `json:"desc"`
-	Values []ArtifactFact `json:"values,omitempty"`
-	Passed bool           `json:"passed,omitempty"`
+	Kind         StepKind         `json:"kind"`
+	Desc         string           `json:"desc"`
+	Values       []ArtifactFact   `json:"values,omitempty"`
+	Passed       bool             `json:"passed,omitempty"`
+	Subject      string           `json:"subject,omitempty"`
+	Value        string           `json:"value,omitempty"`
+	Input        *string          `json:"input,omitempty"`
+	Expected     *string          `json:"expected,omitempty"`
+	Observations []Observation    `json:"observations,omitempty"`
+	Context      *ArtifactContext `json:"context,omitempty"`
 }
 
 // ArtifactFact is one Fact's JSON projection -- Key/Value, in the exact
@@ -265,12 +665,10 @@ type ArtifactFact struct {
 // ADDITIVE to the plain-asserts contract: Then still calls t.Errorf exactly
 // as before, record-mode never changes whether the test itself passes or
 // fails, only whether a side artifact also gets written. Any error while
-// writing the artifact (directory unwritable, marshal failure -- the latter
-// should be structurally impossible given Artifact's all-string/slice shape,
-// but is still handled rather than ignored) is reported via t.Errorf, not
-// silently swallowed: a record-mode run that FAILS to produce its artifact
-// must be visibly red, never a quiet no-op that looks identical to success
-// from the test's own PASS/FAIL alone.
+// writing the artifact (directory unwritable or marshal failure) is reported
+// via t.Errorf, not silently swallowed. Typed raw values are JSON data with
+// deterministic string-key maps. A record-mode failure is visible to callers,
+// never a quiet no-op that looks identical to successful artifact production.
 //
 // Options: WithWhen(desc) sets a default When step for scenarios that all
 // repeat the same action narration -- see WithWhen.
@@ -280,7 +678,7 @@ func NewScenario(t T, reqID, title string, opts ...Option) *Scenario {
 	for _, o := range opts {
 		o(s)
 	}
-	if dir := os.Getenv(RecordDirEnv); dir != "" {
+	if dir := os.Getenv(RecordDirEnv); dir != "" || os.Getenv("HOTAM_RECORD_STDOUT") == "1" {
 		if rt, ok := t.(recordT); ok {
 			rt.Cleanup(func() { s.writeArtifact(rt, dir) })
 		}
@@ -310,19 +708,43 @@ func (s *Scenario) writeArtifact(rt recordT, dir string) {
 		for _, f := range st.Values {
 			values = append(values, ArtifactFact{Key: f.Key, Value: f.Value})
 		}
-		steps = append(steps, ArtifactStep{
-			Kind:   st.Kind,
-			Desc:   st.Desc,
-			Values: values,
-			Passed: st.Passed,
-		})
+		artifactStep := ArtifactStep{
+			Kind: st.Kind, Desc: st.Desc, Values: values, Passed: st.Passed,
+			Subject: st.Subject, Value: st.Value,
+		}
+		if st.HasInput {
+			input := st.Input
+			artifactStep.Input = &input
+		}
+		if st.HasExpected {
+			expected := st.Expected
+			artifactStep.Expected = &expected
+		}
+		artifactStep.Observations = cloneObservations(st.Observations)
+		artifactStep.Context = copyArtifactContext(st.Context)
+		steps = append(steps, artifactStep)
 	}
 	art := Artifact{
-		ReqID:   s.reqID,
-		Test:    rt.Name(),
-		Title:   s.title,
-		Steps:   steps,
-		Verdict: verdict,
+		ReqID:        s.reqID,
+		Test:         rt.Name(),
+		Title:        s.title,
+		Steps:        steps,
+		Verdict:      verdict,
+		Mode:         s.mode,
+		Case:         cloneCaseContext(s.caseContext),
+		CaseInput:    cloneTypedValuePointer(s.caseInput),
+		CaseExpected: cloneTypedValuePointer(s.caseExpected),
+	}
+	if os.Getenv("HOTAM_RECORD_STDOUT") == "1" {
+		line, err := json.Marshal(art)
+		if err != nil {
+			rt.Errorf("hotamspec: marshal artifact: %v", err)
+			return
+		}
+		fmt.Printf("HOTAMSPEC_ARTIFACT:%s\n", line)
+	}
+	if dir == "" {
+		return
 	}
 	data, err := json.MarshalIndent(art, "", "  ")
 	if err != nil {
@@ -331,6 +753,9 @@ func (s *Scenario) writeArtifact(rt recordT, dir string) {
 	}
 	data = append(data, '\n')
 	name := artifactFileName(s.reqID, rt.Name())
+	if s.fileSuffix != "" {
+		name = strings.TrimSuffix(name, ".json") + s.fileSuffix + ".json"
+	}
 	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
 		rt.Errorf("hotamspec: record-mode: could not write artifact %s: %v", name, err)
 	}
@@ -369,6 +794,11 @@ func (s *Scenario) Title() string { return s.title }
 func (s *Scenario) Steps() []Step {
 	out := make([]Step, len(s.steps))
 	copy(out, s.steps)
+	for i := range out {
+		out[i].Values = append([]ValueFact(nil), s.steps[i].Values...)
+		out[i].Observations = cloneObservations(s.steps[i].Observations)
+		out[i].Context = copyArtifactContext(s.steps[i].Context)
+	}
 	return out
 }
 
@@ -461,32 +891,134 @@ func (s *Scenario) Then(desc string, cond bool) bool {
 // Eq("year", BirthYear(1987), 1987) and Eq("kind", Kind("a"), "a") pass, while
 // int vs float never converts across families. On mismatch it reports via
 // t.Errorf (non-fatal, like Then) including label, both renderings and types.
+// A comparison involving a TypedValue instead uses exact structural identity,
+// so byte payloads, scalar kinds, diagnostic-field presence, and float bits
+// remain distinct without changing ordinary Fact behavior.
 // Prefer Eq for value facts ("blocker_count is 0"), Then for boolean
 // predicates ("sign-off is rejected").
 func (s *Scenario) Eq(label string, got, want any) bool {
 	s.t.Helper()
-	s.ensureWhen()
-	g, w := derefValue(got), derefValue(want)
-	w = coerceConst(g, w)
-	gotS, wantS := renderValue(got), renderValue(want)
-	equal := reflect.TypeOf(g) == reflect.TypeOf(w) && renderValue(g) == renderValue(w)
-	if !equal {
-		s.t.Errorf("hotamspec: Eq(%q) failed for %s (%s): got %s (%T), want %s (%T)", label, s.reqID, s.title, gotS, g, wantS, w)
-	}
-	s.steps = append(s.steps, Step{Kind: StepThen, Desc: label + " " + gotS, Passed: equal})
+	equal, _, _ := s.eq(label, got, want)
 	return equal
 }
 
-// derefValue unwraps non-nil pointers (repeatedly), mirroring renderValue.
-func derefValue(v any) any {
-	for v != nil {
-		rv := reflect.ValueOf(v)
-		if rv.Kind() != reflect.Ptr || rv.IsNil() {
+func (s *Scenario) eq(label string, got, want any) (bool, string, string) {
+	s.t.Helper()
+	s.ensureWhen()
+	g, w := derefValue(got), derefValue(want)
+	w = coerceConst(g, w)
+	var gotS, wantS string
+	var equal bool
+	typedComparison := hasTypedValue(got) || hasTypedValue(want)
+	var rawGot, rawWant TypedValue
+	if typedComparison {
+		rawGot, rawWant = typedValue(got), typedValue(want)
+		gotS, wantS = renderTypedValue(rawGot), renderTypedValue(rawWant)
+		equal = reflect.DeepEqual(rawGot, rawWant)
+	} else {
+		gotS, wantS = renderValue(got), renderValue(w)
+		equal = reflect.TypeOf(g) == reflect.TypeOf(w) && renderValue(g) == renderValue(w)
+	}
+	if !equal {
+		s.t.Errorf("hotamspec: Eq(%q) failed for %s (%s): got %s (%T), want %s (%T)", label, s.reqID, s.title, gotS, g, wantS, w)
+	}
+	observation := Observation{Name: label, Actual: gotS, Expected: wantS, Passed: equal}
+	if typedComparison {
+		observation.RawActual, observation.RawExpected = &rawGot, &rawWant
+	}
+	s.steps = append(s.steps, Step{
+		Kind: StepThen, Desc: label + " " + gotS, Passed: equal,
+		Subject: label, Value: gotS, Expected: wantS, HasExpected: true,
+		Observations: []Observation{observation},
+	})
+	return equal, gotS, wantS
+}
+
+func renderExpected(got, want any) string {
+	return renderValue(coerceConst(derefValue(got), derefValue(want)))
+}
+
+func derefValue(value any) any {
+	for value != nil {
+		reflected := reflect.ValueOf(value)
+		if reflected.Kind() != reflect.Ptr || reflected.IsNil() {
 			break
 		}
-		v = rv.Elem().Interface()
+		value = reflected.Elem().Interface()
 	}
-	return v
+	return value
+}
+
+func equalValues(got, want any) bool {
+	if hasTypedValue(got) || hasTypedValue(want) {
+		return reflect.DeepEqual(typedValue(got), typedValue(want))
+	}
+	g, w := derefValue(got), derefValue(want)
+	w = coerceConst(g, w)
+	return reflect.TypeOf(g) == reflect.TypeOf(w) && renderValue(g) == renderValue(w)
+}
+
+func hasTypedValue(value any) bool {
+	switch value.(type) {
+	case TypedValue, *TypedValue:
+		return true
+	default:
+		return false
+	}
+}
+
+func typedValuePointer(value any) *TypedValue {
+	typed := typedValue(value)
+	return &typed
+}
+
+func typedValue(value any) TypedValue {
+	if typed, ok := value.(TypedValue); ok {
+		return cloneTypedValue(typed)
+	}
+	if typed, ok := value.(*TypedValue); ok {
+		if typed == nil {
+			return TypedValue{Kind: "null"}
+		}
+		return cloneTypedValue(*typed)
+	}
+	if value == nil {
+		return TypedValue{Kind: "null"}
+	}
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.Interface, reflect.Ptr:
+		if rv.IsNil() {
+			return TypedValue{Kind: "null"}
+		}
+		return typedValue(rv.Elem().Interface())
+	case reflect.String:
+		return Text(rv.String())
+	case reflect.Bool:
+		boolean := rv.Bool()
+		return TypedValue{Kind: "bool", Bool: &boolean, ScalarKind: "bool"}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return Integer(strconv.FormatInt(rv.Int(), 10))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return Integer(strconv.FormatUint(rv.Uint(), 10))
+	case reflect.Float32, reflect.Float64:
+		return Float64Bits(rv.Float())
+	case reflect.Slice:
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			return Bytes(rv.Bytes())
+		}
+	case reflect.Map:
+		if rv.Type().Key().Kind() == reflect.String {
+			fields := make(map[string]TypedValue, rv.Len())
+			iter := rv.MapRange()
+			for iter.Next() {
+				fields[iter.Key().String()] = typedValue(iter.Value().Interface())
+			}
+			return Object(fields)
+		}
+	}
+	text := renderValue(value)
+	return TypedValue{Kind: "text", Text: &text, ScalarKind: rv.Type().String()}
 }
 
 // constFamily classifies a basic kind for constant coercion; "" = none.
@@ -540,25 +1072,25 @@ func coerceConst(got, want any) any {
 // re-evaluated later.
 func (s *Scenario) Value(key string, v any) {
 	s.ensureWhen()
-	s.steps = append(s.steps, Step{Kind: StepValue, Values: []Fact{{Key: key, Value: renderValue(v)}}})
+	s.steps = append(s.steps, Step{Kind: StepValue, Values: []ValueFact{{Key: key, Value: renderValue(v)}}})
 }
 
 // pairsToFacts converts an alternating key,value,... list into an ordered
-// []Fact, canonically rendering each value via renderValue. Returns
+// []ValueFact, canonically rendering each value via renderValue. Returns
 // ok=false if kvPairs has odd length (a caller bug -- see Given's doc
 // comment for why this is a hard failure, not a silent drop). A non-string
 // key is rendered via fmt.Sprintf("%v", ...) rather than rejected outright,
 // since Go's log/slog accepts this too and rejecting it would make Given
 // pickier than the convention it deliberately mirrors -- but the common,
 // expected case is a string literal key.
-func pairsToFacts(kvPairs []any) ([]Fact, bool) {
+func pairsToFacts(kvPairs []any) ([]ValueFact, bool) {
 	if len(kvPairs)%2 != 0 {
 		return nil, false
 	}
-	facts := make([]Fact, 0, len(kvPairs)/2)
+	facts := make([]ValueFact, 0, len(kvPairs)/2)
 	for i := 0; i < len(kvPairs); i += 2 {
 		key := fmt.Sprintf("%v", kvPairs[i])
-		facts = append(facts, Fact{Key: key, Value: renderValue(kvPairs[i+1])})
+		facts = append(facts, ValueFact{Key: key, Value: renderValue(kvPairs[i+1])})
 	}
 	return facts, true
 }
@@ -594,6 +1126,15 @@ func renderValue(v any) string {
 	if v == nil {
 		return "<nil>"
 	}
+	switch typed := v.(type) {
+	case TypedValue:
+		return renderTypedValue(typed)
+	case *TypedValue:
+		if typed == nil {
+			return "<nil>"
+		}
+		return renderTypedValue(*typed)
+	}
 	if err, ok := v.(error); ok {
 		return err.Error()
 	}
@@ -612,6 +1153,80 @@ func renderValue(v any) string {
 		return renderMap(rv)
 	default:
 		return fmt.Sprintf("%v", v)
+	}
+}
+func renderTypedValue(value TypedValue) string {
+	switch value.Kind {
+	case "text":
+		if value.Text == nil {
+			return "<absent>"
+		}
+		return *value.Text
+	case "bytes":
+		return "base64:" + value.Bytes
+	case "bool":
+		if value.Bool == nil {
+			return "<absent>"
+		}
+		return strconv.FormatBool(*value.Bool)
+	case "integer":
+		if value.Integer == "" {
+			return "<absent>"
+		}
+		return value.Integer
+	case "float":
+		bits, err := strconv.ParseUint(value.FloatBits, 16, 64)
+		if err != nil {
+			return "float-bits:" + value.FloatBits
+		}
+		return strconv.FormatFloat(math.Float64frombits(bits), 'g', -1, 64)
+	case "object":
+		keys := make([]string, 0, len(value.Fields))
+		for key := range value.Fields {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		var b strings.Builder
+		b.WriteByte('{')
+		for i, key := range keys {
+			if i != 0 {
+				b.WriteString(", ")
+			}
+			b.WriteString(key)
+			b.WriteByte(':')
+			b.WriteString(renderTypedValue(value.Fields[key]))
+		}
+		b.WriteByte('}')
+		return b.String()
+	case "null":
+		return "<nil>"
+	case "diagnostic":
+		if value.Diagnostic == nil {
+			return "diagnostic:<absent>"
+		}
+		var b strings.Builder
+		b.WriteString(value.Diagnostic.Code)
+		if value.Diagnostic.Class != nil {
+			b.WriteString(" class=")
+			b.WriteString(*value.Diagnostic.Class)
+		}
+		if value.Diagnostic.Reason != nil {
+			b.WriteString(" reason=")
+			b.WriteString(*value.Diagnostic.Reason)
+		}
+		if value.Diagnostic.Line != nil {
+			b.WriteString(" line=")
+			b.WriteString(strconv.Itoa(*value.Diagnostic.Line))
+		}
+		if value.Diagnostic.Span != nil {
+			b.WriteString(" span=")
+			b.WriteString(strconv.Itoa(value.Diagnostic.Span.Start))
+			b.WriteByte(':')
+			b.WriteString(strconv.Itoa(value.Diagnostic.Span.End))
+		}
+		return b.String()
+	default:
+		return value.Kind
 	}
 }
 
@@ -652,3 +1267,379 @@ var _ T = (*testing.T)(nil)
 // test always supports record-mode; only this package's own fakeT double
 // (hotamspec_test.go) deliberately does not.
 var _ recordT = (*testing.T)(nil)
+
+// Evidence is an executed method result. Holds consumes it without executing
+// the supporting method again.
+type Evidence struct {
+	Subject      string
+	Value        string
+	Passed       bool
+	Observations []Observation
+	Input        string
+	HasInput     bool
+	Context      *ArtifactContext
+	Case         *CaseContext
+	CaseInput    *TypedValue
+	CaseExpected *TypedValue
+
+	hasExpectation bool
+	want           bool
+	isOption       bool
+	hasContext     bool
+	hasCase        bool
+	rawInput       *TypedValue
+}
+
+// EvidenceOption shares the Evidence carrier so Holds can consume execution
+// evidence and options in one ordered argument list.
+type EvidenceOption = Evidence
+
+// Expect overrides Holds' default expected predicate value of true.
+func Expect(want bool) Evidence { return Evidence{hasExpectation: true, want: want} }
+
+// WithInput attaches the real input to a Fact or Holds observation.
+func WithInput(input any) EvidenceOption {
+	return Evidence{Input: renderValue(input), HasInput: true, isOption: true, rawInput: typedValuePointer(input)}
+}
+
+// WithContext attaches explicitly supplied version/profile/target and producer
+// metadata. Component declarations are copied and deterministically ordered;
+// no component identity or measurement is inferred from process state.
+func WithContext(ctx ArtifactContext) EvidenceOption {
+	return Evidence{Context: copyArtifactContext(&ctx), hasContext: true, isOption: true}
+}
+
+// WithCase explicitly selects rule mode and supplies case metadata. The real
+// test and input are recorder-derived; Expected may supply a shared root oracle.
+func WithCase(ctx CaseContext) EvidenceOption {
+	return Evidence{Case: cloneCaseContext(&ctx), hasCase: true, isOption: true}
+}
+
+func validateCaseContext(t T, caller string, ctx *CaseContext) bool {
+	if ctx == nil || strings.TrimSpace(ctx.ID) == "" {
+		t.Fatalf("hotamspec: %s: WithCase requires a non-empty case ID", caller)
+		return false
+	}
+	rt, ok := t.(recordT)
+	if !ok || strings.TrimSpace(rt.Name()) == "" {
+		t.Fatalf("hotamspec: %s: WithCase requires a real test name from T.Name()", caller)
+		return false
+	}
+	return true
+}
+
+// Fact executes a bound zero-argument value method once and asserts Eq
+// semantics. Input and context are opt-in trailing values from WithInput and
+// WithContext. WithCase selects rule mode: test/input derive from the real
+// invocation, want remains this property's comparison expectation, and an
+// optional CaseContext.Expected supplies the shared root oracle. A method may
+// return Observed(value, comparisons...) to carry nested comparisons.
+func Fact[V any](t T, method func() V, want any, options ...EvidenceOption) Evidence {
+	t.Helper()
+	subject, err := methodSubject(method)
+	if err != nil {
+		t.Fatalf("hotamspec: Fact: %v", err)
+		return Evidence{}
+	}
+	var input string
+	var hasInput bool
+	var rawInput *TypedValue
+	var ctx *ArtifactContext
+	var caseContext *CaseContext
+	caseSeen := false
+	for _, option := range options {
+		if !option.isOption || option.hasExpectation {
+			t.Fatalf("hotamspec: Fact: trailing values must be WithInput, WithContext, or WithCase options")
+			return Evidence{}
+		}
+		if option.HasInput {
+			if hasInput {
+				t.Fatalf("hotamspec: Fact: duplicate input")
+				return Evidence{}
+			}
+			input, hasInput = option.Input, true
+			rawInput = option.rawInput
+		}
+		if option.hasContext {
+			if ctx != nil {
+				t.Fatalf("hotamspec: Fact: duplicate context")
+				return Evidence{}
+			}
+			ctx = option.Context
+		}
+		if option.hasCase {
+			if caseSeen {
+				t.Fatalf("hotamspec: Fact: duplicate case")
+				return Evidence{}
+			}
+			caseSeen = true
+			caseContext = option.Case
+		}
+	}
+	if caseSeen && !validateCaseContext(t, "Fact", caseContext) {
+		return Evidence{}
+	}
+
+	result := method()
+	got := any(result)
+	var nested []Observation
+	if carrier, ok := any(result).(observedCarrier); ok {
+		got, nested = carrier.hotamObservation()
+	}
+	mode := "fact"
+	if caseContext != nil {
+		mode = "rule"
+	}
+	s := atomScenario(t, subject, mode)
+	if caseContext != nil {
+		s.caseContext = cloneCaseContext(caseContext)
+		s.caseInput = rawInput
+		if s.caseContext.Expected != nil {
+			s.caseExpected = cloneTypedValuePointer(s.caseContext.Expected)
+		} else {
+			s.caseExpected = typedValuePointer(want)
+		}
+	}
+	passed, rendered, expected := s.eq(subject, got, want)
+	eqObservation := s.steps[0].Observations[0]
+	step := &s.steps[0]
+	step.Subject, step.Value = subject, rendered
+	step.Observations = cloneObservations(nested)
+	if hasInput {
+		step.Input, step.HasInput = input, true
+	}
+	step.Context = copyArtifactContext(ctx)
+	for i := range step.Observations {
+		if !step.Observations[i].Passed {
+			passed = false
+			t.Errorf("hotamspec: nested comparison %q failed for %s: got %s, want %s", step.Observations[i].Name, subject, step.Observations[i].Actual, step.Observations[i].Expected)
+		}
+	}
+	ownObservation := Observation{
+		Name: subject, Input: input, Actual: rendered, Expected: expected, Passed: s.steps[0].Passed,
+		RawInput: rawInput,
+	}
+	if caseContext != nil || hasTypedValue(got) || hasTypedValue(want) {
+		ownObservation.RawActual = eqObservation.RawActual
+		ownObservation.RawExpected = eqObservation.RawExpected
+		if ownObservation.RawActual == nil {
+			ownObservation.RawActual = typedValuePointer(got)
+		}
+		if ownObservation.RawExpected == nil {
+			ownObservation.RawExpected = typedValuePointer(want)
+		}
+	}
+	step.Observations = append(step.Observations, ownObservation)
+	step.Passed = passed
+	observations := cloneObservations(step.Observations)
+	return Evidence{
+		Subject: subject, Value: rendered, Passed: passed, Observations: observations,
+		Input: input, HasInput: hasInput, Context: copyArtifactContext(ctx),
+		Case: cloneCaseContext(s.caseContext), CaseInput: cloneTypedValuePointer(s.caseInput),
+		CaseExpected: cloneTypedValuePointer(s.caseExpected),
+	}
+}
+
+// Holds executes a bound predicate once and records already executed evidence.
+// WithCase selects rule mode: Expect remains the predicate comparison value,
+// while CaseContext.Expected optionally supplies a shared root oracle.
+func Holds(t T, predicate func() bool, evidence ...Evidence) Evidence {
+	t.Helper()
+	subject, err := methodSubject(predicate)
+	if err != nil {
+		t.Fatalf("hotamspec: Holds: %v", err)
+		return Evidence{}
+	}
+	want, seen := true, false
+	var input string
+	var hasInput bool
+	var rawInput *TypedValue
+	var ctx *ArtifactContext
+	var caseContext *CaseContext
+	caseSeen := false
+	for _, e := range evidence {
+		if e.hasExpectation {
+			if seen {
+				t.Fatalf("hotamspec: Holds: duplicate expectation")
+				return Evidence{}
+			}
+			want, seen = e.want, true
+		}
+		if e.isOption {
+			if e.HasInput {
+				if hasInput {
+					t.Fatalf("hotamspec: Holds: duplicate input")
+					return Evidence{}
+				}
+				input, hasInput = e.Input, true
+				rawInput = e.rawInput
+			}
+			if e.hasContext {
+				if ctx != nil {
+					t.Fatalf("hotamspec: Holds: duplicate context")
+					return Evidence{}
+				}
+				ctx = e.Context
+			}
+			if e.hasCase {
+				if caseSeen {
+					t.Fatalf("hotamspec: Holds: duplicate case")
+					return Evidence{}
+				}
+				caseSeen = true
+				caseContext = e.Case
+			}
+		}
+	}
+	if caseSeen && !validateCaseContext(t, "Holds", caseContext) {
+		return Evidence{}
+	}
+	got := predicate()
+	rendered := strconv.FormatBool(got)
+	expected := strconv.FormatBool(want)
+	passed := got == want
+	mode := "holds"
+	if caseContext != nil {
+		mode = "rule"
+	}
+	s := atomScenario(t, subject, mode)
+	if caseContext != nil {
+		s.caseContext = cloneCaseContext(caseContext)
+		s.caseInput = rawInput
+		if s.caseContext.Expected != nil {
+			s.caseExpected = cloneTypedValuePointer(s.caseContext.Expected)
+		} else {
+			s.caseExpected = typedValuePointer(want)
+		}
+	}
+	ownObservation := Observation{
+		Name: subject, Input: input, Actual: rendered, Expected: expected, Passed: passed,
+		RawInput: rawInput,
+	}
+	if caseContext != nil {
+		ownObservation.RawActual = typedValuePointer(got)
+		ownObservation.RawExpected = typedValuePointer(want)
+	}
+	s.steps = append(s.steps, Step{
+		Kind: StepThen, Desc: subject + " " + rendered, Subject: subject, Value: rendered,
+		Passed: passed, Input: input, HasInput: hasInput, Expected: expected, HasExpected: true,
+		Observations: []Observation{ownObservation}, Context: copyArtifactContext(ctx),
+	})
+	observations := []Observation{ownObservation}
+	for _, e := range evidence {
+		if e.hasExpectation || e.isOption {
+			continue
+		}
+		if e.Subject == "" || !e.Passed {
+			passed = false
+		}
+		s.steps = append(s.steps, Step{
+			Kind: StepValue, Desc: e.Subject + " " + e.Value, Subject: e.Subject,
+			Value: e.Value, Passed: e.Passed, Input: e.Input, HasInput: e.HasInput,
+			Observations: cloneObservations(e.Observations), Context: copyArtifactContext(e.Context),
+		})
+		observations = append(observations, e.Observations...)
+	}
+	s.steps[0].Passed = passed
+	if !passed {
+		t.Errorf("hotamspec: Holds(%s) failed: got %t, want %t, supporting evidence must pass", subject, got, want)
+	}
+	if caseContext != nil || rawInput != nil || observationsHaveRawValues(observations) {
+		observations = cloneObservations(observations)
+	}
+	return Evidence{
+		Subject: subject, Value: rendered, Passed: passed, Observations: observations,
+		Input: input, HasInput: hasInput, Context: copyArtifactContext(ctx),
+		Case: cloneCaseContext(s.caseContext), CaseInput: cloneTypedValuePointer(s.caseInput),
+		CaseExpected: cloneTypedValuePointer(s.caseExpected),
+	}
+}
+
+var atomFiles = struct {
+	sync.Mutex
+	counts map[recordT]map[string]int
+}{counts: make(map[recordT]map[string]int)}
+
+func atomScenario(t T, subject, mode string) *Scenario {
+	methodAt := strings.LastIndexByte(subject, '.')
+	receiverAt := strings.LastIndexByte(subject[:methodAt], '.')
+	reqID := "R-" + atomKebab(subject[receiverAt+1:methodAt]) + "-" + atomKebab(subject[methodAt+1:])
+	s := NewScenario(t, reqID, "")
+	s.mode = mode
+	if rt, ok := t.(recordT); ok && (os.Getenv(RecordDirEnv) != "" || os.Getenv("HOTAM_RECORD_STDOUT") == "1") {
+		atomFiles.Lock()
+		counts := atomFiles.counts[rt]
+		if counts == nil {
+			counts = make(map[string]int)
+			atomFiles.counts[rt] = counts
+			rt.Cleanup(func() {
+				atomFiles.Lock()
+				delete(atomFiles.counts, rt)
+				atomFiles.Unlock()
+			})
+		}
+		counts[reqID]++
+		s.fileSuffix = fmt.Sprintf("__atom-%03d", counts[reqID])
+		atomFiles.Unlock()
+	}
+	return s
+}
+
+func methodSubject(method any) (string, error) {
+	v := reflect.ValueOf(method)
+	if !v.IsValid() || v.Kind() != reflect.Func || v.IsNil() {
+		return "", fmt.Errorf("expected a bound method")
+	}
+	fn := runtime.FuncForPC(v.Pointer())
+	if fn == nil {
+		return "", fmt.Errorf("method has no runtime name")
+	}
+	return normalizeMethodName(fn.Name())
+}
+
+func normalizeMethodName(name string) (string, error) {
+	if !strings.HasSuffix(name, "-fm") {
+		return "", fmt.Errorf("%q is not a bound method", name)
+	}
+	name = strings.TrimSuffix(name, "-fm")
+	var b strings.Builder
+	depth := 0
+	for _, r := range name {
+		if r == '[' {
+			depth++
+			continue
+		}
+		if r == ']' {
+			depth--
+			continue
+		}
+		if depth == 0 && r != '(' && r != ')' && r != '*' {
+			b.WriteRune(r)
+		}
+	}
+	name = b.String()
+	last := strings.LastIndexByte(name, '.')
+	if last < 0 {
+		return "", fmt.Errorf("%q has no method", name)
+	}
+	receiver := strings.LastIndexByte(name[:last], '.')
+	if receiver < strings.LastIndexByte(name[:last], '/') || receiver < 0 {
+		return "", fmt.Errorf("%q has no receiver", name)
+	}
+	if depth != 0 {
+		return "", fmt.Errorf("%q is not a named method", name)
+	}
+	return name, nil
+}
+
+func atomKebab(s string) string {
+	runes := []rune(s)
+	var b strings.Builder
+	for i, r := range runes {
+		if unicode.IsUpper(r) && i > 0 && (unicode.IsLower(runes[i-1]) || unicode.IsDigit(runes[i-1]) || (i+1 < len(runes) && unicode.IsLower(runes[i+1]))) {
+			b.WriteByte('-')
+		}
+		b.WriteRune(unicode.ToLower(r))
+	}
+	return b.String()
+}

@@ -40,7 +40,9 @@ var frameworkScopedInvariantNames = map[string]struct{}{
 // DOMAIN-MAP pulse lines) without ever calling back into AllViolations for
 // the same graph.
 func AllViolations(g *ontology.Graph) []Violation {
-	return runViolations(g, All.All(), time.Now().Format("2006-01-02"))
+	return withGraphInvocation(g, func(view *ontology.Graph) []Violation {
+		return runViolations(view, All.All(), time.Now().Format("2006-01-02"))
+	})
 }
 
 // AllViolationsAsOf is AllViolations with an EXPLICIT as-of date threaded
@@ -55,7 +57,9 @@ func AllViolations(g *ontology.Graph) []Violation {
 // all-violations`, status, diagnose) keep using AllViolations and the real
 // date, unchanged.
 func AllViolationsAsOf(g *ontology.Graph, today string) []Violation {
-	return runViolations(g, All.All(), today)
+	return withGraphInvocation(g, func(view *ontology.Graph) []Violation {
+		return runViolations(view, All.All(), today)
+	})
 }
 
 // AllViolationsForProposalGate is the SAME two-phase run as AllViolations,
@@ -115,15 +119,17 @@ func AllViolationsForProposalGate(g *ontology.Graph) []Violation {
 // supplies it directly via ViolationsOverride (internal/generator/claudemd.go),
 // never through this filtered fallback path.
 func AllViolationsExcludingDiskProjection(g *ontology.Graph) []Violation {
-	all := All.All()
-	filtered := make([]Invariant, 0, len(all))
-	for _, inv := range all {
-		if inv.ComparesOnDiskProjection {
-			continue
+	return withGraphInvocation(g, func(view *ontology.Graph) []Violation {
+		all := All.All()
+		filtered := make([]Invariant, 0, len(all))
+		for _, inv := range all {
+			if inv.ComparesOnDiskProjection {
+				continue
+			}
+			filtered = append(filtered, inv)
 		}
-		filtered = append(filtered, inv)
-	}
-	return runViolations(g, filtered, time.Now().Format("2006-01-02"))
+		return runViolations(view, filtered, time.Now().Format("2006-01-02"))
+	})
 }
 
 // PriorToPostProcessViolations returns EXACTLY the violation set
@@ -156,15 +162,17 @@ func AllViolationsExcludingDiskProjection(g *ontology.Graph) []Violation {
 // check_domain_claude_md_current itself must use phase 1 — see
 // Invariant.PostProcessCheck's doc comment.
 func PriorToPostProcessViolations(g *ontology.Graph) []Violation {
-	all := All.All()
-	ordinary := make([]Invariant, 0, len(all))
-	for _, inv := range all {
-		if inv.PostProcessCheck != nil {
-			continue
+	return withGraphInvocation(g, func(view *ontology.Graph) []Violation {
+		all := All.All()
+		ordinary := make([]Invariant, 0, len(all))
+		for _, inv := range all {
+			if inv.PostProcessCheck != nil {
+				continue
+			}
+			ordinary = append(ordinary, inv)
 		}
-		ordinary = append(ordinary, inv)
-	}
-	return runViolations(g, ordinary, "") // today is unused: no PostProcessCheck runs in phase 1 only
+		return runViolations(view, ordinary, "")
+	})
 }
 
 // runViolations is the shared two-phase engine behind AllViolations and

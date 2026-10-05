@@ -61,22 +61,25 @@ type HistoryEntry struct {
 }
 
 type Requirement struct {
-	ID             string     `json:"id"`
-	Claim          string     `json:"claim"`
-	Owner          string     `json:"owner"`
-	Status         string     `json:"status"`
-	Why            string     `json:"why"`
-	Assumptions    []string   `json:"assumptions"`
-	Relations      []Relation `json:"relations"`
-	Enforcement    string     `json:"enforcement"`
-	EnforcedBy     []string   `json:"enforced_by"`
-	MTag           string     `json:"m_tag"`
-	Enforceability string     `json:"enforceability"`
-	Summary        string     `json:"summary"`
-	CreatedAt      string     `json:"created_at"`
-	SettledAt      string     `json:"settled_at"`
-	LastReviewedAt string     `json:"last_reviewed_at"`
-	ReviewAfter    string     `json:"review_after"`
+	ID    string `json:"id"`
+	Claim string `json:"claim"`
+	// ClaimTexts stores explicit authored wording by language; missing entries
+	// are never substituted, and Claim must equal the declared default text.
+	ClaimTexts     LocalizedText `json:"claim_texts,omitempty"`
+	Owner          string        `json:"owner"`
+	Status         string        `json:"status"`
+	Why            string        `json:"why"`
+	Assumptions    []string      `json:"assumptions"`
+	Relations      []Relation    `json:"relations"`
+	Enforcement    string        `json:"enforcement"`
+	EnforcedBy     []string      `json:"enforced_by"`
+	MTag           string        `json:"m_tag"`
+	Enforceability string        `json:"enforceability"`
+	Summary        string        `json:"summary"`
+	CreatedAt      string        `json:"created_at"`
+	SettledAt      string        `json:"settled_at"`
+	LastReviewedAt string        `json:"last_reviewed_at"`
+	ReviewAfter    string        `json:"review_after"`
 	// Evidence is a RETIRED, superseded surface (task #342, R5-generate-
 	// dont-lint inventory consult, resolver decision 2026-07-24): a legacy
 	// free-text run-transcript/rationale-pointer field, almost universally
@@ -131,6 +134,40 @@ type Requirement struct {
 	// methodology (no gate_stage_order in its manifest.json) never
 	// populates this field and its JSON output is unchanged.
 	GateSignoffs []GateSignoff `json:"gate_signoffs,omitempty"`
+	// SourceLinks locate authored clauses backing this requirement. Source
+	// identity, version, and hash live once on Graph.SpecificationSources;
+	// each link names that source and an anchor: a Markdown heading fragment,
+	// a single line (Lx), or a line range (Lx-Ly).
+	SourceLinks []SourceLink `json:"source_links,omitempty"`
+	// Coverage records an authored qualification only when coverage is
+	// unsupported, unreachable, or unverified. Verified/discrepancy are
+	// computed outcomes and must not be authored here.
+	Coverage *CoverageDeclaration `json:"coverage,omitempty"`
+	// AtomKind is empty for legacy value facts and "rule" for an explicitly
+	// authored rule atom. Rule semantics are never inferred from test count.
+	AtomKind string `json:"atom_kind,omitempty"`
+	// Cases may be projected from executed Go test cases; Input/Expected remain
+	// independent declared values and are never replaced by SUT actual results.
+	Cases []CaseDefinition `json:"cases,omitempty"`
+	// ClauseLinks bind this atom to declared source-owned clauses and sides.
+	ClauseLinks []ClauseLink `json:"clause_links,omitempty"`
+	// Strength is the optional authored MUST/SHOULD/MAY obligation level.
+	Strength string `json:"strength,omitempty"`
+	// Applicability is nil for universal applicability.
+	Applicability *Applicability `json:"applicability,omitempty"`
+	// Precedence declares scoped strict order, not dependency or file order.
+	Precedence []PrecedenceLink `json:"precedence,omitempty"`
+}
+
+func (r *Requirement) UnmarshalJSON(data []byte) error {
+	type wire Requirement
+	var value wire
+	if _, err := decodeStrictObject(data, "requirement", &value, nil,
+		[]string{"claim_texts", "atom_kind", "cases", "clause_links", "strength", "applicability", "precedence"}); err != nil {
+		return err
+	}
+	*r = Requirement(value)
+	return nil
 }
 
 func (r Requirement) IsCloseableDebt() bool {

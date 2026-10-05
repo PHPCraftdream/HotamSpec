@@ -1,6 +1,10 @@
 package proposal
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -37,27 +41,36 @@ type actor interface {
 }
 
 type ProposedRequirement struct {
-	ID             string              `json:"id"`
-	Claim          string              `json:"claim"`
-	Owner          string              `json:"owner"`
-	Status         string              `json:"status"`
-	Why            string              `json:"why"`
-	Assumptions    []string            `json:"assumptions"`
-	Relations      []ontology.Relation `json:"relations"`
-	Enforcement    string              `json:"enforcement"`
-	EnforcedBy     []string            `json:"enforced_by"`
-	MTag           string              `json:"m_tag"`
-	Enforceability string              `json:"enforceability"`
-	Summary        string              `json:"summary"`
-	CreatedAt      string              `json:"created_at"`
-	SettledAt      string              `json:"settled_at"`
-	LastReviewedAt string              `json:"last_reviewed_at"`
-	ReviewAfter    string              `json:"review_after"`
-	Evidence       []string            `json:"evidence"`
-	SourceRefs     []string            `json:"source_refs"`
-	BlockedOn      string              `json:"blocked_on"`
-	ImplementedBy  []string            `json:"implemented_by"`
-	VerifiedBy     []string            `json:"verified_by"`
+	ID             string                        `json:"id"`
+	Claim          string                        `json:"claim"`
+	Owner          string                        `json:"owner"`
+	Status         string                        `json:"status"`
+	Why            string                        `json:"why"`
+	Assumptions    []string                      `json:"assumptions"`
+	Relations      []ontology.Relation           `json:"relations"`
+	Enforcement    string                        `json:"enforcement"`
+	EnforcedBy     []string                      `json:"enforced_by"`
+	MTag           string                        `json:"m_tag"`
+	Enforceability string                        `json:"enforceability"`
+	Summary        string                        `json:"summary"`
+	CreatedAt      string                        `json:"created_at"`
+	SettledAt      string                        `json:"settled_at"`
+	LastReviewedAt string                        `json:"last_reviewed_at"`
+	ReviewAfter    string                        `json:"review_after"`
+	Evidence       []string                      `json:"evidence"`
+	SourceRefs     []string                      `json:"source_refs"`
+	BlockedOn      string                        `json:"blocked_on"`
+	ImplementedBy  []string                      `json:"implemented_by"`
+	VerifiedBy     []string                      `json:"verified_by"`
+	SourceLinks    []ontology.SourceLink         `json:"source_links,omitempty"`
+	Coverage       *ontology.CoverageDeclaration `json:"coverage,omitempty"`
+	ClaimTexts     ontology.LocalizedText        `json:"claim_texts,omitempty"`
+	AtomKind       string                        `json:"atom_kind,omitempty"`
+	Cases          []ontology.CaseDefinition     `json:"cases,omitempty"`
+	ClauseLinks    []ontology.ClauseLink         `json:"clause_links,omitempty"`
+	Strength       string                        `json:"strength,omitempty"`
+	Applicability  *ontology.Applicability       `json:"applicability,omitempty"`
+	Precedence     []ontology.PrecedenceLink     `json:"precedence,omitempty"`
 	// Signoff, when non-nil, carries a typed human-decision record (task
 	// #335, R4F-req-signoff) for THIS UPDATE — a Requirement UPDATE that
 	// records a real human decision should carry a typed signoff rather than
@@ -66,6 +79,46 @@ type ProposedRequirement struct {
 	// which rejects a non-nil Signoff on a CREATE-kind proposal. See
 	// ontology.Signoff (internal/ontology/signoff.go) for its fields.
 	Signoff *ontology.Signoff `json:"signoff,omitempty"`
+}
+
+func (p *ProposedRequirement) UnmarshalJSON(data []byte) error {
+	type wire ProposedRequirement
+	var decoded wire
+	fields, err := decodeStrictRequirementProposal(data, &decoded)
+	if err != nil {
+		return err
+	}
+	for _, name := range []string{"claim_texts", "atom_kind", "cases", "clause_links", "strength", "applicability", "precedence"} {
+		if raw, ok := fields[name]; ok && bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
+			return fmt.Errorf("requirement proposal field %q must be omitted or carry a value, not null", name)
+		}
+	}
+	*p = ProposedRequirement(decoded)
+	return nil
+}
+
+func decodeStrictRequirementProposal(data []byte, target any) (map[string]json.RawMessage, error) {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 || trimmed[0] != '{' {
+		return nil, fmt.Errorf("requirement proposal must be a JSON object")
+	}
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(target); err != nil {
+		return nil, err
+	}
+	var trailing any
+	if err := dec.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return nil, fmt.Errorf("requirement proposal has trailing JSON data")
+		}
+		return nil, err
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return nil, err
+	}
+	return fields, nil
 }
 
 func (p ProposedRequirement) Kind() string         { return KindRequirement }

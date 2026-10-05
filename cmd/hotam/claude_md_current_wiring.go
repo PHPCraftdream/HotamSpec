@@ -102,6 +102,13 @@ func checkDomainClaudeMDCurrentReal(g *ontology.Graph, priorViolations []invaria
 	if g.DomainDir == "" {
 		return nil
 	}
+
+	// Explicit language configurations compare default and additional boot
+	// views through check_language_outputs_current; this legacy renderer has
+	// no locale context and must not judge those files.
+	if len(g.Languages) > 0 {
+		return nil
+	}
 	claudeMDPath := resolveClaudeMDPath(g.DomainDir, "")
 	if claudeMDPath == "" {
 		return nil

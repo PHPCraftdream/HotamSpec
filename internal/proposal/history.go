@@ -1,6 +1,7 @@
 package proposal
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -8,6 +9,13 @@ import (
 
 type snapshot struct {
 	Claim          string
+	ClaimTexts     string
+	AtomKind       string
+	Cases          string
+	ClauseLinks    string
+	Strength       string
+	Applicability  string
+	Precedence     string
 	Owner          string
 	Status         string
 	Why            string
@@ -27,6 +35,8 @@ type snapshot struct {
 	BlockedOn      string
 	ImplementedBy  []string
 	VerifiedBy     []string
+	SourceLinks    []ontology.SourceLink
+	Coverage       *ontology.CoverageDeclaration
 	GateSignoffs   []ontology.GateSignoff
 }
 
@@ -37,10 +47,19 @@ func snapshotFrom(r ontology.Requirement) snapshot {
 	eb := append([]string(nil), r.EnforcedBy...)
 	ib := append([]string(nil), r.ImplementedBy...)
 	vb := append([]string(nil), r.VerifiedBy...)
+	sl := append([]ontology.SourceLink(nil), r.SourceLinks...)
+	coverage := cloneCoverageDeclaration(r.Coverage)
 	ev := append([]string(nil), r.Evidence...)
 	sr := append([]string(nil), r.SourceRefs...)
 	gs := append([]ontology.GateSignoff(nil), r.GateSignoffs...)
 	return snapshot{
+		ClaimTexts:     metadataKey(r.ClaimTexts),
+		AtomKind:       r.AtomKind,
+		Cases:          metadataKey(r.Cases),
+		ClauseLinks:    metadataKey(r.ClauseLinks),
+		Strength:       r.Strength,
+		Applicability:  metadataKey(r.Applicability),
+		Precedence:     metadataKey(r.Precedence),
 		Claim:          r.Claim,
 		Owner:          r.Owner,
 		Status:         r.Status,
@@ -61,6 +80,8 @@ func snapshotFrom(r ontology.Requirement) snapshot {
 		BlockedOn:      r.BlockedOn,
 		ImplementedBy:  ib,
 		VerifiedBy:     vb,
+		SourceLinks:    sl,
+		Coverage:       coverage,
 		GateSignoffs:   gs,
 	}
 }
@@ -122,7 +143,16 @@ func summarizeFieldDiff(old snapshot, applied snapshot) string {
 		{"blocked_on", old.BlockedOn, applied.BlockedOn},
 		{"implemented_by", sliceKey(old.ImplementedBy), sliceKey(applied.ImplementedBy)},
 		{"verified_by", sliceKey(old.VerifiedBy), sliceKey(applied.VerifiedBy)},
+		{"source_links", sourceLinkKey(old.SourceLinks), sourceLinkKey(applied.SourceLinks)},
+		{"coverage", coverageKey(old.Coverage), coverageKey(applied.Coverage)},
 		{"gate_signoffs", gateSignoffKey(old.GateSignoffs), gateSignoffKey(applied.GateSignoffs)},
+		{"claim_texts", old.ClaimTexts, applied.ClaimTexts},
+		{"atom_kind", old.AtomKind, applied.AtomKind},
+		{"cases", old.Cases, applied.Cases},
+		{"clause_links", old.ClauseLinks, applied.ClauseLinks},
+		{"strength", old.Strength, applied.Strength},
+		{"applicability", old.Applicability, applied.Applicability},
+		{"precedence", old.Precedence, applied.Precedence},
 	}
 	var parts []string
 	for _, d := range diffs {
@@ -132,6 +162,13 @@ func summarizeFieldDiff(old snapshot, applied snapshot) string {
 		parts = append(parts, d.name+": "+abbrev(d.oldS, 150)+"→"+abbrev(d.newS, 150))
 	}
 	return strings.Join(parts, "; ")
+}
+func metadataKey(value any) string {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return ""
+	}
+	return string(encoded)
 }
 
 func sliceKey(in []string) string {
@@ -166,4 +203,20 @@ func relationKey(in []ontology.Relation) string {
 		parts[i] = "(" + r.Kind + ", " + r.Target + ")"
 	}
 	return "[" + strings.Join(parts, ", ") + "]"
+}
+func sourceLinkKey(in []ontology.SourceLink) string {
+	if len(in) == 0 {
+		return "[]"
+	}
+	parts := make([]string, len(in))
+	for i, link := range in {
+		parts[i] = "(" + link.SourceID + ", " + link.Anchor + ")"
+	}
+	return "[" + strings.Join(parts, ", ") + "]"
+}
+func coverageKey(coverage *ontology.CoverageDeclaration) string {
+	if coverage == nil {
+		return ""
+	}
+	return "(" + coverage.Status + ", " + coverage.Rationale + ", " + coverage.Profile + ")"
 }

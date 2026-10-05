@@ -9,12 +9,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/docbundle"
+	"github.com/PHPCraftdream/HotamSpec/internal/evidence"
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/generator"
 	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
+	"github.com/PHPCraftdream/HotamSpec/internal/localization"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
+	"github.com/PHPCraftdream/HotamSpec/internal/selfspec"
 )
 
 func cmdGenSpec(args []string) error {
@@ -27,7 +32,7 @@ func cmdGenSpec(args []string) error {
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — embedded in freshness/status lines of the generated docs and root crystal; pin this for reproducible/byte-identical regeneration")
 	profile := fs.String("profile", "", "output profile: consumer|full (default: resolve from the domain's manifest.json, falling back to full)")
-	spec := fs.Bool("spec", false, "also render docs/gen/SPEC.md (PLAN-scenario-generated-spec.md §3 W1.3): EXECUTES every verified_by test via go test to record its hotamspec scenario narrative — real, but expensive (a full compile+run per verified_by entry), so this is opt-in, never part of gen-spec's default write set")
+	spec := fs.Bool("spec", false, "render the SPEC bundle (one shared test snapshot); optional for legacy/single-language domains, automatic for multilingual bundles")
 	fs.Parse(args)
 
 	// Validate --profile: only "consumer", "full", or empty (resolve from
@@ -74,19 +79,25 @@ func cmdGenSpec(args []string) error {
 	return nil
 }
 
-// includeSpec (--spec) gates whether SPEC.md (BuildSpec, PLAN-scenario-
-// generated-spec.md §3 W1.3) is rendered and written at all: unlike every
-// other docs/gen/*.md projection, BuildSpec is NOT a pure/cheap function of
-// the graph — it EXECUTES every verified_by test via a real `go test`
-// subprocess (gate.RunVerifiedByTestRecording) to record its scenario
-// narrative, exactly once per verified_by entry, per gen-spec run. For a
-// domain with dozens of verified_by entries (e.g. hotam-spec-self's own 50+)
-// this is a real, measured cost (tens of seconds to minutes), so genSpec
-// defaults to SKIPPING it — every existing caller (every e2e test in
-// cmd/hotam, every other genSpec call site) stays exactly as fast and
-// byte-identical as before this task, and a caller that wants the generated
-// normative text opts in explicitly (cmdGenSpec's --spec flag).
+// includeSpec (--spec) opts legacy/single-language domains into SPEC.md
+// rendering. BuildSpec executes verified_by tests to record their scenario
+// narrative, so the opt-in preserves their prior cost behavior. An explicitly
+// multilingual domain owns a complete per-language SPEC bundle, so genSpec
+// renders every locale from one collected SPEC row set.
 func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) ([]string, []string, error) {
+	var written, removed []string
+	var renderErr error
+	err := localization.SafeRender(func() error {
+		written, removed, renderErr = genSpecStaged(domainDir, claudeMDPath, today, profile, includeSpec)
+		return renderErr
+	})
+	if err != nil {
+		return written, removed, err
+	}
+	return written, removed, renderErr
+}
+
+func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec bool) ([]string, []string, error) {
 	// Profile resolution (R-gen-spec-profile): an explicit non-empty profile
 	// (only cmdGenSpec's --profile flag passes one) overrides the domain's
 	// manifest for THIS invocation without rewriting it. An empty profile
@@ -109,12 +120,79 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// case (the two are indistinguishable to an adopter with nothing modeled
 	// yet). Any OTHER read error (decode failure, permissions) still surfaces
 	// as a real error via loadGraphOrEmpty.
-	g, err := loadGraphOrEmpty(domainDir)
+	g, err := loadGraphForGenSpec(domainDir)
 	if err != nil {
 		return nil, nil, err
 	}
+	layout, err := docbundle.NewLayout(g.Languages, g.DefaultLanguage)
+	if err != nil {
+		return nil, nil, fmt.Errorf("gen-spec: output languages: %w", err)
+	}
+	localizedConfigured := len(g.Languages) > 0
+	if layout.Multilingual() {
+		// A multilingual declaration owns the full normative bundle and one
+		// shared execution snapshot, so it cannot silently omit SPEC views.
+		includeSpec = true
+	}
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	domainName := domainNameFromDir(domainDir)
+
+	reportPresent := false
+	if localizedConfigured {
+		reportPresent, _, err = evidenceReportBundleState(genDir)
+		if err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: inspect evidence report bundle: %w", err)
+		}
+	}
+	refreshReportViews := localizedConfigured && reportPresent
+	shareEvidenceSnapshot := refreshReportViews || invariants.ConformanceAuditRequired(g)
+	needExecutionSnapshot := g.SelfExecutingAtoms || shareEvidenceSnapshot
+	var atomSnapshot *gate.AtomExecutionSnapshot
+	if needExecutionSnapshot {
+		g, atomSnapshot, err = invariants.InvocationExecutionSnapshot(g)
+		if err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: collect one atom execution snapshot: %w", err)
+		}
+	}
+	if g.SelfExecutingAtoms && len(g.Requirements) > 0 {
+		overrides, err := domainRegistryFromSubprocess(domainDir)
+		if err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: atom registry: %w", err)
+		}
+		discovered, err := selfspec.DiscoverAtomsFromSnapshot(gate.SpecRootForGraph(g), overrides, atomSnapshot)
+		if err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: discover atoms: %w", err)
+		}
+		for _, req := range g.Requirements {
+			if req.Status != ontology.StatusREJECTED {
+				if _, ok := discovered.Get(req.ID); !ok {
+					return nil, nil, fmt.Errorf("gen-spec: atom %s vanished; run sync-domain to resolve lifecycle changes", req.ID)
+				}
+			}
+		}
+		if err := selfspec.MergeIntoGraph(g, discovered); err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: merge atoms: %w", err)
+		}
+	}
+	if g.SelfExecutingAtoms {
+		if err := loader.ValidateGraph(g); err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: validate projected graph: %w", err)
+		}
+	}
+
+	var evidenceSnapshot evidence.Report
+	var activeViolations []invariants.Violation
+	if shareEvidenceSnapshot {
+		activeViolations, evidenceSnapshot, err = invariants.PriorToPostProcessViolationsForPublicationWithEvidence(g, includeSpec)
+		if err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: collect shared evidence snapshot: %w", err)
+		}
+		if (reportPresent || includeSpec) && evidenceSnapshot.SchemaVersion <= 0 {
+			return nil, nil, fmt.Errorf("gen-spec: evidence collector returned no valid report schema (schema_version=%d)", evidenceSnapshot.SchemaVersion)
+		}
+	} else {
+		activeViolations = invariants.PriorToPostProcessViolationsForPublication(g, includeSpec)
+	}
 
 	// Resident-crystal char count (CRYSTAL_CHARS budget measure,
 	// R-context-budget-rule): a fixpoint computed at generation time, NOT a
@@ -277,25 +355,18 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// must list exactly this set to stay byte-identical, even though
 	// atoms-*.md/live-state.md are additionally written alongside them on
 	// disk (see mdDocs below).
-	// SPEC.md's real recording pass (RunVerifiedByTestRecording, one go test
-	// per verified_by entry) is collected here, before SPEC.md is rendered,
-	// via generator.CollectSpecRows -- gated behind includeSpec for cost
-	// reasons alone (see includeSpec's own doc comment above). Unlike
-	// before this fix, TRACEABILITY.md and COVERAGE.md no longer consume
-	// this recording pass at all: BuildTraceability/BuildCoverage are now
-	// pure, mode-independent functions of the graph plus a cheap AST scan,
-	// so they render byte-identically whether or not this run passed
-	// --spec -- the REAL executed narrative lives solely in SPEC.md, whose
-	// own freshness is separately enforced by check_spec_md_current. This
-	// is what makes TRACEABILITY.md/COVERAGE.md/REPO-MAP.md safe for
-	// `hotam land`'s own routine regeneration to commit (land passes
-	// includeSpec=true only when specRenderNeeded says check_spec_md_current
-	// applies): they are no longer shaped by
-	// whichever mode last regenerated them (see
-	// TestGenSpec_SharedProjectionsModeIndependent).
-	var specRows map[string]generator.SpecRow
+	// SPEC rows are projected from the one gate.AtomExecutionSnapshot collected
+	// above for discovery, explicit conformance/reporting, or --spec. Every
+	// locale consumes these same rows; languages never rerun a test package.
+	var specRows map[string]gate.SpecRow
 	if includeSpec {
-		specRows = generator.CollectSpecRows(g)
+		if shareEvidenceSnapshot {
+			specRows = evidenceSnapshot.SpecRows
+		} else if atomSnapshot != nil {
+			specRows = gate.CollectSpecRowsFromSnapshot(g, atomSnapshot)
+		} else {
+			specRows = gate.CollectSpecRows(g)
+		}
 	}
 
 	// gateOrder (task #331, R4-process-why): the domain's declared
@@ -351,10 +422,25 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// repoMapDocs/mdDocs by position (below) stays valid whether or not it is
 	// present, and every caller that does not request SPEC.md never
 	// pays this cost or sees SPEC.md in its written/removed lists.
-	var specMD string
+	specDocs := map[string]string{}
+	var specNames []string
 	if includeSpec {
-		specMD = generator.BuildSpecFromRows(g, specRows)
-		repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: "SPEC.md", Content: specMD})
+		specDocs, err = gate.BuildSpecDocumentsFromRows(g, specRows)
+		if err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: render SPEC bundle: %w", err)
+		}
+		if err := validateSpecOutputTargets(genDir, specDocs); err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: refusing SPEC output collision: %w", err)
+		}
+	}
+	if includeSpec {
+		for name := range specDocs {
+			specNames = append(specNames, name)
+		}
+		sort.Strings(specNames)
+		for _, name := range specNames {
+			repoMapDocs = append(repoMapDocs, generator.GenDocEntry{Filename: name, Content: specDocs[name]})
+		}
 	}
 	// REPO-MAP.md lists itself too (the repo-map scan globs docs/gen/*.md
 	// including the file it is about to (re)write); its own title is fixed by
@@ -473,7 +559,9 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		mdDocs = append(mdDocs, docEntry{"REPO-MAP.md", repoMapMD})
 	}
 	if includeSpec {
-		mdDocs = append(mdDocs, docEntry{"SPEC.md", specMD})
+		for _, name := range specNames {
+			mdDocs = append(mdDocs, docEntry{name, specDocs[name]})
+		}
 	}
 	if shouldWriteAtoms(atomsOperator) {
 		mdDocs = append(mdDocs, docEntry{"atoms-operator.md", atomsOperator})
@@ -487,11 +575,9 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	if shouldWriteAtoms(atomsCheck) {
 		mdDocs = append(mdDocs, docEntry{"atoms-check.md", atomsCheck})
 	}
-	// live-state.md/AGENT-CONTEXT.md are deliberately NOT included here —
-	// see the SECOND WRITE PHASE below (after writeFilesParallel(mdPaths,
-	// mdContents) completes) for why: they need activeViolations, which
-	// must be computed AFTER SPEC.md (and everything else in this batch) is
-	// actually on disk, not before.
+	// live-state.md/AGENT-CONTEXT.md need the phase-one violation snapshot;
+	// they are rendered into the staged bundle below, before any file is
+	// published.
 	if decisionsWritten {
 		mdDocs = append(mdDocs, docEntry{"DECISIONS.md", decisionsMD})
 	}
@@ -528,77 +614,42 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		mdDocs = append(mdDocs, docEntry{"ENGINE-VERSION.md", engineVersionMD})
 	}
 
-	// mdDocs's content was already fully rendered above (each entry a pure
-	// function of the graph); only the disk write is left, and every write
-	// targets a distinct path, so the group fans out over writeFilesParallel
-	// (same indexed-slice shape as invariants.AllViolations) instead of the
-	// former sequential loop. written must stay in mdDocs' declared order
-	// for the console listing (R-doc-names-reader-adjacent tooling greps
-	// this output), so it is rebuilt from mdDocs AFTER all writes finish —
-	// never appended to from inside a goroutine.
+	if localizedConfigured {
+		// The localized renderer owns every human-readable projection for an
+		// explicitly configured language set; never also publish the legacy
+		// unsuffixed view set.
+		mdDocs = nil
+	}
 	mdPaths := make([]string, len(mdDocs))
 	mdContents := make([][]byte, len(mdDocs))
 	for i, d := range mdDocs {
 		mdPaths[i] = filepath.Join(genDir, d.filename)
 		mdContents[i] = []byte(d.content)
 	}
-	if err := writeFilesParallel(mdPaths, mdContents); err != nil {
-		return written, nil, err
-	}
-	written = append(written, mdPaths...)
 
-	// SECOND WRITE PHASE: live-state.md, AGENT-CONTEXT.md, and (below) the
-	// root/local crystal itself all embed a violation snapshot of g, and
-	// that snapshot MUST be computed AFTER every other doc this function
-	// writes (SPEC.md above all — a `--spec` run creates it in the FIRST
-	// write phase) is actually on disk. Computing activeViolations any
-	// earlier reads a filesystem state this SAME genSpec call has not
-	// finished producing yet — see the (now-removed) comment this
-	// computation used to carry at the top of the function for the real,
-	// found-in-practice bug that produced: check_spec_md_current correctly
-	// reporting "SPEC.md does not exist" (true AT THAT MOMENT) embedded into
-	// a freshly-written CLAUDE.md/live-state.md, which then permanently
-	// disagreed with any LATER, independent violations scan (e.g. a
-	// `hotam all-violations` subprocess run moments afterward) that
-	// correctly saw the now-existing SPEC.md and reported clean — a
-	// structural, non-regenerable mismatch, not a real staleness signal.
-	//
-	// activeViolations: ONE invariants.PriorToPostProcessViolations(g) pass,
-	// threaded through EVERY render below that needs g's own violation set
-	// (the fixpoint loop, the crystal render, live-state.md,
-	// AGENT-CONTEXT.md) via the *WithViolations entry points and a
-	// ViolationsOverride{For: g, ...}. This ALSO closes a related internal-
-	// consistency bug found while implementing check_domain_claude_md_current
-	// (E4): without it, the crystal's LIVE-STATE block and the SAME domain's
-	// own self-entry inside its own DOMAIN-MAP block (RenderDomainMapBlock ->
-	// domainPulse, whose "no override" fallback deliberately computes a
-	// NARROWER invariants.AllViolationsExcludingDiskProjection(g) set -- see
-	// that function's own doc comment for why: the sibling-pulse fallback
-	// must never trigger a full AllViolations run for OTHER domains, to
-	// avoid real, observed mutual recursion between sibling domains once
-	// check_domain_claude_md_current existed) could silently disagree on
-	// open-action counts for the SAME domain, one block apart in the same
-	// file. Supplying the override here makes DOMAIN-MAP's self-entry use
-	// the exact SAME already-computed violations LIVE-STATE uses (via
-	// domainPulse's forGraph pointer match), while every OTHER (sibling)
-	// domain entry still safely falls through to the narrower, non-recursive
-	// fallback.
-	//
-	// invariants.PriorToPostProcessViolations (NOT plain invariants.AllViolations)
-	// is deliberate: it must return EXACTLY the same violation set
-	// check_domain_claude_md_current's own PostProcessCheck receives as its
-	// priorViolations argument inside a real invariants.AllViolations(g) run
-	// (runViolations' phase 1, excluding every PostProcessCheck-based
-	// invariant's OWN output) — see that function's own doc comment for the
-	// real, found-in-practice structural mismatch this avoids: using the
-	// LARGER plain-AllViolations set here (which additionally includes
-	// check_domain_claude_md_current's own verdict about the file THIS very
-	// render is about to overwrite) would make a freshly-written, genuinely
-	// current CLAUDE.md permanently fail check_domain_claude_md_current on
-	// every subsequent all-violations run, because the two sides of that
-	// check's byte comparison would be fed different violation counts by
-	// construction, forever, with no way to regenerate into a passing state.
-	activeViolations := invariants.PriorToPostProcessViolations(g)
+	var stagedPaths []string
+	var stagedContents [][]byte
+	stagedSet := make(map[string]bool)
+	addStagedFiles := func(paths []string, contents [][]byte) error {
+		if len(paths) != len(contents) {
+			return fmt.Errorf("generated bundle has %d paths but %d contents", len(paths), len(contents))
+		}
+		for i, path := range paths {
+			clean := filepath.Clean(path)
+			if stagedSet[clean] {
+				return fmt.Errorf("generated bundle contains duplicate output path %s", clean)
+			}
+			stagedSet[clean] = true
+			stagedPaths = append(stagedPaths, clean)
+			stagedContents = append(stagedContents, contents[i])
+		}
+		return nil
+	}
+	if err := addStagedFiles(mdPaths, mdContents); err != nil {
+		return nil, nil, err
+	}
+	// The phase-one violation/evidence snapshot was computed before rendering
+	// and is shared by SPEC, every localized view, and the boot crystal.
 	activeOverride := &generator.ViolationsOverride{For: g, Violations: activeViolations}
 
 	// selfCrystalPath == claudeMDPath: when this genSpec run IS writing a
@@ -619,6 +670,129 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 		return written, nil, err
 	}
 
+	if localizedConfigured {
+		specDocsForRepoMap := specDocs
+		if !includeSpec {
+			specDocsForRepoMap = make(map[string]string)
+			candidates, err := docbundle.DomainCandidates(genDir)
+			if err != nil {
+				return nil, nil, err
+			}
+			for _, path := range candidates {
+				if !layout.IsSpecPath(genDir, path) {
+					continue
+				}
+				content, err := os.ReadFile(path)
+				if err != nil {
+					if os.IsNotExist(err) {
+						continue
+					}
+					return nil, nil, fmt.Errorf("read existing SPEC view %s: %w", path, err)
+				}
+				if !gate.IsGeneratedSpecDocument(string(content)) {
+					continue
+				}
+				relative, err := filepath.Rel(genDir, path)
+				if err != nil {
+					return nil, nil, err
+				}
+				specDocsForRepoMap[filepath.ToSlash(relative)] = string(content)
+			}
+		}
+		crystalPaths := make(map[string]string, len(layout.LanguagesForViews()))
+		defaultLanguage := layout.DefaultLanguage
+		if len(layout.Languages) == 1 && defaultLanguage == "" {
+			defaultLanguage = layout.Languages[0]
+		}
+		for _, language := range layout.LanguagesForViews() {
+			crystalPath := claudeMDPath
+			if claudeMDPath != "" && layout.Multilingual() && language != defaultLanguage {
+				name, err := layout.CrystalPath(language)
+				if err != nil {
+					return nil, nil, err
+				}
+				crystalPath = filepath.Join(filepath.Dir(claudeMDPath), name)
+			}
+			crystalPaths[language] = crystalPath
+		}
+		localizedDocuments, err := generator.BuildLocalizedDocumentsWithSnapshotAndCrystalPathsForProfile(g, domainName, repoRoot, today, activeViolations, specDocsForRepoMap, crystalPaths, resolvedProfile)
+		if err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: render localized documents: %w", err)
+		}
+		localizedKeys := make([]string, 0, len(localizedDocuments))
+		for key := range localizedDocuments {
+			localizedKeys = append(localizedKeys, key)
+		}
+		sort.Strings(localizedKeys)
+		localizedPaths := make([]string, 0, len(localizedKeys))
+		localizedContents := make([][]byte, 0, len(localizedKeys))
+		for _, key := range localizedKeys {
+			path, err := docbundle.ResolveOutputPath(repoRoot, domainDir, key)
+			if err != nil {
+				return nil, nil, fmt.Errorf("gen-spec: localized output %q: %w", key, err)
+			}
+			language, localized := docbundle.LocalizedOutputLanguage(key)
+			if !localized && !layout.Multilingual() {
+				language, localized = localizedLayoutBaseLanguage(layout)
+			}
+			if localized {
+				if err := validateLocalizedRendererTarget(path, language); err != nil {
+					return nil, nil, err
+				}
+			}
+			localizedPaths = append(localizedPaths, path)
+			localizedContents = append(localizedContents, []byte(localizedDocuments[key]))
+		}
+		if err := addStagedFiles(localizedPaths, localizedContents); err != nil {
+			return nil, nil, err
+		}
+		specKeys := make([]string, 0, len(specDocs))
+		for key := range specDocs {
+			specKeys = append(specKeys, key)
+		}
+		sort.Strings(specKeys)
+		specPaths := make([]string, 0, len(specKeys))
+		specContents := make([][]byte, 0, len(specKeys))
+		for _, key := range specKeys {
+			specPaths = append(specPaths, filepath.Join(genDir, filepath.FromSlash(key)))
+			specContents = append(specContents, []byte(specDocs[key]))
+		}
+		if err := addStagedFiles(specPaths, specContents); err != nil {
+			return nil, nil, err
+		}
+		if reportPresent {
+			reportDocuments, _, err := buildEvidenceDocuments(g, evidenceSnapshot)
+			if err != nil {
+				return nil, nil, fmt.Errorf("gen-spec: render localized evidence reports: %w", err)
+			}
+			if err := validateEvidenceDocumentTargets(domainDir, reportDocuments); err != nil {
+				return nil, nil, fmt.Errorf("gen-spec: refusing evidence report collision: %w", err)
+			}
+			reportKeys := make([]string, 0, len(reportDocuments))
+			for key := range reportDocuments {
+				reportKeys = append(reportKeys, key)
+			}
+			sort.Strings(reportKeys)
+			reportPaths := make([]string, 0, len(reportKeys))
+			reportContents := make([][]byte, 0, len(reportKeys))
+			for _, key := range reportKeys {
+				reportPaths = append(reportPaths, filepath.Join(domainDir, filepath.FromSlash(key)))
+				reportContents = append(reportContents, []byte(reportDocuments[key]))
+			}
+			if err := addStagedFiles(reportPaths, reportContents); err != nil {
+				return nil, nil, err
+			}
+			machine, err := encodeEvidenceReport(evidenceSnapshot)
+			if err != nil {
+				return nil, nil, fmt.Errorf("gen-spec: encode evidence report: %w", err)
+			}
+			evidencePath := filepath.Join(genDir, "evidence.json")
+			if err := addStagedFiles([]string{evidencePath}, [][]byte{machine}); err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
 	// live-state.md/AGENT-CONTEXT.md (task #364): withheld like every other
 	// docs/gen/ projection this task gates when the domain graph is
 	// genuinely empty (agentContextWritten/liveStateWritten, computed
@@ -628,34 +802,33 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// set, independent of domain content.
 	var liveStateAndAgentContextPaths []string
 	var liveStateAndAgentContextContents [][]byte
-	if liveStateWritten {
+	if liveStateWritten && !localizedConfigured {
 		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "live-state.md"))
 		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildLiveStateWithViolationsRoot(g, domainName, charCount, today, activeViolations, repoRoot)))
 	}
-	if agentContextWritten {
+	if agentContextWritten && !localizedConfigured {
 		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "AGENT-CONTEXT.md"))
 		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildAgentContextRoot(g, domainName, charCount, today, consumer, repoRoot)))
 	}
-	if err := writeFilesParallel(liveStateAndAgentContextPaths, liveStateAndAgentContextContents); err != nil {
-		return written, nil, err
+	if err := addStagedFiles(liveStateAndAgentContextPaths, liveStateAndAgentContextContents); err != nil {
+		return nil, nil, err
 	}
-	written = append(written, liveStateAndAgentContextPaths...)
 
 	// graph.json archival copy (task #364): withheld like every other
 	// docs/gen/ projection this task gates when the domain graph is
 	// genuinely empty (graphJSONWritten, computed above) — BuildGraphJSON
 	// itself still succeeds and would render a well-formed, empty-arrays
 	// payload, but there is nothing to archive for a domain with no content.
+	var graphJSON string
 	if graphJSONWritten {
-		graphJSON, err := generator.BuildGraphJSON(g)
+		graphJSON, err = generator.BuildGraphJSON(g)
 		if err != nil {
-			return written, nil, fmt.Errorf("build graph.json: %w", err)
+			return nil, nil, fmt.Errorf("build graph.json: %w", err)
 		}
-		gp := filepath.Join(genDir, "graph.json")
-		if err := writeFileMkdir(gp, []byte(graphJSON)); err != nil {
-			return written, nil, err
+		graphPath := filepath.Join(genDir, "graph.json")
+		if err := addStagedFiles([]string{graphPath}, [][]byte{[]byte(graphJSON)}); err != nil {
+			return nil, nil, err
 		}
-		written = append(written, gp)
 	}
 
 	// framework/GLOSSARY.md (task #357): the methodology controlled vocabulary
@@ -665,12 +838,11 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// so cleanupStaleProjectFrameworkFiles treats it as current rather than
 	// stale. FRAMEWORK-INVARIANTS.md, by contrast, is per-domain and now writes
 	// through mdDocs into docs/gen/ (where it was before task #355).
-	if !consumer {
+	if !consumer && !localizedConfigured {
 		glossaryPath := filepath.Join(projectFrameworkDir, "GLOSSARY.md")
-		if err := writeFileMkdir(glossaryPath, []byte(glossaryMD)); err != nil {
-			return written, nil, err
+		if err := addStagedFiles([]string{glossaryPath}, [][]byte{[]byte(glossaryMD)}); err != nil {
+			return nil, nil, err
 		}
-		written = append(written, glossaryPath)
 	}
 
 	// thinking/*.md and tools/*.md: BuildThinkingDocs/BuildToolDocs return
@@ -685,7 +857,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// every §-section of the METHODOLOGY ITSELF) is framework
 	// self-documentation, not domain content — skipped entirely for an
 	// external business consumer who just uses the tool.
-	if !consumer {
+	if !consumer && !localizedConfigured {
 		thinkingDocs := generator.BuildThinkingDocs()
 		thinkingKeys := make([]string, 0, len(thinkingDocs))
 		for key := range thinkingDocs {
@@ -698,10 +870,9 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 			thinkingPaths[i] = filepath.Join(genDir, "thinking", key+".md")
 			thinkingContents[i] = []byte(thinkingDocs[key])
 		}
-		if err := writeFilesParallel(thinkingPaths, thinkingContents); err != nil {
-			return written, nil, err
+		if err := addStagedFiles(thinkingPaths, thinkingContents); err != nil {
+			return nil, nil, err
 		}
-		written = append(written, thinkingPaths...)
 	}
 
 	// Consumer profile: write tools/*.md pages ONLY for Implemented tools
@@ -712,7 +883,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// both land under the PROJECT-root framework/tools/ (sibling of domains/),
 	// NOT docs/gen/tools/ — engine self-documentation shared across all domains,
 	// byte-identical regardless of which domain regenerated it.
-	if !consumer {
+	if !consumer && !localizedConfigured {
 		toolDocs := generator.BuildToolDocs(consumer)
 		toolKeys := make([]string, 0, len(toolDocs))
 		for cmd := range toolDocs {
@@ -728,69 +899,85 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 			toolPaths[i] = filepath.Join(projectFrameworkDir, "tools", cmd+".md")
 			toolContents[i] = []byte(toolDocs[cmd])
 		}
-		if err := writeFilesParallel(toolPaths, toolContents); err != nil {
-			return written, nil, err
+		if err := addStagedFiles(toolPaths, toolContents); err != nil {
+			return nil, nil, err
 		}
-		written = append(written, toolPaths...)
-
-		// tools/INDEX.md: a single entry-point page splitting the registry into
-		// Implemented (real commands) vs Planned (methodology surface only), so a
-		// browser of framework/tools/ is not misled by the raw file count (40 .md
-		// files, only 13 backing runnable commands). Purely additive — one extra
-		// file alongside the per-tool docs above.
 		toolIndexPath := filepath.Join(projectFrameworkDir, "tools", "INDEX.md")
-		if err := writeFileMkdir(toolIndexPath, []byte(generator.BuildToolDocsIndex(consumer))); err != nil {
-			return written, nil, err
+		if err := addStagedFiles([]string{toolIndexPath}, [][]byte{[]byte(generator.BuildToolDocsIndex(consumer))}); err != nil {
+			return nil, nil, err
 		}
-		written = append(written, toolIndexPath)
 	}
 
-	// Root CLAUDE.md (R-claude-md-template-driven): the crystal is WRITTEN
-	// to disk only when --claude-md points at a path — the reference behavior
-	// is an unconditional root-crystal regen, but this CLI is also used
-	// against non-root domain checkouts / tests where no CLAUDE.md is wanted,
-	// so the flag opts in to the write. charCount is the converged fixpoint
-	// computed unconditionally above (against this same render), so the
-	// bytes written here embed the crystal's true self-measurement — not a
-	// stale pre-existing-file size — and two consecutive --claude-md passes
-	// over the same tree now converge byte-for-byte.
 	if claudeMDPath != "" {
-		claudeMD := generator.RenderClaudeMDFromTemplateWithViolations(g, domainName, repoRoot, charCount, domainGraphs, today, consumer, activeOverride, claudeMDPath)
-
-		// Durable-notes tail preservation: the template's own trailing marker
-		// line (generator.DurableNotesMarkerLine) promises "Anything you write
-		// below this line survives every regeneration verbatim" — honoring
-		// that promise requires reading whatever tail the PRE-EXISTING
-		// claudeMDPath file already carries (if any) and re-appending it to
-		// this fresh render, rather than the unconditional overwrite this
-		// code used to perform (which silently discarded any tail an
-		// operator had actually written, contradicting the template's own
-		// text — see generator.DurableNotesMarkerLine's doc comment). A
-		// missing file, a file with no marker line at all (not template-
-		// shaped, e.g. a hand-authored README some project already had), or
-		// any read error all fall back to "no tail to carry forward" — the
-		// fresh render's own generated part is used as-is, exactly the prior
-		// behavior, so this is purely additive for the one case (a marker
-		// line IS present) it changes.
-		claudeMD = claudeMD + preserveDurableNotesTail(claudeMDPath)
-		claudeMDBytes := []byte(claudeMD)
-
-		// CLAUDE.md, AGENTS.md and GEMINI.md all receive the identical
-		// rendered crystal (same render, same byte slice) at three distinct
-		// paths, so the three writes fan out together instead of
-		// sequentially; written keeps CLAUDE.md first, then AGENTS.md,
-		// GEMINI.md, matching the prior sequential order exactly.
-		claudeMDDir := filepath.Dir(claudeMDPath)
-		crystalPaths := []string{
-			claudeMDPath,
-			filepath.Join(claudeMDDir, "AGENTS.md"),
-			filepath.Join(claudeMDDir, "GEMINI.md"),
+		defaultLanguage := layout.DefaultLanguage
+		if len(layout.Languages) == 1 && defaultLanguage == "" {
+			defaultLanguage = layout.Languages[0]
 		}
-		crystalContents := [][]byte{claudeMDBytes, claudeMDBytes, claudeMDBytes}
-		if err := writeFilesParallel(crystalPaths, crystalContents); err != nil {
+		for _, language := range layout.LanguagesForViews() {
+			view := *g
+			view.RenderLanguage = language
+			viewGraphs := map[string]*ontology.Graph{domainName: &view}
+			viewOverride := &generator.ViolationsOverride{For: &view, Violations: activeViolations}
+			crystalPath := claudeMDPath
+			if localizedConfigured && language != defaultLanguage {
+				name, err := layout.CrystalPath(language)
+				if err != nil {
+					return nil, nil, err
+				}
+				crystalPath = filepath.Join(filepath.Dir(claudeMDPath), name)
+				if err := validateLocalizedCrystalTarget(crystalPath); err != nil {
+					return nil, nil, err
+				}
+			}
+			viewCharCount, err := generator.ComputeCrystalCharCountFixpointWithViolations(&view, domainName, repoRoot, viewGraphs, today, consumer, viewOverride, crystalPath)
+			if err != nil {
+				return nil, nil, err
+			}
+			claudeMD := generator.RenderClaudeMDFromTemplateWithViolations(&view, domainName, repoRoot, viewCharCount, viewGraphs, today, consumer, viewOverride, crystalPath)
+			claudeMD += preserveDurableNotesTail(crystalPath)
+			crystalBytes := []byte(claudeMD)
+			crystalPaths := []string{crystalPath}
+			crystalContents := [][]byte{crystalBytes}
+			if !localizedConfigured || language == defaultLanguage {
+				crystalDir := filepath.Dir(claudeMDPath)
+				crystalPaths = append(crystalPaths, filepath.Join(crystalDir, "AGENTS.md"), filepath.Join(crystalDir, "GEMINI.md"))
+				crystalContents = append(crystalContents, crystalBytes, crystalBytes)
+			}
+			if err := addStagedFiles(crystalPaths, crystalContents); err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	// All renderers and locale validation have completed. Publish the staged
+	// content through the existing fsio parallel writer. Files are staged
+	// together before writes, but publication is not a multi-file transaction.
+	if err := writeFilesParallel(stagedPaths, stagedContents); err != nil {
+		return nil, nil, err
+	}
+	written = append(written, stagedPaths...)
+
+	var removedCrystals []string
+	var crystalDirs []string
+	if claudeMDPath != "" {
+		// A resolved boot path owns locale cleanup only in its sibling
+		// directory; never disturb a separate project crystal.
+		crystalDirs = []string{filepath.Dir(claudeMDPath)}
+	} else if !crystalConventionExists(repoRoot) {
+		crystalDirs = []string{repoRoot, domainDir}
+	}
+	seenCrystalDirs := make(map[string]bool)
+	for _, directory := range crystalDirs {
+		directory = filepath.Clean(directory)
+		if seenCrystalDirs[directory] {
+			continue
+		}
+		seenCrystalDirs[directory] = true
+		removed, err := cleanupStaleLocalizedCrystals(directory, written)
+		if err != nil {
 			return written, nil, err
 		}
-		written = append(written, crystalPaths...)
+		removedCrystals = append(removedCrystals, removed...)
 	}
 
 	// R-profile-switch-cleanup: genSpec only ever WRITES files, never
@@ -824,9 +1011,67 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// regenerated this run" for "orphaned".
 	var exemptFromCleanup []string
 	if !includeSpec {
-		exemptFromCleanup = []string{"SPEC.md"}
+		candidates, err := docbundle.DomainCandidates(genDir)
+		if err != nil {
+			return written, nil, err
+		}
+		for _, path := range candidates {
+			if !layout.IsSpecPath(genDir, path) {
+				continue
+			}
+			relative, err := filepath.Rel(genDir, path)
+			if err != nil {
+				return written, nil, err
+			}
+			exemptFromCleanup = append(exemptFromCleanup, filepath.ToSlash(relative))
+		}
 	}
-	removedGen, err := cleanupStaleGenFiles(genDir, written, exemptFromCleanup)
+	// Evidence/finding views and their one raw JSON store are owned by
+	// `hotam evidence --write`, not this graph-document generation run.
+	for _, path := range docbundle.ReportCandidates(genDir) {
+		relative, err := filepath.Rel(genDir, path)
+		if err != nil {
+			return written, nil, err
+		}
+		exemptFromCleanup = append(exemptFromCleanup, filepath.ToSlash(relative))
+	}
+	var removedSpec []string
+	if includeSpec {
+		err := filepath.WalkDir(filepath.Join(genDir, "spec"), func(path string, entry os.DirEntry, walkErr error) error {
+			if os.IsNotExist(walkErr) {
+				return nil
+			}
+			if walkErr != nil {
+				return walkErr
+			}
+			if entry.IsDir() || filepath.Ext(path) != ".md" {
+				return nil
+			}
+			rel, err := filepath.Rel(genDir, path)
+			if err != nil {
+				return err
+			}
+			if _, keep := specDocs[filepath.ToSlash(rel)]; keep {
+				return nil
+			}
+			exists, owned, err := inspectGeneratedOutput(path, gate.IsGeneratedSpecDocument)
+			if err != nil {
+				return err
+			}
+			if !exists || !owned {
+				return nil
+			}
+			if err := os.Remove(path); err != nil {
+				return err
+			}
+			removedSpec = append(removedSpec, path)
+			return nil
+		})
+		if err != nil {
+			return written, removedSpec, err
+		}
+	}
+	removedGen, err := cleanupStaleGenFiles(genDir, written, exemptFromCleanup, layout)
 	if err != nil {
 		return written, nil, err
 	}
@@ -838,27 +1083,34 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	// (docs/gen/GLOSSARY.md, docs/gen/tools/*.md): those closed-list entries are
 	// no longer written to docs/gen/, so they register as stale and get removed
 	// — that is the migration path from the old location to the new one.
-	// The shared framework/ is left alone while any domain of the project
-	// still renders the full profile (it owns those files).
+	// Shared framework outputs are reconciled when this is the only full
+	// profile owner, or when a consumer run observes that no full domain still
+	// owns the directory. A sibling full domain can retain another locale set.
 	var removedProjectFW []string
-	if !projectUsesFullProfile(repoRoot, consumer) {
-		removedProjectFW, err = cleanupStaleProjectFrameworkFiles(projectFrameworkDir, written)
+	cleanupProjectFW := false
+	if consumer {
+		cleanupProjectFW = !projectUsesFullProfile(repoRoot, true)
+	} else {
+		cleanupProjectFW = !projectHasOtherFullProfile(repoRoot, domainDir)
+	}
+	if cleanupProjectFW {
+		removedProjectFW, err = cleanupStaleProjectFrameworkFiles(projectFrameworkDir, written, layout)
 		if err != nil {
 			return written, nil, err
 		}
 	}
-	// Per-domain framework/ migration cleanup (task #357 retires #355's
-	// layout): the old domains/<name>/framework/ directory held FRAMEWORK-
-	// INVARIANTS.md + tools/*.md; both have moved (FRAMEWORK-INVARIANTS.md back
-	// to docs/gen/, tools/*.md up to the project root). This pass removes every
-	// generator-owned file left in the per-domain framework/ dir, then prunes
-	// the now-empty tools/ subdir and framework/ dir itself so neither orphan
-	// files nor empty directories survive the migration.
-	removedDomainFW, err := cleanupStaleDomainFrameworkDir(domainFrameworkDir)
+	removedEvidence, err := cleanupStaleEvidenceLocaleViews(genDir, layout)
 	if err != nil {
 		return written, nil, err
 	}
-	removed := append(append(append([]string{}, removedGen...), removedProjectFW...), removedDomainFW...)
+	var removedDomainFW []string
+	if filepath.Clean(domainFrameworkDir) != filepath.Clean(projectFrameworkDir) {
+		removedDomainFW, err = cleanupStaleDomainFrameworkDir(domainFrameworkDir)
+		if err != nil {
+			return written, nil, err
+		}
+	}
+	removed := append(append(append(append(append(append([]string{}, removedCrystals...), removedEvidence...), removedSpec...), removedGen...), removedProjectFW...), removedDomainFW...)
 	sort.Strings(removed)
 	return written, removed, nil
 }
@@ -887,106 +1139,267 @@ func preserveDurableNotesTail(path string) string {
 	return tail
 }
 
-// cleanupStaleGenFiles deletes generator-owned files under <domainDir>/docs/gen/
-// that exist on disk but are NOT in this run's written list. Deletion is scoped
-// strictly to three categories genSpec is authoritative over — nothing outside
-// docs/gen/ is ever touched, and within docs/gen/ only (1) a CLOSED filename
-// list of top-level files, (2) every docs/gen/thinking/*.md, and (3) every
-// docs/gen/tools/*.md are candidates, so a hand-placed or future file with an
-// unrecognized top-level name is left alone (no blind glob of docs/gen/*.md).
-// thinking/ and tools/ ARE fully globbed because every file in them is
-// generator-owned. It returns the sorted list of deleted file paths so the
-// caller can report the shrinkage.
-//
-// exemptTopLevelNames (W2.3): a small, explicit list of top-level filenames
-// (e.g. "SPEC.md") that this call must NEVER remove, regardless of whether
-// they appear in written — distinct from every other candidate, whose
-// absence from written IS staleness. This is for a projection that is
-// KNOWN to the generator (its filename is still in topLevelFiles below) but
-// whose regeneration this particular run deliberately skipped for cost
-// reasons, not because it stopped being wanted. On a plain run that skips
-// it, genSpec separately stats the file and, if present, feeds its real
-// on-disk content into fullRepoMapDocs (see the REPO-MAP.md "SPEC.md
-// acknowledgment" block above) so REPO-MAP.md's own listing stays honest
-// about what actually exists on disk — this exemption alone does not cause
-// that; it only stops cleanup from deleting the file this run left alone.
-// An exempt name that genSpec DID write this run (e.g. a `--spec`
-// invocation) is harmless to also list here — it is already in writtenSet
-// and would never have been a deletion candidate anyway, so callers are
-// free to pass a fixed exemption list without conditioning it on whether
-// this particular run happened to write that file.
-func cleanupStaleGenFiles(genDir string, written []string, exemptTopLevelNames []string) ([]string, error) {
-	writtenSet := make(map[string]bool, len(written))
-	for _, p := range written {
-		writtenSet[filepath.Clean(p)] = true
-	}
-	exemptSet := make(map[string]bool, len(exemptTopLevelNames))
-	for _, name := range exemptTopLevelNames {
-		exemptSet[filepath.Clean(filepath.Join(genDir, name))] = true
-	}
-
-	// (1) Closed list of top-level docs/gen/ filenames genSpec is authoritative
-	// over. FRAMEWORK-INVARIANTS.md is written here (task #357 returned it to
-	// docs/gen/ — it is per-domain content). GLOSSARY.md is listed here
-	// INTENTIONALLY even though task #357 promoted its WRITE to the project-
-	// root framework/: a pre-#357 domain still carries docs/gen/GLOSSARY.md on
-	// disk, and since it is no longer in this run's written list for docs/gen/,
-	// listing it here makes it register as stale and get removed — the
-	// migration path from the old location to the new one (no orphan doubles
-	// left behind). graph.json (task #364: now conditional, like every other
-	// entry in this list except GLOSSARY.md's migration case above) is
-	// listed here so a domain that transitions from non-empty to genuinely
-	// empty (e.g. its last Requirement rejected with nothing landed to
-	// replace it) has its stale archival copy correctly removed on the next
-	// gen-spec run, exactly like every other conditional file in this set.
-	topLevelFiles := []string{
-		"REQUIREMENTS.md", "TENSIONS.md", "OPEN.md", "UNENFORCED.md",
-		"GLOSSARY.md", "HISTORY.md", "CONSTITUTION.md", "FRAMEWORK-INVARIANTS.md",
-		"PIPELINE.md", "TRACEABILITY.md", "MODELS.md", "COVERAGE.md", "SPEC.md",
-		"REPO-MAP.md", "atoms-operator.md", "atoms-substrate.md",
-		"atoms-discipline.md", "atoms-check.md", "live-state.md",
-		"AGENT-CONTEXT.md", "DECISIONS.md", "ENTITIES.md", "graph.json",
-		"ENGINE-VERSION.md",
-	}
-	var candidates []string
-	for _, name := range topLevelFiles {
-		candidates = append(candidates, filepath.Join(genDir, name))
-	}
-
-	// (2) thinking/*.md and (3) tools/*.md — every .md in these two directories
-	// is generator-owned (nothing else is ever placed there), so glob-and-diff
-	// against written is safe. tools/ is still globbed here for migration:
-	// tasks #355→#357 relocated tools/*.md writes first to per-domain
-	// framework/tools/ then to the project-root framework/tools/, so an existing
-	// docs/gen/tools/ directory's files are no longer in this run's written list
-	// and get cleaned up here. A non-existent directory yields an empty match
-	// set (nil error), which is the correct no-candidates outcome.
-	for _, sub := range []string{"thinking", "tools"} {
-		matches, err := filepath.Glob(filepath.Join(genDir, sub, "*.md"))
-		if err != nil {
-			return nil, fmt.Errorf("glob docs/gen/%s: %w", sub, err)
+func validateLocalizedCrystalTarget(path string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
 		}
-		candidates = append(candidates, matches...)
+		return fmt.Errorf("inspect localized crystal destination %s: %w", path, err)
 	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("refusing to overwrite non-regular localized crystal destination %s", path)
+	}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read localized crystal destination %s: %w", path, err)
+	}
+	if _, _, ok := generator.SplitAtDurableNotesMarker(string(content)); !ok {
+		return fmt.Errorf("refusing to overwrite authored or unrecognized localized crystal %s", path)
+	}
+	return nil
+}
 
+func validateLocalizedRendererTarget(path, language string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("inspect localized document destination %s: %w", path, err)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("refusing to overwrite non-regular localized document destination %s", path)
+	}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read localized document destination %s: %w", path, err)
+	}
+	if !generator.IsGeneratedLocalizedDocument(language, string(content)) {
+		return fmt.Errorf("refusing to overwrite authored or unrecognized localized document %s", path)
+	}
+	return nil
+}
+
+func localizedLayoutBaseLanguage(layout docbundle.Layout) (string, bool) {
+	if len(layout.Languages) == 1 {
+		return layout.Languages[0], true
+	}
+	if layout.Multilingual() && layout.DefaultLanguage != "" {
+		return layout.DefaultLanguage, true
+	}
+	return "", false
+}
+
+// cleanupStaleLocalizedCrystals retires only known generated localized
+// CLAUDE.<lang>.md paths. A hand-authored non-template file is preserved; when
+// a generated file contains durable notes, its generated section is removed
+// while the author's tail remains at the same path.
+func cleanupStaleLocalizedCrystals(directory string, written []string) ([]string, error) {
+	current := make(map[string]bool, len(written))
+	for _, path := range written {
+		current[filepath.Clean(path)] = true
+	}
 	var removed []string
-	for _, c := range candidates {
-		cp := filepath.Clean(c)
-		if writtenSet[cp] || exemptSet[cp] {
+	for _, path := range docbundle.CrystalCandidates(directory) {
+		path = filepath.Clean(path)
+		if current[path] {
 			continue
 		}
-		if _, err := os.Stat(cp); err != nil {
+		info, err := os.Lstat(path)
+		if err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
-			return nil, fmt.Errorf("stat stale gen file %s: %w", cp, err)
+			return nil, fmt.Errorf("stat stale localized crystal %s: %w", path, err)
 		}
-		if err := os.Remove(cp); err != nil {
-			return nil, fmt.Errorf("remove stale gen file %s: %w", cp, err)
+		if !info.Mode().IsRegular() {
+			continue
 		}
-		removed = append(removed, cp)
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("read stale localized crystal %s: %w", path, err)
+		}
+		_, tail, templateShaped := generator.SplitAtDurableNotesMarker(string(content))
+		if !templateShaped {
+			continue
+		}
+		if strings.TrimSpace(tail) != "" {
+			if err := os.WriteFile(path, []byte(generator.DurableNotesMarkerLine+"\n"+tail), info.Mode().Perm()); err != nil {
+				return nil, fmt.Errorf("preserve notes from stale localized crystal %s: %w", path, err)
+			}
+			continue
+		}
+		if err := os.Remove(path); err != nil {
+			return nil, fmt.Errorf("remove stale localized crystal %s: %w", path, err)
+		}
+		removed = append(removed, path)
 	}
 	sort.Strings(removed)
+	return removed, nil
+}
+
+// cleanupStaleGenFiles removes stale paths only from the shared closed
+// docs/gen inventory in internal/docbundle. Unknown top-level names and
+// unrecognized localized suffixes are not candidates; the inventory owns
+// generated SPEC shards and the known thinking/tools directories.
+//
+// exemptRelativePaths are domain-relative generated paths intentionally not
+// refreshed by this run (such as the current SPEC bundle on a non---spec run)
+// or owned by another command (the evidence views and shared evidence.json).
+func cleanupStaleGenFiles(genDir string, written []string, exemptRelativePaths []string, layout docbundle.Layout) ([]string, error) {
+	candidates, err := docbundle.DomainCandidates(genDir)
+	if err != nil {
+		return nil, err
+	}
+	exempt := make([]string, 0, len(exemptRelativePaths))
+	for _, relative := range exemptRelativePaths {
+		exempt = append(exempt, filepath.Join(genDir, filepath.FromSlash(relative)))
+	}
+	reportOwned := make(map[string]bool)
+	for _, path := range docbundle.ReportCandidates(genDir) {
+		reportOwned[filepath.Clean(path)] = true
+	}
+	ownedCandidates := make([]string, 0, len(candidates))
+	for _, path := range candidates {
+		if reportOwned[filepath.Clean(path)] {
+			continue
+		}
+		relative, err := filepath.Rel(genDir, path)
+		if err != nil {
+			return nil, err
+		}
+		relative = filepath.ToSlash(relative)
+		if docbundle.UnknownLocaleSuffixedMarkdown(relative) {
+			continue
+		}
+		if docbundle.IsSpecOutputPath(relative) {
+			exists, owned, err := inspectGeneratedOutput(path, gate.IsGeneratedSpecDocument)
+			if err != nil {
+				return nil, err
+			}
+			if !exists || !owned {
+				continue
+			}
+		} else if language, localized := docbundle.LocalizedOutputLanguage(relative); localized {
+			exists, owned, err := inspectGeneratedOutput(path, func(content string) bool {
+				return generator.IsGeneratedLocalizedDocument(language, content)
+			})
+			if err != nil {
+				return nil, err
+			}
+			if !exists || !owned {
+				continue
+			}
+		} else if language, localized := localizedLayoutBaseLanguage(layout); localized && !strings.Contains(relative, "/") && strings.HasSuffix(relative, ".md") {
+			exists, owned, err := inspectGeneratedOutput(path, func(content string) bool {
+				return generator.IsGeneratedLocalizedDocument(language, content)
+			})
+			if err != nil {
+				return nil, err
+			}
+			if !exists || !owned {
+				continue
+			}
+		}
+		ownedCandidates = append(ownedCandidates, path)
+	}
+	candidates = ownedCandidates
+	stale := docbundle.StalePaths(candidates, written, exempt)
+	var removed []string
+	for _, path := range stale {
+		if _, err := os.Stat(path); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, fmt.Errorf("stat stale gen file %s: %w", path, err)
+		}
+		if err := os.Remove(path); err != nil {
+			return nil, fmt.Errorf("remove stale gen file %s: %w", path, err)
+		}
+		removed = append(removed, path)
+	}
+	return removed, nil
+}
+
+func inspectGeneratedOutput(path string, owns func(string) bool) (exists, owned bool, err error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, false, nil
+		}
+		return false, false, fmt.Errorf("inspect generated output %s: %w", path, err)
+	}
+	if !info.Mode().IsRegular() {
+		return true, false, nil
+	}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return true, false, fmt.Errorf("read generated output %s: %w", path, err)
+	}
+	return true, owns(string(content)), nil
+}
+
+func validateSpecOutputTargets(genDir string, documents map[string]string) error {
+	relativePaths := make([]string, 0, len(documents))
+	for relative := range documents {
+		relativePaths = append(relativePaths, relative)
+	}
+	sort.Strings(relativePaths)
+	for _, relative := range relativePaths {
+		path := filepath.Join(genDir, filepath.FromSlash(relative))
+		exists, owned, err := inspectGeneratedOutput(path, gate.IsGeneratedSpecDocument)
+		if err != nil {
+			return err
+		}
+		if exists && !owned {
+			return fmt.Errorf("refusing to overwrite authored or unrecognized SPEC file %s", path)
+		}
+	}
+	return nil
+}
+
+func cleanupStaleEvidenceLocaleViews(genDir string, layout docbundle.Layout) ([]string, error) {
+	var current []string
+	for _, language := range layout.LanguagesForViews() {
+		for _, base := range []string{"docs/gen/EVIDENCE.md", "docs/gen/FINDINGS.md"} {
+			relative, err := layout.DocumentPath(base, language)
+			if err != nil {
+				return nil, err
+			}
+			current = append(current, filepath.Join(genDir, filepath.Base(relative)))
+		}
+	}
+	var candidates []string
+	for _, path := range docbundle.ReportCandidates(genDir) {
+		if filepath.Base(path) == "evidence.json" {
+			continue
+		}
+		candidates = append(candidates, path)
+	}
+	stale := docbundle.StalePaths(candidates, current, nil)
+	var removed []string
+	for _, path := range stale {
+		relative, err := filepath.Rel(genDir, path)
+		if err != nil {
+			return nil, err
+		}
+		owns := generatedReportDocumentPredicate(filepath.ToSlash(relative))
+		if owns == nil {
+			continue
+		}
+		exists, generated, err := inspectGeneratedOutput(path, owns)
+		if err != nil {
+			return nil, err
+		}
+		if !exists || !generated {
+			continue
+		}
+		if err := os.Remove(path); err != nil {
+			return nil, fmt.Errorf("remove obsolete evidence locale view %s: %w", path, err)
+		}
+		removed = append(removed, path)
+	}
 	return removed, nil
 }
 
@@ -1015,59 +1428,81 @@ func projectUsesFullProfile(repoRoot string, activeConsumer bool) bool {
 	return false
 }
 
-// cleanupStaleProjectFrameworkFiles deletes generator-owned files under the
-// PROJECT-root framework/ directory that exist on disk but are NOT in this
-// run's written list (task #357: GLOSSARY.md + tools/*.md are project-shared).
-// Same closed-list discipline as cleanupStaleGenFiles: only (1) GLOSSARY.md
-// (the one top-level file genSpec writes here — FRAMEWORK-INVARIANTS.md is NOT
-// here, it is per-domain under docs/gen/) and (2) every framework/tools/*.md
-// (the per-tool registry pages + INDEX.md) are candidates, so a hand-placed
-// file under framework/ with an unrecognized name is left alone (no blind glob
-// of framework/*.md). It returns the sorted list of deleted file paths, and
-// shares the SAME writtenSet the docs/gen/ pass uses.
-func cleanupStaleProjectFrameworkFiles(projectFrameworkDir string, written []string) ([]string, error) {
-	writtenSet := make(map[string]bool, len(written))
-	for _, p := range written {
-		writtenSet[filepath.Clean(p)] = true
-	}
-
-	var candidates []string
-	// (1) Closed list of top-level framework/ filenames genSpec produces here.
-	// GLOSSARY.md is the only one (tools/ is globbed below).
-	topLevelFiles := []string{"GLOSSARY.md"}
-	for _, name := range topLevelFiles {
-		candidates = append(candidates, filepath.Join(projectFrameworkDir, name))
-	}
-
-	// (2) framework/tools/*.md — every .md in this directory is generator-owned
-	// (per-tool pages + INDEX.md), so glob-and-diff against written is safe. A
-	// non-existent directory yields an empty match set (nil error), the correct
-	// no-candidates outcome for a fresh project whose framework/tools/ was never
-	// materialized.
-	matches, err := filepath.Glob(filepath.Join(projectFrameworkDir, "tools", "*.md"))
+func projectHasOtherFullProfile(repoRoot, activeDomainDir string) bool {
+	entries, err := os.ReadDir(filepath.Join(repoRoot, "domains"))
 	if err != nil {
-		return nil, fmt.Errorf("glob framework/tools: %w", err)
+		return false
 	}
-	candidates = append(candidates, matches...)
-
-	var removed []string
-	for _, c := range candidates {
-		cp := filepath.Clean(c)
-		if writtenSet[cp] {
+	active := filepath.Clean(activeDomainDir)
+	for _, entry := range entries {
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), "_") {
 			continue
 		}
-		if _, err := os.Stat(cp); err != nil {
+		domainDir := filepath.Join(repoRoot, "domains", entry.Name())
+		if filepath.Clean(domainDir) == active {
+			continue
+		}
+		if loader.ResolveGenProfile(filepath.Join(domainDir, "graph.json")) == loader.GenProfileFull {
+			return true
+		}
+	}
+	return false
+}
+
+// cleanupStaleProjectFrameworkFiles reconciles the closed shared framework
+// inventory from internal/docbundle (localized and default GLOSSARY, plus
+// generator-owned framework/tools pages) against this run's staged path set.
+// Unrecognized files directly under framework/ are never candidates.
+func cleanupStaleProjectFrameworkFiles(projectFrameworkDir string, written []string, layout docbundle.Layout) ([]string, error) {
+	candidates, err := docbundle.ProjectCandidates(projectFrameworkDir)
+	if err != nil {
+		return nil, err
+	}
+	stale := docbundle.StalePaths(candidates, written, nil)
+	var removed []string
+	for _, path := range stale {
+		relative, err := filepath.Rel(filepath.Dir(projectFrameworkDir), path)
+		if err != nil {
+			return nil, err
+		}
+		relative = filepath.ToSlash(relative)
+		if docbundle.UnknownLocaleSuffixedMarkdown(relative) {
+			continue
+		}
+		if language, localized := docbundle.LocalizedOutputLanguage(relative); localized {
+			exists, owned, err := inspectGeneratedOutput(path, func(content string) bool {
+				return generator.IsGeneratedLocalizedDocument(language, content)
+			})
+			if err != nil {
+				return nil, err
+			}
+			if !exists || !owned {
+				continue
+			}
+		} else if relative == "framework/GLOSSARY.md" {
+			if language, localized := localizedLayoutBaseLanguage(layout); localized {
+				exists, owned, err := inspectGeneratedOutput(path, func(content string) bool {
+					return generator.IsGeneratedLocalizedDocument(language, content)
+				})
+				if err != nil {
+					return nil, err
+				}
+				if !exists || !owned {
+					continue
+				}
+			}
+		}
+		if _, err := os.Stat(path); err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
-			return nil, fmt.Errorf("stat stale framework file %s: %w", cp, err)
+			return nil, fmt.Errorf("stat stale framework file %s: %w", path, err)
 		}
-		if err := os.Remove(cp); err != nil {
-			return nil, fmt.Errorf("remove stale framework file %s: %w", cp, err)
+		if err := os.Remove(path); err != nil {
+			return nil, fmt.Errorf("remove stale framework file %s: %w", path, err)
 		}
-		removed = append(removed, cp)
+		removed = append(removed, path)
 	}
-	sort.Strings(removed)
 	return removed, nil
 }
 
@@ -1180,9 +1615,24 @@ func repoRootForDomain(domainDir string) string {
 		return filepath.Dir(filepath.Dir(domainDir))
 	}
 	if root, err := paths.ProjectRootOrRaise(); err == nil {
-		return root
+		relative, relativeErr := filepath.Rel(root, domainDir)
+		if relativeErr == nil && relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+			return root
+		}
 	}
 	return domainDir
+}
+
+func loadGraphForGenSpec(domainDir string) (*ontology.Graph, error) {
+	graphPath := graphPathForDomain(domainDir)
+	if _, err := os.Stat(graphPath); err != nil {
+		return loadGraphOrEmpty(domainDir)
+	}
+	manifest, err := loader.LoadManifest(filepath.Join(domainDir, "manifest.json"))
+	if err == nil && manifest.SelfExecutingAtoms {
+		return loader.LoadGraphForCodeProjection(graphPath)
+	}
+	return loadGraphOrEmpty(domainDir)
 }
 
 // loadGraphOrEmpty loads the domain's graph.json, mirroring loadDomainGraph,

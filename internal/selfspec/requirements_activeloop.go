@@ -84,7 +84,7 @@ var _ = Requirements.MustRegister("R-active-loop-protocol", ontology.Requirement
 	Assumptions:    []string{"A-stakeholders-care", "A-text-grounded-in-models"},
 	Relations:      []ontology.Relation{{Kind: "replaces", Target: "R-active-loop-playbooks"}},
 	Enforcement:    "ENFORCED",
-	EnforcedBy:     []string{"TestProposedStructs_JSONTagsRoundTrip"},
+	EnforcedBy:     []string{"TestParseProposal_UnknownFieldRejected", "TestParseProposal_CamelCaseOldFormatRejected"},
 	MTag:           "",
 	Enforceability: "ENFORCEABLE",
 	Summary:        "",

@@ -28,6 +28,9 @@ func (p ProposedRequirement) validate() error {
 	if strings.TrimSpace(p.Status) == "" {
 		return validationError("'status' is required and must be non-empty.")
 	}
+	if err := validateRequirementConformanceShape(p); err != nil {
+		return err
+	}
 	if err := validateEnforcedByClearSentinel(p.EnforcedBy); err != nil {
 		return err
 	}
@@ -48,6 +51,92 @@ func (p ProposedRequirement) validate() error {
 	}
 	if err := validateHistorySignoffShape(p.Signoff); err != nil {
 		return err
+	}
+	return nil
+}
+func validateRequirementConformanceShape(p ProposedRequirement) error {
+	if p.AtomKind != "" && p.AtomKind != "rule" && p.AtomKind != clearSentinel {
+		return validationError("'atom_kind' must be empty, 'rule', or %q to clear.", clearSentinel)
+	}
+	if p.Strength != "" && p.Strength != clearSentinel &&
+		p.Strength != "MUST" && p.Strength != "SHOULD" && p.Strength != "MAY" {
+		return validationError("'strength' must be MUST, SHOULD, MAY, or %q to clear.", clearSentinel)
+	}
+	if p.ClaimTexts != nil {
+		clear := false
+		if len(p.ClaimTexts) == 1 {
+			if value, ok := p.ClaimTexts[clearSentinel]; ok {
+				if value != "" {
+					return validationError("'claim_texts' clear sentinel must have an empty value.")
+				}
+				clear = true
+			}
+		}
+		if !clear {
+			if len(p.ClaimTexts) == 0 {
+				return validationError("'claim_texts' must contain supported non-empty entries or the %q clear sentinel.", clearSentinel)
+			}
+			for _, issue := range ontology.ValidateLocalizedText(p.ClaimTexts) {
+				return validationError("'claim_texts' %s: %s.", issue.ID, issue.Message)
+			}
+		}
+	}
+	caseIDs := map[string]struct{}{}
+	for i, c := range p.Cases {
+		if strings.TrimSpace(c.ID) == "" {
+			return validationError("'cases[%d].id' is required.", i)
+		}
+		if _, exists := caseIDs[c.ID]; exists {
+			return validationError("'cases' contains duplicate case id %q.", c.ID)
+		}
+		caseIDs[c.ID] = struct{}{}
+		if c.Input != nil {
+			if err := c.Input.Validate(); err != nil {
+				return validationError("'cases[%d].input' is invalid: %v.", i, err)
+			}
+		}
+		if c.Expected != nil {
+			if err := c.Expected.Validate(); err != nil {
+				return validationError("'cases[%d].expected' is invalid: %v.", i, err)
+			}
+		}
+		if c.Selection != nil {
+			if c.Selection.Matched == nil {
+				return validationError("'cases[%d].selection.matched' must be an explicit list.", i)
+			}
+			if c.Selection.Selected != "" {
+				found := false
+				for _, matched := range c.Selection.Matched {
+					if matched == c.Selection.Selected {
+						found = true
+						break
+					}
+				}
+				if !found {
+					return validationError("'cases[%d].selection.selected' must be listed in matched.", i)
+				}
+			}
+		}
+	}
+	type clauseLinkKey struct {
+		clauseID string
+		side     string
+	}
+	clauseLinks := map[clauseLinkKey]struct{}{}
+	for i, link := range p.ClauseLinks {
+		if strings.TrimSpace(link.ClauseID) == "" {
+			return validationError("'clause_links[%d].clause_id' is required.", i)
+		}
+		key := clauseLinkKey{clauseID: link.ClauseID, side: link.Side}
+		if _, exists := clauseLinks[key]; exists {
+			return validationError("'clause_links' contains duplicate clause/side %q.", link.ClauseID)
+		}
+		clauseLinks[key] = struct{}{}
+	}
+	for i, link := range p.Precedence {
+		if strings.TrimSpace(link.Target) == "" || strings.TrimSpace(link.Scope) == "" {
+			return validationError("'precedence[%d]' requires target and scope.", i)
+		}
 	}
 	return nil
 }

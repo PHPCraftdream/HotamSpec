@@ -2,6 +2,8 @@ package invariants
 
 import (
 	"fmt"
+	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 
@@ -474,6 +476,33 @@ func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
 	}
 
 	results := make([]verifiedByTestJobResult, len(jobs))
+	if g.SelfExecutingAtoms {
+		_, snapshot, snapshotErr := InvocationExecutionSnapshot(g)
+		if snapshotErr == nil && snapshot != nil {
+			snapshotErr = snapshot.SourceErr
+			if snapshotErr == nil {
+				snapshotErr = snapshot.DiscoveryErr
+			}
+		}
+		for i, job := range jobs {
+			run := gate.TestRunResult{Err: snapshotErr}
+			if snapshotErr == nil {
+				key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(job.entry.file)))
+				if snapshot != nil {
+					if recorded, exists := snapshot.PackageRuns[key]; exists {
+						run = recorded.TestRunResult
+					} else {
+						run.Err = fmt.Errorf("verified_by package %q missing from shared execution snapshot", key)
+					}
+				} else {
+					run.Err = fmt.Errorf("verified_by execution snapshot missing")
+				}
+			}
+			violation, warning := verifiedByTestRunViolation(job.reqID, job.entry, run)
+			results[i] = verifiedByTestJobResult{reqID: job.reqID, violation: violation, skipWarning: warning}
+		}
+		return results
+	}
 	sem := make(chan struct{}, runExecWorkers)
 	var wg sync.WaitGroup
 	for i, j := range jobs {
@@ -561,6 +590,10 @@ const runExecWorkers = 2
 // duplicating this logic per call site.
 func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) (violation, skipWarning *Violation) {
 	run := gate.RunVerifiedByTest(specRoot, e.file, e.symbol)
+	return verifiedByTestRunViolation(reqID, e, run)
+}
+
+func verifiedByTestRunViolation(reqID string, e specFileEntry, run gate.TestRunResult) (violation, skipWarning *Violation) {
 	if run.Skipped {
 		// RunVerifiedByTest's recursion guard fired: this process is already
 		// nested inside a `go test` subprocess RunVerifiedByTest itself
@@ -639,21 +672,7 @@ var _ = All.MustRegister("check_verified_by_test_passes", Invariant{
 	Check: checkVerifiedByTestPasses,
 })
 
-// checkVerifiedByNoUnrelatedReuse is the reuse-detector (§6): the same
-// file:test verified_by entry formally cited by two or more requirements
-// that are NOT all mutually related is suspicious -- one authored test is
-// being stretched to "prove" multiple business claims it was not written to
-// individually exercise. Two requirements are RELATED (and therefore exempt
-// from the flag when a whole citing group is pairwise related) if either
-// directly names the other in its Relations (refines/depends_on/replaces, in
-// either direction) -- a deliberately narrow, STRUCTURAL definition of
-// "related" (no lexical/semantic guessing about claim text, per the honesty
-// boundary in §6). Concretely: partition the citing requirements into
-// connected components under the "related" adjacency; if more than one
-// component exists, every citing requirement is part of an unrelated-reuse
-// situation and fires. A single citation, or a whole group of citations that
-// are all pairwise connected via Relations into ONE component, does not
-// fire.
+// Reuse requires explicit Relations or compatible cases tied to the cited test.
 func checkVerifiedByNoUnrelatedReuse(g *ontology.Graph) []Violation {
 	entryToReqs := map[string][]string{}
 	for _, r := range g.Requirements {
@@ -677,13 +696,10 @@ func checkVerifiedByNoUnrelatedReuse(g *ontology.Graph) []Violation {
 		if len(reqIDs) < 2 {
 			continue
 		}
-		// Partition the citing requirements into connected components under
-		// the "related" adjacency (direct Relation edge only). If they all
-		// collapse into ONE component, the shared entry is legitimately
-		// justified by recorded Relations -- no violation. If MORE THAN ONE
-		// component remains, at least two citers share the entry with no
-		// recorded relation between their components -- every citer fires.
-		groups := partitionByRelatedness(reqIDs, related)
+		// Disconnected proof components cannot justify sharing this entry.
+		groups := partitionByRelatedness(reqIDs, related, func(a, b string) bool {
+			return sharedCaseProof(g, entry, a, b)
+		})
 		if len(groups) <= 1 {
 			continue
 		}
@@ -705,6 +721,44 @@ func relatedPairIndex(g *ontology.Graph) map[[2]string]struct{} {
 	return pairs
 }
 
+// sharedCaseProof links only the specific test's compatible declared cases.
+func sharedCaseProof(g *ontology.Graph, entry, a, b string) bool {
+	if g.Conformance == nil || !g.Conformance.RuleCases {
+		return false
+	}
+	var first, second *ontology.Requirement
+	for i := range g.Requirements {
+		requirement := &g.Requirements[i]
+		if requirement.ID == a {
+			first = requirement
+		} else if requirement.ID == b {
+			second = requirement
+		}
+	}
+	if first == nil || second == nil || first.AtomKind != "rule" || second.AtomKind != "rule" {
+		return false
+	}
+	file, test, ok := gate.ParseFileColonSymbol(entry)
+	if !ok {
+		return false
+	}
+	for i := range first.Cases {
+		caseDef := &first.Cases[i]
+		caseFile, caseTest, valid := gate.ParseFileColonSymbol(caseDef.Test)
+		if caseDef.ID == "" || !valid || caseFile != file || (caseTest != test && !strings.HasPrefix(caseTest, test+"/")) ||
+			!slices.Contains(caseDef.AtomIDs, a) || !slices.Contains(caseDef.AtomIDs, b) {
+			continue
+		}
+		for j := range second.Cases {
+			other := &second.Cases[j]
+			if other.ID == caseDef.ID && ontology.EqualCaseDefinitions(first.Cases[i:i+1], second.Cases[j:j+1]) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func orderedPair(a, b string) [2]string {
 	if a < b {
 		return [2]string{a, b}
@@ -712,12 +766,8 @@ func orderedPair(a, b string) [2]string {
 	return [2]string{b, a}
 }
 
-// partitionByRelatedness groups reqIDs (all citing the same verified_by
-// entry) into connected components under the "related" adjacency (direct
-// Relation edge only -- not transitive beyond the graph's own Relations).
-// Each returned group is either a single unrelated requirement or a
-// mutually-connected cluster.
-func partitionByRelatedness(reqIDs []string, related map[[2]string]struct{}) [][]string {
+// partitionByRelatedness groups citers through Relations and declared case proofs.
+func partitionByRelatedness(reqIDs []string, related map[[2]string]struct{}, shared func(string, string) bool) [][]string {
 	parent := map[string]string{}
 	var find func(string) string
 	find = func(x string) string {
@@ -740,7 +790,8 @@ func partitionByRelatedness(reqIDs []string, related map[[2]string]struct{}) [][
 	}
 	for i := 0; i < len(reqIDs); i++ {
 		for j := i + 1; j < len(reqIDs); j++ {
-			if _, ok := related[orderedPair(reqIDs[i], reqIDs[j])]; ok {
+			_, relatedPair := related[orderedPair(reqIDs[i], reqIDs[j])]
+			if relatedPair || shared(reqIDs[i], reqIDs[j]) {
 				union(reqIDs[i], reqIDs[j])
 			}
 		}
@@ -778,8 +829,8 @@ var _ = All.MustRegister("check_verified_by_no_unrelated_reuse", Invariant{
 	Canon: methodology.Requirement,
 	Claim: "no verified_by entry is formally cited by two or more requirements that are not all mutually related.",
 	Rule: "collect, per distinct verified_by entry (file:test string), every requirement citing it (fewer than 2 citers -- trivially fine, skip). " +
-		"Partition that set into connected components under a STRICT STRUCTURAL adjacency: two requirements are \"related\" only if one directly " +
-		"names the other in its Relations (refines/depends_on/replaces, either direction) -- never by lexical or semantic similarity of claim text " +
+		"Partition that set into connected components under a STRICT STRUCTURAL adjacency: two requirements are related through a direct " +
+		"Relation or a compatible declared case proving both atoms in this specific test -- never by lexical or semantic similarity of claim text " +
 		"(per the §6 honesty boundary). If the citers collapse into exactly ONE component (all pairwise connected via recorded Relations), the " +
 		"shared entry is exempt. If MORE THAN ONE component remains -- i.e. at least two citers share the entry with no recorded relation chain " +
 		"between them -- every citing requirement fires a violation naming the shared entry and the sibling IDs.",

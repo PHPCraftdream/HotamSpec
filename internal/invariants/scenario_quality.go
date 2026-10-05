@@ -59,6 +59,7 @@ package invariants
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
@@ -172,6 +173,18 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 	}
 	specRoot := gate.SpecRootForGraph(g)
 	var out []Violation
+	var atomIndex *gate.AtomSourceIndex
+	var atomRuns map[string]gate.RecordingResult
+	if g.SelfExecutingAtoms {
+		_, snapshot, err := InvocationExecutionSnapshot(g)
+		if err != nil {
+			return []Violation{{Check: "check_scenario_quality", ID: specRoot, Message: err.Error()}}
+		}
+		if snapshot.SourceErr != nil {
+			return []Violation{{Check: "check_scenario_quality", ID: specRoot, Message: snapshot.SourceErr.Error()}}
+		}
+		atomIndex, atomRuns = snapshot.SourceIndex, snapshot.PackageRuns
+	}
 	for _, r := range g.Requirements {
 		if r.Status != ontology.StatusSETTLED {
 			continue
@@ -201,7 +214,17 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 		compliant := false
 		var diagnostics []string
 		for _, e := range scenarioEntries {
-			result := gate.RunVerifiedByTestRecording(specRoot, e.file, e.symbol, "")
+			var result gate.RecordingResult
+			if g.SelfExecutingAtoms {
+				key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(e.file)))
+				var exists bool
+				result, exists = atomRuns[key]
+				if !exists {
+					result.Err = fmt.Errorf("scenario package %q missing from shared execution snapshot", key)
+				}
+			} else {
+				result = gate.RunVerifiedByTestRecording(specRoot, e.file, e.symbol, "")
+			}
 			if result.Skipped || result.Err != nil || result.CompileFailed || !result.Passed {
 				diagnostics = append(diagnostics, fmt.Sprintf(
 					"%s: could not be executed to inspect its recorded scenario (skipped=%v, err=%v, compileFailed=%v, passed=%v)",
@@ -218,11 +241,29 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 					diagnostics = append(diagnostics, fmt.Sprintf("%s: artifact %s could not be decoded", e.raw, art.FileName))
 					continue
 				}
+				if g.SelfExecutingAtoms && parsed.Test != e.symbol && !strings.HasPrefix(parsed.Test, e.symbol+"/") {
+					continue
+				}
 				if parsed.Verdict != "pass" {
 					// Never trusted as proof of anything -- mirrors
 					// scenarioArtifactTitleIfPass's own precedent.
 					diagnostics = append(diagnostics, fmt.Sprintf("%s: artifact %s has verdict %q, not \"pass\" -- skipped", e.raw, art.FileName, parsed.Verdict))
 					continue
+				}
+				if g.SelfExecutingAtoms {
+					atom, err := gate.DecodeAtomArtifact(art.RawJSON)
+					if err == nil && (atom.Mode == "fact" || atom.Mode == "holds") {
+						_, err = atomIndex.DeriveClaim(atom)
+						if err == nil && !atomMatchesRequirementIndexed(atomIndex, atom, r) {
+							err = fmt.Errorf("atom req_id %q does not match citing requirement %q or its primary implemented_by", atom.ReqID, r.ID)
+						}
+						if err == nil && factSubjectFailure(atom) == "" {
+							compliant = true
+							break
+						}
+						diagnostics = append(diagnostics, fmt.Sprintf("%s: invalid atom artifact: %v %s", e.raw, err, factSubjectFailure(atom)))
+						continue
+					}
 				}
 				failed := scenarioQualityFailures(parsed, r.ID)
 				if len(failed) == 0 {

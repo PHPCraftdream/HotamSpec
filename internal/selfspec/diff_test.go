@@ -1,6 +1,7 @@
 package selfspec
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -9,8 +10,20 @@ import (
 
 func fullReqFixture() ontology.Requirement {
 	return ontology.Requirement{
-		ID:             "R-fixture",
-		Claim:          "claim text",
+		ID:         "R-fixture",
+		Claim:      "claim text",
+		ClaimTexts: ontology.LocalizedText{"en": "claim text"},
+		AtomKind:   "rule",
+		Cases: []ontology.CaseDefinition{{
+			ID: "case-1", Operation: "parse", Producer: "direct",
+			Input: &ontology.ObservedValue{Kind: "bytes", Encoding: "base64", Bytes: ""},
+		}},
+		ClauseLinks: []ontology.ClauseLink{{ClauseID: "clause-1", Side: "valid"}},
+		Strength:    "MUST",
+		Applicability: &ontology.Applicability{
+			Operations: []string{"parse"}, Profiles: []string{"standard"}, Features: []string{"roundtrip"},
+		},
+		Precedence:     []ontology.PrecedenceLink{{Target: "R-other", Scope: "parse"}},
 		Owner:          "owner-a",
 		Status:         ontology.StatusSETTLED,
 		Why:            "why text",
@@ -28,6 +41,10 @@ func fullReqFixture() ontology.Requirement {
 		BlockedOn:      "blocked",
 		ImplementedBy:  []string{"pkg:Fn"},
 		VerifiedBy:     []string{"pkg:TestFn"},
+		SourceLinks:    []ontology.SourceLink{{SourceID: "source-1", Anchor: "L2-L4"}},
+		Coverage: &ontology.CoverageDeclaration{
+			Status: ontology.CoverageUnverified, Rationale: "fixture has no runtime evidence",
+		},
 		// Event fields, deliberately set to values that would trip a diff
 		// if StructuralFieldDiffs mistakenly compared them.
 		LastReviewedAt: "2026-02-01",
@@ -85,6 +102,21 @@ func TestStructuralFieldDiffs_OneFieldAtATime(t *testing.T) {
 		{"BlockedOn", func(r *ontology.Requirement) { r.BlockedOn = "different-blocker" }},
 		{"ImplementedBy", func(r *ontology.Requirement) { r.ImplementedBy = []string{"pkg:Other"} }},
 		{"VerifiedBy", func(r *ontology.Requirement) { r.VerifiedBy = []string{"pkg:TestOther"} }},
+		{"SourceLinks", func(r *ontology.Requirement) {
+			r.SourceLinks = []ontology.SourceLink{{SourceID: "source-2", Anchor: "#alternate"}}
+		}},
+		{"Coverage", func(r *ontology.Requirement) {
+			r.Coverage = &ontology.CoverageDeclaration{Status: ontology.CoverageUnsupported, Rationale: "not supported", Profile: "other"}
+		}},
+		{"ClaimTexts", func(r *ontology.Requirement) { r.ClaimTexts["en"] = "different claim text" }},
+		{"AtomKind", func(r *ontology.Requirement) { r.AtomKind = "" }},
+		{"Cases", func(r *ontology.Requirement) { r.Cases = []ontology.CaseDefinition{{ID: "case-2"}} }},
+		{"ClauseLinks", func(r *ontology.Requirement) { r.ClauseLinks = []ontology.ClauseLink{{ClauseID: "clause-2"}} }},
+		{"Strength", func(r *ontology.Requirement) { r.Strength = "SHOULD" }},
+		{"Applicability", func(r *ontology.Requirement) { r.Applicability = &ontology.Applicability{Profiles: []string{"other"}} }},
+		{"Precedence", func(r *ontology.Requirement) {
+			r.Precedence = []ontology.PrecedenceLink{{Target: "R-other-2", Scope: "parse"}}
+		}},
 	}
 
 	for _, tc := range cases {
@@ -181,5 +213,21 @@ func TestStructuralFieldDiffs_ValuesNotTruncated(t *testing.T) {
 	gotNew, ok := diffs[0].New.(string)
 	if !ok || len(gotNew) != 5000 {
 		t.Fatalf("New value truncated or wrong type: len=%d ok=%v", len(gotNew), ok)
+	}
+}
+func TestStructuralFieldDiffs_ObservationPresenceBookkeepingIsNotStructural(t *testing.T) {
+	reg := fullReqFixture()
+	encoded, err := json.Marshal(reg.Cases)
+	if err != nil {
+		t.Fatalf("marshal cases: %v", err)
+	}
+	var decodedCases []ontology.CaseDefinition
+	if err := json.Unmarshal(encoded, &decodedCases); err != nil {
+		t.Fatalf("unmarshal cases: %v", err)
+	}
+	graph := fullReqFixture()
+	graph.Cases = decodedCases
+	if diffs := StructuralFieldDiffs(reg, graph); len(diffs) != 0 {
+		t.Fatalf("wire-presence bookkeeping became a structural diff: %+v", diffs)
 	}
 }

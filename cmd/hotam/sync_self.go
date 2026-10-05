@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
@@ -89,6 +90,11 @@ func cmdSyncSelf(args []string) error {
 	}
 
 	gp := graphPathForDomain(domainDir)
+	loadGraph := loader.LoadGraph
+	manifest, manifestErr := loader.LoadManifest(filepath.Join(domainDir, "manifest.json"))
+	if manifestErr == nil && (manifest.SelfHosting || manifest.RequirementsAuthority == loader.RequirementsAuthorityCode) {
+		loadGraph = loader.LoadGraphForCodeProjection
+	}
 
 	// --- Compute the SyncReport + diff-hash from the CURRENT on-disk state. ---
 	// "before" is a fresh independent load (never mutated) so the append-
@@ -99,19 +105,22 @@ func cmdSyncSelf(args []string) error {
 	// function's own doc comment / the task brief's point 3).
 	syncToday := *today
 	if syncToday == "" {
-		syncToday = "1970-01-01" // dry-run never persists a History entry timestamp for real; a real run requires --today (checked below).
+		syncToday = time.Now().Format("2006-01-02")
 	}
-	before, err := loader.LoadGraph(gp)
+	before, err := loadGraph(gp)
 	if err != nil {
 		return fmt.Errorf("sync-self: load pre-sync graph: %w", err)
 	}
-	after, err := loader.LoadGraph(gp)
+	after, err := loadGraph(gp)
 	if err != nil {
 		return fmt.Errorf("sync-self: load working graph: %w", err)
 	}
 	report, err := selfspec.SyncGraph(after, selfspec.Requirements, syncToday)
 	if err != nil {
 		return fmt.Errorf("sync-self: SyncGraph: %w", err)
+	}
+	if err := loader.ValidateGraph(after); err != nil {
+		return fmt.Errorf("sync-self: validate projected graph: %w", err)
 	}
 
 	diffHash, err := computeSyncDiffHash(gp, report)
@@ -278,8 +287,10 @@ type confrontBlockerDigest struct {
 	EntryID        string   `json:"entry_id"`
 	HitID          string   `json:"hit_id"`
 	HitClaim       string   `json:"hit_claim"`
-	OppositeMarker string   `json:"opposite_marker"`
-	Shared         []string `json:"shared"`
+	Classification string   `json:"classification"`
+	Confidence     string   `json:"confidence"`
+	Reasons        []string `json:"reasons"`
+	ConflictIDs    []string `json:"conflict_ids"`
 }
 
 // runSyncGates runs gates 7-9 against the (before, after) graph pair and
@@ -290,13 +301,9 @@ type confrontBlockerDigest struct {
 // the dry-run itself) and the confirm path (where a non-nil error DOES abort
 // before any write).
 //
-// GATE 7 — confront: for every ADDED entry, and every CHANGED entry whose
-// FieldDiffs include Field=="Claim", diagnose.Confront(after, claim) is run
-// and blocking hits (diagnose.IsBlockingHit) are collected — EXCLUDING, for a
-// CHANGED entry, any hit whose ID equals the entry's own ID (a requirement's
-// own claim changing must never self-block against its own prior claim).
-// Blockers require an ack (--ack-conflict / --decision-ref, landAckOptions)
-// to proceed, mirroring semanticConflictGate's override contract.
+// GATE 7 — confront: added and claim-changed requirements are checked with
+// their full metadata. Lexical and linked suspicions are advisory; only an
+// explicit unresolved Conflict carrier blocks without a recorded decision.
 //
 // GATE 8 — pre/post violation diff: invariants.AllViolationsForProposalGate
 // is computed on `before` (untouched) and on `after` (post-SyncGraph-mutation)
@@ -311,27 +318,28 @@ func runSyncGates(domainDir string, before, after *ontology.Graph, report *selfs
 
 	// Gate 7: confront.
 	var blockers []confrontBlockerDigest
+	requirements := syncConfrontRequirements(after, report)
 	for _, entry := range report.Entries {
 		claim, ok := claimForConfront(entry)
 		if !ok {
 			continue
 		}
-		result := diagnose.Confront(after, claim)
-		for _, h := range result.Settled {
+		result := diagnose.ConfrontRequirement(after, syncConfrontCandidate(requirements, entry.ID, claim))
+		for _, h := range result.FormalConflicts {
 			if !diagnose.IsBlockingHit(h) {
 				continue
 			}
-			if entry.Kind == selfspec.SyncKindChanged && h.ID == entry.ID {
-				// A requirement's own claim change must never self-block
-				// against its own (now-stale) prior claim.
+			if h.ID == entry.ID {
 				continue
 			}
 			blockers = append(blockers, confrontBlockerDigest{
 				EntryID:        entry.ID,
 				HitID:          h.ID,
 				HitClaim:       h.Claim,
-				OppositeMarker: h.OppositeMarker,
-				Shared:         h.Shared,
+				Classification: h.Classification,
+				Confidence:     h.Confidence,
+				Reasons:        h.Reasons,
+				ConflictIDs:    h.ConflictIDs,
 			})
 		}
 	}
@@ -339,6 +347,9 @@ func runSyncGates(domainDir string, before, after *ontology.Graph, report *selfs
 
 	if len(blockers) > 0 {
 		if err := validateAckConflict(domainDir, ackOpts); err != nil {
+			return gr, err
+		}
+		if err := validateSyncConflictCoverage(ackOpts, blockers); err != nil {
 			return gr, err
 		}
 		if !ackOpts.hasAck() {
@@ -364,6 +375,26 @@ func runSyncGates(domainDir string, before, after *ontology.Graph, report *selfs
 	}
 
 	return gr, nil
+}
+
+func syncConfrontRequirements(g *ontology.Graph, report *selfspec.SyncReport) map[string]ontology.Requirement {
+	if len(report.Entries) == 0 {
+		return nil
+	}
+	requirements := make(map[string]ontology.Requirement, len(g.Requirements))
+	for _, r := range g.Requirements {
+		requirements[r.ID] = r
+	}
+	return requirements
+}
+
+func syncConfrontCandidate(requirements map[string]ontology.Requirement, id, claim string) ontology.Requirement {
+	candidate, ok := requirements[id]
+	if !ok {
+		candidate.ID = id
+	}
+	candidate.Claim = claim
+	return candidate
 }
 
 // claimForConfront returns the claim text gate 7 should confront for entry,
@@ -413,16 +444,63 @@ func validateAckConflict(domainDir string, ackOpts landAckOptions) error {
 	return fmt.Errorf("sync-self: --ack-conflict %q does not match any Conflict node in the graph", ackOpts.AckConflict)
 }
 
+func validateSyncConflictCoverage(ackOpts landAckOptions, blockers []confrontBlockerDigest) error {
+	if ackOpts.AckConflict == "" {
+		return nil
+	}
+	for _, blocker := range blockers {
+		covered := false
+		for _, id := range blocker.ConflictIDs {
+			if id == ackOpts.AckConflict {
+				covered = true
+				break
+			}
+		}
+		if !covered {
+			return fmt.Errorf("--ack-conflict %q does not cover formal conflict between %s and %s", ackOpts.AckConflict, blocker.EntryID, blocker.HitID)
+		}
+	}
+	return nil
+}
+
+func syncConfrontFlaggedEntries(g *ontology.Graph, report *selfspec.SyncReport) map[string]bool {
+	flagged := map[string]bool{}
+	requirements := syncConfrontRequirements(g, report)
+	for _, entry := range report.Entries {
+		eligible := entry.Kind == selfspec.SyncKindAdded
+		if entry.Kind == selfspec.SyncKindChanged {
+			for _, diff := range entry.FieldDiffs {
+				if diff.Field == "Claim" {
+					eligible = true
+					break
+				}
+			}
+		}
+		candidate, exists := requirements[entry.ID]
+		if !eligible || !exists {
+			continue
+		}
+		result := diagnose.ConfrontRequirement(g, candidate)
+		for _, hit := range result.FormalConflicts {
+			if diagnose.IsBlockingHit(hit) {
+				flagged[entry.ID] = true
+				break
+			}
+		}
+	}
+	return flagged
+}
+
 // formatConfrontBlockersError renders the same "name the specific conflicting
 // anchors + suggest remediation" shape semanticConflictGate's own refusal
 // uses, adapted for potentially MULTIPLE SyncReportEntry sources instead of
 // one ProposedRequirement.
 func formatConfrontBlockersError(blockers []confrontBlockerDigest) error {
 	var b strings.Builder
-	fmt.Fprintf(&b, "refusing to sync: %d requirement(s) semantically contradict SETTLED requirement(s) (opposite-marker signal):\n", len(blockers))
+	fmt.Fprintf(&b, "refusing to sync: %d requirement pair(s) have an explicit unresolved Conflict carrier:\n", len(blockers))
 	for _, h := range blockers {
-		fmt.Fprintf(&b, "  - %s vs %s: %q\n     opposite markers: %s; shared tokens: [%s]\n",
-			h.EntryID, h.HitID, h.HitClaim, h.OppositeMarker, strings.Join(h.Shared, ", "))
+		fmt.Fprintf(&b, "  - %s vs %s: %q\n     conflict IDs: [%s]; reasons: [%s]\n",
+			h.EntryID, h.HitID, h.HitClaim, strings.Join(h.ConflictIDs, ", "), strings.Join(h.Reasons, "; "))
 	}
 	b.WriteString("a human decision must be recorded before this can sync. Use one of:\n")
 	b.WriteString("  --ack-conflict <C-id>       cite an existing Conflict node whose members cover this tension\n")
@@ -625,14 +703,14 @@ func rollbackSyncSelf(domainDir string, snap *graphSnapshot, specBytes []byte, s
 // land` but fanning out over potentially several affected requirements
 // instead of exactly one ProposedRequirement.
 func appendSyncAckHistory(graphPath string, report *selfspec.SyncReport, today string, ackOpts landAckOptions) error {
-	flagged := map[string]bool{}
-	for _, entry := range report.Entries {
-		claim, ok := claimForConfront(entry)
-		if !ok || claim == "" {
-			continue
-		}
-		flagged[entry.ID] = true
+	if len(report.Entries) == 0 {
+		return nil
 	}
+	g, err := loader.LoadGraph(graphPath)
+	if err != nil {
+		return fmt.Errorf("load graph for sync ack history: %w", err)
+	}
+	flagged := syncConfrontFlaggedEntries(g, report)
 	if len(flagged) == 0 {
 		return nil
 	}
@@ -647,10 +725,6 @@ func appendSyncAckHistory(graphPath string, report *selfspec.SyncReport, today s
 		summary = fmt.Sprintf("semantic conflict acknowledged — human decision recorded: %s", ackOpts.DecisionRef)
 	}
 
-	g, err := loader.LoadGraph(graphPath)
-	if err != nil {
-		return fmt.Errorf("load graph for sync ack history: %w", err)
-	}
 	touched := false
 	for i, r := range g.Requirements {
 		if !flagged[r.ID] {
@@ -703,11 +777,11 @@ func renderSyncDryRun(out *os.File, report *selfspec.SyncReport, diffHash string
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "gate preview (7-9 — what a real --confirm-hash run would enforce):")
 	if len(gateReport.ConfrontBlockers) == 0 {
-		fmt.Fprintln(out, "  [7 confront] clear — no blocking semantic-conflict hits")
+		fmt.Fprintln(out, "  [7 confront] clear — no unresolved formal conflict carriers")
 	} else {
 		for _, h := range gateReport.ConfrontBlockers {
-			fmt.Fprintf(out, "  [7 confront] BLOCKED: %s vs %s: opposite markers: %s; shared: [%s]\n",
-				h.EntryID, h.HitID, h.OppositeMarker, strings.Join(h.Shared, ", "))
+			fmt.Fprintf(out, "  [7 confront] BLOCKED: %s vs %s: conflicts: [%s]; reasons: [%s]\n",
+				h.EntryID, h.HitID, strings.Join(h.ConflictIDs, ", "), strings.Join(h.Reasons, "; "))
 		}
 	}
 	if len(gateReport.NewViolations) == 0 {

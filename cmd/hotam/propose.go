@@ -141,8 +141,8 @@ func cmdProposeRequirement(args []string) error {
 	today := fs.String("today", "", "date in YYYY-MM-DD (required when --land is set)")
 	out := fs.String("out", "", "output path for the proposal JSON (default: proposals/draft-<id>.json relative to cwd)")
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
-	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal (only meaningful with --land)")
-	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History (only meaningful with --land); for a real judgment-call decision, prefer a typed 'signoff' field on the ProposedRequirement/ProposedAssumptionRewrite itself (decided_by resolved against declared Stakeholders) — --decision-ref remains best for lighter mechanical acknowledgments")
+	ackConflict := fs.String("ack-conflict", "", "cite a matching unresolved Conflict whose members cover this candidate/member pair — overrides that formal blocker (only meaningful with --land)")
+	decisionRef := fs.String("decision-ref", "", "record a human decision reference to override a matching unresolved Conflict carrier; persisted in requirement History (only meaningful with --land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
 	fs.Parse(args)
@@ -388,14 +388,14 @@ func runPropose(
 		return err
 	}
 
-	// Confront: load the graph and run the SAME advisory check `hotam
-	// confront` runs. This is advisory only — a high-overlap hit prints a
-	// warning but never blocks the write.
+	// Confront: load the graph and run the same advisory evidence report as
+	// `hotam confront`. Lexical and metadata suspicions never block the write;
+	// --land later applies the separate formal unresolved-Conflict gate.
 	g, err := loadDomainGraph(domainDir)
 	if err != nil {
 		return err
 	}
-	confrontResult := diagnose.Confront(g, proposeConfrontText(p))
+	confrontResult := confrontProposal(g, p)
 
 	// Resolve the output path.
 	if outPath == "" {

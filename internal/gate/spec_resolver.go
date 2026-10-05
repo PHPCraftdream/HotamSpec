@@ -378,9 +378,10 @@ func ResolveSpecTest(specRoot, file, testName string) (SpecTestResult, error) {
 		if !isRealTestSignature(fn) {
 			continue
 		}
-		teeth := testBodyHasTeeth(fn.Body, importsHotamspec(astFile))
+		atoms := testBodyHasAtomCalls(fn.Body, astFile)
+		teeth := testBodyHasTeeth(fn.Body, importsHotamspec(astFile)) || atoms
 		skip := testBodyHasTopLevelSkip(fn.Body)
-		scenario := testBodyHasScenarioConstructor(fn.Body)
+		scenario := testBodyHasScenarioConstructor(fn.Body) || atoms
 		return SpecTestResult{Found: true, HasTeeth: teeth, HasSkip: skip, HasScenario: scenario}, nil
 	}
 	return SpecTestResult{Found: false}, nil
@@ -517,6 +518,52 @@ func importsHotamspec(f *ast.File) bool {
 		}
 	}
 	return false
+}
+
+// testBodyHasAtomCalls resolves the call's qualifier against recorder imports,
+// so aliases work without treating unrelated packages' Fact/Holds as proofs.
+func testBodyHasAtomCalls(body *ast.BlockStmt, file *ast.File) bool {
+	if body == nil {
+		return false
+	}
+	names := make(map[string]bool)
+	for _, imp := range file.Imports {
+		path, err := strconv.Unquote(imp.Path.Value)
+		if err != nil || (path != "hotamspec" && !strings.HasSuffix(path, "/hotamspec")) {
+			continue
+		}
+		name := "hotamspec"
+		if imp.Name != nil {
+			name = imp.Name.Name
+		}
+		if name != "_" && name != "." {
+			names[name] = true
+		}
+	}
+	found := false
+	ast.Inspect(body, func(node ast.Node) bool {
+		if found {
+			return false
+		}
+		call, ok := node.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		fun := call.Fun
+		if indexed, ok := fun.(*ast.IndexExpr); ok {
+			fun = indexed.X
+		}
+		sel, ok := fun.(*ast.SelectorExpr)
+		if !ok || (sel.Sel.Name != "Fact" && sel.Sel.Name != "Holds") {
+			return true
+		}
+		ident, ok := sel.X.(*ast.Ident)
+		if ok && names[ident.Name] {
+			found = true
+		}
+		return !found
+	})
+	return found
 }
 
 // testBodyHasScenarioConstructor reports whether body contains a call to the

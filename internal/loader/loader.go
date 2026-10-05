@@ -25,7 +25,20 @@ type graphDTO struct {
 	Entities      []ontology.EntityInstance `json:"entities"`
 }
 
+// LoadGraph loads a graph with full conformance validation.
 func LoadGraph(path string) (*ontology.Graph, error) {
+	return loadGraph(path, false)
+}
+
+// LoadGraphForCodeProjection loads a graph for an authorized code-authority
+// projection when the persisted Requirement metadata is necessarily stale.
+// Wire, manifest, and core graph validation remain strict; callers must run
+// ValidateGraph on the projected in-memory graph before writing it.
+func LoadGraphForCodeProjection(path string) (*ontology.Graph, error) {
+	return loadGraph(path, true)
+}
+
+func loadGraph(path string, codeProjection bool) (*ontology.Graph, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("load graph: read %s: %w", path, err)
@@ -111,14 +124,71 @@ func LoadGraph(path string) (*ontology.Graph, error) {
 		DomainDir:                    filepath.Dir(path),
 		Discipline:                   ResolveDiscipline(path),
 	}
+	if manifest, manifestErr := LoadManifest(filepath.Join(filepath.Dir(path), "manifest.json")); manifestErr == nil {
+		g.SelfExecutingAtoms = manifest.SelfExecutingAtoms
+		g.SpecificationSources = manifest.SpecificationSources
+		g.Languages = append([]string(nil), manifest.Languages...)
+		g.DefaultLanguage = manifest.DefaultLanguage
+		if g.DefaultLanguage == "" && len(g.Languages) == 1 {
+			g.DefaultLanguage = g.Languages[0]
+		}
+		g.Conformance = manifest.Conformance
+	} else if manifestDeclaresAtomicConfiguration(filepath.Join(filepath.Dir(path), "manifest.json")) {
+		return nil, fmt.Errorf("load graph: invalid manifest language/conformance declaration: %w", manifestErr)
+	} else if manifestDeclaresSpecificationSources(filepath.Join(filepath.Dir(path), "manifest.json")) {
+		return nil, fmt.Errorf("load graph: invalid manifest specification_sources declaration: %w", manifestErr)
+	}
+
 	parentDecl := ResolveParent(path)
 	g.ManifestExists = parentDecl.ManifestExists
 	g.ParentDeclared = parentDecl.Declared
 	g.Parent = parentDecl.Value
-	if err := validateGraph(g); err != nil {
+	if codeProjection && !g.SelfHosting && !g.RequirementsAuthorityCode {
+		return nil, fmt.Errorf("load graph for code projection: %s requires self_hosting or requirements_authority code", path)
+	}
+	if err := validateGraphWithMode(g, !codeProjection); err != nil {
 		return nil, fmt.Errorf("load graph: %s: %w", path, err)
 	}
 	return g, nil
+}
+
+// manifestDeclaresSpecificationSources preserves the tolerant manifest
+// defaults used by older resolvers while failing closed if malformed manifest
+// bytes explicitly attempted to author source metadata.
+func manifestDeclaresSpecificationSources(path string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(data, &fields) == nil {
+		_, declared := fields["specification_sources"]
+		return declared
+	}
+	return bytes.Contains(data, []byte(`"specification_sources"`))
+}
+func manifestDeclaresAtomicConfiguration(path string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(data, &fields) == nil {
+		for key := range fields {
+			switch strings.ToLower(key) {
+			case "languages", "default_language", "conformance":
+				return true
+			}
+		}
+		return false
+	}
+	lower := bytes.ToLower(data)
+	for _, key := range []string{`"languages"`, `"default_language"`, `"conformance"`} {
+		if bytes.Contains(lower, []byte(key)) {
+			return true
+		}
+	}
+	return false
 }
 
 func WriteGraph(path string, g *ontology.Graph) error {
@@ -689,6 +759,19 @@ func ResolveDomainPresentation(graphPath string) DomainPresentation {
 }
 
 func validateGraph(g *ontology.Graph) error {
+	return validateGraphWithMode(g, true)
+}
+
+// ValidateGraph applies all core and conformance validation to an in-memory
+// graph, including after code-owned metadata has been projected.
+func ValidateGraph(g *ontology.Graph) error {
+	return validateGraph(g)
+}
+
+func validateGraphWithMode(g *ontology.Graph, validateConformance bool) error {
+	if g == nil {
+		return fmt.Errorf("graph validation: nil graph")
+	}
 	var errs []string
 	add := func(format string, args ...any) {
 		errs = append(errs, fmt.Sprintf(format, args...))
@@ -788,6 +871,11 @@ func validateGraph(g *ontology.Graph) error {
 		}
 		if e.EntityType == "" {
 			add("entities[%d] %s: empty entity_type", i, e.ID)
+		}
+	}
+	if validateConformance {
+		for _, issue := range ontology.ValidateConformance(g) {
+			add("conformance %s: %s", issue.ID, issue.Message)
 		}
 	}
 

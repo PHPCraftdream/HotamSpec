@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/localization"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
@@ -50,45 +51,122 @@ func stripInternalPkgRefs(s string) string {
 // byte-identical to before this parameter existed — the registry's source
 // strings are rendered verbatim.
 func BuildToolDocs(consumer bool) map[string]string {
+	docs, _ := BuildToolDocsLocalized("", consumer)
+	return docs
+}
+
+// BuildToolDocsLocalized renders each methodology tool with one explicit
+// locale. It preflights all translations before starting renderer goroutines,
+// so a missing key cannot escape as an untyped goroutine panic.
+func BuildToolDocsLocalized(language string, consumer bool) (map[string]string, error) {
 	tools := methodology.Tools.All()
+	banner, err := localization.Lookup(language, Banner)
+	if err != nil {
+		return nil, err
+	}
+	statusHeading, err := localization.Lookup(language, "## Status")
+	if err != nil {
+		return nil, err
+	}
+	canonHeading, err := localization.Lookup(language, "## Canon")
+	if err != nil {
+		return nil, err
+	}
+	purposeHeading, err := localization.Lookup(language, "## Purpose")
+	if err != nil {
+		return nil, err
+	}
+	implementedBadge, err := localization.Lookup(language, "[IMPLEMENTED]")
+	if err != nil {
+		return nil, err
+	}
+	plannedBadge, err := localization.Lookup(language, "[PLANNED — not implemented]")
+	if err != nil {
+		return nil, err
+	}
+	implementedLine, err := localization.Lookup(language, "Implemented — this is a real `hotam` CLI subcommand; running it does something.")
+	if err != nil {
+		return nil, err
+	}
+	plannedLine, err := localization.Lookup(language, "Planned — methodology surface only; no Go command exists for it yet; invoking it as `hotam <name>` will fail with \"unknown command\".")
+	if err != nil {
+		return nil, err
+	}
+
+	purposes := make([]string, len(tools))
+	for i, tool := range tools {
+		purpose, err := localization.Lookup(language, tool.Purpose)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", tool.Command, err)
+		}
+		if consumer && tool.Status == methodology.Implemented {
+			purpose = stripInternalPkgRefs(purpose)
+		}
+		purposes[i] = purpose
+	}
 	keys := make([]string, len(tools))
 	contents := make([]string, len(tools))
 	var wg sync.WaitGroup
-	for i, t := range tools {
+	for i, tool := range tools {
 		wg.Add(1)
-		go func(idx int, tool methodology.Tool) {
+		go func(index int, entry methodology.Tool, purpose string) {
 			defer wg.Done()
-			purpose := tool.Purpose
-			if consumer && tool.Status == methodology.Implemented {
-				purpose = stripInternalPkgRefs(purpose)
+			badge, status := "["+string(entry.Status)+"]", string(entry.Status)
+			switch entry.Status {
+			case methodology.Implemented:
+				badge, status = implementedBadge, implementedLine
+			case methodology.Planned:
+				badge, status = plannedBadge, plannedLine
 			}
 			lines := []string{
-				Banner,
+				banner,
 				"",
-				"# " + tool.Command + " " + statusBadge(tool.Status),
+				"# " + entry.Command + " " + badge,
 				"",
-				"## Status",
+				statusHeading,
 				"",
-				statusLine(tool.Status),
+				status,
 				"",
-				"## Canon",
+				canonHeading,
 				"",
-				tool.Canon,
+				entry.Canon,
 				"",
-				"## Purpose",
+				purposeHeading,
 				"",
 				purpose,
 			}
-			keys[idx] = tool.Command
-			contents[idx] = strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
-		}(i, t)
+			keys[index] = entry.Command
+			contents[index] = strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
+		}(i, tool, purposes[i])
 	}
 	wg.Wait()
 	out := make(map[string]string, len(tools))
-	for i, k := range keys {
-		out[k] = contents[i]
+	for i, key := range keys {
+		out[key] = contents[i]
 	}
-	return out
+	return out, nil
+}
+
+func statusBadgeLocalized(language string, status methodology.Status) string {
+	switch status {
+	case methodology.Implemented:
+		return localization.Text(language, "[IMPLEMENTED]")
+	case methodology.Planned:
+		return localization.Text(language, "[PLANNED — not implemented]")
+	default:
+		return "[" + string(status) + "]"
+	}
+}
+
+func statusLineLocalized(language string, status methodology.Status) string {
+	switch status {
+	case methodology.Implemented:
+		return localization.Text(language, "Implemented — this is a real `hotam` CLI subcommand; running it does something.")
+	case methodology.Planned:
+		return localization.Text(language, "Planned — methodology surface only; no Go command exists for it yet; invoking it as `hotam <name>` will fail with \"unknown command\".")
+	default:
+		return string(status)
+	}
 }
 
 // statusBadge renders the short inline marker appended to a tool doc's H1,
@@ -98,28 +176,11 @@ func BuildToolDocs(consumer bool) map[string]string {
 // tool.go's doc comment: "registry stores only rules and commands that
 // actually work, not intentions").
 func statusBadge(s methodology.Status) string {
-	switch s {
-	case methodology.Implemented:
-		return "[IMPLEMENTED]"
-	case methodology.Planned:
-		return "[PLANNED — not implemented]"
-	default:
-		return "[" + string(s) + "]"
-	}
+	return statusBadgeLocalized("", s)
 }
 
-// statusLine renders the one-line "## Status" section body: a longer,
-// unambiguous prose form of statusBadge's short marker, for the reader who
-// opens the doc after the badge caught their eye.
 func statusLine(s methodology.Status) string {
-	switch s {
-	case methodology.Implemented:
-		return "Implemented — this is a real `hotam` CLI subcommand; running it does something."
-	case methodology.Planned:
-		return "Planned — methodology surface only; no Go command exists for it yet; invoking it as `hotam <name>` will fail with \"unknown command\"."
-	default:
-		return string(s)
-	}
+	return statusLineLocalized("", s)
 }
 
 // purposeExcerpt strips the "Usage: hotam <cmd> [flags]. " prefix from an
@@ -162,6 +223,21 @@ func purposeExcerpt(p string) string {
 // framework-internal source-file reference from its intro sentence. Under
 // the full profile the Planned section renders byte-identical to before.
 func BuildToolDocsIndex(consumer bool) string {
+	doc, _ := BuildToolDocsIndexLocalized("", consumer)
+	return doc
+}
+
+// BuildToolDocsIndexLocalized renders the registry navigation page for one
+// explicit locale, returning a typed refusal if any fixed template is absent.
+func BuildToolDocsIndexLocalized(language string, consumer bool) (doc string, err error) {
+	err = localization.SafeRender(func() error {
+		doc = buildToolDocsIndex(language, consumer)
+		return nil
+	})
+	return doc, err
+}
+
+func buildToolDocsIndex(language string, consumer bool) string {
 	tools := methodology.Tools.All()
 	sorted := make([]methodology.Tool, len(tools))
 	copy(sorted, tools)
@@ -177,67 +253,47 @@ func BuildToolDocsIndex(consumer bool) string {
 	}
 
 	lines := []string{
-		Banner,
+		localization.Text(language, Banner),
 		"",
-		"# Tool docs index",
+		localization.Text(language, "# Tool docs index"),
 		"",
-		fmt.Sprintf("%d tools registered — **%d Implemented** (real `hotam` CLI subcommands) · **%d Planned** (methodology surface only; no Go command exists yet).",
-			len(sorted), len(implemented), len(planned)),
+		localization.Text(language, "%d tools registered — **%d Implemented** (real `hotam` CLI subcommands) · **%d Planned** (methodology surface only; no Go command exists yet).", len(sorted), len(implemented), len(planned)),
 		"",
-		"This index splits the tool registry so a browser of `docs/gen/tools/` can tell at a glance which entries are real commands versus aspirational methodology surface. The root crystal's Tool reference block (`EMBEDDED-TOOLS`) collapses the Planned tools into a one-line summary; each per-tool `.md` file below carries full Status/Canon/Purpose detail.",
+		localization.Text(language, "This index splits the tool registry so a browser of `docs/gen/tools/` can tell at a glance which entries are real commands versus aspirational methodology surface. The root crystal's Tool reference block (`EMBEDDED-TOOLS`) collapses the Planned tools into a one-line summary; each per-tool `.md` file below carries full Status/Canon/Purpose detail."),
 		"",
-		"## Implemented (real commands)",
+		localization.Text(language, "## Implemented (real commands)"),
 		"",
-		fmt.Sprintf("These %d are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.", len(implemented)),
+		localization.Text(language, "These %d are real `hotam` CLI subcommands wired in `cmd/hotam/main.go` — running them does something.", len(implemented)),
 		"",
 	}
 	for _, t := range implemented {
 		displayName := strings.ReplaceAll(t.Command, "_", "-")
-		desc := purposeExcerpt(t.Purpose)
+		desc := purposeExcerpt(localization.Text(language, t.Purpose))
 		if consumer {
-			// Strip framework-internal package pointers (see
-			// stripInternalPkgRefs) — dead-end references for an external
-			// consumer who has no internal/ tree.
 			desc = stripInternalPkgRefs(desc)
 		}
-		lines = append(lines, fmt.Sprintf("- [`hotam %s`](%s.md) — %s", displayName, t.Command, desc))
+		lines = append(lines, localization.Text(language, "- [`hotam %s`](%s.md) — %s", displayName, t.Command, desc))
 	}
 
-	lines = append(lines, "", "## Planned (methodology surface only — no command exists)", "")
+	lines = append(lines, "", localization.Text(language, "## Planned (methodology surface only — no command exists)"), "")
 	if len(planned) == 0 {
-		lines = append(lines, "_(none — all registered tools are implemented.)_")
+		lines = append(lines, localization.Text(language, "_(none — all registered tools are implemented.)_"))
 	} else {
 		if consumer {
-			// Consumer: genSpec writes NO per-tool .md pages for Planned
-			// tools (the toolIsImplemented filter skips them), so the
-			// full-profile intro's reference to `internal/methodology/
-			// tools_data.go` (a framework SOURCE FILE that does not exist in
-			// an external consumer's project) and its claim that "Their
-			// per-tool `.md` files exist" are both false under this profile.
-			// Rephrase to point at the CLI's own discovery surface instead.
-			lines = append(lines, fmt.Sprintf(
-				"These %d are registered in the methodology registry as future-work surface (see `hotam -h` / `hotam status` for the real command set). Invoking any of them as `hotam <name>` fails with \"unknown command\".",
-				len(planned),
-			))
+			lines = append(lines, localization.Text(language, "These %d are registered in the methodology registry as future-work surface (see `hotam -h` / `hotam status` for the real command set). Invoking any of them as `hotam <name>` fails with \"unknown command\".", len(planned)))
 		} else {
-			lines = append(lines, fmt.Sprintf(
-				"These %d are registered in the methodology registry (`internal/methodology/tools_data.go`) as future-work surface. Invoking any of them as `hotam <name>` fails with \"unknown command\". Their per-tool `.md` files exist for design-continuity reference only.",
-				len(planned),
-			))
+			lines = append(lines, localization.Text(language, "These %d are registered in the methodology registry (`internal/methodology/tools_data.go`) as future-work surface. Invoking any of them as `hotam <name>` fails with \"unknown command\". Their per-tool `.md` files exist for design-continuity reference only.", len(planned)))
 		}
 		lines = append(lines, "")
 		for _, t := range planned {
 			displayName := strings.ReplaceAll(t.Command, "_", "-")
+			desc := purposeExcerpt(localization.Text(language, t.Purpose))
 			if consumer {
-				// No per-tool .md page was written for this Planned tool, so
-				// a markdown link would be dead — render the command name as
-				// a plain backtick code span (no link wrapper).
-				lines = append(lines, fmt.Sprintf("- `hotam %s` — %s", displayName, purposeExcerpt(t.Purpose)))
+				lines = append(lines, localization.Text(language, "- `hotam %s` — %s", displayName, desc))
 			} else {
-				lines = append(lines, fmt.Sprintf("- [`hotam %s`](%s.md) — %s", displayName, t.Command, purposeExcerpt(t.Purpose)))
+				lines = append(lines, localization.Text(language, "- [`hotam %s`](%s.md) — %s", displayName, t.Command, desc))
 			}
 		}
 	}
-
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 }

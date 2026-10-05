@@ -12,10 +12,10 @@ import (
 // fields (everything the requirements_<topic>.go codegen wrote — Claim,
 // Owner, Status, Why, Assumptions, Relations, Enforcement, EnforcedBy, MTag,
 // Enforceability, Summary, CreatedAt, SettledAt, SourceRefs, DeclOrder,
-// BlockedOn, ImplementedBy, VerifiedBy) are REPLACED from the registry
-// value, while the EVENT fields (History, GateSignoffs, LastReviewedAt,
-// ReviewAfter, Evidence) are PASSED THROUGH untouched from the graph's
-// existing node.
+// BlockedOn, ImplementedBy, VerifiedBy, SourceLinks, Coverage, ClaimTexts,
+// AtomKind, Cases, ClauseLinks, Strength, Applicability, Precedence) are
+// replaced from the registry; event fields (History, GateSignoffs,
+// LastReviewedAt, ReviewAfter, Evidence) pass through untouched from the graph.
 //
 // reg is an explicit parameter (task #366/RAC2 Phase B) rather than this
 // package's own package-global Requirements var, so the identical merge
@@ -70,7 +70,7 @@ func MergeIntoGraph(g *ontology.Graph, reg *registry.Registry[ontology.Requireme
 			return fmt.Errorf("selfspec: MergeIntoGraph: registered requirement %q not found in graph — this package never creates graph nodes, only mirrors existing ones", id)
 		}
 		existing := g.Requirements[idx]
-		merged := *entry // copy: structural fields from the registry
+		merged := ontology.CloneRequirementMetadata(*entry)
 		// Event fields pass through untouched from the graph's existing node.
 		merged.LastReviewedAt = existing.LastReviewedAt
 		merged.ReviewAfter = existing.ReviewAfter

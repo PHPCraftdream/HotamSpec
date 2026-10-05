@@ -8,10 +8,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -451,6 +453,13 @@ type RecordedArtifact struct {
 	RawJSON []byte
 }
 
+// TestVerdict is one individual Go test or subtest's terminal result from
+// `go test -json`. Package failure does not erase passing siblings.
+type TestVerdict struct {
+	Test    string
+	Verdict string
+}
+
 // RecordingResult is the outcome of RunVerifiedByTestRecording: everything
 // TestRunResult already reports (the test's own pass/fail verdict), plus the
 // canonical scenario artifact(s) the test wrote in record-mode and the raw
@@ -461,6 +470,9 @@ type RecordedArtifact struct {
 // asserts + artifact + coverprofile" contract).
 type RecordingResult struct {
 	TestRunResult
+	// TestVerdicts preserves each terminal test/subtest action independently
+	// of the package exit status.
+	TestVerdicts []TestVerdict
 	// Artifacts holds every canonical JSON scenario artifact found in the
 	// record dir after the run -- ordinarily exactly one (a verified_by test
 	// that constructs a single hotamspec.Scenario), but a test that
@@ -585,6 +597,151 @@ func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) R
 		Artifacts:     artifacts,
 		CoverProfile:  coverProfile,
 	}
+}
+
+// RunAtomPackageRecording records all tests in one package. Artifacts travel
+// through cached go-test stdout, not filesystem side effects: a native cache
+// hit therefore reproduces exactly the evidence of the original passing run.
+func RunAtomPackageRecording(specRoot, file string) RecordingResult {
+	return runAtomRecording(specRoot, file, "", "")
+}
+
+// RunAtomTestRecording retains test-specific coverage attribution while using
+// Go's native result/coverage cache. The Go command, not the test binary,
+// restores -coverprofile output on cache hits.
+func RunAtomTestRecording(specRoot, file, testName, coverPkgFile string) RecordingResult {
+	return runAtomRecording(specRoot, file, testName, coverPkgFile)
+}
+
+func runAtomRecording(specRoot, file, testName, coverPkgFile string) RecordingResult {
+	if inRecursionGuard() {
+		return RecordingResult{TestRunResult: TestRunResult{Skipped: true, InfraWarning: "recursion guard honored"}}
+	}
+	path, err := filepath.Abs(filepath.Join(specRoot, filepath.FromSlash(file)))
+	if err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+	}
+	root, ok := ModuleRoot(filepath.Dir(path))
+	if !ok {
+		return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("no go.mod found for %s", path)}}
+	}
+	pattern, err := relativePackagePattern(root, path)
+	if err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), testExecTimeout())
+	defer cancel()
+	select {
+	case globalExecSlots <- struct{}{}:
+	case <-ctx.Done():
+		return RecordingResult{TestRunResult: TestRunResult{Err: ctx.Err()}}
+	}
+	defer func() { <-globalExecSlots }()
+	args := []string{"test", "-json", "-v"}
+	if testName != "" {
+		args = append(args, "-run", "^"+regexp.QuoteMeta(testName)+"$")
+	}
+	var coverProfile string
+	if coverPkgFile != "" {
+		coverPath, err := filepath.Abs(filepath.Join(specRoot, filepath.FromSlash(coverPkgFile)))
+		if err != nil {
+			return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+		}
+		coverPattern, err := relativePackagePattern(root, coverPath)
+		if err != nil {
+			return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+		}
+		dir, err := os.MkdirTemp("", "hotam-atom-cover-")
+		if err != nil {
+			return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+		}
+		defer os.RemoveAll(dir)
+		coverProfile = filepath.Join(dir, "cover.out")
+		args = append(args, "-coverpkg", coverPattern, "-coverprofile", coverProfile)
+	}
+	args = append(args, pattern)
+	cmd := exec.CommandContext(ctx, "go", args...)
+	cmd.Dir = root
+	// Stable values are intentional: Go records getenv dependencies in its
+	// test cache. A fresh nonce or temporary recording path defeats that cache.
+	cmd.Env = append(os.Environ(), recursionGuardEnv+"=atom-package", "HOTAM_RECORD_STDOUT=1", recordDirEnvName+"=")
+	data, runErr := cmd.CombinedOutput()
+	result := RecordingResult{TestRunResult: TestRunResult{Output: boundOutput(string(data))}}
+	if coverProfile != "" {
+		profile, err := os.ReadFile(coverProfile)
+		if err == nil {
+			result.CoverProfile = profile
+		} else if runErr == nil {
+			result.Err = fmt.Errorf("reading native atom coverage profile: %w", err)
+		}
+	}
+	stdoutText, testVerdicts, decodeErr := parseAtomEvents(data)
+	result.TestVerdicts = testVerdicts
+	if decodeErr != nil {
+		result.Err = fmt.Errorf("decoding go test JSON output: %w", decodeErr)
+	}
+	for _, line := range strings.Split(stdoutText, "\n") {
+		const marker = "HOTAMSPEC_ARTIFACT:"
+		if !strings.HasPrefix(line, marker) {
+			continue
+		}
+		raw := []byte(strings.TrimSpace(strings.TrimPrefix(line, marker)))
+		if !looksLikeRecorderArtifact(raw) {
+			result.Err = fmt.Errorf("invalid atom recording artifact")
+			continue
+		}
+		result.Artifacts = append(result.Artifacts, RecordedArtifact{RawJSON: raw})
+	}
+	if ctx.Err() != nil {
+		result.Err = ctx.Err()
+	} else if runErr != nil {
+		var exit *exec.ExitError
+		if !isExitError(runErr, &exit) {
+			result.Err = runErr
+		}
+		result.CompileFailed = looksLikeCompileFailure(string(data))
+	} else {
+		result.Passed = true
+	}
+	return result
+}
+
+func parseAtomEvents(data []byte) (string, []TestVerdict, error) {
+	var stdout strings.Builder
+	var verdicts []TestVerdict
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	for {
+		var event struct {
+			Action string
+			Test   string
+			Output string
+		}
+		if err := decoder.Decode(&event); err != nil {
+			if err == io.EOF {
+				break
+			}
+			sortTestVerdicts(verdicts)
+			return stdout.String(), verdicts, err
+		}
+		stdout.WriteString(event.Output)
+		switch event.Action {
+		case "pass", "fail", "skip":
+			if event.Test != "" {
+				verdicts = append(verdicts, TestVerdict{Test: event.Test, Verdict: event.Action})
+			}
+		}
+	}
+	sortTestVerdicts(verdicts)
+	return stdout.String(), verdicts, nil
+}
+
+func sortTestVerdicts(verdicts []TestVerdict) {
+	sort.Slice(verdicts, func(i, j int) bool {
+		if verdicts[i].Test == verdicts[j].Test {
+			return verdicts[i].Verdict < verdicts[j].Verdict
+		}
+		return verdicts[i].Test < verdicts[j].Test
+	})
 }
 
 // runGoTestRecording is runGoTest's record-mode sibling: same recursion-guard

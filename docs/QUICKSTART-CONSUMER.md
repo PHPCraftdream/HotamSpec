@@ -191,24 +191,29 @@ worked example each, see [PROPOSAL-REFERENCE.md](PROPOSAL-REFERENCE.md).
 
 ## 5. Regenerate readable docs from the graph
 
-The graph in `graph.json` is the source of truth, but it is not meant to be
-read directly. `hotam land` (used for r1.json/r2.json above) already
-regenerates docs/gen as part of its pipeline; `apply-proposal` alone (used
-for the stakeholders/axis/conflict above) does not. Regenerate the Markdown
-views under `domains/main/docs/gen/` standalone at any time with:
+The authoring source depends on `requirements_authority`: graph-authority
+domains use proposals, while code-authority domains keep Requirements and
+Rejections in `spec/requirements.go` and project them to the graph through
+`sync-domain` (see Requirements as code below). In a proposal-authority domain,
+`hotam land` applies a proposal and regenerates docs; `apply-proposal` alone
+does not. Run `hotam gen-spec` to regenerate the current views under
+`domains/main/docs/gen/` at any time:
 
 ```bash
 hotam gen-spec --domain domains/main
 ```
 
-The consumer profile is lightweight: it writes `SPEC.md` (with `--spec`),
+Because this example has no `languages` declaration, the consumer profile
+writes the existing one-language names: `SPEC.md` (with `--spec`),
 `REQUIREMENTS.md` (not for code-authority + `discipline: "full"` domains,
 whose text lives in `spec/requirements.go` and `SPEC.md`), and
 `TENSIONS.md`/`PIPELINE.md`/`HISTORY.md`/`OPEN.md`/`UNENFORCED.md` only when
-the domain has data for them. The engine's own self-documentation
-(`CONSTITUTION.md`, `TRACEABILITY.md`, `COVERAGE.md`, `REPO-MAP.md`,
-`AGENT-CONTEXT.md`, `framework/tools/`, `framework/GLOSSARY.md`, ...) is not
-written; `hotam gen-spec --domain domains/main --profile full` renders it
+the domain has data for them. A language-configured domain uses the same
+document kinds in language-suffixed views; SPEC indexes link to that locale's
+shards. The engine's own self-documentation (`CONSTITUTION.md`,
+`TRACEABILITY.md`, `COVERAGE.md`, `REPO-MAP.md`, `AGENT-CONTEXT.md`,
+`framework/tools/`, `framework/GLOSSARY.md`, ...) is not written in consumer
+profile; `hotam gen-spec --domain domains/main --profile full` renders it
 one-shot, and the next consumer run removes it again.
 
 ## 6. Verify the graph stays structurally sound
@@ -312,6 +317,234 @@ Go registry is the only authority, mirroring how the framework's own
 via `hotam sync-self`). See the root [README](../README.md) for the full
 `vendor-ontology`/`scaffold-registrydump`/`sync-domain` command reference, and
 `docs/AUTHORED-SPEC-CONTRACT.md` §11 for the contract framing.
+
+## Self-executing atoms (per-domain opt-in)
+
+Use this path for the legacy, one-language value-fact contract: the method's
+doc phrase combines with its real executed value. It requires no language
+configuration or rule/case metadata. The separate guide below covers
+multilingual phrase blocks and explicitly declared rule/case atoms.
+
+```json
+{
+  "self_executing_atoms": true,
+  "atom_defaults": {
+    "owner": "alice",
+    "status": "SETTLED",
+    "why": "Confirmed by the owner.",
+    "created_at": "2026-10-01",
+    "settled_at": "2026-10-01"
+  }
+}
+```
+
+The owner must exist in the graph or the domain's Stakeholders registry.
+Vendor the current recorder with `hotam vendor-recorder --domain domains/main`.
+Write a method and one test; for this plain one-language fact, the first doc line is the phrase:
+
+```go
+// birth year
+func (h Human) BirthYear() BirthYear { return h.born }
+
+func TestBirthYear(t *testing.T) {
+    hotamspec.Fact(t, Init().BirthYear, BirthYear(1987))
+}
+```
+
+The resulting claim is **Birth year — 1987.** Change `Init` and the test's
+expected value to change it; do not edit generated prose. A value method
+contains exactly one return expression. Closures and free functions are
+rejected because they do not identify a model method.
+
+Use `hotamspec.Holds(t, predicate, evidence...)` for a bool relation;
+each evidence argument is a result of `Fact`. `hotamspec.Expect(false)`
+checks a false relation without wrapping or renaming its method.
+`NewScenario` remains available for multi-step scenarios.
+
+Run `sync-domain` first in dry-run mode, then confirm its returned hash
+using the command above. `requirements.go` now holds only REJECTED entries
+and explicit overrides, not a second fact roster. IDs default to
+`R-<receiver-kebab>-<method-kebab>`; an override identifies its method through
+`ImplementedBy`. When renaming a method, explicitly reject the old ID and
+give the successor a `replaces` relation; the graph remains append-only.
+
+Tests under `spec/model/` are discovered recursively. Requirements follow
+source order, without hand-authored `DeclOrder`. `docs/gen/SPEC.md` indexes
+`docs/gen/spec/<pkg>.md`; oversized consumer crystals show package links
+and counters. Recording uses native `go test -json` caching with replayable
+stdout artifacts, not a separate disk verdict cache.
+
+
+## Multilingual and rule-case atoms
+
+The default-language, one-language path above remains unchanged. Supported
+service locales are `en`, `ru` and `zh`; one explicit locale uses a one-code
+`languages` list and still accepts plain method comments. For a multilingual
+domain using automatic method discovery, merge the following relevant fields
+into the existing manifest:
+
+```json
+{
+  "languages": ["en", "ru"],
+  "default_language": "en",
+  "requirements_authority": "code",
+  "self_executing_atoms": true,
+  "conformance": {
+    "rule_cases": true
+  }
+}
+```
+
+Write the short translation pair beside the same method. Each declared
+language appears exactly once; keep prose outside the blocks out of the
+comment. There is one marker syntax, with no aliases:
+
+```go
+// >>>>> lang=en
+// Birth year is at least one.
+//
+// >>>>> lang=ru
+// Год рождения не меньше одного.
+func (h Human) HasValidBirthYear() bool {
+	return h.born >= 1
+}
+```
+
+The same atom ID, method, graph and test executions supply every locale view.
+One-language mode accepts an ordinary unmarked phrase; in multilingual mode
+each declared language needs its own non-empty block. Unknown, duplicate,
+empty or missing blocks are errors, not a reason to guess a language or fall
+back to another translation. Changing `default_language` changes the primary
+claim/view, not atom identity or verdict.
+
+For automatic `sync-domain` method discovery, the manifest must declare
+`requirements_authority: "code"`, `self_executing_atoms: true` and
+`conformance.rule_cases: true`. `requirements_authority` selects the Go-to-graph
+source; `self_executing_atoms` enables atom discovery; `rule_cases` permits
+explicit rule/case semantics. `self_executing_atoms` alone preserves legacy
+`Fact`/`Holds` behavior and does not permit rule cases; `rule_cases` alone does
+not scan model methods. Explicit graph-authority case descriptors can be
+written through Requirement proposals; their `Test` links are case/report
+references, not `verified_by` proof or a method-discovery trigger.
+
+`WithCase` turns the existing `Fact` or `Holds` call into rule mode: the method doc text
+is the stable norm; each case supplies an independent expected value and
+records its actual observation separately. The bound method remains the
+requirement subject. The case ID is stable and required; the test/subtest,
+input, and expected value come from the real recorder invocation:
+
+```go
+type Parser struct{ input []byte }
+
+// >>>>> lang=en
+// The parser accepts a non-empty input not starting with '!'.
+//
+// >>>>> lang=ru
+// Парсер принимает непустой ввод, не начинающийся с «!».
+func (p Parser) Accepts() bool { return len(p.input) != 0 && p.input[0] != '!' }
+
+func TestParserCases(t *testing.T) {
+	cases := []struct {
+		id    string
+		input []byte
+		want  bool
+	}{
+		{id: "valid-input", input: []byte("valid"), want: true},
+		{id: "invalid-input", input: []byte("!"), want: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.id, func(t *testing.T) {
+			p := Parser{input: tc.input}
+			hotamspec.Fact(t, p.Accepts, tc.want,
+				hotamspec.WithInput(hotamspec.Bytes(tc.input)),
+				hotamspec.WithCase(hotamspec.CaseContext{
+					ID: tc.id, Operation: "parse", Target: "parser",
+					Producer: "in-package-parser",
+				}),
+			)
+		})
+	}
+}
+```
+
+Use an independently authored `want`; never derive it from the same actual
+result or call the system under test again to make an oracle. `CaseContext.ID`
+is the stable case identity. The real test/subtest name comes from execution;
+`WithInput` and `want` supply authored input/oracle data. Discovery may project
+these values into a new `CaseDefinition` (`Input` and `Expected`) while
+keeping the actual result only in observation data. An explicit
+registry/proposal case is an override: recorded declarations must agree or
+`sync-domain` refuses the mismatch instead of overwriting the descriptor.
+Do not maintain a second registry copy for ordinary test-table cases.
+
+For a shared multi-property case, optional `CaseContext.Expected` carries a
+`hotamspec.TypedValue` oracle at the artifact root as `case_expected`, never
+inside `case.expected`. If absent, the root value comes from `Fact`'s explicit
+`want` or `Holds`' `Expect`; each observation's `RawExpected` remains specific
+to its own comparison.
+
+Declare `Operation`, `Producer`, `Target`, and `Profile` where applicable;
+they are provenance/selection metadata, not guessed from a result.
+`Fixtures`, `Conditions`, `Sides`, and `Selection` carry only declared
+references or evidence the producer actually observed. A failed comparison
+fails the test while passing siblings remain observable.
+
+Case inputs do not create new requirements. Several cases can exercise one
+stable rule atom, and one fixture or execution can support several atoms
+without duplicating a real operation. The case/corpus report describes its
+declared evidence only; passing fixtures do not establish semantic
+completeness or universal conformance.
+
+Language views use one shared graph, evidence/review store and execution
+snapshot. Multilingual output uses `SPEC.<lang>.md` and
+`spec/<lang>/<pkg>.md`; other localized projections use the language suffix
+where emitted. The default-language `CLAUDE.md` remains the standard boot
+entry point, with additional `CLAUDE.<lang>.md` views where generated. See
+[AUTHORED-SPEC-CONTRACT.md §13](AUTHORED-SPEC-CONTRACT.md#13-atomic-multilingual-and-conformance-specifications)
+for source clauses, typed bytes/errors, profiles, precedence, composition and
+the structural audit boundary.
+
+## Inspect failing evidence without publishing a false passing spec
+
+```bash
+hotam evidence --domain domains/main --json --write
+hotam findings list --domain domains/main --json
+hotam findings show <F-id> --domain domains/main --json
+hotam findings review <F-id> --domain domains/main \
+  --kind needs_review --status open \
+  --rationale "Explain the classification" --decision-ref "Recorded decision"
+```
+
+`evidence` saves positive and negative observations under `docs/gen/` even
+when a test fails, then returns nonzero. A passing test remains visible when
+its package has a failing sibling. Atom tests are observed before the first
+successful sync too; report-only findings do not create graph requirements.
+`gen-spec --spec` and graph mutation keep their strict passing-proof gates.
+
+`Fact` automatically records actual and expected. Use `WithInput` and
+`WithContext` for explicit input/version/profile context. A method can return
+`hotamspec.Observed(value, hotamspec.Observe(name, input, actual, expected))`
+to expose detailed comparisons inside a summary check; failed inner
+comparisons fail the real test even when its summary equals `want`.
+
+Declare `specification_sources` in the domain manifest: each source has
+`id`, `path`, `version`, and the SHA-256 of its exact bytes. Add typed
+`SourceLinks` (`source_id`, `anchor`) to the registry exception for its
+method. Anchors resolve to headings or `Lx-Ly`/`Lx`; relative paths resolve
+from the consumer domain, not an arbitrary current working directory.
+Regenerate the vendored ontology before using these new fields.
+
+Coverage distinguishes execution-verified evidence, discrepancies, unsupported
+recommendations, profile-qualified unreachable branches, and unverified
+obligations. Author qualifications require rationale and source links;
+unreachable also requires a profile. They never erase an observed failure.
+These links/statuses are structural evidence, not automatic semantic proof.
+
+Finding review notes live separately from current observations and are not a
+test-verdict cache. Classify `specification_issue`, `model_issue`,
+`implementation_issue`, or `needs_review` deliberately; the tool does not
+assign blame. Lexical `confront` suspicions likewise do not establish a
+contradiction or block a write without an explicit unresolved Conflict carrier.
 
 ## What's next
 

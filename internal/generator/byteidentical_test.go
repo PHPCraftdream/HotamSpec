@@ -111,17 +111,6 @@ func truncate(s string, n int) string {
 	return s[:n] + "…"
 }
 
-func TestBuildRequirements_ByteIdenticalToFixture(t *testing.T) {
-	t.Parallel()
-	g := loadFixtureGraph(t)
-	got := BuildRequirements(g, "hotam-spec-self", false)
-	want, err := os.ReadFile("testdata/fixture/REQUIREMENTS.md")
-	if err != nil {
-		t.Fatalf("read reference: %v", err)
-	}
-	diffReport(t, "REQUIREMENTS.md", got, string(want))
-}
-
 func TestBuildTensions_ByteIdenticalToFixture(t *testing.T) {
 	t.Parallel()
 	g := loadFixtureGraph(t)

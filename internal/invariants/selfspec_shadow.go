@@ -168,8 +168,10 @@ func checkSelfRequirementsMatchRegistry(g *ontology.Graph) []Violation {
 // the authoritative list — Claim, Owner, Status, Why, Assumptions,
 // Relations, Enforcement, EnforcedBy, MTag, Enforceability, Summary,
 // CreatedAt, SettledAt, SourceRefs, DeclOrder, BlockedOn, ImplementedBy,
-// VerifiedBy) between reg (a registry entry) and graphReq (the graph's
-// current node with the SAME ID), deliberately IGNORING the event fields
+// VerifiedBy, SourceLinks, Coverage, ClaimTexts, AtomKind, Cases, ClauseLinks,
+// Strength, Applicability, and Precedence) between reg (a registry entry)
+// and graphReq (the current node with the SAME ID), deliberately IGNORING
+// the event fields
 // (History, GateSignoffs, LastReviewedAt, ReviewAfter, Evidence) that
 // MergeIntoGraph passes through untouched — those legitimately differ
 // between two Requirement values that are otherwise a perfect structural
@@ -203,9 +205,24 @@ func firstStructuralFieldDiff(reg, graphReq ontology.Requirement) string {
 		{"blocked_on", reg.BlockedOn, graphReq.BlockedOn},
 		{"implemented_by", reg.ImplementedBy, graphReq.ImplementedBy},
 		{"verified_by", reg.VerifiedBy, graphReq.VerifiedBy},
+		{"source_links", reg.SourceLinks, graphReq.SourceLinks},
+		{"coverage", reg.Coverage, graphReq.Coverage},
+		{"claim_texts", reg.ClaimTexts, graphReq.ClaimTexts},
+		{"atom_kind", reg.AtomKind, graphReq.AtomKind},
+		{"cases", reg.Cases, graphReq.Cases},
+		{"clause_links", reg.ClauseLinks, graphReq.ClauseLinks},
+		{"strength", reg.Strength, graphReq.Strength},
+		{"applicability", reg.Applicability, graphReq.Applicability},
+		{"precedence", reg.Precedence, graphReq.Precedence},
 	}
 	for _, c := range checks {
-		if !reflect.DeepEqual(c.regValue, c.graphValue) {
+		var equal bool
+		if c.name == "cases" {
+			equal = ontology.EqualCaseDefinitions(reg.Cases, graphReq.Cases)
+		} else {
+			equal = reflect.DeepEqual(c.regValue, c.graphValue)
+		}
+		if !equal {
 			return fmt.Sprintf("%s: registry=%v graph=%v", c.name, c.regValue, c.graphValue)
 		}
 	}
@@ -221,7 +238,7 @@ var _ = All.MustRegister("check_self_requirements_match_registry", Invariant{
 		"no longer exists or was renamed; (2) every Requirement ID in g.Requirements MUST be registered in internal/selfspec.Requirements — a graph node absent from the registry means a new Requirement landed (via " +
 		"`hotam sync-self`, the only sanctioned path for a self-hosting domain's Requirement/Rejection structural fields — R-no-hand-edit-graph) without the registry being updated to match; (3) for every ID present in " +
 		"BOTH, the structural fields selfspec.MergeIntoGraph/StructuralFieldDiffs replace wholesale (Claim, Owner, Status, Why, Assumptions, Relations, Enforcement, EnforcedBy, MTag, Enforceability, Summary, CreatedAt, " +
-		"SettledAt, SourceRefs, DeclOrder, BlockedOn, ImplementedBy, VerifiedBy) MUST agree byte-for-byte between the registry and the graph. Event fields (History, GateSignoffs, LastReviewedAt, ReviewAfter, Evidence) are " +
+		"SettledAt, SourceRefs, DeclOrder, BlockedOn, ImplementedBy, VerifiedBy, SourceLinks, Coverage) MUST agree byte-for-byte between the registry and the graph. Event fields (History, GateSignoffs, LastReviewedAt, ReviewAfter, Evidence) are " +
 		"deliberately excluded — they legitimately differ between two otherwise-identical values and comparing them would be permanent, meaningless noise.",
 	Why: "task #345 (RAC-A) registered this exact comparison as a SHADOW check — advisory-only, deliberately never gating — because at that point the registry was a MIRROR, not yet the authority: a mismatch could only " +
 		"mean the registry had gone stale, and there was no sanctioned write path that could make the mismatch mean anything more actionable. RAC-B (task #346) built that path across three prior steps: RAC-B1 (task #348) " +

@@ -174,29 +174,182 @@ func TestConfront_RejectedHitCarriesReplacesSuccessor(t *testing.T) {
 	}
 }
 
-// TestConfront_OppositeMarkerLowersThreshold verifies the marker half of the
-// inspect threshold logic carries over: a candidate that shares only a single
-// significant token with a settled claim still fires when the two use opposite
-// markers (never/always) — the canonical "cache must never store PII" vs "cache
-// stores all fields always" example from inspect.
-func TestConfront_OppositeMarkerLowersThreshold(t *testing.T) {
+// TestConfront_OppositeMarkerIsAdvisory verifies that a topical lexical hit
+// with opposite marker text remains a suspicion, never a semantic blocker.
+func TestConfront_OppositeMarkerIsAdvisory(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{Requirements: []ontology.Requirement{
+		settledClaim("R-cache-no-pii", "team-a", "cache must never store PII"),
+	}}
+	res := Confront(g, "cache stores all fields always")
+	if len(res.Settled) != 1 || res.Settled[0].ID != "R-cache-no-pii" {
+		t.Fatalf("expected a lexical suspicion for the matching requirement, got %+v", res.Settled)
+	}
+	hit := res.Settled[0]
+	if hit.Classification != ClassificationLexicalSuspicion || hit.Confidence != "advisory" {
+		t.Fatalf("opposite marker must remain advisory: %+v", hit)
+	}
+	if len(hit.Reasons) == 0 || !strings.Contains(strings.Join(hit.Reasons, " "), hit.OppositeMarker) {
+		t.Fatalf("advisory reason should explain the marker evidence: %+v", hit.Reasons)
+	}
+	if IsBlockingHit(hit) {
+		t.Fatal("opposite marker text alone must not block")
+	}
+}
+
+func TestConfront_OnlyAnyDifferentScopeIsAdvisory(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{Requirements: []ontology.Requirement{
+		settledClaim("R-only-invoice", "team-a", "only admins may delete legacy invoice batches"),
+	}}
+	res := Confront(g, "any user may archive invoice batches")
+	if len(res.Settled) != 1 {
+		t.Fatalf("expected shared-subject suspicion, got %+v", res.Settled)
+	}
+	if res.Settled[0].OppositeMarker == "" {
+		t.Fatalf("fixture must exercise only/any marker text: %+v", res.Settled[0])
+	}
+	if IsBlockingHit(res.Settled[0]) {
+		t.Fatal("different-scope only/any language must remain advisory")
+	}
+}
+
+func TestConfrontRequirement_SharedImplementationLinkStrengthensSuspicion(t *testing.T) {
+	t.Parallel()
+	existing := settledClaim("R-cache-ttl", "team-a", "cache entries expire after a fixed interval")
+	existing.ImplementedBy = []string{"spec/model/cache.go:Expire"}
+	g := &ontology.Graph{Requirements: []ontology.Requirement{existing}}
+	candidate := ontology.Requirement{
+		ID:            "R-audit-retention",
+		Claim:         "audit records remain available during incident review",
+		ImplementedBy: []string{"spec/model/cache.go:Expire"},
+	}
+	res := ConfrontRequirement(g, candidate)
+	if len(res.Settled) != 1 {
+		t.Fatalf("shared exact implementation link should surface a linked suspicion: %+v", res.Settled)
+	}
+	hit := res.Settled[0]
+	if hit.Classification != ClassificationLinkedSuspicion || hit.Confidence != "corroborated" {
+		t.Fatalf("metadata-linked hit classification = %+v", hit)
+	}
+	if IsBlockingHit(hit) {
+		t.Fatal("implementation links strengthen suspicion but do not prove contradiction")
+	}
+}
+
+func TestConfrontRequirement_ExactSourceAnchorStrengthensSuspicion(t *testing.T) {
+	t.Parallel()
+	link := ontology.SourceLink{SourceID: "S-storage", Anchor: "durability"}
+	existing := settledClaim("R-storage-a", "team-a", "the archive retains sealed snapshots")
+	existing.SourceLinks = []ontology.SourceLink{link}
+	g := &ontology.Graph{Requirements: []ontology.Requirement{existing}}
+	candidate := ontology.Requirement{
+		ID:          "R-storage-b",
+		Claim:       "backup revisions are readable by operators",
+		SourceLinks: []ontology.SourceLink{link},
+	}
+	res := ConfrontRequirement(g, candidate)
+	if len(res.Settled) != 1 || res.Settled[0].Classification != ClassificationLinkedSuspicion {
+		t.Fatalf("same source anchor should strengthen the finding: %+v", res.Settled)
+	}
+}
+
+func TestConfrontRequirement_ExplicitRelationStrengthensSuspicion(t *testing.T) {
+	t.Parallel()
+	existing := settledClaim("R-related-subject", "team-a", "archive retention uses a rotating medium")
+	g := &ontology.Graph{Requirements: []ontology.Requirement{existing}}
+	candidate := ontology.Requirement{
+		ID:        "R-related-consumer",
+		Claim:     "operators review incident annotations each quarter",
+		Relations: []ontology.Relation{{Kind: "depends_on", Target: existing.ID}},
+	}
+	res := ConfrontRequirement(g, candidate)
+	if len(res.Settled) != 1 || res.Settled[0].Classification != ClassificationLinkedSuspicion {
+		t.Fatalf("explicit relation should surface a linked suspicion: %+v", res.Settled)
+	}
+	if IsBlockingHit(res.Settled[0]) {
+		t.Fatal("explicit relations strengthen suspicion but are not semantic proof")
+	}
+}
+
+func TestConfront_OnlyAnyAcrossUnrelatedDutiesIsAdvisory(t *testing.T) {
+	t.Parallel()
+	g := &ontology.Graph{Requirements: []ontology.Requirement{
+		settledClaim("R-only-archive", "team-a", "only admins must archive invoices"),
+	}}
+	res := Confront(g, "any visitors must create passports")
+	if len(res.Settled) != 1 {
+		t.Fatalf("generic shared modal with only/any markers should surface as a suspicion: %+v", res.Settled)
+	}
+	hit := res.Settled[0]
+	if hit.OppositeMarker == "" || hit.Classification != ClassificationLexicalSuspicion {
+		t.Fatalf("fixture should exercise advisory only/any marker evidence: %+v", hit)
+	}
+	if IsBlockingHit(hit) {
+		t.Fatal("only/any across unrelated duties must not become a semantic blocker")
+	}
+}
+
+func TestConfrontRequirement_FormalConflictBlocksWithoutLexicalHit(t *testing.T) {
 	t.Parallel()
 	g := &ontology.Graph{
 		Requirements: []ontology.Requirement{
-			settledClaim("R-cache-no-pii", "team-a", "cache must never store PII"),
+			settledClaim("R-formal-peer", "team-a", "independent tea grading applies yearly"),
 		},
+		Conflicts: []ontology.Conflict{{
+			ID: "C-formal", Lifecycle: ontology.ConflictACKNOWLEDGED,
+			Members: []string{"R-formal-candidate", "R-formal-peer"},
+		}},
 	}
-	// Shares only the single significant token "cache" (PII/store are on one
-	// side only), plus the opposite marker never/always — must still fire.
-	res := Confront(g, "cache stores all fields always")
-	if res.Clear {
-		t.Fatalf("Clear = true, want false: opposite-marker single-token overlap must fire")
+	res := ConfrontRequirement(g, ontology.Requirement{
+		ID: "R-formal-candidate", Claim: "completely unrelated quantum scheduling",
+	})
+	if len(res.Settled) != 0 || len(res.FormalConflicts) != 1 {
+		t.Fatalf("formal carrier should be found independently of lexical overlap: %+v", res)
 	}
-	if len(res.Settled) != 1 || res.Settled[0].ID != "R-cache-no-pii" {
-		t.Fatalf("expected single hit R-cache-no-pii, got %+v", res.Settled)
+	hit := res.FormalConflicts[0]
+	if hit.Classification != ClassificationFormalConflict || !IsBlockingHit(hit) {
+		t.Fatalf("explicit unresolved carrier must be a formal blocker: %+v", hit)
 	}
-	if res.Settled[0].Score < 1+3 {
-		t.Errorf("score = %d, want >= 4 (1 shared token + 3 marker bonus)", res.Settled[0].Score)
+	if hit.Confidence != ConfidenceExplicit || len(hit.Reasons) == 0 {
+		t.Fatalf("formal evidence should be labeled explicit with an explanation: %+v", hit)
+	}
+	if len(hit.ConflictIDs) != 1 || hit.ConflictIDs[0] != "C-formal" {
+		t.Fatalf("formal blocker must identify its carrier: %+v", hit)
+	}
+}
+
+func TestConfrontRequirement_ResolvedOrHeldConflictDoesNotBlock(t *testing.T) {
+	t.Parallel()
+	for _, lifecycle := range []string{"DECIDED(accepted)", "HELD(wait)", "REVISIT_WHEN(signal)"} {
+		t.Run(lifecycle, func(t *testing.T) {
+			t.Parallel()
+			g := &ontology.Graph{
+				Requirements: []ontology.Requirement{
+					settledClaim("R-formal-peer", "team-a", "independent tea grading applies yearly"),
+				},
+				Conflicts: []ontology.Conflict{{
+					ID: "C-formal", Lifecycle: lifecycle,
+					Members: []string{"R-formal-candidate", "R-formal-peer"},
+				}},
+			}
+			res := ConfrontRequirement(g, ontology.Requirement{
+				ID: "R-formal-candidate", Claim: "unrelated quantum scheduling",
+			})
+			if len(res.FormalConflicts) != 0 {
+				t.Fatalf("%s is not an unresolved blocking carrier: %+v", lifecycle, res.FormalConflicts)
+			}
+		})
+	}
+}
+
+func TestConfrontRequirement_ExcludesCandidateSelfID(t *testing.T) {
+	t.Parallel()
+	existing := settledClaim("R-self", "team-a", "the gateway retains audit records")
+	g := &ontology.Graph{Requirements: []ontology.Requirement{existing}}
+	res := ConfrontRequirement(g, existing)
+	if len(res.Settled) != 0 || len(res.Rejected) != 0 {
+		t.Fatalf("candidate must not confront its own previous graph node: %+v", res)
 	}
 }
 

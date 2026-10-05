@@ -99,6 +99,14 @@ func checkSpecMDCurrent(g *ontology.Graph) []Violation {
 		// no-op, mirroring checkRecorderCurrent's identical guard.
 		return nil
 	}
+
+	// Explicit language configs use check_language_outputs_current, which
+	// compares the entire localized SPEC index/shard bundle from one rows
+	// snapshot. The legacy check below intentionally remains only for graphs
+	// that have not declared a language set.
+	if len(g.Languages) > 0 {
+		return nil
+	}
 	specPath := filepath.Join(g.DomainDir, filepath.FromSlash(specMDRelPath))
 	committed, err := os.ReadFile(specPath)
 	if err != nil {
@@ -116,13 +124,13 @@ func checkSpecMDCurrent(g *ontology.Graph) []Violation {
 			// while its entire generated normative text was gone, undetected
 			// by all-violations. A domain WITHOUT discipline:full keeps the
 			// existing honest no-op (it never promised a SPEC.md).
-			if g.Discipline == loader.DisciplineFull {
+			if g.Discipline == loader.DisciplineFull || g.SelfExecutingAtoms {
 				return []Violation{{
 					Check: "check_spec_md_current",
 					ID:    g.DomainDir,
 					Message: fmt.Sprintf(
-						"docs/gen/SPEC.md does not exist for %s, but this domain has declared discipline:\"full\" -- "+
-							"a discipline:full domain's normative text must be generated from real scenario test runs; "+
+						"docs/gen/SPEC.md does not exist for %s, but this domain opted into discipline:\"full\" or self_executing_atoms -- "+
+							"its normative text must be generated from real scenario or atom test runs; "+
 							"run `hotam gen-spec --domain %s --spec` to generate it",
 						g.DomainDir, g.DomainDir),
 				}}
@@ -139,20 +147,75 @@ func checkSpecMDCurrent(g *ontology.Graph) []Violation {
 		}}
 	}
 
-	fresh := gate.BuildSpecFromRows(g, gate.CollectSpecRows(g))
-	if string(committed) != fresh {
-		return []Violation{{
-			Check: "check_spec_md_current",
-			ID:    g.DomainDir,
-			Message: fmt.Sprintf(
-				"%s does not match what a fresh `hotam gen-spec --spec` run produces right now -- it is either stale "+
-					"(the domain's graph, implemented_by/verified_by links, or the code they point at changed since SPEC.md "+
-					"was last regenerated) or was edited by hand despite its own do-not-edit banner; re-run "+
-					"`hotam gen-spec --domain %s --spec` to regenerate it from the current, real, passing `go test` output",
-				specPath, g.DomainDir),
-		}}
+	var rows map[string]gate.SpecRow
+	if ConformanceAuditRequired(g) {
+		report, err := InvocationEvidenceSnapshot(g)
+		if err != nil {
+			return []Violation{{Check: "check_spec_md_current", ID: g.DomainDir, Message: fmt.Sprintf("collect shared conformance evidence for SPEC freshness: %v", err)}}
+		}
+		rows = report.SpecRows
+	} else {
+		rows = gate.CollectSpecRows(g)
 	}
-	return nil
+	documents, err := gate.BuildSpecDocumentsFromRows(g, rows)
+	if err != nil {
+		return []Violation{{Check: "check_spec_md_current", ID: g.DomainDir, Message: fmt.Sprintf("render SPEC document bundle: %v", err)}}
+	}
+	return compareSpecDocuments(g, committed, documents)
+}
+
+func compareSpecDocuments(g *ontology.Graph, committed []byte, documents map[string]string) []Violation {
+	var out []Violation
+	for relative, fresh := range documents {
+		path := filepath.Join(g.DomainDir, "docs", "gen", filepath.FromSlash(relative))
+		content := committed
+		var err error
+		if relative != "SPEC.md" {
+			content, err = os.ReadFile(path)
+		} else {
+			err = nil
+		}
+		if err != nil || string(content) != fresh {
+			out = append(out, Violation{
+				Check:   "check_spec_md_current",
+				ID:      path,
+				Message: fmt.Sprintf("%s is missing, unreadable, or stale (read error: %v); run `hotam gen-spec --domain %s --spec` to regenerate the index and every package shard", path, err, g.DomainDir),
+			})
+		}
+	}
+	if g.SelfExecutingAtoms {
+		genDir := filepath.Join(g.DomainDir, "docs", "gen")
+		walkErr := filepath.WalkDir(filepath.Join(genDir, "spec"), func(path string, entry os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if entry.IsDir() || filepath.Ext(path) != ".md" {
+				return nil
+			}
+			relative, err := filepath.Rel(genDir, path)
+			if err != nil {
+				return err
+			}
+			if _, exists := documents[filepath.ToSlash(relative)]; exists {
+				return nil
+			}
+			content, err := os.ReadFile(path)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return nil
+				}
+				return err
+			}
+			if gate.IsGeneratedSpecDocument(string(content)) {
+				out = append(out, Violation{Check: "check_spec_md_current", ID: path, Message: "obsolete generated SPEC package shard is no longer part of the generated index; run `hotam gen-spec --spec`"})
+			}
+			return nil
+		})
+		if walkErr != nil && !os.IsNotExist(walkErr) {
+			out = append(out, Violation{Check: "check_spec_md_current", ID: genDir, Message: fmt.Sprintf("cannot inspect SPEC package shards: %v", walkErr)})
+		}
+	}
+	return out
 }
 
 var _ = All.MustRegister("check_spec_md_current", Invariant{

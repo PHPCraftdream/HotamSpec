@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
+	"github.com/PHPCraftdream/HotamSpec/internal/localization"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
@@ -101,31 +102,19 @@ func TraceabilityMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildTraceability(g *ontology.Graph) string {
-	lines := []string{Banner, ReaderHeaderLine("TRACEABILITY", g), ""}
-	lines = append(lines, "# TRACEABILITY.md — requirement -> implemented_by -> verified_by (Hotam-Spec)")
+	lines := []string{localizedBanner(g), ReaderHeaderLine("TRACEABILITY", g), ""}
+	lines = append(lines, serviceText(g, "# TRACEABILITY.md — requirement -> implemented_by -> verified_by (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines,
-		"Generated from `implemented_by`/`verified_by` on each requirement in this domain's "+
-			"`graph.json` (PLAN-authored-spec-discipline.md §4/§7). Each authored link is "+
-			"RE-RESOLVED here (same resolver the mechanical gate uses — "+
-			"internal/gate/spec_resolver.go) purely for display: `resolves` means the named "+
-			"file:symbol / file:test was found by parsing that file; `ORPHANED` means it was "+
-			"not (stale reference, typo, or renamed/deleted symbol) — the mechanical gate "+
-			"(internal/invariants/authored_links.go) is the actual enforcement point, this doc "+
-			"only reports its verdict for navigation. The `scenario` column (PLAN-scenario-"+
-			"generated-spec.md §3 W1.4) is a CHEAP, AST-only signal (no test execution) that a "+
-			"verified_by test's body calls `hotamspec.NewScenario(...)` — this is the only "+
-			"scenario signal this document ever renders, so it stays byte-identical on every "+
-			"`gen-spec` run. The REAL, executed narrative — Given/When/Then/Value steps from an "+
-			"actually-passing `go test` run — lives in `docs/gen/SPEC.md`, generated only by "+
-			"`hotam gen-spec --spec` (real, but expensive: a full compile+run per verified_by "+
-			"entry); that file's own freshness is separately enforced by "+
-			"`check_spec_md_current`, so this document does not need to (and must not) overlay "+
-			"its outcome here.")
+		serviceText(g, "Generated from `implemented_by`/`verified_by` on each requirement in this domain's `graph.json` (PLAN-authored-spec-discipline.md §4/§7).")+" "+
+			serviceText(g, "Each authored link is RE-RESOLVED here (same resolver the mechanical gate uses — internal/gate/spec_resolver.go) purely for display: `resolves` means the named file:symbol / file:test was found by parsing that file; `ORPHANED` means it was not (stale reference, typo, or renamed/deleted symbol) — the mechanical gate (internal/invariants/authored_links.go) is the actual enforcement point, this doc only reports its verdict for navigation.")+" "+
+			serviceText(g, "The `scenario` column (PLAN-scenario-generated-spec.md §3 W1.4) is a CHEAP, AST-only signal (no test execution) that a verified_by test's body calls `hotamspec.NewScenario(...)` — this is the only scenario signal this document ever renders, so it stays byte-identical on every `gen-spec` run.")+" "+
+			serviceText(g, "The REAL, executed narrative — Given/When/Then/Value steps from an actually-passing `go test` run — lives in `docs/gen/SPEC.md`, generated only by `hotam gen-spec --spec` (real, but expensive: a full compile+run per verified_by entry); that file's own freshness is separately enforced by `check_spec_md_current`, so this document does not need to (and must not) overlay its outcome here."),
+	)
 	lines = append(lines, "")
 
 	if g.IsEmpty() {
-		lines = append(lines, EmptyNotice)
+		lines = append(lines, localizedEmptyNotice(g))
 		lines = append(lines, "")
 		return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 	}
@@ -162,57 +151,50 @@ func BuildTraceability(g *ontology.Graph) string {
 	lines = append(lines, "---")
 	lines = append(lines, "")
 
-	lines = append(lines, "## Authored-linked requirements")
+	lines = append(lines, serviceText(g, "## Authored-linked requirements"))
 	lines = append(lines, "")
 	if len(linked) == 0 {
-		lines = append(lines, "_No requirement in this domain carries an `implemented_by` or `verified_by` entry yet — the authored-spec layer (PLAN-authored-spec-discipline.md §3) has not been started for this domain._")
+		lines = append(lines, serviceText(g, "_No requirement in this domain carries an `implemented_by` or `verified_by` entry yet — the authored-spec layer (PLAN-authored-spec-discipline.md §3) has not been started for this domain._"))
 		lines = append(lines, "")
 	} else {
-		lines = append(lines, "| id | status | implemented_by | verified_by | claim |")
+		lines = append(lines, serviceText(g, "| id | status | implemented_by | verified_by | claim |"))
 		lines = append(lines, "|---|---|---|---|---|")
 		for _, row := range linked {
-			implCell := renderTraceabilityLinks(row.implementedRes)
-			verifCell := renderTraceabilityLinks(row.verifiedRes)
-			lines = append(lines, "| `"+row.req.ID+"` | "+Cell(row.req.Status)+" | "+implCell+" | "+verifCell+" | "+Cell(row.req.Claim)+" |")
+			implCell := renderTraceabilityLinks(row.implementedRes, g.RenderLanguage)
+			verifCell := renderTraceabilityLinks(row.verifiedRes, g.RenderLanguage)
+			lines = append(lines, "| `"+row.req.ID+"` | "+Cell(serviceText(g, row.req.Status))+" | "+implCell+" | "+verifCell+" | "+Cell(requirementClaim(g, row.req))+" |")
 		}
 		lines = append(lines, "")
 	}
 
-	lines = append(lines, "## Engine-enforced (enforced_by, no authored carrier)")
+	lines = append(lines, serviceText(g, "## Engine-enforced (enforced_by, no authored carrier)"))
 	lines = append(lines, "")
-	lines = append(lines,
-		"SETTLED+ENFORCED requirements proven by the engine mechanism (a `check_*` invariant or "+
-			"repo-wide `Test*` function named in `enforced_by`) rather than a domain-authored "+
-			"`spec/` symbol+test pair. Typical for a domain's own methodology/framework "+
-			"requirements (`hotam-spec-self`) whose \"code\" IS the engine.")
+	lines = append(lines, serviceText(g, "SETTLED+ENFORCED requirements proven by the engine mechanism (a `check_*` invariant or repo-wide `Test*` function named in `enforced_by`) rather than a domain-authored `spec/` symbol+test pair. Typical for a domain's own methodology/framework requirements (`hotam-spec-self`) whose \"code\" IS the engine."))
 	lines = append(lines, "")
 	if len(engineEnforced) == 0 {
-		lines = append(lines, "_None in this domain._")
+		lines = append(lines, serviceText(g, "_None in this domain._"))
 		lines = append(lines, "")
 	} else {
-		lines = append(lines, "| id | enforced_by | claim |")
+		lines = append(lines, serviceText(g, "| id | enforced_by | claim |"))
 		lines = append(lines, "|---|---|---|")
 		for _, r := range engineEnforced {
-			lines = append(lines, "| `"+r.ID+"` | "+Cell(strings.Join(r.EnforcedBy, ", "))+" | "+Cell(r.Claim)+" |")
+			lines = append(lines, "| `"+r.ID+"` | "+Cell(strings.Join(r.EnforcedBy, ", "))+" | "+Cell(requirementClaim(g, r))+" |")
 		}
 		lines = append(lines, "")
 	}
 
-	lines = append(lines, "## Prose / roadmap-debt (no code carrier yet)")
+	lines = append(lines, serviceText(g, "## Prose / roadmap-debt (no code carrier yet)"))
 	lines = append(lines, "")
-	lines = append(lines,
-		"Requirements with no `implemented_by`/`verified_by` AND no `enforced_by` — honest "+
-			"discipline/roadmap-debt per PLAN-authored-spec-discipline.md §5: a requirement may "+
-			"be SETTLED without code, but is not yet traceable to a real carrier.")
+	lines = append(lines, serviceText(g, "Requirements with no `implemented_by`/`verified_by` AND no `enforced_by` — honest discipline/roadmap-debt per PLAN-authored-spec-discipline.md §5: a requirement may be SETTLED without code, but is not yet traceable to a real carrier."))
 	lines = append(lines, "")
 	if len(prose) == 0 {
-		lines = append(lines, "_None in this domain._")
+		lines = append(lines, serviceText(g, "_None in this domain._"))
 		lines = append(lines, "")
 	} else {
-		lines = append(lines, "| id | status | enforcement | claim |")
+		lines = append(lines, serviceText(g, "| id | status | enforcement | claim |"))
 		lines = append(lines, "|---|---|---|---|")
 		for _, r := range prose {
-			lines = append(lines, "| `"+r.ID+"` | "+Cell(r.Status)+" | "+Cell(r.Enforcement)+" | "+Cell(r.Claim)+" |")
+			lines = append(lines, "| `"+r.ID+"` | "+Cell(localizedStatus(g, r.Status))+" | "+Cell(localizedStatus(g, r.Enforcement))+" | "+Cell(requirementClaim(g, r))+" |")
 		}
 		lines = append(lines, "")
 	}
@@ -276,7 +258,7 @@ func resolveTraceabilityLinks(specRoot string, raw []string, isSymbol bool) []tr
 // only scenario signal ever rendered here (no real executed verdict overlay
 // -- see BuildTraceability's own doc comment for why), so this function's
 // output is a pure function of its links argument, mode-independent.
-func renderTraceabilityLinks(links []traceabilityLink) string {
+func renderTraceabilityLinks(links []traceabilityLink, language string) string {
 	if len(links) == 0 {
 		return "—"
 	}
@@ -287,16 +269,16 @@ func renderTraceabilityLinks(links []traceabilityLink) string {
 		case !l.resolved:
 			reason := l.detail
 			if reason == "" {
-				reason = "not found"
+				reason = localization.Text(language, "not found")
 			}
-			cell += " — **ORPHANED** (" + reason + ")"
+			cell += " — **" + localization.Text(language, "ORPHANED") + "** (" + reason + ")"
 		case l.detail != "":
-			cell += " — resolves (" + l.detail + ")"
+			cell += " — " + localization.Text(language, "resolves") + " (" + l.detail + ")"
 		default:
-			cell += " — resolves"
+			cell += " — " + localization.Text(language, "resolves")
 		}
 		if l.resolved && l.hasScenario {
-			cell += " · scenario"
+			cell += " · " + localization.Text(language, "scenario")
 		}
 		parts = append(parts, cell)
 	}

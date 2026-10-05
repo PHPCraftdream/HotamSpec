@@ -55,6 +55,7 @@ package selfspec
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
@@ -108,6 +109,9 @@ const ClaimDerivationSeparator = " "
 // anything (e.g. to skip needless work) can inspect len() rather than
 // re-diffing the whole registry themselves.
 func DeriveClaimsFromScenarios(reg *registry.Registry[ontology.Requirement], specRoot string, selfHosting bool, discipline string) []string {
+	if manifest, err := loader.LoadManifest(filepath.Join(specRoot, "manifest.json")); err == nil && manifest.SelfExecutingAtoms {
+		return nil
+	}
 	if discipline != loader.DisciplineFull {
 		// Domain-level honest no-op — mirrors checkSettledRequiresScenario's
 		// own top-of-function guard exactly (scenario_discipline.go).

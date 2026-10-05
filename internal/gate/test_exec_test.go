@@ -1724,3 +1724,26 @@ func TestRunVerifiedByTestRecording_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t 
 		t.Fatalf("expected 'timed out' error, got %v", res.Err)
 	}
 }
+
+func TestParseAtomEventsRetainsPassingSiblingInFailedPackage(t *testing.T) {
+	data := []byte(
+		"{\"Action\":\"run\",\"Test\":\"TestPassing\"}\n" +
+			"{\"Action\":\"output\",\"Test\":\"TestPassing\",\"Output\":\"pass evidence\\n\"}\n" +
+			"{\"Action\":\"pass\",\"Test\":\"TestPassing\"}\n" +
+			"{\"Action\":\"run\",\"Test\":\"TestFailing\"}\n" +
+			"{\"Action\":\"fail\",\"Test\":\"TestFailing\"}\n" +
+			"{\"Action\":\"fail\",\"Package\":\"example.test/model\"}\n",
+	)
+	output, verdicts, err := parseAtomEvents(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if output != "pass evidence\n" {
+		t.Fatalf("captured output = %q, want the test output retained", output)
+	}
+	if len(verdicts) != 2 ||
+		verdicts[0] != (TestVerdict{Test: "TestFailing", Verdict: "fail"}) ||
+		verdicts[1] != (TestVerdict{Test: "TestPassing", Verdict: "pass"}) {
+		t.Fatalf("per-test verdicts = %+v; want failing and passing siblings separately", verdicts)
+	}
+}

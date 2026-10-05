@@ -92,18 +92,37 @@ func cmdSyncDomain(args []string) error {
 	}
 
 	gp := graphPathForDomain(domainDir)
+	loadGraph := loader.LoadGraph
+	manifest, manifestErr := loader.LoadManifest(filepath.Join(domainDir, "manifest.json"))
+	if manifestErr == nil && (manifest.SelfHosting || manifest.RequirementsAuthority == loader.RequirementsAuthorityCode) {
+		loadGraph = loader.LoadGraphForCodeProjection
+	}
 
 	syncToday := *today
 	if syncToday == "" {
-		syncToday = "1970-01-01" // dry-run never persists a History entry timestamp for real; a real run requires --today (checked below).
+		syncToday = time.Now().Format("2006-01-02")
 	}
-	before, err := loader.LoadGraph(gp)
+	before, err := loadGraph(gp)
 	if err != nil {
 		return fmt.Errorf("sync-domain: load pre-sync graph: %w", err)
 	}
-	after, err := loader.LoadGraph(gp)
+	after, err := loadGraph(gp)
 	if err != nil {
 		return fmt.Errorf("sync-domain: load working graph: %w", err)
+	}
+	if before.SelfExecutingAtoms {
+		reg, err = selfspec.DiscoverAtoms(gate.SpecRootForGraph(before), reg)
+		if err != nil {
+			return fmt.Errorf("sync-domain: discover atoms: %w", err)
+		}
+		for _, previous := range before.Requirements {
+			if previous.Status == "REJECTED" {
+				continue
+			}
+			if _, exists := reg.Get(previous.ID); !exists {
+				return fmt.Errorf("sync-domain: requirement %s no longer has an executed atom; declare explicit REJECTED/replaces metadata for method removal or rename", previous.ID)
+			}
+		}
 	}
 
 	// --- Claim derivation (task #369, RAC3-A): for a discipline:"full"
@@ -147,6 +166,9 @@ func cmdSyncDomain(args []string) error {
 	report, err := selfspec.SyncGraph(after, reg, syncToday)
 	if err != nil {
 		return fmt.Errorf("sync-domain: SyncGraph: %w", err)
+	}
+	if err := loader.ValidateGraph(after); err != nil {
+		return fmt.Errorf("sync-domain: validate projected graph: %w", err)
 	}
 
 	diffHash, err := computeDomainSyncDiffHash(gp, report, addedStk)
@@ -428,25 +450,28 @@ func runDomainSyncGates(domainDir string, reg *registry.Registry[ontology.Requir
 
 	// Gate 7: confront.
 	var blockers []confrontBlockerDigest
+	requirements := syncConfrontRequirements(after, report)
 	for _, entry := range report.Entries {
 		claim, ok := domainClaimForConfront(reg, entry)
 		if !ok {
 			continue
 		}
-		result := diagnose.Confront(after, claim)
-		for _, h := range result.Settled {
+		result := diagnose.ConfrontRequirement(after, syncConfrontCandidate(requirements, entry.ID, claim))
+		for _, h := range result.FormalConflicts {
 			if !diagnose.IsBlockingHit(h) {
 				continue
 			}
-			if entry.Kind == selfspec.SyncKindChanged && h.ID == entry.ID {
+			if h.ID == entry.ID {
 				continue
 			}
 			blockers = append(blockers, confrontBlockerDigest{
 				EntryID:        entry.ID,
 				HitID:          h.ID,
 				HitClaim:       h.Claim,
-				OppositeMarker: h.OppositeMarker,
-				Shared:         h.Shared,
+				Classification: h.Classification,
+				Confidence:     h.Confidence,
+				Reasons:        h.Reasons,
+				ConflictIDs:    h.ConflictIDs,
 			})
 		}
 	}
@@ -454,6 +479,9 @@ func runDomainSyncGates(domainDir string, reg *registry.Registry[ontology.Requir
 
 	if len(blockers) > 0 {
 		if err := validateAckConflict(domainDir, ackOpts); err != nil {
+			return gr, err
+		}
+		if err := validateSyncConflictCoverage(ackOpts, blockers); err != nil {
 			return gr, err
 		}
 		if !ackOpts.hasAck() {
@@ -596,21 +624,14 @@ func runSyncDomainWrite(domainDir, gp string, before, after *ontology.Graph, rep
 // exactly, parameterized over report only (it never needs the registry
 // itself — the ack summary text is registry-independent).
 func appendDomainSyncAckHistory(graphPath string, report *selfspec.SyncReport, today string, ackOpts landAckOptions) error {
-	flagged := map[string]bool{}
-	for _, entry := range report.Entries {
-		if entry.Kind != selfspec.SyncKindAdded && entry.Kind != selfspec.SyncKindChanged {
-			continue
-		}
-		hasClaimSignal := entry.Kind == selfspec.SyncKindAdded
-		for _, d := range entry.FieldDiffs {
-			if d.Field == "Claim" {
-				hasClaimSignal = true
-			}
-		}
-		if hasClaimSignal {
-			flagged[entry.ID] = true
-		}
+	if len(report.Entries) == 0 {
+		return nil
 	}
+	g, err := loader.LoadGraph(graphPath)
+	if err != nil {
+		return fmt.Errorf("load graph for sync ack history: %w", err)
+	}
+	flagged := syncConfrontFlaggedEntries(g, report)
 	if len(flagged) == 0 {
 		return nil
 	}
@@ -625,10 +646,6 @@ func appendDomainSyncAckHistory(graphPath string, report *selfspec.SyncReport, t
 		summary = fmt.Sprintf("semantic conflict acknowledged — human decision recorded: %s", ackOpts.DecisionRef)
 	}
 
-	g, err := loader.LoadGraph(graphPath)
-	if err != nil {
-		return fmt.Errorf("load graph for sync ack history: %w", err)
-	}
 	touched := false
 	for i, r := range g.Requirements {
 		if !flagged[r.ID] {
@@ -671,11 +688,11 @@ func renderDomainSyncDryRun(out *os.File, report *selfspec.SyncReport, addedStk 
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "gate preview (7-9 — what a real --confirm-hash run would enforce):")
 	if len(gateReport.ConfrontBlockers) == 0 {
-		fmt.Fprintln(out, "  [7 confront] clear — no blocking semantic-conflict hits")
+		fmt.Fprintln(out, "  [7 confront] clear — no unresolved formal conflict carriers")
 	} else {
 		for _, h := range gateReport.ConfrontBlockers {
-			fmt.Fprintf(out, "  [7 confront] BLOCKED: %s vs %s: opposite markers: %s; shared: [%s]\n",
-				h.EntryID, h.HitID, h.OppositeMarker, strings.Join(h.Shared, ", "))
+			fmt.Fprintf(out, "  [7 confront] BLOCKED: %s vs %s: conflicts: [%s]; reasons: [%s]\n",
+				h.EntryID, h.HitID, strings.Join(h.ConflictIDs, ", "), strings.Join(h.Reasons, "; "))
 		}
 	}
 	if len(gateReport.NewViolations) == 0 {

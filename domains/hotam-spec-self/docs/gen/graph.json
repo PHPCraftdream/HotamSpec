@@ -284,6 +284,7 @@
     "R-conflict-min-two-members",
     "R-conflict-resolved-in-members-or-mediator",
     "R-conflict-structurally-visible",
+    "R-conformance-audit-own-fields",
     "R-confront-includes-aspirations",
     "R-constituting-requirements-converge",
     "R-constitution-is-index",
@@ -298,6 +299,7 @@
     "R-context-hook-piggybacks-cah-stamp",
     "R-core-imports-stdlib-or-hotam-spec-only",
     "R-core-periphery-import-ratchet",
+    "R-coverage-qualification-is-authored",
     "R-critical-core-methodology",
     "R-critical-core-per-domain",
     "R-critical-core-scope",
@@ -396,6 +398,8 @@
     "R-land-tier-trace",
     "R-land-tier-trace-best-effort",
     "R-land-tier-trace-skips-dry-run",
+    "R-language-bundle-complete",
+    "R-language-outputs-current",
     "R-latent-connectors-cluster-by-assumption",
     "R-lifecycle-abstraction",
     "R-lifecycle-type-exists",
@@ -474,6 +478,7 @@
     "R-scope-is-projection",
     "R-scope-overlap-generated",
     "R-seed-in-src",
+    "R-self-executing-atoms-own-structural-obligations",
     "R-sensorium-committed",
     "R-setup-claude-generates-settings",
     "R-shared-projections-mode-independent",
@@ -482,10 +487,12 @@
     "R-shared-tools-in-spec-tools",
     "R-signoff-preserved-in-substrate",
     "R-smoke-test",
+    "R-source-clause-links-resolve",
     "R-spawn-log-carries-isolation",
     "R-speak-by-reference",
     "R-speak-domain-register-by-default",
     "R-spec-link-embodied-vs-proven",
+    "R-specification-source-bytes-current",
     "R-speculative-aspects-frozen",
     "R-stable-conflict-identity",
     "R-stale-substrate",
@@ -738,6 +745,11 @@
           "at": "2026-07-17",
           "decided_by": "",
           "summary": "evidence: [task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…→[task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…; source_refs: [internal/generator/traceability.go, internal/generator/constitution_entities_framework_repomap_test.go]→[internal/generator/traceability.go, internal/generator/models.go, internal/generator/coverage.go, internal/generator/constitution_entities_framework…; implemented_by: [internal/generator/traceability.go:BuildTraceability]→[internal/generator/traceability.go:BuildTraceability, internal/generator/models.go:BuildModels, internal/generator/coverage.go:BuildCoverage]; verified_by: [internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture]→[internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture, internal/generator/constitution_ent…"
+        },
+        {
+          "at": "2026-10-05",
+          "decided_by": "",
+          "summary": "field VerifiedBy: [internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture internal/generator/constitution_entities_framework_repomap_test.go:TestBuildCoverage_ByteIdenticalToFixture] -> [internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture internal/generator/scenario_traceability_test.go:TestBuildCoverage_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput]"
         }
       ],
       "id": "R-authored-spec-projections-are-derived",
@@ -759,7 +771,7 @@
       "verified_by": [
         "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture",
         "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture",
-        "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildCoverage_ByteIdenticalToFixture"
+        "internal/generator/scenario_traceability_test.go:TestBuildCoverage_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput"
       ],
       "why": "PLAN-authored-spec-discipline.md §3 draws the authored/generated line at the directory level (\"spec/ -- AUTHORED код-спека -- пишется РУКАМИ, движок НЕ перезаписывает\" versus \"docs/gen/ -- ГЕНЕРИРУЕМЫЕ проекции -- движок перезаписывает\"), and §7 (\"Генерируемые проекции (вместо кода)\") names the specific four documents this requirement covers: TRACEABILITY.md, MODELS.md, COVERAGE.md, UNENFORCED.md. This is the natural-language DEFINITION half of the authored/generated split; it is distinct from R-domain-overview-projection (#201/PIPELINE.md), which governs a DIFFERENT generated document (the Process/EntityType-driven whole-domain overview, unrelated to spec/ code) and from R-requirement-freshness-fields (#the history mechanism), which governs a DIFFERENT derived artifact (per-node History, not a whole document). Naming this requirement closes the same gap R-domain-overview-projection closes for PIPELINE.md, but for the NEW authored-spec-era documents PLAN §7 introduces -- without this node, an agent reading the self-domain graph would find no anchor stating that TRACEABILITY/MODELS/COVERAGE/UNENFORCED are derived, not authored, and might be tempted to hand-edit them the way spec/ itself is meant to be hand-edited, exactly inverting PLAN §3's authored/generated boundary. Honestly PROSE/feature-blocked today (R-speculative-aspects-frozen's pattern): none of these four generators exist yet in internal/generator (task #225, PLAN §11, not yet executed at authorship time) -- this requirement fixes the CONTRACT the future generator must honor (never hand-write these four documents) before the generator itself is built, the same order R-domain-overview-projection followed for PIPELINE.md."
     },
@@ -809,6 +821,65 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "SPLIT from R-work-within-launch-dir 2026-07-13 (task #115, decision brief docs/reviews/2026-07-13-category-c2-decision-brief.md section 6 option (a')): the original 'operator shall confine all file mutations to its launch directory' claim bundled two genuinely different things -- (1) committed framework CODE that writes into the host home (statically, mechanically checkable: an AST scanner over committed source), and (2) a live agent shelling out at RUNTIME through bash/tool-calls to touch the home dir (not statically checkable -- discipline of prose). This atom is the structural/mechanically-checkable half (1); the residual live-conduct half (2) stays at R-work-within-launch-dir (now INHERENTLY_PROSE, same category as R-agent-conduct-is-rules-not-tests). The original enforcement was a Python AST scanner (tests/test_launch_dir_write_scope.py, ENFORCED 2026-07-10) that was NOT carried forward into the Go port (reverted to PROSE 2026-07-12); this atom re-ports that scanner to Go. Resolver verdict 2026-07-05 stands verbatim (from the original why): the framework is a guest in the host's home -- it lives strictly within the repository it was launched in; everything outside is sovereign and untouched absent an explicit user request. Trigger for the original rule: the operator once proposed setup_context_hook.py --patch-global --apply, which patched the global host configuration (a host-sovereignty violation that a host update overwrites anyway). EXACT MECHANICAL RULE (enforced by TestLaunchDirWriteScope_NoHomeWriteColocation in internal/selfcheck/launch_dir_scope_test.go): for every NON-TEST, NON-TESTDATA .go file under internal/ and cmd/hotam/, no function body may contain BOTH a home-directory reference (os.UserHomeDir(), os.Getenv(\"HOME\"), os.Getenv(\"USERPROFILE\"), or a string literal starting with \"~/\") AND a filesystem-write sink (os.WriteFile/Create/Mkdir/MkdirAll/Remove/RemoveAll/Rename/Symlink/Chmod); the conjunction within one *ast.FuncDecl body is the hit (same-function co-location, the scope within which a computed home path can flow into a write -- matches the spirit of the original Python scanner). os.OpenFile is deliberately excluded (read-or-write; the explicit write primitives cover the unambiguous case); os/user.Current().HomeDir is out of scope today (this repo imports neither, and would only matter under the same conjunction). The framework tree currently has ZERO home-directory references (verified 2026-07-13), so the scan is green today and fails RED the moment a committed function computes a home path next to a write sink. Refines R-work-within-launch-dir (the broad launch-dir principle, whose live-conduct residual carries the genuinely-unobservable half)."
+    },
+    {
+      "assumptions": [],
+      "claim": "The conformance audit is triggered only by its own declared rule_cases, clauses, profiles, compositions, or requirement atom_kind, cases, clause_links, strength, applicability, or precedence fields. It validates and reports declared structural conformance evidence without claiming semantic completeness, corpus-wide compliance, or automatic implementation blame.",
+      "enforced_by": [
+        "check_conformance_audit"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        }
+      ],
+      "id": "R-conformance-audit-own-fields",
+      "implemented_by": [
+        "internal/invariants/conformance_audit.go:checkConformanceAudit"
+      ],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "docs/PLAN-atomic-conformance-spec.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "Clause inventories, rule cases, profiles and composition provenance introduce distinct obligations; an existing language, discipline, or self-executing opt-in is not consent to those obligations."
+    },
+    {
+      "assumptions": [],
+      "claim": "Coverage declarations qualify unsupported recommendations, unreachable profile-specific branches, or unverified obligations with explicit rationale. An unreachable declaration includes its profile and source links; verified and discrepancy states come from execution evidence, not an authored passing verdict.",
+      "enforced_by": [
+        "check_coverage_declarations_justified"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-02",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        }
+      ],
+      "id": "R-coverage-qualification-is-authored",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/source/source.go",
+        "internal/invariants/source_evidence.go",
+        "internal/ontology/source_evidence.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "A declared limitation or domain proof differs from an observed test verdict and must not hide an actual discrepancy. The qualification duty activates only for the new explicit Coverage field."
     },
     {
       "assumptions": [],
@@ -1109,6 +1180,66 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "TaskList P1-77 / external review flagged a concrete bug in the pre-fix cmd/hotam/land.go:86: step (a) apply writes a new graph.json to disk, but if step (b) gen-spec or step (c) all-violations then fails, the command returned early and left that NEW graph.json sitting next to STALE (pre-land) docs/gen/*.md — the exact drift `hotam land` exists to prevent, now created BY a failed land instead of prevented by a successful one. The fix is a compensating-rollback design, not two-phase commit on the filesystem: cmdLand snapshots graph.json + graph.lock (snapshotGraphFiles) before step (a) ever writes; if step (b) or (c) fails, rollbackLand restores those exact pre-land bytes and then re-runs genSpec. This is sufficient (not just a partial fix) specifically because genSpec is a PURE function of the on-disk graph.json — it calls loadDomainGraph fresh every invocation and deterministically re-renders every doc from it, so restoring the graph and re-rendering restores the docs to the identical pre-land content too, without needing to snapshot docs/gen/*.md separately. A first-ever land into a brand-new domain (graph.json/graph.lock absent pre-land) rolls back to absence via restoreGraphFile's remove-if-absent path, keeping rollback idempotent and correct even at that boundary. Proven 2026-07-13 by three tests in cmd/hotam/land_test.go: TestCmdLand_GenSpecFailure_RollsBackGraphJSON forces a genSpec failure after a successful apply via a --claude-md path pointed at a directory, and proves graph.json is byte-identical to the pre-land baseline and graph.lock is removed again (pre-land state was absent); TestRollbackLand_RestoresFilesAndRegeneratesDocs unit-tests the rollbackLand helper directly, proving the docs are re-rendered to baseline content (not just the graph file restored) after a simulated post-apply, post-gen-spec failure; TestCmdLand_SuccessPathDoesNotRollBack is the regression guard proving the happy path still lands normally and does NOT spuriously roll back (graph.lock remains, new node present in both graph.json and docs) — together these prove the rollback fires exactly when needed and never when not. This is the SAME situation as the sibling R-land-tier-trace/-best-effort/-skips-dry-run requirements (also `hotam land` CLI-orchestration behavior), except those three remain genuinely unimplemented (no runtime land-log writer exists yet in cmd/hotam), so they stay PROSE correctly — this requirement is the one case among the wave-6 closeable-debt list where the enforcer already existed but the resolver could not see it. ENFORCED 2026-07-13: TestCmdLand_GenSpecFailure_RollsBackGraphJSON, TestRollbackLand_RestoresFilesAndRegeneratesDocs, TestCmdLand_SuccessPathDoesNotRollBack in cmd/hotam/land_test.go, resolver widened to cover cmd/ this session (task #97) — internal/gate.TestFuncNames (mechanism #1, the Test*-name half of enforced_by resolution) now walks both internal/**/*_test.go and cmd/**/*_test.go, so a real Go test enforcer living in cmd/hotam is no longer structurally invisible to check_enforced_by_resolvable / hotam gate just because of which directory it happens to live in. Mechanism #2 (the check_* literal -> tests map) stays scoped to internal/invariants only, per its own unchanged reasoning."
+    },
+    {
+      "assumptions": [],
+      "claim": "For a domain declaring more than one language, each atom has exactly one non-empty source phrase for every declared language; malformed, duplicate, unknown, or missing language blocks are reported. This is structural translation completeness, not semantic equivalence.",
+      "enforced_by": [
+        "check_language_bundle_complete"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        }
+      ],
+      "id": "R-language-bundle-complete",
+      "implemented_by": [
+        "internal/invariants/language_bundle.go:checkLanguageBundleComplete"
+      ],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "docs/PLAN-atomic-multilingual-spec.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "The language bundle has its own translation-completeness trigger; enabling an older atom or scenario mode must not silently impose a later obligation."
+    },
+    {
+      "assumptions": [],
+      "claim": "Whenever a domain explicitly declares a language list, the expected generated language bundle is fresh across every emitted localized document, SPEC index and shard, and boot crystal; the one-language layout keeps its existing filenames.",
+      "enforced_by": [
+        "check_language_outputs_current"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        }
+      ],
+      "id": "R-language-outputs-current",
+      "implemented_by": [
+        "cmd/hotam/language_freshness_wiring.go:checkLanguageOutputsCurrentReal"
+      ],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "docs/PLAN-atomic-multilingual-spec.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "Freshness must cover the complete expected output inventory rather than only the legacy SPEC.md; explicit single-language locales also change service-rendered content and have their own freshness trigger."
     },
     {
       "assumptions": [],
@@ -1478,6 +1609,50 @@
     },
     {
       "assumptions": [],
+      "claim": "A domain explicitly declaring self_executing_atoms:true opts into three structural obligations: every executed method subject has a non-empty first doc phrase with no conflicting explicit title; every subject is a zero-argument single-result method, legacy value facts return exactly one expression, Holds predicates return bool and may branch, and explicit typed rule methods may branch; each Fact carries exactly one bound method subject, never a closure or a multi-subject carrier. check_fact_method_has_phrase, check_fact_method_atomic, and check_one_subject_per_fact enforce these obligations only under this independent opt-in, not under already-spent discipline, claim-authority, public-surface-authority, or scenario-authority triggers. These checks establish structural correspondence, not semantic proof of the authored claim.",
+      "enforced_by": [
+        "check_fact_method_has_phrase",
+        "check_fact_method_atomic",
+        "check_one_subject_per_fact"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        },
+        {
+          "at": "2026-10-01",
+          "decided_by": "",
+          "summary": "semantic conflict acknowledged — human decision recorded: 2026-10-01 user request to implement docs/PLAN-self-executing-atoms.md F4: independent self_executing_atoms opt-in; opposite-marker hits refer to unrelated obligations"
+        },
+        {
+          "at": "2026-10-05",
+          "decided_by": "",
+          "summary": "field Claim: A domain explicitly declaring self_executing_atoms:true opts into three structural obligations: every executed method subject has a non-empty first doc phrase with no conflicting explicit title; each value method is a zero-argument method returning exactly one expression, while a Holds bool relation predicate may branch; and each Fact carries exactly one bound method subject, never a closure or a multi-subject carrier. check_fact_method_has_phrase, check_fact_method_atomic, and check_one_subject_per_fact enforce these obligations only under this independent opt-in, not under already-spent discipline, claim-authority, public-surface-authority, or scenario-authority triggers. These checks establish structural correspondence, not semantic proof of the authored claim. -> A domain explicitly declaring self_executing_atoms:true opts into three structural obligations: every executed method subject has a non-empty first doc phrase with no conflicting explicit title; every subject is a zero-argument single-result method, legacy value facts return exactly one expression, Holds predicates return bool and may branch, and explicit typed rule methods may branch; each Fact carries exactly one bound method subject, never a closure or a multi-subject carrier. check_fact_method_has_phrase, check_fact_method_atomic, and check_one_subject_per_fact enforce these obligations only under this independent opt-in, not under already-spent discipline, claim-authority, public-surface-authority, or scenario-authority triggers. These checks establish structural correspondence, not semantic proof of the authored claim."
+        }
+      ],
+      "id": "R-self-executing-atoms-own-structural-obligations",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "docs/PLAN-self-executing-atoms.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md",
+        "internal/invariants/fact_methods.go",
+        "internal/invariants/fact_methods_test.go",
+        "internal/gate/atom_source.go",
+        "internal/loader/manifest.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "Self-executing atoms derive claims and traceability from executed methods rather than parallel authored requirement titles. Structural phrase, atomicity, and single-subject checks make that derivation honest without crossing authored_links' semantic-audit boundary. Their new duty belongs to its own self_executing_atoms manifest trigger, preserving unchanged behavior for legacy domains."
+    },
+    {
+      "assumptions": [],
       "claim": "Every docs/gen/ projection generated by plain `hotam gen-spec` (implemented_by TRACEABILITY.md/COVERAGE.md/REPO-MAP.md's own Build* functions) MUST render byte-identically regardless of whether the SAME `gen-spec` invocation also passed `--spec`, EXCEPT SPEC.md itself, which ALWAYS remains the sole `--spec`-shaped artifact whose staleness is separately enforced by check_spec_md_current.",
       "enforced_by": [
         "TestGenSpec_SharedProjectionsModeIndependent"
@@ -1519,6 +1694,35 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "task #334 (R4F-bind-test, fourth external review §4.3): the requirement landed SETTLED/PROSE with empty implemented_by/verified_by despite a real regression test for exactly this property already existing and being named in the requirement's own claim evidence — TestGenSpec_SharedProjectionsModeIndependent (cmd/hotam/gen_spec_test.go). This claim is about GENERATOR/engine behavior (a property of cmd/hotam/gen_spec.go and internal/generator/traceability.go+coverage.go), the same shape as the neighboring R-empty-content-gen-notice, which binds via enforced_by to a bare Test* name rather than the authored implemented_by+verified_by path (that path is reserved for path-qualified references into a domain's own authored spec/ tree, per internal/invariants/authored_links.go and PLAN-authored-spec-discipline.md §5/§12's disjunctive gate — an engine-self-hosting requirement is not forced to fabricate one). Binding enforced_by alone satisfies check_enforced_requires_enforcer_or_authored_link's disjunction and check_enforced_by_resolvable resolves TestGenSpec_SharedProjectionsModeIndependent via the repo-wide cmd/**/*_test.go scan. Mechanical traceability-completion fix, not a new judgment call — decision-ref: task #334, review-sourced finding, linking an existing test to an existing requirement."
+    },
+    {
+      "assumptions": [],
+      "claim": "An explicitly authored source_links entry resolves to a declared source and an existing heading or line range. A valid source-to-method-to-test link establishes traceability, not automatic semantic completeness.",
+      "enforced_by": [
+        "check_source_links_resolve"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-02",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        }
+      ],
+      "id": "R-source-clause-links-resolve",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/source/source.go",
+        "internal/invariants/source_evidence.go",
+        "internal/ontology/source_evidence.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "SourceLinks provide the typed seam from a source clause to its executable carrier and recorded observations. Legacy free-text SourceRefs retain their existing meaning."
     },
     {
       "assumptions": [
@@ -1609,6 +1813,35 @@
         "internal/proposal/proposal_test.go:TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal"
       ],
       "why": "PLAN-authored-spec-discipline.md §4 (\"Схема связи: requirement -> code -> test\") and §12 (resolver decision 2026-07-16) establish implemented_by/verified_by as two separate fields on Requirement (internal/ontology/requirement.go), landed additively in task #223 and already carrying inline doc comments naming the same embodied/proven distinction (requirement.go:80-96: \"ImplementedBy names WHERE this requirement is embodied\", \"VerifiedBy names WHERE this requirement is PROVEN\"). R-authored-spec-links-mechanically-checked (#223) and R-enforced-requires-enforcer-or-authored-link (#223) already model the MECHANICAL checking of these fields (symbol/test resolvability, non-vacuousness, no-skip, no-reuse) and the DISJUNCTIVE ENFORCED gate that accepts either enforced_by or implemented_by+verified_by together -- but neither requirement states the CONCEPTUAL distinction itself: why two fields exist, what each one MEANS, and why they are not interchangeable. Without this requirement as a first-class node, the SpecLink concept (PLAN §4's requirement->code->test schema) exists only in code comments and PLAN prose, not as a graph anchor a future agent can cite when modeling a business domain's own spec/ tree (task #224 pilot, task #236 recursion into hotam-spec-self's own engine code). This requirement is the missing OBJECT-level node: it names the SpecLink concept and its two fields' distinct semantics, one layer above the two already-landed mechanical-check requirements which govern HOW the fields are validated, not WHAT they mean. F5 remediation (2026-07-17, @fh adversarial review): the previous carrier (implemented_by internal/gate/spec_resolver.go:ResolveSpecSymbol, verified_by a symbol-resolution staleness mutation test) proved a SINGLE field resolves correctly, not that the two fields are ORTHOGONAL -- the claim's own load-bearing word. The new carrier is internal/proposal/mutate.go's resolveImplementedBy AND resolveVerifiedBy together -- two structurally near-identical wrapper functions (both delegate to coalesceSlice with the same clear-sentinel handling) that are consequently easy to cross-wire by accident, proven distinct and independently-addressable by TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal (internal/proposal/proposal_test.go): an implemented_by-only UPDATE leaves verified_by byte-identical, a verified_by-only UPDATE leaves implemented_by byte-identical, and each field's own clear-sentinel clears only itself. This is a genuine ORTHOGONALITY proof (mutation-verified: swapping the two resolve calls in mutate.go's apply path makes the test fail), not merely a staleness/resolvability check on one field in isolation."
+    },
+    {
+      "assumptions": [],
+      "claim": "An explicitly declared specification source carries its identity, path, declared version and SHA-256; its current bytes are checked against that digest. Missing, invalid and drifted sources are reported as structural failures, not as semantic proof or an invented version.",
+      "enforced_by": [
+        "check_specification_sources_current"
+      ],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-02",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        }
+      ],
+      "id": "R-specification-source-bytes-current",
+      "implemented_by": [],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [
+        "internal/source/source.go",
+        "internal/invariants/source_evidence.go",
+        "internal/ontology/source_evidence.go"
+      ],
+      "status": "SETTLED",
+      "verified_by": [],
+      "why": "Source drift must remain visible when executable requirements cite a frozen external specification. The new duty activates through specification_sources, not a pre-existing discipline flag."
     },
     {
       "assumptions": [],
@@ -2371,7 +2604,8 @@
       ],
       "claim": "A set of Proposed* struct kinds (ProposedRequirement, ProposedConflictTransition, ProposedRejection, ProposedConflict, ProposedAssumptionTransition, et al.) shall exist in `internal/proposal` as the typed protocol for resolver-approved operator changes, decoded strictly (snake_case json tags, unknown fields rejected).",
       "enforced_by": [
-        "TestProposedStructs_JSONTagsRoundTrip"
+        "TestParseProposal_UnknownFieldRejected",
+        "TestParseProposal_CamelCaseOldFormatRejected"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -2390,6 +2624,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "claim: Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for resolver-approved…→A set of Proposed* struct kinds (ProposedRequirement, ProposedConflictTransition, ProposedRejection, ProposedConflict, ProposedAssumptionTransition, …; why: Atom of R-active-loop-playbooks (data-model concern). hotam_spec/proposal.py defines the three types.→Atom of R-active-loop-playbooks (data-model concern). `internal/proposal/types.go` defines the Proposed* structs (12 kinds today: Requirement, Confli…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/proposal/types.go, internal/proposal/mutate.go, internal/proposal/validate.go]"
+        },
+        {
+          "at": "2026-10-02",
+          "decided_by": "",
+          "summary": "field EnforcedBy: [TestProposedStructs_JSONTagsRoundTrip] -> [TestParseProposal_UnknownFieldRejected TestParseProposal_CamelCaseOldFormatRejected]"
         }
       ],
       "id": "R-active-loop-protocol",
@@ -6799,10 +7038,8 @@
         "A-python-stack"
       ],
       "claim": "Every tool registered in the methodology.Tools registry whose entry opens with a Canon: §<topic> marker shall be projected into a STRUCTURAL tool-derived requirement R-tool-<basename> with that tool's claim text, enforced by its named enforcer test when one exists.",
-      "enforced_by": [
-        "TestScanToolRequirements_ProjectsEveryEntryToRequirement"
-      ],
-      "enforcement": "ENFORCED",
+      "enforced_by": [],
+      "enforcement": "STRUCTURAL",
       "evidence": [],
       "history": [
         {
@@ -6829,6 +7066,11 @@
           "at": "2026-07-13",
           "decided_by": "",
           "summary": "why: The sensor-substrate inversion taken one step deeper: not only does code generate the operator's prompt, the tool IS its own requirement. The claim i…→The sensor-substrate inversion taken one step deeper: not only does code generate the operator's prompt, the tool IS its own requirement. The claim i…; enforcement: PROSE→ENFORCED; enforced_by: []→[TestScanToolRequirements_ProjectsEveryEntryToRequirement]"
+        },
+        {
+          "at": "2026-10-02",
+          "decided_by": "",
+          "summary": "field Enforcement: ENFORCED -> STRUCTURAL; field EnforcedBy: [TestScanToolRequirements_ProjectsEveryEntryToRequirement] -> []"
         }
       ],
       "id": "R-tool-is-its-own-requirement",
@@ -9005,7 +9247,7 @@
       "assumptions": [],
       "claim": "The CONSTITUTION index in root CLAUDE.md shall render only business and discipline atoms, relocating framework-plumbing atoms to a generated docs/gen/FRAMEWORK-INVARIANTS.md named by an in-block pointer, with the partition total equal to all SETTLED atoms.",
       "enforced_by": [
-        "TestBuildFrameworkInvariants_ByteIdenticalToFixture"
+        "TestFrameworkPartitionPreservesSettledObligationsAndExcludesDrafts"
       ],
       "enforcement": "ENFORCED",
       "evidence": [],
@@ -9019,6 +9261,11 @@
           "at": "2026-07-12",
           "decided_by": "",
           "summary": "enforced_by: [test_constitution.py::test_constitution_partitions_all_settled, test_constitution.py::test_constitution_pointer_to_framework_invariants, test_consti…→[TestBuildFrameworkInvariants_ByteIdenticalToFixture]; settled_at: 2026-07-02→2026-07-12"
+        },
+        {
+          "at": "2026-10-02",
+          "decided_by": "",
+          "summary": "field EnforcedBy: [TestBuildFrameworkInvariants_ByteIdenticalToFixture] -> [TestFrameworkPartitionPreservesSettledObligationsAndExcludesDrafts]"
         }
       ],
       "id": "R-constitution-separates-plumbing",

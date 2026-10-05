@@ -87,6 +87,23 @@ func resolveVerifiedBy(newVal, oldVal []string) []string {
 	return coalesceSlice(newVal, oldVal)
 }
 
+func coalesceSourceLinks(newVal, oldVal []ontology.SourceLink) []ontology.SourceLink {
+	if len(newVal) == 0 {
+		return oldVal
+	}
+	cp := make([]ontology.SourceLink, len(newVal))
+	copy(cp, newVal)
+	return cp
+}
+
+func cloneCoverageDeclaration(coverage *ontology.CoverageDeclaration) *ontology.CoverageDeclaration {
+	if coverage == nil {
+		return nil
+	}
+	copy := *coverage
+	return &copy
+}
+
 // resolveBlockedOn is the blocked_on-specific coalesce, mirroring
 // resolveEnforcedBy's shape for a scalar string field: the sentinel
 // "<clear>" clears to ""; any other non-empty value replaces; empty
@@ -101,6 +118,16 @@ func resolveBlockedOn(newVal, oldVal string) string {
 	return coalesceStr(newVal, "", oldVal)
 }
 
+func resolveMetadataString(newVal, oldVal string) string {
+	if newVal == clearSentinel {
+		return ""
+	}
+	return coalesceStr(newVal, "", oldVal)
+}
+
+func isClaimTextsClear(texts ontology.LocalizedText) bool {
+	return len(texts) == 1 && texts[clearSentinel] == ""
+}
 func coalesceRelations(newVal, oldVal []ontology.Relation) []ontology.Relation {
 	if len(newVal) == 0 {
 		return oldVal
@@ -218,6 +245,35 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied := existing
 		applied.Claim = p.Claim
 		applied.Owner = p.Owner
+		metadata := ontology.CloneRequirementMetadata(ontology.Requirement{
+			ClaimTexts: p.ClaimTexts, Cases: p.Cases, ClauseLinks: p.ClauseLinks,
+			Applicability: p.Applicability, Precedence: p.Precedence,
+		})
+		if p.ClaimTexts != nil {
+			if isClaimTextsClear(p.ClaimTexts) {
+				applied.ClaimTexts = nil
+			} else {
+				applied.ClaimTexts = metadata.ClaimTexts
+			}
+		}
+		applied.AtomKind = resolveMetadataString(p.AtomKind, existing.AtomKind)
+		if p.Cases != nil {
+			applied.Cases = metadata.Cases
+		}
+		if p.ClauseLinks != nil {
+			applied.ClauseLinks = metadata.ClauseLinks
+		}
+		if p.Strength == clearSentinel {
+			applied.Strength = ""
+		} else {
+			applied.Strength = resolveMetadataString(p.Strength, existing.Strength)
+		}
+		if p.Applicability != nil {
+			applied.Applicability = metadata.Applicability
+		}
+		if p.Precedence != nil {
+			applied.Precedence = metadata.Precedence
+		}
 		applied.Status = p.Status
 		applied.Why = coalesceStr(p.Why, "", existing.Why)
 		applied.Assumptions = coalesceSlice(p.Assumptions, existing.Assumptions)
@@ -234,6 +290,10 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied.EnforcedBy = resolveEnforcedBy(p.EnforcedBy, existing.EnforcedBy)
 		applied.ImplementedBy = resolveImplementedBy(p.ImplementedBy, existing.ImplementedBy)
 		applied.VerifiedBy = resolveVerifiedBy(p.VerifiedBy, existing.VerifiedBy)
+		applied.SourceLinks = coalesceSourceLinks(p.SourceLinks, existing.SourceLinks)
+		if p.Coverage != nil {
+			applied.Coverage = cloneCoverageDeclaration(p.Coverage)
+		}
 		applied.Relations = coalesceRelations(p.Relations, existing.Relations)
 		// Enforceability coalesce: same asymmetry bug the Enforcement field
 		// above was already fixed for (see that field's comment). The old
@@ -268,6 +328,9 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		applied.Evidence = coalesceSlice(p.Evidence, existing.Evidence)
 		applied.SourceRefs = coalesceSlice(p.SourceRefs, existing.SourceRefs)
 		applied.BlockedOn = resolveBlockedOn(p.BlockedOn, existing.BlockedOn)
+		if err := validateRequirementLocalizedClaim(g, applied); err != nil {
+			return err
+		}
 
 		resolvedSignoff, err := resolveHistorySignoff(g, p.Signoff, today)
 		if err != nil {
@@ -331,6 +394,9 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 				"Land the requirement first, then land a separate UPDATE proposal carrying the "+
 				"signoff.", p.ID)
 	}
+	if p.AtomKind == clearSentinel || p.Strength == clearSentinel || isClaimTextsClear(p.ClaimTexts) {
+		return validationError("clear sentinels are only valid when updating an existing requirement.")
+	}
 
 	created := defaultStr(p.CreatedAt, today)
 	settledAt := p.SettledAt
@@ -349,6 +415,8 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		EnforcedBy:     append([]string(nil), p.EnforcedBy...),
 		ImplementedBy:  append([]string(nil), p.ImplementedBy...),
 		VerifiedBy:     append([]string(nil), p.VerifiedBy...),
+		SourceLinks:    append([]ontology.SourceLink(nil), p.SourceLinks...),
+		Coverage:       cloneCoverageDeclaration(p.Coverage),
 		MTag:           p.MTag,
 		Enforceability: defaultStr(p.Enforceability, ontology.EnforceabilityENFORCEABLE),
 		Summary:        p.Summary,
@@ -359,25 +427,105 @@ func (p ProposedRequirement) mutate(g *ontology.Graph, today string) error {
 		Evidence:       append([]string(nil), p.Evidence...),
 		SourceRefs:     append([]string(nil), p.SourceRefs...),
 		BlockedOn:      p.BlockedOn,
+		ClaimTexts:     p.ClaimTexts,
+		AtomKind:       p.AtomKind,
+		Cases:          p.Cases,
+		ClauseLinks:    p.ClauseLinks,
+		Strength:       p.Strength,
+		Applicability:  p.Applicability,
+		Precedence:     p.Precedence,
+	}
+	newReq = ontology.CloneRequirementMetadata(newReq)
+	if err := validateRequirementLocalizedClaim(g, newReq); err != nil {
+		return err
 	}
 	g.Requirements = append(g.Requirements, newReq)
 	return nil
 }
+func validateRequirementLocalizedClaim(g *ontology.Graph, r ontology.Requirement) error {
+	if g.Languages == nil {
+		if r.ClaimTexts != nil {
+			return validationError("claim_texts requires an explicit languages declaration.")
+		}
+		return nil
+	}
+	if len(g.Languages) == 0 {
+		return validationError("languages must contain at least one supported language.")
+	}
+	defaultLanguage := g.DefaultLanguage
+	if defaultLanguage == "" && len(g.Languages) == 1 {
+		defaultLanguage = g.Languages[0]
+	}
+	if len(g.Languages) > 1 && defaultLanguage == "" {
+		return validationError("default_language is required when multiple languages are declared.")
+	}
+	if r.ClaimTexts == nil {
+		if len(g.Languages) > 1 {
+			return validationError("claim_texts must cover every declared language.")
+		}
+		return nil
+	}
+	for _, issue := range ontology.ValidateLocalizedText(r.ClaimTexts) {
+		return validationError("claim_texts[%q]: %s.", issue.ID, issue.Message)
+	}
+	declared := make(map[string]struct{}, len(g.Languages))
+	for _, language := range g.Languages {
+		declared[language] = struct{}{}
+		text, ok := r.ClaimTexts[language]
+		if !ok || strings.TrimSpace(text) == "" {
+			return validationError("claim_texts must include non-empty text for %q.", language)
+		}
+	}
+	for language := range r.ClaimTexts {
+		if _, ok := declared[language]; !ok {
+			return validationError("claim_texts language %q is not declared.", language)
+		}
+	}
+	if defaultLanguage != "" && r.ClaimTexts[defaultLanguage] != r.Claim {
+		return validationError("claim must exactly match claim_texts[%q].", defaultLanguage)
+	}
+	return nil
+}
 
-// cloneGraph returns a deep copy of g via a JSON marshal/unmarshal round-trip.
-// This is a simple, correct-by-construction clone (every ontology type here
-// is a plain data struct that already round-trips through graph.json) — no
-// hand-written deep-copy code to keep in sync as fields are added. It is
-// used ONLY for in-memory simulation (SimulateRequirementResult); it never
-// touches disk. DomainDir (json:"-") does not round-trip, but
-// SimulateRequirementResult's caller (provenanceGate) never reads it off the
-// simulated copy, so that is not a concern here.
+// cloneGraph deep-copies serialized graph content plus runtime configuration
+// loaded from manifest.json. The graph's invocation-local render selection
+// and source metadata must survive simulations without sharing mutable slices.
 func cloneGraph(g *ontology.Graph) (*ontology.Graph, error) {
 	data, err := json.Marshal(g)
 	if err != nil {
 		return nil, fmt.Errorf("clone graph: marshal: %w", err)
 	}
-	var out ontology.Graph
+	out := *g
+	out.InvocationState = nil
+	out.Axes = nil
+	out.Stakeholders = nil
+	out.Assumptions = nil
+	out.Requirements = nil
+	out.Conflicts = nil
+	out.Operators = nil
+	out.Processes = nil
+	out.Goals = nil
+	out.EntityTypes = nil
+	out.Entities = nil
+	if g.Languages != nil {
+		out.Languages = make([]string, len(g.Languages))
+		copy(out.Languages, g.Languages)
+	}
+	if g.SpecificationSources != nil {
+		out.SpecificationSources = make([]ontology.SpecificationSource, len(g.SpecificationSources))
+		copy(out.SpecificationSources, g.SpecificationSources)
+	}
+	if g.Conformance != nil {
+		conformanceData, err := json.Marshal(g.Conformance)
+		if err != nil {
+			return nil, fmt.Errorf("clone graph: marshal conformance: %w", err)
+		}
+		var conformance ontology.ConformanceConfig
+		if err := json.Unmarshal(conformanceData, &conformance); err != nil {
+			return nil, fmt.Errorf("clone graph: unmarshal conformance: %w", err)
+		}
+		out.Conformance = &conformance
+	}
 	if err := json.Unmarshal(data, &out); err != nil {
 		return nil, fmt.Errorf("clone graph: unmarshal: %w", err)
 	}

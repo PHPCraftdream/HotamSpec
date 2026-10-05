@@ -3,6 +3,7 @@ package generator
 import (
 	"strings"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/localization"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
@@ -15,31 +16,35 @@ import (
 // BuildFrameworkInvariants / frameworkinvariants.go for the sibling
 // "static intro + derived list" pattern this file follows for its own
 // Tools section).
-var repoMapFrameworkBodyContent = strings.Join([]string{
-	"### Repository Map",
-	"",
-	"**Framework body** (`internal/ontology/`)",
-	"",
-	"- `internal/ontology/assumption.go` — a claim with its OWN lifecycle (the root of context drift).",
-	"- `internal/ontology/axis.go` — controlled vocabulary of tension dimensions.",
-	"- `internal/ontology/conflict.go` — the first-class connector NODE, a held property of the discipline (not its headline; J1, commit b2c58c8).",
-	"- `internal/ontology/entity.go` — domain-declared business concept with its own lifecycle.",
-	"- `internal/ontology/graph.go` — the requirement store (with conflict bookkeeping) and its traversal helpers.",
-	"- `internal/ontology/graph_traversal.go` — traversal helpers over the requirement store.",
-	"- `internal/ontology/lifecycle.go` — the generic state-machine value-type (framework keystone).",
-	"- `internal/ontology/operator.go` — the acting facet of a Stakeholder (M20: NEW TYPE).",
-	"- `internal/ontology/process.go` — opt-in behavioral aspect (M12).",
-	"- `internal/ontology/requirement.go` — a requirement: an atomic object with a method whose scenario generates its text.",
-	"- `internal/ontology/signoff.go` — the frozen provenance record of a human resolver decision.",
-	"- `internal/ontology/stakeholder.go` — who owns requirements and resolvers conflicts.",
-	"- `internal/invariants/` — structural rules over the requirement store (the check_* layer).",
-	"- `internal/diagnose/` — the operator's next-action diagnosis (what_now equivalent).",
-	"- `internal/proposal/` — structured operator-→-resolver change proposals + the mechanical apply writer.",
-	"- `internal/loader/` — reads a domain's graph.json into an in-memory Graph.",
-	"- `internal/generator/` — regenerates docs/gen/ from the graph (the gen-spec engine).",
-	"- `internal/gate/` — T1 tiered LAND gate: select a targeted test subset instead of the full suite.",
-	"- `internal/paths/` — project-root resolution for the consumer's data directory.",
-}, "\n")
+var repoMapFrameworkBodyContent = repoMapFrameworkBodyContentForLanguage("")
+
+func repoMapFrameworkBodyContentForLanguage(language string) string {
+	return strings.Join([]string{
+		localization.Text(language, "### Repository Map"),
+		"",
+		localization.Text(language, "**Framework body** (`internal/ontology/`)"),
+		"",
+		localization.Text(language, "- `internal/ontology/assumption.go` — a claim with its OWN lifecycle (the root of context drift)."),
+		localization.Text(language, "- `internal/ontology/axis.go` — controlled vocabulary of tension dimensions."),
+		localization.Text(language, "- `internal/ontology/conflict.go` — the first-class connector NODE, a held property of the discipline (not its headline; J1, commit b2c58c8)."),
+		localization.Text(language, "- `internal/ontology/entity.go` — domain-declared business concept with its own lifecycle."),
+		localization.Text(language, "- `internal/ontology/graph.go` — the requirement store (with conflict bookkeeping) and its traversal helpers."),
+		localization.Text(language, "- `internal/ontology/graph_traversal.go` — traversal helpers over the requirement store."),
+		localization.Text(language, "- `internal/ontology/lifecycle.go` — the generic state-machine value-type (framework keystone)."),
+		localization.Text(language, "- `internal/ontology/operator.go` — the acting facet of a Stakeholder (M20: NEW TYPE)."),
+		localization.Text(language, "- `internal/ontology/process.go` — opt-in behavioral aspect (M12)."),
+		localization.Text(language, "- `internal/ontology/requirement.go` — a requirement: an atomic object with a method whose scenario generates its text."),
+		localization.Text(language, "- `internal/ontology/signoff.go` — the frozen provenance record of a human resolver decision."),
+		localization.Text(language, "- `internal/ontology/stakeholder.go` — who owns requirements and resolvers conflicts."),
+		localization.Text(language, "- `internal/invariants/` — structural rules over the requirement store (the check_* layer)."),
+		localization.Text(language, "- `internal/diagnose/` — the operator's next-action diagnosis (what_now equivalent)."),
+		localization.Text(language, "- `internal/proposal/` — structured operator-→-resolver change proposals + the mechanical apply writer."),
+		localization.Text(language, "- `internal/loader/` — reads a domain's graph.json into an in-memory Graph."),
+		localization.Text(language, "- `internal/generator/` — regenerates docs/gen/ from the graph (the gen-spec engine)."),
+		localization.Text(language, "- `internal/gate/` — T1 tiered LAND gate: select a targeted test subset instead of the full suite."),
+		localization.Text(language, "- `internal/paths/` — project-root resolution for the consumer's data directory."),
+	}, "\n")
+}
 
 // renderRepoMapToolsSection renders the "Tools" section of REPO-MAP.md as a
 // projection of the methodology.Tools registry — one line per Implemented
@@ -59,8 +64,12 @@ var repoMapFrameworkBodyContent = strings.Join([]string{
 // the same deterministic order every other registry-derived renderer in this
 // package relies on (e.g. RenderEmbeddedToolsBlock, ScanToolRequirements).
 func renderRepoMapToolsSection() string {
+	return renderRepoMapToolsSectionLocalized("")
+}
+
+func renderRepoMapToolsSectionLocalized(language string) string {
 	lines := []string{
-		"**Tools** (`cmd/hotam/`, dispatched by `hotam <command>`)",
+		localization.Text(language, "**Tools** (`cmd/hotam/`, dispatched by `hotam <command>`)"),
 		"",
 	}
 
@@ -76,22 +85,22 @@ func renderRepoMapToolsSection() string {
 
 	if len(planned) > 0 {
 		lines = append(lines, "")
-		lines = append(lines, "Registered in the methodology but not yet implemented as `hotam` subcommands: "+strings.Join(planned, ", ")+".")
+		lines = append(lines, localization.Text(language, "Registered in the methodology but not yet implemented as `hotam` subcommands: %s.", strings.Join(planned, ", ")))
 	}
-
 	return strings.Join(lines, "\n")
 }
 
-// domainGraphPyRole returns the one-line role text for domains/<name>/graph.json
-// in the "Domain content" section. Domains carry graph.json (no per-domain
-// source file to introspect), so the known domains' role text is captured
-// here directly; any other domain falls back to generic phrasing.
+// domainGraphPyRole returns the legacy English/source-language description.
 func domainGraphPyRole(domainName string) string {
+	return domainGraphPyRoleLocalized("", domainName)
+}
+
+func domainGraphPyRoleLocalized(language, domainName string) string {
 	switch domainName {
 	case "hotam-spec-self":
-		return "Hotam-Spec modeling itself — the meta-domain (the framework's own design)."
+		return localization.Text(language, "Hotam-Spec modeling itself — the meta-domain (the framework's own design).")
 	default:
-		return "content graph of domain '" + domainName + "'."
+		return localization.Text(language, "content graph of domain '%s'.", domainName)
 	}
 }
 

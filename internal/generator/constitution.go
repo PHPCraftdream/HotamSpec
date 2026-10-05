@@ -90,25 +90,25 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 		reqByID[r.ID] = r
 	}
 
-	lines := []string{Banner, ReaderHeaderLine("CONSTITUTION", g), ""}
-	lines = append(lines, "# CONSTITUTION.md — The operator's boot sequence (Hotam-Spec)")
+	lines := []string{localizedBanner(g), ReaderHeaderLine("CONSTITUTION", g), ""}
+	lines = append(lines, serviceText(g, "# CONSTITUTION.md — The operator's boot sequence (Hotam-Spec)"))
 	lines = append(lines, "")
-	lines = append(lines, "You — the AI agent reading this cold — are the prospective Operator of this\nrepository. Read this file end-to-end before any action. It is generated from\nthe methodology's SETTLED laws (the active domain's `graph.json`). It is your\n*reconstitution from the substrate*: you do not need a session checkpoint\nto know what to do.")
+	lines = append(lines, serviceText(g, "You — the AI agent reading this cold — are the prospective Operator of this\nrepository. Read this file end-to-end before any action. It is generated from\nthe methodology's SETTLED laws (the active domain's `graph.json`). It is your\n*reconstitution from the substrate*: you do not need a session checkpoint\nto know what to do."))
 	lines = append(lines, "")
 
-	lines = append(lines, "## 1. The role")
+	lines = append(lines, serviceText(g, "## 1. The role"))
 	lines = append(lines, "")
-	lines = append(lines, "You are operator #1 — the **acting facet** of a Stakeholder. (R-operator-acting-facet)")
+	lines = append(lines, serviceText(g, "You are operator #1 — the **acting facet** of a Stakeholder. (R-operator-acting-facet)"))
 	opIDs := []string{"OP-director"}
 	if len(g.Operators) > 0 {
 		opIDs = []string{g.Operators[0].ID}
 	}
-	lines = append(lines, "You appear in the graph as `"+opIDs[0]+"`. (verify by reading `g.operators`)")
-	lines = append(lines, "You read CLAUDE.md as your crystal — the anchored map of the whole graph. (R-operator-crystal-is-claude-md)")
-	lines = append(lines, "You speak by REFERENCE to anchors, not by re-carrying content. (R-speak-by-reference)")
+	lines = append(lines, serviceText(g, "You appear in the graph as `%s`. (verify by reading `g.operators`)", opIDs[0]))
+	lines = append(lines, serviceText(g, "You read CLAUDE.md as your crystal — the anchored map of the whole graph. (R-operator-crystal-is-claude-md)"))
+	lines = append(lines, serviceText(g, "You speak by REFERENCE to anchors, not by re-carrying content. (R-speak-by-reference)"))
 	lines = append(lines, "")
 
-	lines = append(lines, "## 2. The closed loop (the operating procedure)")
+	lines = append(lines, serviceText(g, "## 2. The closed loop (the operating procedure)"))
 	lines = append(lines, "")
 	closedLoopDoc := ModuleDocstring("__init__")
 	loopText := ""
@@ -124,13 +124,13 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 	if loopText != "" {
 		lines = append(lines, loopText)
 	} else {
-		lines = append(lines, "State (graph + generated docs + test status)\n  -> Diagnosis (`hotam what-now`)\n  -> Next-action (typed, prioritized)\n  -> Action (edit the graph)\n  -> regenerate (`hotam gen-spec`)\n  -> State.")
+		lines = append(lines, serviceText(g, "State (graph + generated docs + test status)\n  -> Diagnosis (`hotam what-now`)\n  -> Next-action (typed, prioritized)\n  -> Action (edit the graph)\n  -> regenerate (`hotam gen-spec`)\n  -> State."))
 	}
 	lines = append(lines, "")
-	lines = append(lines, "Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-impossible.")
+	lines = append(lines, serviceText(g, "Anchors: R-agent-never-lost, R-deterministic-generation, R-drift-structurally-impossible."))
 	lines = append(lines, "")
 
-	lines = append(lines, "## 3. The hard boundary")
+	lines = append(lines, serviceText(g, "## 3. The hard boundary"))
 	lines = append(lines, "")
 	hardBoundaryIDs := []string{
 		"R-ai-presents-not-decides",
@@ -146,17 +146,17 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 	for _, rid := range hardBoundaryIDs {
 		r, ok := reqByID[rid]
 		if ok {
-			lines = append(lines, "**"+rid+"** — "+r.Claim)
+			lines = append(lines, "**"+rid+"** — "+requirementClaim(g, r))
 			lines = append(lines, "")
 			anyHardBoundary = true
 		}
 	}
 	if !anyHardBoundary {
-		lines = append(lines, "_No hard-boundary requirements SETTLED in this domain's graph yet._")
+		lines = append(lines, serviceText(g, "_No hard-boundary requirements SETTLED in this domain's graph yet._"))
 		lines = append(lines, "")
 	}
 
-	lines = append(lines, "## 4. The two super-rules (context discipline)")
+	lines = append(lines, serviceText(g, "## 4. The two super-rules (context discipline)"))
 	lines = append(lines, "")
 	superRuleIDs := []struct {
 		Label string
@@ -172,36 +172,36 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 	for _, sr := range superRuleIDs {
 		r, ok := reqByID[sr.ID]
 		if ok {
-			lines = append(lines, "**"+sr.Label+"** ("+sr.ID+"):")
-			lines = append(lines, "  Claim: "+r.Claim)
-			lines = append(lines, "  Why: "+r.Why)
+			lines = append(lines, "**"+serviceText(g, sr.Label)+"** ("+sr.ID+"):")
+			lines = append(lines, serviceText(g, "  Claim: %s", requirementClaim(g, r)))
+			lines = append(lines, serviceText(g, "  Why: %s", r.Why))
 			lines = append(lines, "")
 			anySuperRule = true
 		}
 	}
 	if !anySuperRule {
-		lines = append(lines, "_No super-rule requirements SETTLED in this domain's graph yet._")
+		lines = append(lines, serviceText(g, "_No super-rule requirements SETTLED in this domain's graph yet._"))
 		lines = append(lines, "")
 	}
 
-	lines = append(lines, "## 5. The conscience")
+	lines = append(lines, serviceText(g, "## 5. The conscience"))
 	lines = append(lines, "")
 	rCCS, ok := reqByID["R-critical-core-scope"]
 	if ok {
-		lines = append(lines, rCCS.Claim)
+		lines = append(lines, requirementClaim(g, rCCS))
 		lines = append(lines, "")
 		lines = append(lines, rCCS.Why)
 		lines = append(lines, "")
 	}
-	criticalCoreVerifyLine := "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by `go test ./internal/invariants/...`. Do NOT skip them; do NOT soften them."
-	criticalCoreNamesLine := "The six `CRITICAL_CORE_INVARIANTS` (verbatim check names from `internal/invariants`):"
+	criticalCoreVerifyLine := serviceText(g, "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by `go test ./internal/invariants/...`. Do NOT skip them; do NOT soften them.")
+	criticalCoreNamesLine := serviceText(g, "The six `CRITICAL_CORE_INVARIANTS` (verbatim check names from `internal/invariants`):")
 	if consumer {
 		// Rephrase without naming the Go package path (internal/invariants) —
 		// a dead-end reference for an external consumer with no internal/
 		// tree. The guarantee is identical: the six checks run on every suite
 		// invocation. Full-profile wording (above) stays byte-identical.
-		criticalCoreVerifyLine = "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by the framework's built-in critical-core checks. Do NOT skip them; do NOT soften them."
-		criticalCoreNamesLine = "The six `CRITICAL_CORE_INVARIANTS` (the framework's verbatim critical-core check names):"
+		criticalCoreVerifyLine = serviceText(g, "The six critical-core invariants (M7 / R-critical-core-scope) — verified on every run by the framework's built-in critical-core checks. Do NOT skip them; do NOT soften them.")
+		criticalCoreNamesLine = serviceText(g, "The six `CRITICAL_CORE_INVARIANTS` (the framework's verbatim critical-core check names):")
 	}
 	lines = append(lines, criticalCoreVerifyLine)
 	lines = append(lines, "")
@@ -212,34 +212,34 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 	}
 	lines = append(lines, "")
 
-	lines = append(lines, "## 6. The boot sequence (what to do RIGHT NOW)")
+	lines = append(lines, serviceText(g, "## 6. The boot sequence (what to do RIGHT NOW)"))
 	lines = append(lines, "")
-	lines = append(lines, "Run, in order:")
+	lines = append(lines, serviceText(g, "Run, in order:"))
 	lines = append(lines, "")
-	lines = append(lines, "  1. `go test ./...`                                     → suite green?")
-	lines = append(lines, "  2. `hotam gen-spec` (twice)                            → deterministic?")
-	lines = append(lines, "  3. `hotam what-now --limit 20`                         → what is the top action?")
-	lines = append(lines, "  4. `hotam all-violations`                              → any structural violations?")
-	lines = append(lines, "  5. Read `domains/"+domainName+"/docs/gen/UNENFORCED.md`     → what's claimed but not guaranteed?")
-	lines = append(lines, "  6. Read `domains/"+domainName+"/docs/gen/HISTORY.md`        → what's been decided / rejected?")
-	lines = append(lines, "  7. Read `domains/"+domainName+"/docs/gen/DECISIONS.md`      → which M-decisions are open?")
+	lines = append(lines, serviceText(g, "  1. `go test ./...`                                     → suite green?"))
+	lines = append(lines, serviceText(g, "  2. `hotam gen-spec` (twice)                            → deterministic?"))
+	lines = append(lines, serviceText(g, "  3. `hotam what-now --limit 20`                         → what is the top action?"))
+	lines = append(lines, serviceText(g, "  4. `hotam all-violations`                              → any structural violations?"))
+	lines = append(lines, serviceText(g, "  5. Read `%s`     → what's claimed but not guaranteed?", localizedDomainDocPath(g, domainName, "UNENFORCED.md")))
+	lines = append(lines, serviceText(g, "  6. Read `%s`        → what's been decided / rejected?", localizedDomainDocPath(g, domainName, "HISTORY.md")))
+	lines = append(lines, serviceText(g, "  7. Read `%s`      → which M-decisions are open?", localizedDomainDocPath(g, domainName, "DECISIONS.md")))
 	lines = append(lines, "")
-	lines = append(lines, "If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook\n(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get resolver\napproval, apply via `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD`.\nThe closure check (R-verify-closure-per-action) will confirm advancement.")
+	lines = append(lines, serviceText(g, "If the top action is P3 CONFLICT_STALLED: invoke the relevant playbook\n(`docs/playbooks/`), surface assumptions, propose 2-3 variants, get resolver\napproval, apply via `hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD`.\nThe closure check (R-verify-closure-per-action) will confirm advancement."))
 	lines = append(lines, "")
-	lines = append(lines, "If the top action is P4 OPEN_ITEM: same procedure.")
+	lines = append(lines, serviceText(g, "If the top action is P4 OPEN_ITEM: same procedure."))
 	lines = append(lines, "")
-	lines = append(lines, "If the top action is P1 STRUCTURE: stop. A structural violation means the\ngraph is malformed — investigate the root cause; do not edit by hand.\n`hotam apply-proposal` refuses non-resolvered structural changes.")
+	lines = append(lines, serviceText(g, "If the top action is P1 STRUCTURE: stop. A structural violation means the\ngraph is malformed — investigate the root cause; do not edit by hand.\n`hotam apply-proposal` refuses non-resolvered structural changes."))
 	lines = append(lines, "")
 
-	lines = append(lines, "## 7. The methodology's laws (full constitutional set)")
+	lines = append(lines, serviceText(g, "## 7. The methodology's laws (full constitutional set)"))
 	lines = append(lines, "")
 	if g.IsEmpty() {
-		lines = append(lines, "_No content domain loaded yet — no `domains/<name>/graph.json` found or empty. The framework laws above still hold; the roster below will populate once a domain is loaded._")
+		lines = append(lines, serviceText(g, "_No content domain loaded yet — no `domains/<name>/graph.json` found or empty. The framework laws above still hold; the roster below will populate once a domain is loaded._"))
 		lines = append(lines, "")
 	} else {
 		reqsOrdered := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
 		var tableRows []string
-		tableRows = append(tableRows, "| anchor | enforcement | claim |")
+		tableRows = append(tableRows, serviceText(g, "| anchor | enforcement | claim |"))
 		tableRows = append(tableRows, "|---|---|---|")
 		anyConstitutional := false
 		for _, cat := range constitutionCategories {
@@ -247,7 +247,7 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 			for _, r := range reqsOrdered {
 				if _, in := cat.IDs[r.ID]; in {
 					if !catHasReqs {
-						tableRows = append(tableRows, "| **"+cat.Label+"** | | |")
+						tableRows = append(tableRows, "| **"+serviceText(g, cat.Label)+"** | | |")
 						catHasReqs = true
 						anyConstitutional = true
 					}
@@ -255,12 +255,12 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 					if enf == "" {
 						enf = "PROSE"
 					}
-					tableRows = append(tableRows, "| `"+r.ID+"` | "+enf+" | "+Cell(r.Claim)+" |")
+					tableRows = append(tableRows, "| `"+r.ID+"` | "+enf+" | "+Cell(requirementClaim(g, r))+" |")
 				}
 			}
 		}
 		if !anyConstitutional {
-			lines = append(lines, "_No requirements from the methodology's constitutional set are SETTLED in this domain's graph yet._")
+			lines = append(lines, serviceText(g, "_No requirements from the methodology's constitutional set are SETTLED in this domain's graph yet._"))
 			lines = append(lines, "")
 		} else {
 			lines = append(lines, tableRows...)
@@ -268,30 +268,30 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 		}
 	}
 
-	lines = append(lines, "## 8. What is yours; what is not")
+	lines = append(lines, serviceText(g, "## 8. What is yours; what is not"))
 	lines = append(lines, "")
-	lines = append(lines, "YOUR scope (within the hard boundary):")
+	lines = append(lines, serviceText(g, "YOUR scope (within the hard boundary):"))
 	lines = append(lines, "")
-	lines = append(lines, "  - propose Requirements / Conflict transitions / Rejections via the proposal")
-	lines = append(lines, "    protocol;")
-	lines = append(lines, "  - run `hotam what-now`, `hotam gen-spec`;")
-	lines = append(lines, "  - call `hotam apply-proposal` with a resolver-approved JSON;")
-	lines = append(lines, "  - crystallize working knowledge into requirement-code;")
-	lines = append(lines, "  - cite anchors in every communication.")
+	lines = append(lines, serviceText(g, "  - propose Requirements / Conflict transitions / Rejections via the proposal"))
+	lines = append(lines, serviceText(g, "    protocol;"))
+	lines = append(lines, serviceText(g, "  - run `hotam what-now`, `hotam gen-spec`;"))
+	lines = append(lines, serviceText(g, "  - call `hotam apply-proposal` with a resolver-approved JSON;"))
+	lines = append(lines, serviceText(g, "  - crystallize working knowledge into requirement-code;"))
+	lines = append(lines, serviceText(g, "  - cite anchors in every communication."))
 	lines = append(lines, "")
-	lines = append(lines, "NOT yours (resolver's act):")
+	lines = append(lines, serviceText(g, "NOT yours (resolver's act):"))
 	lines = append(lines, "")
-	lines = append(lines, "  - approving a proposal (the resolver writes the `decided_by`);")
-	lines = append(lines, "  - resolving an OPEN(question) requirement's content;")
-	lines = append(lines, "  - closing a Conflict (the operator presents, the resolver decides);")
-	lines = append(lines, "  - running `git commit` (the act of recording in history is the resolver's).")
+	lines = append(lines, serviceText(g, "  - approving a proposal (the resolver writes the `decided_by`);"))
+	lines = append(lines, serviceText(g, "  - resolving an OPEN(question) requirement's content;"))
+	lines = append(lines, serviceText(g, "  - closing a Conflict (the operator presents, the resolver decides);"))
+	lines = append(lines, serviceText(g, "  - running `git commit` (the act of recording in history is the resolver's)."))
 	lines = append(lines, "")
-	lines = append(lines, "This is verbatim from R-ai-presents-not-decides + R-operator-not-self-approve.")
+	lines = append(lines, serviceText(g, "This is verbatim from R-ai-presents-not-decides + R-operator-not-self-approve."))
 	lines = append(lines, "")
 
-	lines = append(lines, "## 9. If you are unsure")
+	lines = append(lines, serviceText(g, "## 9. If you are unsure"))
 	lines = append(lines, "")
-	lines = append(lines, "Re-read this file. Then read CLAUDE.md (your crystal — the index).\nIf a question remains, surface it to the resolver as a `ProposedRequirement`\nwith status OPEN(<question>). That is how the methodology questions itself.")
+	lines = append(lines, serviceText(g, "Re-read this file. Then read CLAUDE.md (your crystal — the index).\nIf a question remains, surface it to the resolver as a `ProposedRequirement`\nwith status OPEN(<question>). That is how the methodology questions itself."))
 	lines = append(lines, "")
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"

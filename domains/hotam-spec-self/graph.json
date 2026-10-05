@@ -422,7 +422,8 @@
       ],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "TestProposedStructs_JSONTagsRoundTrip"
+        "TestParseProposal_UnknownFieldRejected",
+        "TestParseProposal_CamelCaseOldFormatRejected"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
@@ -451,6 +452,11 @@
         {
           "at": "2026-07-12",
           "summary": "claim: Three Proposed* dataclass types (ProposedRequirement, ProposedConflictTransition, ProposedRejection) shall exist as the protocol for resolver-approved…→A set of Proposed* struct kinds (ProposedRequirement, ProposedConflictTransition, ProposedRejection, ProposedConflict, ProposedAssumptionTransition, …; why: Atom of R-active-loop-playbooks (data-model concern). hotam_spec/proposal.py defines the three types.→Atom of R-active-loop-playbooks (data-model concern). `internal/proposal/types.go` defines the Proposed* structs (12 kinds today: Requirement, Confli…; last_reviewed_at: 2026-06-30→2026-07-12; review_after: 2026-12-30→2026-08-12; source_refs: []→[internal/proposal/types.go, internal/proposal/mutate.go, internal/proposal/validate.go]",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-10-02",
+          "summary": "field EnforcedBy: [TestProposedStructs_JSONTagsRoundTrip] -> [TestParseProposal_UnknownFieldRejected TestParseProposal_CamelCaseOldFormatRejected]",
           "decided_by": ""
         }
       ],
@@ -1890,6 +1896,11 @@
           "at": "2026-07-17",
           "summary": "evidence: [task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…→[task #236 self-example W2 (2026-07-16): promoted PROSE -> ENFORCED per PLAN-authored-spec-discipline.md §5's authored-path gate (implemented_by AND…; source_refs: [internal/generator/traceability.go, internal/generator/constitution_entities_framework_repomap_test.go]→[internal/generator/traceability.go, internal/generator/models.go, internal/generator/coverage.go, internal/generator/constitution_entities_framework…; implemented_by: [internal/generator/traceability.go:BuildTraceability]→[internal/generator/traceability.go:BuildTraceability, internal/generator/models.go:BuildModels, internal/generator/coverage.go:BuildCoverage]; verified_by: [internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture]→[internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture, internal/generator/constitution_ent…",
           "decided_by": ""
+        },
+        {
+          "at": "2026-10-05",
+          "summary": "field VerifiedBy: [internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture internal/generator/constitution_entities_framework_repomap_test.go:TestBuildCoverage_ByteIdenticalToFixture] -> [internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture internal/generator/scenario_traceability_test.go:TestBuildCoverage_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput]",
+          "decided_by": ""
         }
       ],
       "decl_order": 0,
@@ -1901,7 +1912,7 @@
       "verified_by": [
         "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture",
         "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture",
-        "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildCoverage_ByteIdenticalToFixture"
+        "internal/generator/scenario_traceability_test.go:TestBuildCoverage_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput"
       ]
     },
     {
@@ -2987,6 +2998,47 @@
       "decl_order": 78
     },
     {
+      "id": "R-conformance-audit-own-fields",
+      "claim": "The conformance audit is triggered only by its own declared rule_cases, clauses, profiles, compositions, or requirement atom_kind, cases, clause_links, strength, applicability, or precedence fields. It validates and reports declared structural conformance evidence without claiming semantic completeness, corpus-wide compliance, or automatic implementation blame.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Clause inventories, rule cases, profiles and composition provenance introduce distinct obligations; an existing language, discipline, or self-executing opt-in is not consent to those obligations.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-opt-in-trigger-owns-its-own-obligations"
+        }
+      ],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_conformance_audit"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-10-04",
+      "settled_at": "2026-10-04",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "docs/PLAN-atomic-conformance-spec.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md"
+      ],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0,
+      "implemented_by": [
+        "internal/invariants/conformance_audit.go:checkConformanceAudit"
+      ]
+    },
+    {
       "id": "R-confront-includes-aspirations",
       "claim": "At the CONFRONT step the operator shall check every change not only against SETTLED rules but also against the graph's goals, IMPLEMENTS aspirations and values, surfacing any contradiction before writing.",
       "owner": "framework-author",
@@ -3099,7 +3151,7 @@
       "relations": [],
       "enforcement": "ENFORCED",
       "enforced_by": [
-        "TestBuildFrameworkInvariants_ByteIdenticalToFixture"
+        "TestFrameworkPartitionPreservesSettledObligationsAndExcludesDrafts"
       ],
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
@@ -3119,6 +3171,11 @@
         {
           "at": "2026-07-12",
           "summary": "enforced_by: [test_constitution.py::test_constitution_partitions_all_settled, test_constitution.py::test_constitution_pointer_to_framework_invariants, test_consti…→[TestBuildFrameworkInvariants_ByteIdenticalToFixture]; settled_at: 2026-07-02→2026-07-12",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-10-02",
+          "summary": "field EnforcedBy: [TestBuildFrameworkInvariants_ByteIdenticalToFixture] -> [TestFrameworkPartitionPreservesSettledObligationsAndExcludesDrafts]",
           "decided_by": ""
         }
       ],
@@ -3638,6 +3695,40 @@
         }
       ],
       "decl_order": 272
+    },
+    {
+      "id": "R-coverage-qualification-is-authored",
+      "claim": "Coverage declarations qualify unsupported recommendations, unreachable profile-specific branches, or unverified obligations with explicit rationale. An unreachable declaration includes its profile and source links; verified and discrepancy states come from execution evidence, not an authored passing verdict.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "A declared limitation or domain proof differs from an observed test verdict and must not hide an actual discrepancy. The qualification duty activates only for the new explicit Coverage field.",
+      "assumptions": null,
+      "relations": null,
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_coverage_declarations_justified"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-10-02",
+      "settled_at": "2026-10-02",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "internal/source/source.go",
+        "internal/invariants/source_evidence.go",
+        "internal/ontology/source_evidence.go"
+      ],
+      "history": [
+        {
+          "at": "2026-10-02",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
     },
     {
       "id": "R-critical-core-methodology",
@@ -8185,6 +8276,88 @@
       "blocked_on": "blocked on the .runtime/land-log.jsonl writer (absent)"
     },
     {
+      "id": "R-language-bundle-complete",
+      "claim": "For a domain declaring more than one language, each atom has exactly one non-empty source phrase for every declared language; malformed, duplicate, unknown, or missing language blocks are reported. This is structural translation completeness, not semantic equivalence.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "The language bundle has its own translation-completeness trigger; enabling an older atom or scenario mode must not silently impose a later obligation.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-opt-in-trigger-owns-its-own-obligations"
+        }
+      ],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_language_bundle_complete"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-10-04",
+      "settled_at": "2026-10-04",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "docs/PLAN-atomic-multilingual-spec.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md"
+      ],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0,
+      "implemented_by": [
+        "internal/invariants/language_bundle.go:checkLanguageBundleComplete"
+      ]
+    },
+    {
+      "id": "R-language-outputs-current",
+      "claim": "Whenever a domain explicitly declares a language list, the expected generated language bundle is fresh across every emitted localized document, SPEC index and shard, and boot crystal; the one-language layout keeps its existing filenames.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Freshness must cover the complete expected output inventory rather than only the legacy SPEC.md; explicit single-language locales also change service-rendered content and have their own freshness trigger.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-opt-in-trigger-owns-its-own-obligations"
+        }
+      ],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_language_outputs_current"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-10-04",
+      "settled_at": "2026-10-04",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "docs/PLAN-atomic-multilingual-spec.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md"
+      ],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0,
+      "implemented_by": [
+        "cmd/hotam/language_freshness_wiring.go:checkLanguageOutputsCurrentReal"
+      ]
+    },
+    {
       "id": "R-latent-connectors-cluster-by-assumption",
       "claim": "The what-now harness shall render latent-connector suspects as one P5 action per shared-assumption cluster rather than one action per requirement pair.",
       "owner": "framework-author",
@@ -11662,6 +11835,60 @@
       "decl_order": 101
     },
     {
+      "id": "R-self-executing-atoms-own-structural-obligations",
+      "claim": "A domain explicitly declaring self_executing_atoms:true opts into three structural obligations: every executed method subject has a non-empty first doc phrase with no conflicting explicit title; every subject is a zero-argument single-result method, legacy value facts return exactly one expression, Holds predicates return bool and may branch, and explicit typed rule methods may branch; each Fact carries exactly one bound method subject, never a closure or a multi-subject carrier. check_fact_method_has_phrase, check_fact_method_atomic, and check_one_subject_per_fact enforce these obligations only under this independent opt-in, not under already-spent discipline, claim-authority, public-surface-authority, or scenario-authority triggers. These checks establish structural correspondence, not semantic proof of the authored claim.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Self-executing atoms derive claims and traceability from executed methods rather than parallel authored requirement titles. Structural phrase, atomicity, and single-subject checks make that derivation honest without crossing authored_links' semantic-audit boundary. Their new duty belongs to its own self_executing_atoms manifest trigger, preserving unchanged behavior for legacy domains.",
+      "assumptions": null,
+      "relations": [
+        {
+          "kind": "refines",
+          "target": "R-opt-in-trigger-owns-its-own-obligations"
+        }
+      ],
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_fact_method_has_phrase",
+        "check_fact_method_atomic",
+        "check_one_subject_per_fact"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-10-01",
+      "settled_at": "2026-10-01",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "docs/PLAN-self-executing-atoms.md",
+        "docs/AUTHORED-SPEC-CONTRACT.md",
+        "internal/invariants/fact_methods.go",
+        "internal/invariants/fact_methods_test.go",
+        "internal/gate/atom_source.go",
+        "internal/loader/manifest.go"
+      ],
+      "history": [
+        {
+          "at": "2026-10-01",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-10-01",
+          "summary": "semantic conflict acknowledged — human decision recorded: 2026-10-01 user request to implement docs/PLAN-self-executing-atoms.md F4: independent self_executing_atoms opt-in; opposite-marker hits refer to unrelated obligations",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-10-05",
+          "summary": "field Claim: A domain explicitly declaring self_executing_atoms:true opts into three structural obligations: every executed method subject has a non-empty first doc phrase with no conflicting explicit title; each value method is a zero-argument method returning exactly one expression, while a Holds bool relation predicate may branch; and each Fact carries exactly one bound method subject, never a closure or a multi-subject carrier. check_fact_method_has_phrase, check_fact_method_atomic, and check_one_subject_per_fact enforce these obligations only under this independent opt-in, not under already-spent discipline, claim-authority, public-surface-authority, or scenario-authority triggers. These checks establish structural correspondence, not semantic proof of the authored claim. -> A domain explicitly declaring self_executing_atoms:true opts into three structural obligations: every executed method subject has a non-empty first doc phrase with no conflicting explicit title; every subject is a zero-argument single-result method, legacy value facts return exactly one expression, Holds predicates return bool and may branch, and explicit typed rule methods may branch; each Fact carries exactly one bound method subject, never a closure or a multi-subject carrier. check_fact_method_has_phrase, check_fact_method_atomic, and check_one_subject_per_fact enforce these obligations only under this independent opt-in, not under already-spent discipline, claim-authority, public-surface-authority, or scenario-authority triggers. These checks establish structural correspondence, not semantic proof of the authored claim.",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
+    },
+    {
       "id": "R-sensorium-committed",
       "claim": "The universal sensorium hooks (SessionStart/PostCompact gen_spec, UserPromptSubmit emit_cipher+claude_md_diff_watch+attention_hook, PreToolUse graph-guard, Stop context_producer) shall live in a committed project settings.json generated by a setup tool with commands portable via $CLAUDE_PROJECT_DIR, never only in the personal git-ignored settings.local.json.",
       "owner": "framework-author",
@@ -12060,6 +12287,40 @@
       "decl_order": 25
     },
     {
+      "id": "R-source-clause-links-resolve",
+      "claim": "An explicitly authored source_links entry resolves to a declared source and an existing heading or line range. A valid source-to-method-to-test link establishes traceability, not automatic semantic completeness.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "SourceLinks provide the typed seam from a source clause to its executable carrier and recorded observations. Legacy free-text SourceRefs retain their existing meaning.",
+      "assumptions": null,
+      "relations": null,
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_source_links_resolve"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-10-02",
+      "settled_at": "2026-10-02",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "internal/source/source.go",
+        "internal/invariants/source_evidence.go",
+        "internal/ontology/source_evidence.go"
+      ],
+      "history": [
+        {
+          "at": "2026-10-02",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
+    },
+    {
       "id": "R-spawn-log-carries-isolation",
       "claim": "Every spawn-log entry shall carry isolation (worktree|shared) and mutating (bool) fields, defaulting to shared/false when the caller omits them.",
       "owner": "framework-author",
@@ -12271,6 +12532,40 @@
       "verified_by": [
         "internal/proposal/proposal_test.go:TestApply_Requirement_ImplementedByAndVerifiedByAreOrthogonal"
       ]
+    },
+    {
+      "id": "R-specification-source-bytes-current",
+      "claim": "An explicitly declared specification source carries its identity, path, declared version and SHA-256; its current bytes are checked against that digest. Missing, invalid and drifted sources are reported as structural failures, not as semantic proof or an invented version.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Source drift must remain visible when executable requirements cite a frozen external specification. The new duty activates through specification_sources, not a pre-existing discipline flag.",
+      "assumptions": null,
+      "relations": null,
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_specification_sources_current"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-10-02",
+      "settled_at": "2026-10-02",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "internal/source/source.go",
+        "internal/invariants/source_evidence.go",
+        "internal/ontology/source_evidence.go"
+      ],
+      "history": [
+        {
+          "at": "2026-10-02",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
     },
     {
       "id": "R-speculative-aspects-frozen",
@@ -13435,10 +13730,8 @@
           "target": "R-setup-claude-generates-settings"
         }
       ],
-      "enforcement": "ENFORCED",
-      "enforced_by": [
-        "TestScanToolRequirements_ProjectsEveryEntryToRequirement"
-      ],
+      "enforcement": "STRUCTURAL",
+      "enforced_by": null,
       "m_tag": "",
       "enforceability": "ENFORCEABLE",
       "summary": "",
@@ -13475,6 +13768,11 @@
         {
           "at": "2026-07-13",
           "summary": "why: The sensor-substrate inversion taken one step deeper: not only does code generate the operator's prompt, the tool IS its own requirement. The claim i…→The sensor-substrate inversion taken one step deeper: not only does code generate the operator's prompt, the tool IS its own requirement. The claim i…; enforcement: PROSE→ENFORCED; enforced_by: []→[TestScanToolRequirements_ProjectsEveryEntryToRequirement]",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-10-02",
+          "summary": "field Enforcement: ENFORCED -> STRUCTURAL; field EnforcedBy: [TestScanToolRequirements_ProjectsEveryEntryToRequirement] -> []",
           "decided_by": ""
         }
       ],

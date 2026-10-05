@@ -50,6 +50,8 @@ reader: ai-agent
 - `hotam vendor-ontology` — vendors the engine's canonical minimal Requirement+Registry mirror into a consumer domain's own spec/ Go module, the RAC2 (task #365) infrastructure prerequisite for a domain to author its own Go requirements registry.
 - `hotam scaffold-registrydump` — scaffolds the domain-side registrydump program that bridges a consumer domain's spec/ Go module boundary for hotam sync-domain to read (task #366).
 - `hotam sync-domain` — mirrors a consumer domain's own Go requirements registry onto its graph.json, generalizing hotam sync-self's mechanism to any domain that has adopted the Go-code-only authority path, gated by the same confirm-hash dry-run/confirm handshake plus confront/violation/append-only gates.
+- `hotam evidence` — collects fresh source-to-method-to-test evidence and preserves observed discrepancies alongside passing proof without changing the source graph.
+- `hotam findings` — lets a human inspect observed findings and record explicit review notes separately without inferring semantic blame or changing proof payloads.
 
 Registered in the methodology but not yet implemented as `hotam` subcommands: attention, attention_hook, audit_atomicity, audit_tensions, claude_md_diff_watch, closure, context, context_producer, create_agent, create_axis, create_domain, create_entity_type, emit_cipher, gate_status, invoke_agent, mark_revisit_evaluated, review, setup_context_hook, setup_hooks, spawn_agent, spawn_log_isolation_status, ticket_comment, ticket_create, ticket_edit, ticket_list, ticket_move, ticket_show.
 

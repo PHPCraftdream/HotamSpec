@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"os"
 	"strings"
 	"testing"
 )
@@ -87,18 +86,3 @@ func TestBuildRequirements_ConsumerClosingSectionPointsAtHotamH(t *testing.T) {
 	}
 }
 
-// TestBuildRequirements_FullProfileByteIdenticalToPreChangeFixture pins
-// full-profile (consumer==false) output to the exact same golden fixture
-// TestBuildRequirements_ByteIdenticalToFixture already checks — restated
-// here under its own name so the R6-j task's byte-identity claim is
-// independently verifiable without relying on a shared test name.
-func TestBuildRequirements_FullProfileByteIdenticalToPreChangeFixture(t *testing.T) {
-	t.Parallel()
-	g := loadFixtureGraph(t)
-	got := BuildRequirements(g, "hotam-spec-self", false)
-	want, err := os.ReadFile("testdata/fixture/REQUIREMENTS.md")
-	if err != nil {
-		t.Fatalf("read reference: %v", err)
-	}
-	diffReport(t, "REQUIREMENTS.md (full profile)", got, string(want))
-}

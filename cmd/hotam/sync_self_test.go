@@ -608,15 +608,8 @@ func TestCmdSyncSelf_SubprocessSmoke(t *testing.T) {
 // function sync-self's CLI path calls, so this is not a weaker proof, only
 // a more direct one.
 
-// syncGatesTestGraph builds a minimal, otherwise-valid *ontology.Graph with
-// one existing SETTLED requirement (R-sync-gate-existing) whose claim
-// asserts a universal ("... ALWAYS widget frobnicate ...") — the fixed
-// target a synthetic CHANGED entry's new claim will contradict via the
-// never/always opposite-marker pair, sharing the topical tokens
-// "widget"/"frobnicate" so diagnose.IsBlockingHit's topical-shared-token
-// requirement is also satisfied (see blocking_hit.go's own doc comment: an
-// opposite marker alone is not enough, a shared NON-marker token is also
-// required).
+// syncGatesTestGraph supplies two requirements with opposing words.
+// Those words remain advisory unless a test explicitly adds a Conflict carrier.
 func syncGatesTestGraph() *ontology.Graph {
 	return &ontology.Graph{
 		DomainDir: "unit-test-fixture",
@@ -642,15 +635,17 @@ func syncGatesTestGraph() *ontology.Graph {
 	}
 }
 
-// TestRunSyncGates_ConfrontBlocker_RequiresAck proves gate 7 end-to-end at
-// the function level: a CHANGED entry whose new Claim (via FieldDiffs)
-// carries an opposite-marker contradiction against another existing SETTLED
-// requirement's claim is reported as a blocker and refused with no ack, and
-// accepted (ConfrontAcked=true, nil error caused by THIS gate) once a
-// --decision-ref is supplied.
+// An explicit unresolved carrier blocks a claim update until a decision is recorded.
 func TestRunSyncGates_ConfrontBlocker_RequiresAck(t *testing.T) {
 	before := syncGatesTestGraph()
 	after := syncGatesTestGraph()
+	carrier := ontology.Conflict{
+		ID: "C-sync-gate-formal", Axis: "startup", Context: "widget startup",
+		Members:   []string{"R-sync-gate-changing", "R-sync-gate-existing"},
+		Lifecycle: ontology.ConflictDETECTED,
+	}
+	before.Conflicts = []ontology.Conflict{carrier}
+	after.Conflicts = []ontology.Conflict{carrier}
 	report := &selfspec.SyncReport{
 		Entries: []selfspec.SyncReportEntry{
 			{

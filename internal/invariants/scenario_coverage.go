@@ -247,6 +247,46 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 		return out
 	}
 
+	if g.SelfExecutingAtoms {
+		_, snapshot, err := InvocationExecutionSnapshot(g)
+		if err != nil {
+			return append(out, Violation{Check: "check_scenario_executes_impl", ID: specRoot, Message: err.Error()})
+		}
+		if snapshot.SourceErr != nil {
+			return append(out, Violation{Check: "check_scenario_executes_impl", ID: specRoot, Message: snapshot.SourceErr.Error()})
+		}
+		for _, j := range jobs {
+			proven, skipped := false, false
+			for _, test := range j.tests {
+				key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(test.file)))
+				if run, exists := snapshot.PackageRuns[key]; exists && run.Skipped {
+					skipped = true
+					continue
+				}
+				for _, artifact := range recordedAtoms(test.file, test.symbol, snapshot.PackageRuns) {
+					for _, step := range artifact.Steps {
+						subject, resolveErr := snapshot.SourceIndex.Resolve(step.Subject)
+						if resolveErr == nil && subject.Link() == j.implRaw {
+							proven = true
+							break
+						}
+					}
+					if proven {
+						break
+					}
+				}
+				if proven {
+					break
+				}
+			}
+			if !proven && !skipped {
+				out = append(out, Violation{Check: "check_scenario_executes_impl", ID: j.reqID,
+					Message: fmt.Sprintf("implemented_by entry %q has no passing executed method subject in its declared tests", j.implRaw)})
+			}
+		}
+		return out
+	}
+
 	sem := make(chan struct{}, runExecWorkers)
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -433,6 +473,7 @@ func scenarioExecutesImplViolation(specRoot, reqID, implRaw string, symRng gate.
 	var tried []string
 	var infra []string
 	for _, te := range tests {
+		var result gate.RecordingResult
 		key := coverageRunKey{testFile: te.file, testName: te.symbol, coverPkgFile: relImplFile}
 
 		// Content hash for cache invalidation: derive the SAME (absPkgDir,
@@ -469,7 +510,7 @@ func scenarioExecutesImplViolation(specRoot, reqID, implRaw string, symRng gate.
 			continue
 		}
 
-		result := runOrReuseCoverage(key, hash, func() gate.RecordingResult {
+		result = runOrReuseCoverage(key, hash, func() gate.RecordingResult {
 			return gate.RunVerifiedByTestRecording(specRoot, te.file, te.symbol, relImplFile)
 		})
 		tried = append(tried, te.raw)

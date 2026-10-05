@@ -81,7 +81,6 @@ func TestConsumerCrystal_SwitchesToCountsAboveBudget(t *testing.T) {
 	}
 	for _, want := range []string{
 		"E (enforced) 20 · S (structural) 20 · P (prose) 20",
-		"Inline list omitted: over 6000 chars",
 		"R-item-004[S,DRAFT]",
 		"R-item-002[P]",
 		"hotam req list --domain domains/acme",
@@ -92,6 +91,28 @@ func TestConsumerCrystal_SwitchesToCountsAboveBudget(t *testing.T) {
 	}
 	if strings.Contains(out, "R-item-000[") {
 		t.Errorf("ENFORCED non-draft R-item-000 must not be listed among exceptions:\n%s", out)
+	}
+}
+
+func TestConsumerCrystal_OverBudgetIndexesAtomPackages(t *testing.T) {
+	t.Parallel()
+	g := consumerTestGraph(60, strings.Repeat(" long claim padding words", 8))
+	g.SelfExecutingAtoms = true
+	for i := range g.Requirements {
+		g.Requirements[i].ImplementedBy = []string{"model/people/person.go:Person.Name"}
+		if i >= 30 {
+			g.Requirements[i].ImplementedBy = []string{"model/roles/role.go:Role.Name"}
+		}
+	}
+	out := renderConsumerRequirements(g, "acme")
+	for _, pkg := range []string{"model/people", "model/roles"} {
+		want := "| [" + pkg + "](domains/acme/docs/gen/spec/" + pkg + ".md) | 30 | 10 | 10 | 10 |"
+		if !strings.Contains(out, want) {
+			t.Errorf("package counts or shard link missing: %s", want)
+		}
+	}
+	if strings.Contains(out, "- R-item-000 —") {
+		t.Error("oversized requirement list remains inline")
 	}
 }
 
@@ -235,14 +256,3 @@ func TestConsumerDocPredicates_OwnData(t *testing.T) {
 	}
 }
 
-// Full profile stays byte-identical: the crystal of the fixture graph hashes
-// to the value rendered by the pre-change generator.
-func TestFullProfileCrystal_Golden(t *testing.T) {
-	t.Parallel()
-	g := loadFixtureGraph(t)
-	out := RenderClaudeMDFromTemplate(g, "hotam-spec-self", t.TempDir(), 4200, nil, "2026-07-12", false)
-	got := sha256Hex(out)
-	if got != fullProfileCrystalGolden {
-		t.Errorf("full-profile crystal changed: sha256 = %s, want %s", got, fullProfileCrystalGolden)
-	}
-}

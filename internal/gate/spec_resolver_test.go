@@ -1438,3 +1438,23 @@ func equalStringSlices(a, b []string) bool {
 	}
 	return true
 }
+
+func TestResolveSpecTest_AtomRecorderAliases(t *testing.T) {
+	t.Parallel()
+	for _, method := range []string{"Fact", "Holds"} {
+		for _, qualifier := range []string{"hs", "other"} {
+			t.Run(method+"/"+qualifier, func(t *testing.T) {
+				src := "package model\nimport (\n\"testing\"\nhs \"example.com/dom/spec/hotamspec\"\nother \"example.com/other\"\n)\nfunc TestAtom(t *testing.T) { " + qualifier + "." + method + "(t, object.Method) }\n"
+				domainDir := writeSpecFixture(t, "spec/model/atom_test.go", src)
+				result, err := ResolveSpecTest(SpecRoot(domainDir, false), "spec/model/atom_test.go", "TestAtom")
+				if err != nil {
+					t.Fatal(err)
+				}
+				want := qualifier == "hs"
+				if result.HasTeeth != want || result.HasScenario != want {
+					t.Fatalf("qualifier %s method %s: teeth=%v scenario=%v, want %v", qualifier, method, result.HasTeeth, result.HasScenario, want)
+				}
+			})
+		}
+	}
+}

@@ -1,11 +1,11 @@
 package generator
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
 	"github.com/PHPCraftdream/HotamSpec/internal/freshness"
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
@@ -55,20 +55,22 @@ func AgentContextMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool) string {
-	return buildAgentContext(g, domainName, claudeMDCharCount, today, consumer)
+	return buildAgentContext(g, domainName, claudeMDCharCount, today, consumer, invariants.AllViolations(g), "")
 }
 
 // BuildAgentContextRoot is BuildAgentContext with the repo root threaded
-// through, so absolute paths under it embedded in violation/what-now signal
-// text are rewritten to root-relative, forward-slashed paths before
-// docs/gen/AGENT-CONTEXT.md is rendered — no machine-specific absolute path
-// leaks into the committed document. repoRoot "" keeps the legacy
-// (unrewritten) form for callers that have no root.
+// through for absolute-path normalization.
 func BuildAgentContextRoot(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool, repoRoot string) string {
-	return rewriteRepoAbsPaths(repoRoot, buildAgentContext(g, domainName, claudeMDCharCount, today, consumer))
+	return BuildAgentContextRootWithViolations(g, domainName, claudeMDCharCount, today, consumer, invariants.AllViolations(g), repoRoot)
 }
 
-func buildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool) string {
+// BuildAgentContextRootWithViolations renders the locale view using the
+// caller's shared violation snapshot, avoiding a second per-locale scan.
+func BuildAgentContextRootWithViolations(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool, violations []invariants.Violation, repoRoot string) string {
+	return rewriteRepoAbsPaths(repoRoot, buildAgentContext(g, domainName, claudeMDCharCount, today, consumer, violations, repoRoot))
+}
+
+func buildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount int, today string, consumer bool, violations []invariants.Violation, repoRoot string) string {
 	if domainName == "" {
 		domainName = "hotam-spec-self"
 	}
@@ -76,18 +78,18 @@ func buildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount i
 	tensionsWritten := TensionsMDHasContent(g)
 
 	lines := []string{
-		generatedHeaderComment,
+		serviceText(g, generatedHeaderComment),
 		"",
-		"# AGENT-CONTEXT.md — compact agent boot digest (" + domainName + ")",
+		serviceText(g, "# AGENT-CONTEXT.md — compact agent boot digest (%s)", domainName),
 		"",
-		"This file is the compact entry point for an agent session — target < 15KB. It is a live-state pulse, a top-action shortlist, and an id+flag-only constitution index, NOT a substitute for the full reference docs. Full claims/WHY/assumptions, tension detail, and rejection history remain in the other docs/gen/*.md files below — those are reference-only, load them on demand, not at every boot.",
+		serviceText(g, "This file is the compact entry point for an agent session — target < 15KB. It is a live-state pulse, a top-action shortlist, and an id+flag-only constitution index, NOT a substitute for the full reference docs. Full claims/WHY/assumptions, tension detail, and rejection history remain in the other docs/gen/*.md files below — those are reference-only, load them on demand, not at every boot."),
 		"",
 	}
 
-	lines = append(lines, BuildLiveState(g, domainName, claudeMDCharCount, today))
+	lines = append(lines, BuildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, violations))
 	lines = append(lines, "")
 
-	lines = append(lines, renderAgentContextWhatNow(g, today)...)
+	lines = append(lines, renderAgentContextWhatNow(g, today, violations)...)
 	lines = append(lines, "")
 
 	lines = append(lines, renderAgentContextCounters(g, today)...)
@@ -96,43 +98,47 @@ func buildAgentContext(g *ontology.Graph, domainName string, claudeMDCharCount i
 	lines = append(lines, renderAgentContextConstitutionIndex(g, consumer)...)
 	lines = append(lines, "")
 
-	lines = append(lines, "## Details on demand", "")
-	lines = append(lines, fmt.Sprintf("- One requirement's full claim + WHY + assumptions: `hotam req show <id> --domain domains/%s`.", domainName))
-	lines = append(lines, fmt.Sprintf("- Full requirement roster: `domains/%s/docs/gen/REQUIREMENTS.md`.", domainName))
+	lines = append(lines, serviceText(g, "## Details on demand"), "")
+	lines = append(lines, serviceText(g, "- One requirement's full claim + WHY + assumptions: `hotam req show <id> --domain domains/%s`.", domainName))
+	lines = append(lines, serviceText(g, "- Full requirement roster: `%s`.", localizedDomainDocPath(g, domainName, "REQUIREMENTS.md")))
 	if tensionsWritten {
-		lines = append(lines, fmt.Sprintf("- Tension clusters: `domains/%s/docs/gen/TENSIONS.md`.", domainName))
+		lines = append(lines, serviceText(g, "- Tension clusters: `%s`.", localizedDomainDocPath(g, domainName, "TENSIONS.md")))
 	}
-	lines = append(lines, fmt.Sprintf("- Rejection history: `domains/%s/docs/gen/HISTORY.md`.", domainName))
-	lines = append(lines, fmt.Sprintf("- Enforcement gap detail: `domains/%s/docs/gen/UNENFORCED.md`.", domainName))
-	lines = append(lines, fmt.Sprintf("- Framework-internal atoms: `domains/%s/docs/gen/FRAMEWORK-INVARIANTS.md`.", domainName))
-	lines = append(lines, "- Review-freshness detail (which ids, how overdue): `hotam due --domain domains/"+domainName+"`.")
+	lines = append(lines, serviceText(g, "- Rejection history: `%s`.", localizedDomainDocPath(g, domainName, "HISTORY.md")))
+	lines = append(lines, serviceText(g, "- Enforcement gap detail: `%s`.", localizedDomainDocPath(g, domainName, "UNENFORCED.md")))
+	lines = append(lines, serviceText(g, "- Framework-internal atoms: `%s`.", localizedDomainDocPath(g, domainName, "FRAMEWORK-INVARIANTS.md")))
+	lines = append(lines, serviceText(g, "- Review-freshness detail (which ids, how overdue): `hotam due --domain domains/%s`.", domainName))
 	lines = append(lines, "")
 
-	lines = append(lines, renderAgentContextDocsGenIndex(domainName, tensionsWritten)...)
+	lines = append(lines, renderAgentContextDocsGenIndex(g, domainName, tensionsWritten)...)
 
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
+}
+
+func localizedDomainDocPath(g *ontology.Graph, domainName, filename string) string {
+	return "domains/" + domainName + "/" + localizedDocumentPath(g, "docs/gen/"+filename)
 }
 
 // renderAgentContextWhatNow renders the "## Top actions" section: the first
 // agentContextWhatNowLimit signals from diagnose.DiagnoseSignals, the same
 // ranked list `hotam what-now` prints, reused verbatim rather than
 // re-deriving priority ordering here.
-func renderAgentContextWhatNow(g *ontology.Graph, today string) []string {
-	out := []string{fmt.Sprintf("## Top actions (what-now, top %d)", agentContextWhatNowLimit), ""}
-	signals := diagnose.DiagnoseSignals(g, today)
+func renderAgentContextWhatNow(g *ontology.Graph, today string, violations []invariants.Violation) []string {
+	out := []string{serviceText(g, "## Top actions (what-now, top %d)", agentContextWhatNowLimit), ""}
+	signals := diagnose.DiagnoseSignalsWithViolations(g, today, violations)
 	if len(signals) == 0 {
-		out = append(out, "_(none — graph clean)_")
+		out = append(out, serviceText(g, "_(none — graph clean)_"))
 		return out
 	}
 	end := agentContextWhatNowLimit
 	if end > len(signals) {
 		end = len(signals)
 	}
-	for _, s := range signals[:end] {
-		out = append(out, fmt.Sprintf("- [P%d] %s on `%s` — %s", s.Priority, bandLabel[s.Priority], s.Target, s.Message))
+	for _, signal := range signals[:end] {
+		out = append(out, serviceText(g, "- [P%d] %s on `%s` — %s", signal.Priority, serviceText(g, bandLabel[signal.Priority]), signal.Target, signal.Message))
 	}
 	if len(signals) > end {
-		out = append(out, "", fmt.Sprintf("_(showing %d of %d — full list: `hotam what-now`)_", end, len(signals)))
+		out = append(out, "", serviceText(g, "_(showing %d of %d — full list: `hotam what-now`)_", end, len(signals)))
 	}
 	return out
 }
@@ -163,9 +169,9 @@ func renderAgentContextCounters(g *ontology.Graph, today string) []string {
 	}
 
 	return []string{
-		"## Status counters",
+		serviceText(g, "## Status counters"),
 		"",
-		fmt.Sprintf("SETTLED %d · DRAFT %d · REJECTED %d · OVERDUE %d (as of %s)", settled, draft, rejected, overdue, today),
+		serviceText(g, "SETTLED %d · DRAFT %d · REJECTED %d · OVERDUE %d (as of %s)", settled, draft, rejected, overdue, today),
 	}
 }
 
@@ -194,41 +200,42 @@ func renderAgentContextCounters(g *ontology.Graph, today string) []string {
 // MANDATORY would be a dead link (task #361). PIPELINE.md and MODELS.md are
 // NOT listed here at all (they are REFERENCE-level or absent, tracked in
 // REPO-MAP.md's "not written" lines instead).
-func renderAgentContextDocsGenIndex(domainName string, tensionsWritten bool) []string {
-	base := "domains/" + domainName + "/docs/gen/"
-	// projectFW (task #357): GLOSSARY.md and tools/*.md are PROJECT-shared — a
-	// single copy at the repository root's framework/ directory, byte-identical
-	// regardless of which domain regenerated it. The references below use
-	// repo-root-relative paths (framework/...), not domain-prefixed ones, since
-	// the files are siblings of domains/, not inside any one domain.
-	projectFW := "framework/"
+func renderAgentContextDocsGenIndex(g *ontology.Graph, domainName string, tensionsWritten bool) []string {
+	domainPath := func(filename string) string {
+		return "domains/" + domainName + "/" + localizedDocumentPath(g, "docs/gen/"+filename)
+	}
+	projectPath := func(filename string) string {
+		return localizedDocumentPath(g, "framework/"+filename)
+	}
+	thinkingPattern := strings.TrimSuffix(localizedDocumentPath(g, "docs/gen/thinking/slug.md"), "slug.md") + "<slug>.md"
+	toolPattern := strings.TrimSuffix(projectPath("tools/tool.md"), "tool.md") + "<tool>.md"
 	mandatory := []string{
-		"## docs/gen/ file index (which files do I actually need to read?)",
+		serviceText(g, "## docs/gen/ file index (which files do I actually need to read?)"),
 		"",
-		"MANDATORY (named directly in this domain's CLAUDE.md boot text — read essentially every session):",
-		"- `AGENT-CONTEXT.md` (this file) — compact boot digest.",
-		"- `" + base + "REQUIREMENTS.md` — full requirement roster (LOCATE step).",
+		serviceText(g, "MANDATORY (named directly in this domain's CLAUDE.md boot text — read essentially every session):"),
+		serviceText(g, "- `%s` (this file) — compact boot digest.", domainPath("AGENT-CONTEXT.md")),
+		serviceText(g, "- `%s` — full requirement roster (LOCATE step).", domainPath("REQUIREMENTS.md")),
 	}
 	if tensionsWritten {
-		mandatory = append(mandatory, "- `"+base+"TENSIONS.md` — conflict clusters (LOCATE step).")
+		mandatory = append(mandatory, serviceText(g, "- `%s` — conflict clusters (LOCATE step).", domainPath("TENSIONS.md")))
 	}
 	mandatory = append(mandatory,
-		"- `"+base+"UNENFORCED.md` — enforcement-gap detail behind the top-action line.",
-		"- `"+base+"FRAMEWORK-INVARIANTS.md` — framework-internal atoms behind the Constitution index.",
+		serviceText(g, "- `%s` — enforcement-gap detail behind the top-action line.", domainPath("UNENFORCED.md")),
+		serviceText(g, "- `%s` — framework-internal atoms behind the Constitution index.", domainPath("FRAMEWORK-INVARIANTS.md")),
 		"",
-		"REFERENCE (load on demand for a specific task, not at boot):",
-		"- `"+base+"CONSTITUTION.md`, `REPO-MAP.md` — narrative expansions of sections already summarized above.",
-		"- `"+projectFW+"GLOSSARY.md` — methodology controlled vocabulary (project-shared).",
-		"- `"+base+"atoms-operator.md`, `atoms-substrate.md`, `atoms-discipline.md`, `atoms-check.md` — per-category atom detail.",
-		"- `"+base+"live-state.md` — the same pulse this file's Live-state section already carries, standalone.",
-		"- `"+base+"OPEN.md` — open-question detail behind the OPEN status.",
-		"- `"+base+"thinking/<slug>.md` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.",
-		"- `"+projectFW+"tools/INDEX.md` — entry point for the tool-docs directory: splits the registry into Implemented (real commands) vs Planned (methodology surface only).",
-		"- `"+projectFW+"tools/<tool>.md` — one purpose doc per tool, loaded only when working with that tool.",
+		serviceText(g, "REFERENCE (load on demand for a specific task, not at boot):"),
+		serviceText(g, "- `%s`, `%s` — narrative expansions of sections already summarized above.", domainPath("CONSTITUTION.md"), domainPath("REPO-MAP.md")),
+		serviceText(g, "- `%s` — methodology controlled vocabulary (project-shared).", projectPath("GLOSSARY.md")),
+		serviceText(g, "- `%s`, `%s`, `%s`, `%s` — per-category atom detail.", domainPath("atoms-operator.md"), domainPath("atoms-substrate.md"), domainPath("atoms-discipline.md"), domainPath("atoms-check.md")),
+		serviceText(g, "- `%s` — the same pulse this file's Live-state section already carries, standalone.", domainPath("live-state.md")),
+		serviceText(g, "- `%s` — open-question detail behind the OPEN status.", domainPath("OPEN.md")),
+		serviceText(g, "- `%s` — one deep-dive per §-section, loaded only when a §-anchor needs its full Canon/Narrative/Why.", thinkingPattern),
+		serviceText(g, "- `%s` — entry point for the tool-docs directory: splits the registry into Implemented (real commands) vs Planned (methodology surface only).", projectPath("tools/INDEX.md")),
+		serviceText(g, "- `%s` — one purpose doc per tool, loaded only when working with that tool.", toolPattern),
 		"",
-		"ARCHIVAL (historical/self-contained — read only when investigating past decisions, never at boot):",
-		"- `"+base+"HISTORY.md` — REJECTED + DECIDED change-log; anti-relitigation lookup only.",
-		"- `"+base+"graph.json` — read-only regenerated snapshot of this domain's graph.json, kept byte-identical by R-drift-structurally-impossible for archival/portability; no tool reads it back.",
+		serviceText(g, "ARCHIVAL (historical/self-contained — read only when investigating past decisions, never at boot):"),
+		serviceText(g, "- `%s` — REJECTED + DECIDED change-log; anti-relitigation lookup only.", domainPath("HISTORY.md")),
+		serviceText(g, "- `domains/%s/graph.json` — read-only regenerated snapshot of this domain's graph.json, kept byte-identical by R-drift-structurally-impossible for archival/portability; no tool reads it back.", domainName),
 	)
 	return mandatory
 }
@@ -240,17 +247,17 @@ func renderAgentContextDocsGenIndex(domainName string, tensionsWritten bool) []s
 // — rather than a second independent index builder.
 func renderAgentContextConstitutionIndex(g *ontology.Graph, consumer bool) []string {
 	out := []string{
-		"## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)",
+		serviceText(g, "## Constitution index (id + flag only — [E] ENFORCED · [S] STRUCTURAL · [P] PROSE)"),
 		"",
 	}
 	categories := buildConstitutionIndexModel(g, consumer)
 	if len(categories) == 0 {
-		out = append(out, "_No SETTLED requirements yet._")
+		out = append(out, serviceText(g, "_No SETTLED requirements yet._"))
 		return out
 	}
 	for _, category := range categories {
 		items := clusterIndexItems(category.Requirements)
-		out = append(out, fmt.Sprintf("**%s** — %s", category.Label, strings.Join(items, " · ")))
+		out = append(out, serviceText(g, "**%s** — %s", serviceText(g, category.Label), strings.Join(items, " · ")))
 		out = append(out, "")
 	}
 	return out

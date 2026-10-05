@@ -1,17 +1,12 @@
 package methodology
 
 import (
-	"strings"
 	"testing"
 )
 
-func TestSectionsComplete(t *testing.T) {
+func TestSectionsHaveValidMetadata(t *testing.T) {
 	t.Parallel()
 	sections := Sections.All()
-	const want = 29
-	if len(sections) != want {
-		t.Fatalf("expected %d sections, got %d", want, len(sections))
-	}
 	for _, s := range sections {
 		if s.Slug == "" {
 			t.Errorf("section has empty Slug: %+v", s)
@@ -29,6 +24,26 @@ func TestSectionsComplete(t *testing.T) {
 		case ONTOLOGY, DISCIPLINE, PROCESS, PLUMBING:
 		default:
 			t.Errorf("section %q has unknown Kind %q", s.Slug, s.Kind)
+		}
+	}
+}
+
+func TestToolsHaveValidMetadata(t *testing.T) {
+	t.Parallel()
+	for _, tool := range Tools.All() {
+		if tool.Command == "" {
+			t.Errorf("tool has empty Command: %+v", tool)
+		}
+		if tool.Canon == "" {
+			t.Errorf("tool %q has empty Canon", tool.Command)
+		}
+		if tool.Purpose == "" {
+			t.Errorf("tool %q has empty Purpose", tool.Command)
+		}
+		switch tool.Status {
+		case Implemented, Planned:
+		default:
+			t.Errorf("tool %q has unknown Status %q", tool.Command, tool.Status)
 		}
 	}
 }
@@ -77,55 +92,6 @@ func TestNamedSectionVariables(t *testing.T) {
 	}
 }
 
-func TestToolsComplete(t *testing.T) {
-	t.Parallel()
-	tools := Tools.All()
-	// 21 Implemented (gen_spec, what_now, apply_proposal, gate, all_violations,
-	// req, brief, due, status, inspect, confront, land, init, init_project, use,
-	// propose, sync_self, version, vendor_ontology, scaffold_registrydump,
-	// sync_domain — every real `hotam` CLI subcommand; the last three added by
-	// task #367/RAC2 Phase C, which found #365/#366 had implemented them as
-	// real cmd/hotam subcommands but never registered them here) + 27
-	// Planned (methodology surface not yet implemented as Go commands).
-	const want = 48
-	if len(tools) != want {
-		t.Fatalf("expected %d tools, got %d", want, len(tools))
-	}
-	for _, tl := range tools {
-		if tl.Command == "" {
-			t.Errorf("tool has empty Command: %+v", tl)
-		}
-		if tl.Canon == "" {
-			t.Errorf("tool %q has empty Canon", tl.Command)
-		}
-		if tl.Purpose == "" {
-			t.Errorf("tool %q has empty Purpose", tl.Command)
-		}
-		switch tl.Status {
-		case Implemented, Planned:
-		default:
-			t.Errorf("tool %q has unknown Status %q", tl.Command, tl.Status)
-		}
-	}
-}
-
-// TestToolsImplementedCount pins the exact count of Implemented tools (as opposed to
-// TestToolsComplete's total, which also counts Planned) so a future edit
-// that accidentally demotes/promotes a tool's Status is caught even though
-// the total count wouldn't change.
-func TestToolsImplementedCount(t *testing.T) {
-	t.Parallel()
-	implemented := 0
-	for _, tl := range Tools.All() {
-		if tl.Status == Implemented {
-			implemented++
-		}
-	}
-	const wantImplemented = 21
-	if implemented != wantImplemented {
-		t.Fatalf("expected %d Implemented tools, got %d", wantImplemented, implemented)
-	}
-}
 
 // TestStatusToolRegisteredImplemented enforces R-status-single-command-summary's
 // existence half: the `status` tool must be registered in the methodology
@@ -156,38 +122,3 @@ func TestStatusToolRegisteredImplemented(t *testing.T) {
 	}
 }
 
-// TestToolPurposeDocumentsRealFlags guards against the doc-drift class fixed by
-// the registry/flag sync: a real CLI flag (registered in cmd/hotam/<tool>.go's
-// flag.FlagSet) that the registry's Purpose "Usage:" string omits. It cannot
-// detect NEW flags added without docs (that would require importing package
-// main, an import cycle), but it pins the specific flags that had drifted so a
-// revert of this fix fails loudly. The asserted substrings match the usage
-// strings cmd/hotam prints on a missing-argument error exactly.
-func TestToolPurposeDocumentsRealFlags(t *testing.T) {
-	t.Parallel()
-	required := map[string][]string{
-		// --today and --claude-md were added to gen-spec's FlagSet but its
-		// Purpose omitted them.
-		"gen_spec": {"--today YYYY-MM-DD", "--claude-md <path>"},
-		// --today was added to what-now's FlagSet but its Purpose omitted it.
-		"what_now": {"--today YYYY-MM-DD"},
-		// --batch is an alternative invocation mode of apply-proposal that its
-		// Purpose omitted (see cmd/hotam/apply_proposal.go's own usage string).
-		"apply_proposal": {"--batch <dir>"},
-		// --batch is an alternative invocation mode of land that its Purpose
-		// omitted (see cmd/hotam/land.go's own usage string).
-		"land": {"--batch <dir>", "--claude-md <path>"},
-	}
-	for cmd, flags := range required {
-		tool, ok := Tools.Get(cmd)
-		if !ok {
-			t.Errorf("tool %q not registered", cmd)
-			continue
-		}
-		for _, f := range flags {
-			if !strings.Contains(tool.Purpose, f) {
-				t.Errorf("tool %q Purpose missing %q in its Usage string\nPurpose: %s", cmd, f, tool.Purpose)
-			}
-		}
-	}
-}

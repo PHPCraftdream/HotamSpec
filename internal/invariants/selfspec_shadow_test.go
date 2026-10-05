@@ -3,6 +3,7 @@ package invariants
 import (
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
@@ -183,6 +184,28 @@ func TestCheckSelfRequirementsMatchRegistry_MUTATION_DetectsStructuralFieldDrift
 	}
 	if !hit {
 		t.Fatalf("expected a violation for %q (graph Claim mutated away from the registry's value), got %+v", victim, got)
+	}
+}
+
+func TestFirstStructuralFieldDiffIncludesSourceEvidence(t *testing.T) {
+	registryValue := ontology.Requirement{
+		ID:          "R-source-fields",
+		SourceLinks: []ontology.SourceLink{{SourceID: "spec", Anchor: "#scope"}},
+		Coverage: &ontology.CoverageDeclaration{
+			Status: ontology.CoverageUnverified, Rationale: "no execution evidence",
+		},
+	}
+	graphValue := registryValue
+	graphValue.SourceLinks = []ontology.SourceLink{{SourceID: "spec", Anchor: "#stale"}}
+	if got := firstStructuralFieldDiff(registryValue, graphValue); got == "" || !strings.HasPrefix(got, "source_links:") {
+		t.Fatalf("source_links drift = %q, want the structural source_links field", got)
+	}
+	graphValue = registryValue
+	graphValue.Coverage = &ontology.CoverageDeclaration{
+		Status: ontology.CoverageUnsupported, Rationale: "different authored qualification",
+	}
+	if got := firstStructuralFieldDiff(registryValue, graphValue); got == "" || !strings.HasPrefix(got, "coverage:") {
+		t.Fatalf("coverage drift = %q, want the structural coverage field", got)
 	}
 }
 

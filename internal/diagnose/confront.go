@@ -7,80 +7,71 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
-// Confront is the CONFRONT step of the mediation loop, made callable: it takes
-// an EXTERNAL candidate text (a draft claim an operator is about to propose)
-// and checks it for lexical overlap with every SETTLED requirement (duplicate
-// guard) and every REJECTED requirement (anti-relitigation guard) in the graph.
-//
-// It reuses the SAME tokenization (claimTokens), opposite-marker detection
-// (markerHits), and overlap thresholds (MinLexicalOverlapTokens /
-// MinLexicalOverlapTokensWithMarker) as InspectLexicalClaimOverlap — the only
-// difference is that one side of the comparison is an external string rather
-// than a second graph node, so the "different owner" branch of the inspect
-// heuristic does not apply (a candidate has no owner). What remains is the
-// signal that matters for CONFRONT: significant shared tokens, optionally
-// strengthened by an opposite marker (never/always, must/must not, only/any).
-//
-// The result is ALWAYS advisory (R-ai-presents-not-decides): confront never
-// gates, never decides, and never changes exit code. It gives the operator a
-// deterministic shortlist of "looks like X already" before anything is written.
+// Classification and Confidence contain stable machine-readable labels for
+// advisory lexical/link evidence and explicit formal carrier matches.
+const (
+	ClassificationLexicalSuspicion = "lexical_suspicion"
+	ClassificationLinkedSuspicion  = "linked_suspicion"
+	ClassificationFormalConflict   = "formal_conflict"
+
+	ConfidenceAdvisory     = "advisory"
+	ConfidenceCorroborated = "corroborated"
+	ConfidenceExplicit     = "explicit"
+)
+
+// ConfrontHit is a lexical/metadata suspicion or a match to an explicit
+// unresolved Conflict carrier. Classification and Reasons explain the
+// machine's evidence; only formal_conflict is a hard blocker.
 type ConfrontHit struct {
-	ID     string   `json:"id"`
-	Claim  string   `json:"claim"`
-	Score  int      `json:"score"`
-	Shared []string `json:"shared"`
-	// OppositeMarker carries the human-readable "a vs b" label (e.g.
-	// "always vs never") when this hit was strengthened by an opposite-marker
-	// pair split across the candidate and the settled/rejected requirement,
-	// or "" when no such marker contributed. It is the SAME value confrontHit
-	// already folded into Score (+3 bonus); exposing it on the struct lets
-	// callers distinguish "high score from many shared topical tokens"
-	// (relatedness, not contradiction) from "opposite marker present"
-	// (genuine semantic tension) — the distinction the land semantic-conflict
-	// gate (cmd/hotam/semantic_gate.go) uses as its high-confidence signal.
+	ID             string   `json:"id"`
+	Claim          string   `json:"claim"`
+	Score          int      `json:"score"`
+	Shared         []string `json:"shared"`
 	OppositeMarker string   `json:"opposite_marker,omitempty"`
 	ReplacedBy     []string `json:"replaced_by,omitempty"`
+	Classification string   `json:"classification"`
+	Confidence     string   `json:"confidence"`
+	Reasons        []string `json:"reasons"`
+	ConflictIDs    []string `json:"conflict_ids,omitempty"`
 }
 
-// HasOppositeMarker reports whether this hit was strengthened by an
-// opposite-marker pair (never/always, must/must not, only/any) split across
-// the candidate and the matched requirement. It is the precise signal a caller
-// uses to decide "this hit is likely a genuine semantic contradiction, not
-// mere topical overlap" — the land semantic-conflict gate's primary trigger.
+// HasOppositeMarker indicates recognized opposite marker text. It does not
+// establish that the claims share a scope or contradict one another.
 func (h ConfrontHit) HasOppositeMarker() bool {
 	return h.OppositeMarker != ""
 }
 
-// ConfrontResult is the full output of one Confront check: the candidate text
-// (echoed back so JSON consumers can correlate), the duplicate-suspect hits
-// against SETTLED requirements, the re-litigation-suspect hits against REJECTED
-// requirements, and a Clear flag that is true iff NO significant overlap was
-// found on either side (the "green light to propose" signal).
+// ConfrontResult carries lexical suspicions in Settled/Rejected and explicit
+// matching unresolved carriers separately in FormalConflicts.
 type ConfrontResult struct {
-	Candidate string        `json:"candidate"`
-	Settled   []ConfrontHit `json:"settled"`
-	Rejected  []ConfrontHit `json:"rejected"`
-	Clear     bool          `json:"clear"`
+	Candidate       string        `json:"candidate"`
+	Settled         []ConfrontHit `json:"settled"`
+	Rejected        []ConfrontHit `json:"rejected"`
+	FormalConflicts []ConfrontHit `json:"formal_conflicts"`
+	Clear           bool          `json:"clear"`
 }
 
 // Confront checks candidateText for lexical overlap with the SETTLED and
-// REJECTED requirements of g. A hit fires when the shared-significant-token
-// count reaches the same threshold InspectLexicalClaimOverlap uses
-// (MinLexicalOverlapTokens, lowered to MinLexicalOverlapTokensWithMarker when
-// an opposite marker is also present). REJECTED hits additionally carry any
-// known REPLACES successor (via ontology.ReplacesMap) so the operator can cite
-// the replacement instead of re-deriving the rejected idea.
-//
-// Tokens on BOTH sides (candidate and requirement) are filtered through the
-// SAME corpus-common exclusion InspectLexicalClaimOverlap uses
-// (corpusCommonTokens(g), computed fresh from g's own SETTLED claims) —
-// see inspect.go's doc comments for the full rationale. In practice this
-// means a candidate that shares only domain-frequent connective words with a
-// SETTLED requirement (e.g. "requirement", "enforce", "every" in this
-// project's own corpus) no longer counts as a duplicate/re-litigation
-// suspect purely on that overlap; it takes a rarer, more topically specific
-// shared token (or an opposite marker) to fire.
+// REJECTED requirements of g. Opposite markers lower the lexical overlap
+// threshold but are evidence of textual polarity only: every lexical result is
+// advisory, never proof of semantic contradiction and never a blocker.
 func Confront(g *ontology.Graph, candidateText string) ConfrontResult {
+	var candidate ontology.Requirement
+	candidate.Claim = candidateText
+	return confront(g, candidate)
+}
+
+// ConfrontRequirement checks a candidate Requirement using its claim and
+// authored metadata. Exact implementation/source links and explicit relations
+// can strengthen a lexical suspicion or surface a linked suspicion without
+// lexical overlap. Only an explicit unresolved Conflict carrier naming the
+// candidate ID and another member ID is classified as formal_conflict.
+func ConfrontRequirement(g *ontology.Graph, candidate ontology.Requirement) ConfrontResult {
+	return confront(g, candidate)
+}
+
+func confront(g *ontology.Graph, candidate ontology.Requirement) ConfrontResult {
+	candidateText := candidate.Claim
 	common := corpusCommonTokens(g)
 	candTokens := claimTokens(candidateText, common)
 	candMarks := markerHits(candidateText)
@@ -89,12 +80,15 @@ func Confront(g *ontology.Graph, candidateText string) ConfrontResult {
 
 	var settled, rejected []ConfrontHit
 	for _, r := range g.Requirements {
+		if candidate.ID != "" && r.ID == candidate.ID {
+			continue
+		}
 		switch r.Status {
 		case ontology.StatusSETTLED, ontology.StatusREJECTED:
 		default:
 			continue
 		}
-		hit := confrontHit(candTokens, candMarks, r, common)
+		hit := confrontHit(candTokens, candMarks, candidate, r, common)
 		if hit == nil {
 			continue
 		}
@@ -110,37 +104,33 @@ func Confront(g *ontology.Graph, candidateText string) ConfrontResult {
 		}
 	}
 
+	formal := formalConflictHits(g, candidate)
 	sortConfrontHits(settled)
 	sortConfrontHits(rejected)
+	sortConfrontHits(formal)
 
-	// Settled/Rejected are array-typed JSON fields consumed by `hotam
-	// confront --json`: normalize nil to an empty (non-nil) slice so a
-	// clear result (the common case — no overlap found) marshals to `[]`,
-	// not `null`, keeping the shape stable for machine consumers.
 	if settled == nil {
 		settled = []ConfrontHit{}
 	}
 	if rejected == nil {
 		rejected = []ConfrontHit{}
 	}
+	if formal == nil {
+		formal = []ConfrontHit{}
+	}
 
 	return ConfrontResult{
-		Candidate: candidateText,
-		Settled:   settled,
-		Rejected:  rejected,
-		Clear:     len(settled) == 0 && len(rejected) == 0,
+		Candidate:       candidateText,
+		Settled:         settled,
+		Rejected:        rejected,
+		FormalConflicts: formal,
+		Clear:           len(settled) == 0 && len(rejected) == 0 && len(formal) == 0,
 	}
 }
 
-// confrontHit returns a populated *ConfrontHit for candidate vs r when the
-// overlap clears the inspect threshold, or nil when it does not. The threshold
-// and scoring mirror InspectLexicalClaimOverlap exactly (minus the
-// different-owner term, which is undefined for an owner-less candidate): the
-// overlap bar is MinLexicalOverlapTokens (2) normally, lowered to
-// MinLexicalOverlapTokensWithMarker (1) when an opposite marker is present.
-// common is the corpus-common token set (corpusCommonTokens(g)) applied to
-// r's tokens on top of the stop-word filter — see Confront's doc comment.
-func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, r ontology.Requirement, common map[string]struct{}) *ConfrontHit {
+// confrontHit returns a populated *ConfrontHit for candidate vs r when there
+// is enough lexical overlap or an exact authored metadata link.
+func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, candidate, r ontology.Requirement, common map[string]struct{}) *ConfrontHit {
 	reqTokens := claimTokens(r.Claim, common)
 	var shared []string
 	for t := range candTokens {
@@ -151,18 +141,32 @@ func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, r 
 	sort.Strings(shared)
 
 	opposite := oppositeMarkerBetween(candMarks, markerHits(r.Claim))
+	linked, linkReasons := sharedMetadataLinks(candidate, r)
 
 	threshold := MinLexicalOverlapTokens
 	if opposite != "" {
 		threshold = MinLexicalOverlapTokensWithMarker
 	}
-	if len(shared) < threshold {
+	if len(shared) < threshold && !linked {
 		return nil
 	}
 
 	score := len(shared)
+	reasons := make([]string, 0, 2+len(linkReasons))
+	if len(shared) > 0 {
+		reasons = append(reasons, "shared lexical tokens: ["+strings.Join(shared, ", ")+"]")
+	}
 	if opposite != "" {
 		score += 3
+		reasons = append(reasons, "opposite marker text: "+opposite+" (lexical evidence only)")
+	}
+	reasons = append(reasons, linkReasons...)
+
+	classification := ClassificationLexicalSuspicion
+	confidence := ConfidenceAdvisory
+	if linked {
+		classification = ClassificationLinkedSuspicion
+		confidence = ConfidenceCorroborated
 	}
 	return &ConfrontHit{
 		ID:             r.ID,
@@ -170,7 +174,116 @@ func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, r 
 		Score:          score,
 		Shared:         shared,
 		OppositeMarker: opposite,
+		Classification: classification,
+		Confidence:     confidence,
+		Reasons:        reasons,
 	}
+}
+
+func sharedMetadataLinks(candidate, existing ontology.Requirement) (bool, []string) {
+	var reasons []string
+	for _, candidateLink := range candidate.ImplementedBy {
+		if candidateLink == "" {
+			continue
+		}
+		for _, existingLink := range existing.ImplementedBy {
+			if candidateLink == existingLink {
+				reasons = append(reasons, "same implemented_by link: "+candidateLink)
+			}
+		}
+	}
+	for _, candidateLink := range candidate.VerifiedBy {
+		if candidateLink == "" {
+			continue
+		}
+		for _, existingLink := range existing.VerifiedBy {
+			if candidateLink == existingLink {
+				reasons = append(reasons, "same verified_by link: "+candidateLink)
+			}
+		}
+	}
+	for _, candidateLink := range candidate.SourceLinks {
+		if candidateLink.SourceID == "" || candidateLink.Anchor == "" {
+			continue
+		}
+		for _, existingLink := range existing.SourceLinks {
+			if candidateLink == existingLink {
+				reasons = append(reasons, "same source anchor: "+candidateLink.SourceID+"#"+candidateLink.Anchor)
+			}
+		}
+	}
+	for _, candidateRelation := range candidate.Relations {
+		if candidateRelation.Kind == "" || candidateRelation.Target == "" {
+			continue
+		}
+		for _, existingRelation := range existing.Relations {
+			if candidateRelation == existingRelation {
+				reasons = append(reasons, "same explicit relation: "+candidateRelation.Kind+" -> "+candidateRelation.Target)
+			}
+		}
+		if existing.ID != "" && candidateRelation.Target == existing.ID {
+			reasons = append(reasons, "explicit relation to matched requirement: "+candidateRelation.Kind+" -> "+existing.ID)
+		}
+	}
+	for _, existingRelation := range existing.Relations {
+		if candidate.ID != "" && existingRelation.Kind != "" && existingRelation.Target == candidate.ID {
+			reasons = append(reasons, "matched requirement explicitly relates to candidate: "+existingRelation.Kind+" -> "+candidate.ID)
+		}
+	}
+	sort.Strings(reasons)
+	return len(reasons) > 0, reasons
+}
+
+func formalConflictHits(g *ontology.Graph, candidate ontology.Requirement) []ConfrontHit {
+	if candidate.ID == "" {
+		return nil
+	}
+	requirements := make(map[string]ontology.Requirement, len(g.Requirements))
+	for _, r := range g.Requirements {
+		requirements[r.ID] = r
+	}
+	byMember := make(map[string]*ConfrontHit)
+	for _, conflict := range g.Conflicts {
+		if !conflict.IsUnresolved() || conflict.ID == "" || !containsID(conflict.Members, candidate.ID) {
+			continue
+		}
+		for _, memberID := range conflict.Members {
+			if memberID == "" || memberID == candidate.ID {
+				continue
+			}
+			hit, ok := byMember[memberID]
+			if !ok {
+				hit = &ConfrontHit{
+					ID:             memberID,
+					Classification: ClassificationFormalConflict,
+					Confidence:     ConfidenceExplicit,
+					Reasons:        []string{},
+				}
+				if r, exists := requirements[memberID]; exists {
+					hit.Claim = r.Claim
+				}
+				byMember[memberID] = hit
+			}
+			hit.ConflictIDs = append(hit.ConflictIDs, conflict.ID)
+			hit.Reasons = append(hit.Reasons, "unresolved "+conflict.Lifecycle+" Conflict "+conflict.ID+" names both "+candidate.ID+" and "+memberID)
+		}
+	}
+	out := make([]ConfrontHit, 0, len(byMember))
+	for _, hit := range byMember {
+		sort.Strings(hit.ConflictIDs)
+		sort.Strings(hit.Reasons)
+		out = append(out, *hit)
+	}
+	return out
+}
+
+func containsID(ids []string, target string) bool {
+	for _, id := range ids {
+		if id == target {
+			return true
+		}
+	}
+	return false
 }
 
 // oppositeMarkerBetween returns the human-readable "a vs b" label for the first
@@ -178,7 +291,13 @@ func confrontHit(candTokens map[string]struct{}, candMarks map[string]string, r 
 // side in a, the other in b), or "" when no such split exists. It is the same
 // comparison InspectLexicalClaimOverlap inlines over two settled requirements.
 func oppositeMarkerBetween(a, b map[string]string) string {
-	for key, sideA := range a {
+	keys := make([]string, 0, len(a))
+	for key := range a {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		sideA := a[key]
 		sideB, ok := b[key]
 		if !ok || sideB == sideA {
 			continue

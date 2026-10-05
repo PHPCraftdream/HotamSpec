@@ -10,13 +10,12 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/selfspec"
 )
 
-// ConflictChecker is injected by a periphery-aware caller (cmd/hotam) so
-// internal/proposal (core) never imports internal/diagnose (periphery) --
-// see R-core-periphery-import-ratchet, enforced by
-// internal/selfcheck/imports_test.go's TestCorePeriphery_ImportRatchet.
-// It returns a non-nil, ready-to-surface error if claim semantically
-// conflicts with SETTLED content in g, or nil if clear.
-type ConflictChecker func(g *ontology.Graph, claim string) error
+// ConflictChecker is injected by cmd/hotam so internal/proposal does not
+// import the periphery diagnosis package. It receives the full candidate
+// Requirement, including ID and authored links, and returns a non-nil error
+// only when an explicit unresolved Conflict carrier covers the candidate and
+// another member.
+type ConflictChecker func(g *ontology.Graph, candidate ontology.Requirement) error
 
 // ProvenanceChecker is injected by the caller (cmd/hotam) so ApplyBatch can
 // enforce the opt-in provenance gate (require_provenance in manifest.json —
@@ -321,23 +320,15 @@ func Apply(graphPath string, today string, p Proposal) error {
 // the graph on disk (graph.json + graph.lock) is left untouched.
 //
 // SEMANTIC-CONFLICT GATE (batch path): for each ProposedRequirement, BEFORE
-// applyToGraph mutates g, ApplyBatch invokes the injected checkConflict
-// (a ConflictChecker) against the ROLLING in-memory graph — which by the time
-// proposal i is checked already reflects proposals 0..i-1 applied earlier in
-// the SAME batch — and refuses the ENTIRE batch if checkConflict reports a
-// blocking conflict. internal/proposal (core) cannot import internal/diagnose
-// (periphery) — see R-core-periphery-import-ratchet — so the actual
-// opposite-marker + topical-token check (diagnose.IsBlockingHit) is built by
-// cmd/hotam (which imports both packages) and passed in as checkConflict. It
-// catches both contradictions against PRE-EXISTING graph state AND
-// contradictions against an EARLIER item of the same batch (the rolling
-// graph makes that free — no extra bookkeeping). A refusal returns before
-// WriteGraph/WriteLock, so disk stays untouched, exactly like every other
-// ApplyBatch failure. There is NO --ack-conflict / --decision-ref override in
-// batch mode: a conflicting item must be pulled out and landed individually
-// via `hotam land` / `hotam apply-proposal` (single-file) with an explicit
-// ack. checkConflict may be nil, in which case no semantic-conflict checking
-// is performed (used by callers/tests that don't need the gate).
+// applyToGraph mutates g, ApplyBatch invokes the injected checkConflict against
+// the ROLLING in-memory graph. The caller owns classification and blocks only
+// when an explicit unresolved Conflict carrier names both the candidate ID and
+// another member ID. Lexical markers, token overlap, source links, and
+// relations may produce advisory findings but are not blockers. A refusal
+// returns before WriteGraph/WriteLock, so the entire batch remains atomic.
+// There is no per-item decision override in batch mode; a blocked item must be
+// applied individually with a recorded decision. checkConflict may be nil when
+// the caller does not require this gate.
 //
 // PROVENANCE GATE (batch path): mirrors the semantic-conflict gate's shape
 // and placement. For each ProposedRequirement, BEFORE applyToGraph mutates g,
@@ -358,15 +349,21 @@ func ApplyBatch(graphPath string, today string, ps []Proposal, checkConflict Con
 	}
 
 	for i, p := range ps {
-		// Batch semantic-conflict gate: confront this requirement's claim
-		// against the ROLLING in-memory graph (already reflecting proposals
-		// 0..i-1) via the injected checkConflict, and refuse on any blocking
-		// conflict. Runs BEFORE applyToGraph so a refusal leaves g unmutated
-		// and — because the failure returns before the single WriteGraph
-		// below — disk untouched.
+		// The injected formal-conflict gate runs before mutation against the
+		// rolling graph; only a matching unresolved Conflict member can refuse.
 		if checkConflict != nil {
 			if pr, ok := p.(ProposedRequirement); ok {
-				if err := checkConflict(g, pr.Claim); err != nil {
+				candidate := ontology.Requirement{
+					ID:            pr.ID,
+					Claim:         pr.Claim,
+					Status:        pr.Status,
+					Relations:     pr.Relations,
+					ImplementedBy: pr.ImplementedBy,
+					VerifiedBy:    pr.VerifiedBy,
+					SourceLinks:   pr.SourceLinks,
+					Coverage:      pr.Coverage,
+				}
+				if err := checkConflict(g, candidate); err != nil {
 					return fmt.Errorf("batch proposal %d of %d (%s %s): %w",
 						i+1, len(ps), p.Kind(), p.TargetAnchor(), err)
 				}

@@ -193,6 +193,25 @@ func init() {
 		Run:      nil,
 	})
 
+	Tools.MustRegister("evidence", Tool{
+		Command:  "evidence",
+		Canon:    "§Requirement",
+		Purpose:  "Usage: hotam evidence [--domain <path>] [--json] [--write]. Collects source checks and per-test observations into a fresh evidence report; --write emits docs/gen/EVIDENCE.md, FINDINGS.md, and evidence.json without changing the graph, including when real checks fail.",
+		Status:   Implemented,
+		Claim:    "collects fresh source-to-method-to-test evidence and preserves observed discrepancies alongside passing proof without changing the source graph.",
+		Enforcer: "",
+		Run:      nil,
+	})
+	Tools.MustRegister("findings", Tool{
+		Command:  "findings",
+		Canon:    "§Requirement",
+		Purpose:  "Usage: hotam findings <list|show|review> [args] [--domain <path>] [--json]. Reads findings from the latest generated evidence report and stores explicit human classifications, statuses, rationale, and decision references separately from the immutable observed evidence.",
+		Status:   Implemented,
+		Claim:    "lets a human inspect observed findings and record explicit review notes separately without inferring semantic blame or changing proof payloads.",
+		Enforcer: "",
+		Run:      nil,
+	})
+
 	// --- Planned: methodology surface not yet implemented as a
 	// Go command. Command below is the historical tool name, not a
 	// runnable invocation. See P1-6. ---

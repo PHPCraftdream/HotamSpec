@@ -25,7 +25,9 @@ type FieldDiff struct {
 // fields MergeIntoGraph (merge.go) replaces wholesale from the registry:
 // Claim, Owner, Status, Why, Assumptions, Relations, Enforcement,
 // EnforcedBy, MTag, Enforceability, Summary, CreatedAt, SettledAt,
-// SourceRefs, DeclOrder, BlockedOn, ImplementedBy, VerifiedBy.
+// SourceRefs, DeclOrder, BlockedOn, ImplementedBy, VerifiedBy, SourceLinks,
+// Coverage, ClaimTexts, AtomKind, Cases, ClauseLinks, Strength,
+// Applicability, and Precedence.
 //
 // Deliberately excluded: the EVENT fields MergeIntoGraph passes through
 // untouched — History, GateSignoffs, LastReviewedAt, ReviewAfter, Evidence.
@@ -76,10 +78,25 @@ func StructuralFieldDiffs(reg, graph ontology.Requirement) []FieldDiff {
 		{"BlockedOn", reg.BlockedOn, graph.BlockedOn},
 		{"ImplementedBy", reg.ImplementedBy, graph.ImplementedBy},
 		{"VerifiedBy", reg.VerifiedBy, graph.VerifiedBy},
+		{"SourceLinks", reg.SourceLinks, graph.SourceLinks},
+		{"Coverage", reg.Coverage, graph.Coverage},
+		{"ClaimTexts", reg.ClaimTexts, graph.ClaimTexts},
+		{"AtomKind", reg.AtomKind, graph.AtomKind},
+		{"Cases", reg.Cases, graph.Cases},
+		{"ClauseLinks", reg.ClauseLinks, graph.ClauseLinks},
+		{"Strength", reg.Strength, graph.Strength},
+		{"Applicability", reg.Applicability, graph.Applicability},
+		{"Precedence", reg.Precedence, graph.Precedence},
 	}
 	var out []FieldDiff
 	for _, f := range fields {
-		if !reflect.DeepEqual(f.regValue, f.graphValue) {
+		var equal bool
+		if f.name == "Cases" {
+			equal = ontology.EqualCaseDefinitions(reg.Cases, graph.Cases)
+		} else {
+			equal = reflect.DeepEqual(f.regValue, f.graphValue)
+		}
+		if !equal {
 			out = append(out, FieldDiff{Field: f.name, Old: f.graphValue, New: f.regValue})
 		}
 	}

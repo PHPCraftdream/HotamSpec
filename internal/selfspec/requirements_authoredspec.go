@@ -97,7 +97,7 @@ var _ = Requirements.MustRegister("R-authored-spec-projections-are-derived", ont
 	SourceRefs:     []string{"internal/generator/traceability.go", "internal/generator/models.go", "internal/generator/coverage.go", "internal/generator/constitution_entities_framework_repomap_test.go"},
 	DeclOrder:      0,
 	ImplementedBy:  []string{"internal/generator/traceability.go:BuildTraceability", "internal/generator/models.go:BuildModels", "internal/generator/coverage.go:BuildCoverage"},
-	VerifiedBy:     []string{"internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture", "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture", "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildCoverage_ByteIdenticalToFixture"},
+	VerifiedBy:     []string{"internal/generator/constitution_entities_framework_repomap_test.go:TestBuildTraceability_ByteIdenticalToFixture", "internal/generator/constitution_entities_framework_repomap_test.go:TestBuildModels_ByteIdenticalToFixture", "internal/generator/scenario_traceability_test.go:TestBuildCoverage_ModeIndependent_VerifiedByGoTestExecutionDoesNotChangeOutput"},
 })
 
 var _ = Requirements.MustRegister("R-generations-inherit-doc-test-code", ontology.Requirement{
@@ -348,5 +348,24 @@ var _ = Requirements.MustRegister("R-scenario-authority-owns-its-own-obligations
 	CreatedAt:      "2026-07-30",
 	SettledAt:      "2026-07-30",
 	SourceRefs:     []string{"internal/loader/loader.go", "internal/invariants/scenario_quality.go", "internal/invariants/scenario_authority_ratchet.go", "internal/loader/lock.go"},
+	DeclOrder:      0,
+})
+
+var _ = Requirements.MustRegister("R-self-executing-atoms-own-structural-obligations", ontology.Requirement{
+	ID:             "R-self-executing-atoms-own-structural-obligations",
+	Claim:          "A domain explicitly declaring self_executing_atoms:true opts into three structural obligations: every executed method subject has a non-empty first doc phrase with no conflicting explicit title; every subject is a zero-argument single-result method, legacy value facts return exactly one expression, Holds predicates return bool and may branch, and explicit typed rule methods may branch; each Fact carries exactly one bound method subject, never a closure or a multi-subject carrier. check_fact_method_has_phrase, check_fact_method_atomic, and check_one_subject_per_fact enforce these obligations only under this independent opt-in, not under already-spent discipline, claim-authority, public-surface-authority, or scenario-authority triggers. These checks establish structural correspondence, not semantic proof of the authored claim.",
+	Owner:          "framework-author",
+	Status:         "SETTLED",
+	Why:            "Self-executing atoms derive claims and traceability from executed methods rather than parallel authored requirement titles. Structural phrase, atomicity, and single-subject checks make that derivation honest without crossing authored_links' semantic-audit boundary. Their new duty belongs to its own self_executing_atoms manifest trigger, preserving unchanged behavior for legacy domains.",
+	Assumptions:    nil,
+	Relations:      []ontology.Relation{{Kind: "refines", Target: "R-opt-in-trigger-owns-its-own-obligations"}},
+	Enforcement:    "ENFORCED",
+	EnforcedBy:     []string{"check_fact_method_has_phrase", "check_fact_method_atomic", "check_one_subject_per_fact"},
+	MTag:           "",
+	Enforceability: "ENFORCEABLE",
+	Summary:        "",
+	CreatedAt:      "2026-10-01",
+	SettledAt:      "2026-10-01",
+	SourceRefs:     []string{"docs/PLAN-self-executing-atoms.md", "docs/AUTHORED-SPEC-CONTRACT.md", "internal/invariants/fact_methods.go", "internal/invariants/fact_methods_test.go", "internal/gate/atom_source.go", "internal/loader/manifest.go"},
 	DeclOrder:      0,
 })

@@ -18,6 +18,8 @@ package ontology
 const CurrentSchemaVersion = 3
 
 type Graph struct {
+	// InvocationState belongs only to a shallow runtime check view.
+	InvocationState any `json:"-"`
 	// SchemaVersion is the graph.json format version this graph was written
 	// with. Populated by the loader (LoadGraph) and stamped by the writer
 	// (marshalCanonical); always CurrentSchemaVersion on round-trip. Serialized
@@ -33,7 +35,12 @@ type Graph struct {
 	Goals         []Goal           `json:"goals"`
 	EntityTypes   []EntityType     `json:"entity_types"`
 	Entities      []EntityInstance `json:"entities"`
-	SelfHosting   bool             `json:"self_hosting"`
+	// SpecificationSources is authored in manifest.json and projected into
+	// the in-memory graph for source verification and evidence collection. It
+	// is deliberately absent from graph.json; source metadata has one
+	// canonical authored location.
+	SpecificationSources []SpecificationSource `json:"-"`
+	SelfHosting          bool                  `json:"self_hosting"`
 	// RequirementsAuthorityCode is the domain's manifest.json
 	// "requirements_authority": "code" opt-in (loader.resolveRequirementsAuthorityCode,
 	// task #367/RAC2 Phase C), populated by the loader at LoadGraph time exactly
@@ -128,6 +135,8 @@ type Graph struct {
 	// this "" -- an honest no-op, the same convention DomainDir/SelfHosting
 	// already establish for synthetic graphs.
 	Discipline string `json:"-"`
+	// SelfExecutingAtoms opts into requirements derived from executed methods.
+	SelfExecutingAtoms bool `json:"-"`
 	// ManifestExists, ParentDeclared, and Parent carry the domain's
 	// manifest.json "parent" field (loader.ResolveParent), populated by the
 	// loader at LoadGraph time exactly like Discipline above -- deliberately
@@ -168,6 +177,13 @@ type Graph struct {
 	ManifestExists bool   `json:"-"`
 	ParentDeclared bool   `json:"-"`
 	Parent         string `json:"-"`
+	// Languages, DefaultLanguage, and Conformance are loaded from manifest.json
+	// and are invocation-scoped configuration. RenderLanguage is selected for
+	// one projection only; callers use a shallow Graph copy to select it.
+	Languages       []string           `json:"-"`
+	DefaultLanguage string             `json:"-"`
+	RenderLanguage  string             `json:"-"`
+	Conformance     *ConformanceConfig `json:"-"`
 }
 
 func (g *Graph) IsEmpty() bool {

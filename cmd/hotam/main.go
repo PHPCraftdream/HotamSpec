@@ -29,8 +29,7 @@ func versionString() string {
 
 // cmdVersion is the Run-shaped (func(args []string) error) wrapper around
 // versionString, so `version` can be registered as an Implemented tool in
-// internal/methodology/tools_data.go and wired via tool_wiring.go like every
-// other real subcommand (TestToolWiring_EveryImplementedToolHasRun). main's
+// internal/methodology/tools_data.go and wired via tool_wiring.go. main's
 // switch below calls it directly for both the "version" and "--version"
 // spellings instead of duplicating the Println.
 func cmdVersion(args []string) error {
@@ -104,6 +103,10 @@ func main() {
 		err = cmdUse(args)
 	case "gen-spec":
 		err = cmdGenSpec(args)
+	case "evidence":
+		err = cmdEvidence(args)
+	case "findings":
+		err = cmdFindings(args)
 	case "vendor-recorder":
 		err = cmdVendorRecorder(args)
 	case "vendor-ontology":
@@ -194,6 +197,14 @@ Commands:
         tool docs; "consumer" skips framework-self-documentation noise
         (thinking/*.md, Planned tool docs, empty atoms docs) for external
         business projects.
+  evidence [--domain <path>] [--json] [--write]
+        Collect fresh specification-to-method-to-test evidence. --json emits
+        one report document; --write writes docs/gen/EVIDENCE.md, FINDINGS.md,
+        and evidence.json even when observed tests or source checks fail.
+  findings <list|show|review> [args] [--domain <path>] [--json]
+        Inspect findings in the latest generated evidence report. Review notes
+        require explicit human classification, status, rationale, and
+        decision reference; they are stored separately under docs/reviews/.
   vendor-recorder [--domain <path>]
         Copy the engine's canonical hotamspec scenario-recorder source
         (internal/recorder/canon/hotamspec.go) into
@@ -348,6 +359,7 @@ Commands:
 // the subcommand's own FlagSet.Parse(["-h"]) is never reached.
 var boolFlagNames = map[string]bool{
 	"json":               true,
+	"write":              true,
 	"land":               true,
 	"require-provenance": true,
 	"spec":               true,

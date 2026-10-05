@@ -14,31 +14,17 @@ import (
 // <path>] [--proposal <path>] [--json]`: the CONFRONT step of the mediation
 // loop, made executable.
 //
-// CONFRONT checks a candidate claim (a draft the operator is about to propose)
-// against the graph's SETTLED reality (duplicate guard) and REJECTED history
-// (anti-relitigation guard) BEFORE anything is written. It reuses the SAME
-// lexical-overlap engine as `hotam inspect` (internal/diagnose.Confront, backed
-// by claimTokens / markerHits / the MinLexicalOverlap* thresholds) — no new
-// scoring was invented for this command.
+// Text candidates receive lexical advisory evidence. Requirement proposals also
+// carry authored links and explicit unresolved Conflict carriers; proposal mode
+// includes shared-assumption/axis structural signals.
 //
-// The candidate text comes either from a positional argument (quoted), from
-// --file <path> (- = stdin) for long drafts, or from --proposal <path> for a
-// full proposal JSON file. --proposal mode ADDITIONALLY runs the structural
-// confront checks (diagnose.StructuralConfrontForRequirement /
-// StructuralConfrontForConflict): shared-assumption clusters and axis
-// co-reference signals that the purely-lexical check cannot see — the same
-// detectors `hotam inspect` uses, parameterized for an external candidate via
-// the synthetic-node-in-a-graph-copy technique.
-//
-// Output is human-readable by default; --json emits machine-readable JSON.
-// Exit code is ALWAYS 0: confront informs, it never gates
-// (R-ai-presents-not-decides) — a high-overlap hit is a warning to the
-// operator, not a block.
+// Positional text, --file (- for stdin), and --proposal are mutually exclusive.
+// Confront itself informs and returns zero; apply/land enforce formal carriers.
 func cmdConfront(args []string) error {
 	fs := newFlagSet("confront")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	file := fs.String("file", "", "read candidate text from this file (use \"-\" for stdin)")
-	proposalPath := fs.String("proposal", "", "confront a proposal JSON file: runs both lexical AND structural (shared-assumption / axis) checks")
+	proposalPath := fs.String("proposal", "", "confront proposal metadata, formal Conflict carriers and shared-assumption/axis signals")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
 	fs.Parse(args)
 
@@ -72,18 +58,12 @@ func cmdConfront(args []string) error {
 	return nil
 }
 
-// cmdConfrontProposal implements `hotam confront --proposal <path>`: parses
-// a full proposal JSON (via the EXISTING parseProposal), runs the EXISTING
-// lexical diagnose.Confront (using proposeConfrontText, the same helper
-// `hotam propose` uses), AND ADDITIONALLY runs the new structural checks
-// (StructuralConfrontForRequirement for a ProposedRequirement, passing its
-// Assumptions; StructuralConfrontForConflict for a ProposedConflict, passing
-// its Axis + SharedAssumption; a clean no-op for every other kind). The
-// operator sees BOTH the lexical report and (when there are hits) the
-// structural-hits section. The structural result is ALWAYS rendered in
-// --proposal mode (even when clear) so the operator knows both checks ran —
-// matching formatConfrontReport's own "always an explicit verdict, never
-// silence" contract.
+// cmdConfrontProposal parses a proposal, runs the shared confrontation API
+// (including Requirement metadata links and formal carriers when available),
+// and additionally runs the existing structural checks for assumptions and
+// axes. The operator sees the evidence report and structural section together.
+// --proposal always renders the structural verdict, even when clear, so it is
+// explicit that both checks ran.
 func cmdConfrontProposal(proposalPath, domainFlag string, asJSON bool) error {
 	p, err := parseProposalFile(proposalPath)
 	if err != nil {
@@ -98,7 +78,7 @@ func cmdConfrontProposal(proposalPath, domainFlag string, asJSON bool) error {
 		return err
 	}
 
-	lexical := diagnose.Confront(g, proposeConfrontText(p))
+	lexical := confrontProposal(g, p)
 
 	structural := structuralConfrontForProposal(g, p)
 
@@ -111,6 +91,13 @@ func cmdConfrontProposal(proposalPath, domainFlag string, asJSON bool) error {
 	fmt.Print(formatConfrontReport(lexical))
 	fmt.Print(formatStructuralConfrontReport(structural))
 	return nil
+}
+
+func confrontProposal(g *ontology.Graph, p proposal.Proposal) diagnose.ConfrontResult {
+	if requirement, ok := p.(proposal.ProposedRequirement); ok {
+		return diagnose.ConfrontRequirement(g, requirementFromProposal(requirement))
+	}
+	return diagnose.Confront(g, proposeConfrontText(p))
 }
 
 // structuralConfrontForProposal dispatches to the right structural check based
@@ -205,44 +192,54 @@ func readConfrontCandidate(file string, positional []string) (string, error) {
 	return strings.Join(positional, " "), nil
 }
 
-// formatConfrontReport renders the human-readable CONFRONT report. It always
-// produces an explicit verdict — either the hits (grouped SETTLED then
-// REJECTED, each with id/score/shared-tokens/claim, plus replaced_by for
-// REJECTED) or the "clear to propose" green light. Silence is never the output:
-// the operator must know the check ran and what it concluded.
+// formatConfrontReport renders lexical/metadata suspicions and explicit formal
+// Conflict carriers separately so advisory evidence is never presented as a
+// semantic verdict.
 func formatConfrontReport(r diagnose.ConfrontResult) string {
 	var b strings.Builder
-	b.WriteString("hotam confront — CONFRONT check (advisory; exit code always 0).\n")
-	b.WriteString(fmt.Sprintf("candidate: %s\n", confrontCandidatePreview(r.Candidate)))
-	b.WriteString("\n")
+	b.WriteString("hotam confront — lexical/metadata suspicions are advisory; only an explicit unresolved Conflict carrier is a gate blocker.\n")
+	b.WriteString(fmt.Sprintf("candidate: %s\n\n", confrontCandidatePreview(r.Candidate)))
 	if r.Clear {
-		b.WriteString("no significant overlap with SETTLED or REJECTED — clear to propose.\n")
+		b.WriteString("no lexical, metadata-linked, or unresolved formal-conflict evidence found.\n")
 		return b.String()
 	}
 	if len(r.Settled) > 0 {
-		b.WriteString(fmt.Sprintf("possible DUPLICATE of %d SETTLED requirement(s):\n", len(r.Settled)))
+		b.WriteString(fmt.Sprintf("possible overlap with %d SETTLED requirement(s):\n", len(r.Settled)))
 		for _, h := range r.Settled {
 			writeConfrontHit(&b, &h)
 		}
 		b.WriteString("\n")
 	}
 	if len(r.Rejected) > 0 {
-		b.WriteString(fmt.Sprintf("possible RE-LITIGATION of %d REJECTED requirement(s):\n", len(r.Rejected)))
+		b.WriteString(fmt.Sprintf("possible overlap with %d REJECTED requirement(s):\n", len(r.Rejected)))
 		for _, h := range r.Rejected {
 			writeConfrontHit(&b, &h)
 			if len(h.ReplacedBy) > 0 {
-				b.WriteString(fmt.Sprintf("     replaced by: %s (cite the replacement instead of re-deriving; see docs/gen/HISTORY.md)\n", strings.Join(h.ReplacedBy, ", ")))
+				b.WriteString(fmt.Sprintf("     replaced by: %s (see docs/gen/HISTORY.md)\n", strings.Join(h.ReplacedBy, ", ")))
 			} else {
-				b.WriteString("     no known REPLACES successor; see docs/gen/HISTORY.md for why it was rejected.\n")
+				b.WriteString("     no known REPLACES successor; see docs/gen/HISTORY.md.\n")
 			}
+		}
+		b.WriteString("\n")
+	}
+	if len(r.FormalConflicts) > 0 {
+		b.WriteString(fmt.Sprintf("unresolved formal Conflict carrier(s): %d (these are the only semantic-gate blockers)\n", len(r.FormalConflicts)))
+		for _, h := range r.FormalConflicts {
+			writeConfrontHit(&b, &h)
 		}
 	}
 	return b.String()
 }
 
 func writeConfrontHit(b *strings.Builder, h *diagnose.ConfrontHit) {
-	b.WriteString(fmt.Sprintf("  - %s (score %d): %s\n", h.ID, h.Score, h.Claim))
+	b.WriteString(fmt.Sprintf("  - %s [%s; confidence=%s] (score %d): %s\n", h.ID, h.Classification, h.Confidence, h.Score, h.Claim))
 	b.WriteString(fmt.Sprintf("     shared tokens: [%s]\n", strings.Join(h.Shared, ", ")))
+	for _, reason := range h.Reasons {
+		b.WriteString("     reason: " + reason + "\n")
+	}
+	if len(h.ConflictIDs) > 0 {
+		b.WriteString(fmt.Sprintf("     conflicts: [%s]\n", strings.Join(h.ConflictIDs, ", ")))
+	}
 }
 
 // confrontCandidatePreview renders a single-line preview of the candidate text,

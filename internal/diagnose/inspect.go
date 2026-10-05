@@ -182,20 +182,10 @@ var stopWords = map[string]struct{}{
 	"can": {}, "could": {}, "may": {}, "might": {}, "not": {}, "no": {},
 }
 
-// tokenRE tokenizes on Unicode letters/digits (\p{L}\p{N}), not just ASCII
-// [a-z0-9]. This is a necessary companion to the caps-token marker fix
-// below: IsBlockingHit (blocking_hit.go) requires an opposite marker AND at
-// least one shared token that is NOT itself a marker word (the "topical
-// anchor" requirement — see its doc comment) before a hit can BLOCK a
-// land/apply. An ASCII-only tokenizer made every pure-Cyrillic claim
-// tokenize to the empty set, so two Russian claims sharing an obvious
-// topical anchor ("Экспорт записей") would still score zero shared tokens
-// and never clear IsBlockingHit's topical-anchor bar, no matter how strong
-// the caps-token opposite-marker signal was — silently defeating the whole
-// point of this task's Russian-claim blocking demonstration (task
-// #156/R10-b). \p{L}\p{N} is a strict superset of [a-z0-9] for tokenization
-// purposes (every ASCII letter/digit is also \p{L}/\p{N}), so this is
-// additive: no existing English-only claim's token set changes.
+// tokenRE tokenizes Unicode letters/digits (\p{L}\p{N}), not just ASCII
+// [a-z0-9], so lexical-overlap suspicions work for claims written in other
+// scripts as well as English. Marker and overlap evidence is advisory; it is
+// never a semantic proof or a gate by itself.
 var tokenRE = regexp.MustCompile(`[\p{L}\p{N}]+`)
 
 // CorpusCommonTokenFraction is the document-frequency ceiling above which a
@@ -252,18 +242,13 @@ const CorpusCommonTokenFraction = 0.05
 // un-excluded until len(settled) is large enough for ceiling to reach 1.0.
 // Below that point, ANY token occurring in just ONE SETTLED requirement
 // (n=1) already satisfies n > ceiling and gets excluded as "corpus-common" —
-// which, since every content token appears in at least one claim by
-// definition, means the filter wipes out 100% of the corpus vocabulary, not
-// occasionally but as a guaranteed consequence of the formula. Concretely,
-// with CorpusCommonTokenFraction=0.05, any corpus with 8-19 SETTLED
-// requirements had ceiling < 1.0 (e.g. N=13 -> ceiling=0.65), so n=1 > 0.65
-// excluded EVERY token — silently defeating both InspectLexicalClaimOverlap
-// and, more seriously, the semantic-conflict land-time gate
-// (IsBlockingHit's topical-shared-token requirement in blocking_hit.go),
-// which could never find a surviving topical token to block on. Bug found
-// while pilot-testing against an external domain with exactly 13 SETTLED
-// requirements (squarely in the hole); hotam-dev (this repo's own
-// self-hosted secondary domain, 9 SETTLED) sat in the same hole.
+// which means the filter wipes out 100% of the corpus vocabulary. Concretely,
+// with CorpusCommonTokenFraction=0.05, a corpus with 8-19 SETTLED requirements
+// has ceiling < 1.0 (e.g. N=13 -> ceiling=0.65), so n=1 > 0.65 excludes every
+// token and disables useful lexical-overlap suspicions. Bug found while
+// pilot-testing against an external domain with exactly 13 SETTLED requirements;
+// hotam-dev (this repo's own self-hosted secondary domain, 9 SETTLED) sat in
+// the same hole.
 //
 // ceiling first reaches >= 1.0 (so a single-occurrence token, n=1, no longer
 // automatically clears n > ceiling) at len(settled) =
@@ -339,11 +324,10 @@ func claimTokens(claim string, common map[string]struct{}) map[string]struct{} {
 	return out
 }
 
-// oppositeMarkerPairs is the controlled vocabulary of lexical markers whose
-// PRESENCE-on-one-side-ABSENCE(or-opposite)-on-the-other is itself evidence
-// of tension, independent of token overlap size — e.g. "cache must never
-// store PII" vs "cache stores all fields" share few tokens but one asserts
-// universal prohibition where the other asserts unconditional inclusion.
+// oppositeMarkerPairs is the controlled vocabulary of textual markers used
+// to raise lexical suspicion when their poles differ across claims. The
+// markers indicate word-level polarity only; they do not establish that the
+// claims address the same scope or are semantically contradictory.
 var oppositeMarkerPairs = [][2]string{
 	{"never", "always"},
 	{"must", "must not"},
@@ -500,44 +484,25 @@ func markerHits(claim string) map[string]string {
 // CorpusCommonTokenFraction's 5% ceiling, so this is NOT corpus-filter noise
 // leaking through. It is a real (if weak, score=2, the minimum) two-token
 // overlap correctly surfaced at this deliberately low bar. Confirmed
-// defensible rather than tuned away: confront never gates (exit code always
-// 0), so the cost of a resolver glancing at one weak hit and dismissing it is
-// cheap, exactly the tradeoff this comment already commits to.
+// defensible rather than tuned away: lexical-overlap reports remain advisory,
+// while the separate land gate blocks only a matching unresolved Conflict
+// carrier, not a weak token-overlap score.
 const MinLexicalOverlapTokens = 2
 
-// MinLexicalOverlapTokensWithMarker is the (lower) minimum shared-token
-// count required when an opposite marker (never/always, must/must not,
-// only/any) is ALSO present. A single strong topical anchor is enough once
-// the opposite-marker signal itself is doing most of the work — this is
-// exactly the task's own canonical example: "cache must never store PII"
-// vs "cache stores all fields" share only the single token "cache".
+// MinLexicalOverlapTokensWithMarker is the lower minimum shared-token count
+// required when opposite marker text (never/always, must/must not, only/any)
+// is also present. A single shared token can surface an advisory suspicion
+// alongside the marker evidence; neither signal proves contradiction.
 const MinLexicalOverlapTokensWithMarker = 1
 
-// InspectLexicalClaimOverlap is heuristic (b) from the task: for every pair
-// of SETTLED requirements, normalize their claims to token sets and flag the
-// pair when they share a significant number of tokens AND (1) have
-// different owners, OR (2) use opposite markers from oppositeMarkerPairs
-// (never/always, must/must not, only/any). The token-overlap bar is lower
-// when a marker hit is present (see MinLexicalOverlapTokensWithMarker),
-// since the marker itself is strong evidence. Each hit becomes a Candidate
-// carrying the shared tokens / marker words as evidence.
+// InspectLexicalClaimOverlap is a heuristic that surfaces SETTLED requirement
+// pairs with significant claim-token overlap and either different owners or
+// opposite marker text. Hits are candidates for human review, not conclusions.
 //
 // Tokens are additionally filtered through corpusCommonTokens(g) — a
 // document-frequency exclusion computed FRESH from this graph's own SETTLED
-// claims (see its doc comment). This is what keeps this heuristic from
-// mistaking two claims that share only domain-frequent connective vocabulary
-// (e.g. "requirement", "graph", "enforce" in a methodology describing
-// itself) for a genuine topical anchor: those tokens are dropped from BOTH
-// the overlap-count gate and the score before pairwise comparison begins, so
-// a pair surviving purely on generic domain nouns no longer clears the
-// MinLexicalOverlapTokens bar at all (not just "scores lower"). This does
-// NOT guarantee zero false negatives: a real tension whose ONLY shared
-// vocabulary happens to be corpus-common words, with no opposite marker and
-// no rarer shared token, will still be missed — exactly the same class of
-// miss the plain stop-word list already accepted for generic English words,
-// now extended to this domain's own frequent words. Below
-// MinCorpusSizeForFrequencyFilter SETTLED requirements this exclusion is a
-// no-op (empty set) and behavior is identical to stop-words-only.
+// claims (see its doc comment). This keeps the heuristic from mistaking
+// domain-frequent connective vocabulary for a useful lexical anchor.
 func InspectLexicalClaimOverlap(g *ontology.Graph) []Candidate {
 	common := corpusCommonTokens(g)
 	var settled []ontology.Requirement
@@ -586,13 +551,9 @@ func InspectLexicalClaimOverlap(g *ontology.Graph) []Candidate {
 			differentOwner := a.req.Owner != b.req.Owner
 			hasMarker := oppositeMarker != ""
 
-			// Task spec (b): significant token overlap AND (different owner
-			// OR opposite markers). Token overlap is still the gate in both
-			// branches — it just takes fewer shared tokens to count as
-			// "significant" when an opposite marker is also present, since
-			// the marker itself is strong topical-anchor evidence (task's
-			// own example: "cache must never store PII" vs "cache stores
-			// all fields" share only the single token "cache").
+			// Significant overlap plus different owners or opposite marker
+			// text surfaces a lexical suspicion; the lower marker threshold
+			// is a recall heuristic, not a claim of semantic contradiction.
 			threshold := MinLexicalOverlapTokens
 			if hasMarker {
 				threshold = MinLexicalOverlapTokensWithMarker

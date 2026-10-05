@@ -252,31 +252,31 @@ func BuildConstitutionBlock(g *ontology.Graph, domainName string, consumer bool)
 
 	categories := buildConstitutionIndexModel(g, consumer)
 	if len(categories) == 0 {
-		return generatedHeaderComment + "\n\n_No SETTLED requirements yet._"
+		return serviceText(g, generatedHeaderComment) + "\n\n" + serviceText(g, "_No SETTLED requirements yet._")
 	}
 
-	agentContextPath := fmt.Sprintf("domains/%s/docs/gen/AGENT-CONTEXT.md", domainName)
-	rosterPath := fmt.Sprintf("domains/%s/docs/gen/REQUIREMENTS.md", domainName)
+	agentContextPath := localizedDomainDocPath(g, domainName, "AGENT-CONTEXT.md")
+	rosterPath := localizedDomainDocPath(g, domainName, "REQUIREMENTS.md")
 	// Task #357: FRAMEWORK-INVARIANTS.md moved back to docs/gen/ — it is a
 	// per-domain projection (which framework-plumbing atoms THIS domain has),
 	// not project-shared content, so it belongs with the other docs/gen/ files.
-	invariantsPath := fmt.Sprintf("domains/%s/docs/gen/FRAMEWORK-INVARIANTS.md", domainName)
-	unenforcedPath := fmt.Sprintf("domains/%s/docs/gen/UNENFORCED.md", domainName)
+	invariantsPath := localizedDomainDocPath(g, domainName, "FRAMEWORK-INVARIANTS.md")
+	unenforcedPath := localizedDomainDocPath(g, domainName, "UNENFORCED.md")
 
 	lines := []string{
-		generatedHeaderComment,
+		serviceText(g, generatedHeaderComment),
 		"",
-		"### Constitution index (business + discipline SETTLED requirements — summary)",
+		serviceText(g, "### Constitution index (business + discipline SETTLED requirements — summary)"),
 		"",
-		fmt.Sprintf("> Full id+flag index: `%s`. Full claim + WHY + assumptions: `%s` (roster) ·", agentContextPath, rosterPath),
-		fmt.Sprintf("> one requirement: `hotam req show <id> --domain domains/%s`. enforcement detail: `%s`.", domainName, unenforcedPath),
-		"> Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE.",
-		fmt.Sprintf("> Framework internals (%d atoms): `%s`.", nPlumbing, invariantsPath),
+		serviceText(g, "> Full id+flag index: `%s`. Full claim + WHY + assumptions: `%s` (roster) ·", agentContextPath, rosterPath),
+		serviceText(g, "> one requirement: `hotam req show <id> --domain domains/%s`. enforcement detail: `%s`.", domainName, unenforcedPath),
+		serviceText(g, "> Flags: [E] ENFORCED · [S] STRUCTURAL · [P] PROSE."),
+		serviceText(g, "> Framework internals (%d atoms): `%s`.", nPlumbing, invariantsPath),
 		"",
 	}
 	var catParts []string
 	for _, category := range categories {
-		catParts = append(catParts, fmt.Sprintf("%s (%d)", category.Label, len(category.Requirements)))
+		catParts = append(catParts, serviceText(g, "%s (%d)", serviceText(g, category.Label), len(category.Requirements)))
 	}
 	lines = append(lines, strings.Join(catParts, " · "))
 

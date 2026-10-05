@@ -234,15 +234,11 @@ func TestCorpusCommonTokens_ExcludesHighFrequencyTokens(t *testing.T) {
 	}
 }
 
-// gateCorpusClaims returns 13 claim strings shaped like the real pilot
-// scenario that surfaced this bug: several requirements share common
-// requirement-prose vocabulary ("gate", "approve") at genuinely high
-// in-corpus frequency (10/13 and 8/13), alongside narrow topical tokens
-// ("budget", "audit", "export") that occur only once each — exactly the
-// shape IsBlockingHit (blocking_hit.go) needs a surviving topical anchor
-// from. n must be 13 (len of this slice); callers needing a different N pad
-// or trim independently.
-func gateCorpusClaims() []string {
+// frequencyRegressionClaims has 13 claims with repeated domain vocabulary
+// ("gate", "approve") alongside narrow tokens ("budget", "audit", "export")
+// that occur once each, exercising corpus-frequency filtering on a small
+// graph.
+func frequencyRegressionClaims() []string {
 	return []string{
 		"the gate must be approved by P-G before release",
 		"the gate must record who approved it",
@@ -289,7 +285,7 @@ func settledClaimsFrom(idPrefix string, claims []string) []ontology.Requirement 
 func TestCorpusCommonTokens_SmallCorpusHoleClosed(t *testing.T) {
 	t.Parallel()
 
-	claims := gateCorpusClaims()
+	claims := frequencyRegressionClaims()
 	n := len(claims)
 	if n < 8 || n > 19 {
 		t.Fatalf("test setup: n=%d must stay in the historical [8,19] hole this test guards against", n)
@@ -337,7 +333,7 @@ func TestCorpusCommonTokens_GenuinelyCommonTokenStillExcludedAboveGuard(t *testi
 		t.Fatalf("test setup: MinCorpusSizeForFrequencyFilter=%d still produces ceiling<1.0 (ceiling=%.2f) — the derivation itself is broken", n, ceiling)
 	}
 
-	claims := gateCorpusClaims()
+	claims := frequencyRegressionClaims()
 	// Pad with extra "gate"-carrying claims so "gate"'s document frequency
 	// stays well over the ceiling at the larger N, while budget/audit/export
 	// remain single-occurrence.

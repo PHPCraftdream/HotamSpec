@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/localization"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
@@ -42,22 +43,26 @@ func ScanToolRequirements() []ToolRequirement {
 }
 
 func BuildToolDerivedSection() string {
+	return BuildToolDerivedSectionLocalized("")
+}
+
+// BuildToolDerivedSectionLocalized renders registry guidance in one explicit
+// locale while preserving authored Tool.Claim text as normative source data.
+func BuildToolDerivedSectionLocalized(language string) string {
 	toolReqs := ScanToolRequirements()
-	lines := []string{}
-	lines = append(lines, "## Tool-derived requirements")
-	lines = append(lines, "")
-	lines = append(lines, "Projected from the tool registry, one entry per tool whose first doc line matches `Canon: §<topic> — <claim>` (R-tool-is-its-own-requirement). Tools without a Go CLI port yet are tracked here as not-yet-enforced. The doc line IS the claim; the body IS the check; the test IS the enforcer. Deleting the tool deletes the R.")
+	lines := []string{localization.Text(language, "## Tool-derived requirements"), ""}
+	lines = append(lines, localization.Text(language, "Projected from the tool registry, one entry per tool whose first doc line matches `Canon: §<topic> — <claim>` (R-tool-is-its-own-requirement). Tools without a Go CLI port yet are tracked here as not-yet-enforced. The doc line IS the claim; the body IS the check; the test IS the enforcer. Deleting the tool deletes the R."))
 	lines = append(lines, "")
 	if len(toolReqs) == 0 {
-		lines = append(lines, "_No tools carry a Canon: §... marker yet._")
+		lines = append(lines, localization.Text(language, "_No tools carry a Canon: §... marker yet._"))
 		lines = append(lines, "")
 	} else {
-		for _, tr := range toolReqs {
-			enforcerStr := "enforcer: (none)"
-			if tr.Enforcer != "" {
-				enforcerStr = "enforcer: `" + tr.Enforcer + "`"
+		for _, tool := range toolReqs {
+			enforcer := localization.Text(language, "enforcer: (none)")
+			if tool.Enforcer != "" {
+				enforcer = localization.Text(language, "enforcer: `%s`", tool.Enforcer)
 			}
-			lines = append(lines, "- **"+tr.ID+"** — *"+tr.Claim+"* [STRUCTURAL·tool · §"+tr.CanonSection+"] ["+enforcerStr+"]")
+			lines = append(lines, "- **"+tool.ID+"** — *"+tool.Claim+"* [STRUCTURAL·tool · §"+tool.CanonSection+"] ["+enforcer+"]")
 		}
 		lines = append(lines, "")
 	}

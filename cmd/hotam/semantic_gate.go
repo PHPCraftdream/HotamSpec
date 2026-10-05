@@ -10,24 +10,13 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
 )
 
-// landAckOptions carries the two forms of human-decision evidence an operator
-// can supply to override the semantic-conflict gate (semanticConflictGate):
+// landAckOptions carries the human-decision evidence that can override a
+// matching unresolved formal Conflict carrier.
 //
-//   - AckConflict: the ID of an EXISTING Conflict node in the graph whose
-//     Members plausibly cover the tension between the new requirement and the
-//     SETTLED requirement(s) it contradicts. The tool validates EXISTENCE only
-//     (the node is graph ground truth — its coverage of this specific tension
-//     is the resolver's judgment, not the tool's, per R-ai-presents-not-decides
-//     and R-decided-needs-human-signoff). The Conflict node itself is the
-//     durable record; the requirement additionally gets a HistoryEntry audit
-//     trail noting which Conflict was cited (see appendAckHistory).
-//
-//   - DecisionRef: a free-text reference to where a human decision was
-//     recorded (a ticket link, a meeting note, a resolver's name+date). The
-//     CONTENT is not validated, only its PRESENCE — persisted as a HistoryEntry
-//     on the landed requirement so the audit trail lives on the node it
-//     concerns, avoiding the heavier Conflict-node machinery when a full
-//     Conflict would be overkill for the specific case.
+// AckConflict must name one of the carriers whose members include both the
+// candidate requirement ID and another conflict member. DecisionRef records a
+// human decision reference on the landed requirement. Neither option turns
+// lexical or metadata-linked suspicions into blockers.
 type landAckOptions struct {
 	AckConflict string
 	DecisionRef string
@@ -59,59 +48,27 @@ func hasOverride(o landAckOptions, p proposal.Proposal) bool {
 	return false
 }
 
-// semanticConflictGate is the land-time gate that closes the review-8 R8-d gap:
-// "the system checks structure but not meaning." When landing a
-// ProposedRequirement whose claim triggers a HIGH-CONFIDENCE semantic-conflict
-// signal against one or more EXISTING SETTLED requirements, the land REFUSES
-// (non-zero exit) unless the operator supplied evidence a human already made a
-// decision about this tension (landAckOptions).
+// semanticConflictGate blocks only when an explicit unresolved Conflict node
+// names both the candidate requirement ID and at least one other member ID.
+// Confront's lexical markers, token overlap, implementation/source links, and
+// relations are emitted as suspicions for review; none establishes semantic
+// contradiction or gates a landing.
 //
-// HIGH-CONFIDENCE SIGNAL — opposite marker only:
-// The signal is a ConfrontHit that carries an OppositeMarker (never/always,
-// must/must not, only/any) split across the candidate claim and an existing
-// SETTLED requirement's claim. This is deliberately the ONLY trigger:
+// The formal carrier is checked regardless of lexical score or marker text.
+// DETECTED and ACKNOWLEDGED carriers are unresolved per ontology.Conflict's
+// lifecycle contract. DECIDED, HELD, and REVISIT_WHEN carriers are not hard
+// blockers. This gate does not create, resolve, or infer Conflict records.
 //
-//   - An opposite marker is a PRECISE indicator of genuine semantic
-//     contradiction — one side asserts a universal where the other asserts a
-//     prohibition (the review's own worked example: "always encrypt" vs
-//     "never encrypt").
+// The gate runs before transactional snapshot/apply in landProposalValue, so a
+// refusal leaves graph and docs untouched. It applies to land and propose
+// --land through their shared pipeline. Batch paths use the same
+// ConfrontRequirement/IsBlockingHit contract via batchConflictChecker, but
+// have no per-item decision override.
 //
-//   - A high token-overlap score WITHOUT an opposite marker is often just
-//     "these two requirements are about the same subject" (relatedness, not
-//     contradiction). Using raw score alone would generate false positives on
-//     every pair of requirements that share domain vocabulary but agree.
-//
-//   - No pure-score fallback threshold is used. This is the conservative
-//     choice the task asks for ("err toward few false positives, clear escape
-//     hatches"): the opposite-marker controlled vocabulary (established in
-//     inspect.go's oppositeMarkerPairs) is narrow enough that a resolver who
-//     triggers it almost always has a real tension on their hands, while the
-//     overwhelming majority of ordinary requirement lands (which never carry
-//     an opposite marker against an existing SETTLED requirement) pass through
-//     the gate untouched.
-//
-// This gate does NOT decide semantic correctness — it requires a DECISION to be
-// RECORDED before proceeding, which is exactly what R-ai-presents-not-decides
-// and R-decided-needs-human-signoff establish as the pattern for Conflict
-// nodes. The confront machinery it reuses is the SAME diagnose.Confront the
-// land/propose confront-at-gate already runs (warn-only visibility); this gate
-// adds only the refusal-on-no-ack behavior on top of it.
-//
-// The gate runs BEFORE the transactional snapshot/apply in landProposalValue,
-// so a refusal leaves the graph and docs completely untouched. It applies to
-// BOTH `hotam land <file>` and `hotam propose requirement --land` (both funnel
-// through landProposalValue) and is NOT duplicated in two places. The batch
-// path (`--batch <dir>`) does NOT call this function — its BLOCKING half runs
-// inside internal/proposal.ApplyBatch (same diagnose.IsBlockingHit predicate,
-// against the rolling in-memory graph); only the ack-OVERRIDE half is absent
-// in batch mode (see cmdLandBatch's and cmdApplyProposal's doc comments).
-//
-// Returns hadConflict=true IFF a high-confidence signal (blockers) was found,
-// regardless of whether an ack overrode the refusal. The caller uses this to
-// gate appendAckHistory: the audit trail must be written ONLY when a real
-// conflict existed, not merely because ack flags were passed (landing a
-// non-conflicting requirement with --decision-ref must NOT record a false
-// "semantic conflict acknowledged" entry).
+// Returns hadConflict=true iff at least one matching unresolved carrier was
+// found, regardless of whether the operator recorded an override. The caller
+// uses this to avoid writing false conflict-acknowledgment history when flags
+// were supplied for a candidate with no formal blocker.
 func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAckOptions) (hadConflict bool, err error) {
 	pr, ok := p.(proposal.ProposedRequirement)
 	if !ok {
@@ -123,10 +80,9 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 		return false, fmt.Errorf("semantic-conflict gate: %w", err)
 	}
 
-	// Validate --ack-conflict references a real Conflict node BEFORE using it
-	// to override the gate, so a typo'd C-id does not silently bypass the
-	// refusal. Existence-only: the node is graph ground truth; whether it
-	// plausibly covers THIS tension is the resolver's judgment.
+	// Validate existence first so a typo'd C-id cannot be treated as a
+	// citation. Once formal blockers are known below, the supplied ID must
+	// also match one of their ConflictIDs.
 	if ackOpts.AckConflict != "" {
 		found := false
 		for _, c := range g.Conflicts {
@@ -143,73 +99,77 @@ func semanticConflictGate(domainDir string, p proposal.Proposal, ackOpts landAck
 		}
 	}
 
-	// Run the SAME confront the land/propose confront-at-gate already uses.
-	result := diagnose.Confront(g, pr.Claim)
+	result := diagnose.ConfrontRequirement(g, requirementFromProposal(pr))
 
-	// Collect high-confidence hits: SETTLED requirements that IsBlockingHit
-	// flags (opposite marker + topical shared token). The blocking predicate
-	// lives in internal/diagnose (diagnose.IsBlockingHit) so the batch path —
-	// internal/proposal.ApplyBatch, which cannot import cmd/hotam — runs the
-	// SAME check the single-file gate runs.
 	var blockers []diagnose.ConfrontHit
-	for _, h := range result.Settled {
+	for _, h := range result.FormalConflicts {
 		if diagnose.IsBlockingHit(h) {
 			blockers = append(blockers, h)
 		}
 	}
 	if len(blockers) == 0 {
-		return false, nil // no high-confidence semantic conflict
+		return false, nil
 	}
 
-	// Override provided (an ack flag OR a typed Requirement Signoff) →
-	// proceed. The tool required a decision to be recorded; it does not
-	// verify the decision's correctness. hadConflict is true: a real signal
-	// WAS found, even though the override overrides the refusal, so the
-	// audit trail is legitimately written.
+	if ackOpts.AckConflict != "" && !ackNamesFormalBlocker(ackOpts.AckConflict, blockers) {
+		return true, fmt.Errorf(
+			"--ack-conflict %q does not match an unresolved Conflict whose members cover this requirement and a blocker",
+			ackOpts.AckConflict)
+	}
+
 	if hasOverride(ackOpts, pr) {
 		return true, nil
 	}
 
-	// Refuse: name the SPECIFIC conflicting anchor(s) and their claims, and
-	// suggest remediation paths.
 	var b strings.Builder
-	fmt.Fprintf(&b, "refusing to land %s: its claim semantically contradicts %d SETTLED requirement(s) "+
-		"(opposite-marker signal):\n", pr.ID, len(blockers))
+	fmt.Fprintf(&b, "refusing to land %s: an unresolved formal Conflict names this requirement and %d other member(s):\n", pr.ID, len(blockers))
 	for _, h := range blockers {
-		fmt.Fprintf(&b, "  - %s: %q\n     opposite markers: %s; shared tokens: [%s]\n",
-			h.ID, h.Claim, h.OppositeMarker, strings.Join(h.Shared, ", "))
+		fmt.Fprintf(&b, "  - %s: %q\n     conflicts: [%s]\n",
+			h.ID, h.Claim, strings.Join(h.ConflictIDs, ", "))
 	}
 	b.WriteString("a human decision must be recorded before this can land. Use one of:\n")
-	b.WriteString("  'signoff' on the proposal itself   the PREFERRED mechanism for a real human decision — a typed, Stakeholder-resolved signoff (decided_by/date/verbatim/instrument) attached to the UPDATE (see internal/ontology.Signoff, task #335)\n")
-	b.WriteString("  --ack-conflict <C-id>               cite an existing Conflict node whose members cover this tension\n")
-	b.WriteString(fmt.Sprintf("  --decision-ref <text>               record a free-text reference to where the decision was made (e.g. ticket, meeting, resolver+date) — reserved for lighter mechanical acknowledgments (e.g. task #334's traceability-completion fix), not a substitute for a typed signoff on a real judgment-call decision\n"))
-	b.WriteString("\nThis gate does not decide correctness — it requires that a decision be RECORDED first ")
-	b.WriteString("(R-ai-presents-not-decides, R-decided-needs-human-signoff).")
+	b.WriteString("  'signoff' on the proposal itself   attach a typed, Stakeholder-resolved signoff to this update\n")
+	b.WriteString("  --ack-conflict <C-id>               cite one of the unresolved Conflict nodes listed above\n")
+	b.WriteString("  --decision-ref <text>               record a reference to where the decision was made\n")
+	b.WriteString("\nLexical markers, shared subjects, and metadata links are advisory only; they do not establish a semantic contradiction.")
 	return true, fmt.Errorf("%s", b.String())
 }
 
-// batchConflictChecker builds the proposal.ConflictChecker that
-// internal/proposal.ApplyBatch invokes for each ProposedRequirement in a
-// batch. internal/proposal (core) cannot import internal/diagnose
-// (periphery) — see R-core-periphery-import-ratchet, enforced by
-// internal/selfcheck/imports_test.go's TestCorePeriphery_ImportRatchet — so
-// cmd/hotam, which already imports both packages, builds this closure and
-// injects it into ApplyBatch. It runs the SAME diagnose.Confront +
-// diagnose.IsBlockingHit check the single-file semanticConflictGate runs
-// (against g's SETTLED requirements), and — unlike semanticConflictGate —
-// has no ack-override: batch mode has no per-file flag mechanism, so a
-// conflicting item must be pulled out and landed individually with an
-// explicit ack.
-func batchConflictChecker(g *ontology.Graph, claim string) error {
-	result := diagnose.Confront(g, claim)
-	for _, h := range result.Settled {
+func requirementFromProposal(pr proposal.ProposedRequirement) ontology.Requirement {
+	var candidate ontology.Requirement
+	candidate.ID = pr.ID
+	candidate.Claim = pr.Claim
+	candidate.Status = pr.Status
+	candidate.Relations = pr.Relations
+	candidate.ImplementedBy = pr.ImplementedBy
+	candidate.VerifiedBy = pr.VerifiedBy
+	candidate.SourceLinks = pr.SourceLinks
+	candidate.Coverage = pr.Coverage
+	return candidate
+}
+
+func ackNamesFormalBlocker(conflictID string, blockers []diagnose.ConfrontHit) bool {
+	for _, blocker := range blockers {
+		for _, id := range blocker.ConflictIDs {
+			if id == conflictID {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// batchConflictChecker is injected into proposal.ApplyBatch. It receives the
+// full candidate Requirement so source links and explicit relations participate
+// in advisory output, while only matching unresolved Conflict members block.
+func batchConflictChecker(g *ontology.Graph, candidate ontology.Requirement) error {
+	result := diagnose.ConfrontRequirement(g, candidate)
+	for _, h := range result.FormalConflicts {
 		if diagnose.IsBlockingHit(h) {
 			return fmt.Errorf(
-				"semantically contradicts SETTLED requirement %s: %q "+
-					"(opposite-marker signal; shared tokens: [%s]) — "+
-					"batch mode has no --ack-conflict/--decision-ref override: "+
-					"pull this item out and land it individually with an explicit ack",
-				h.ID, h.Claim, strings.Join(h.Shared, ", "))
+				"matches unresolved formal Conflict member %s (%s) — "+
+					"batch mode has no per-item decision override: pull this item out and land it individually with a recorded decision",
+				h.ID, strings.Join(h.ConflictIDs, ", "))
 		}
 	}
 	return nil
@@ -247,10 +207,9 @@ func batchConflictChecker(g *ontology.Graph, claim string) error {
 // When BOTH ackOpts.AckConflict and a Requirement Signoff are present for
 // the same landing (a resolver citing an existing Conflict node ALONGSIDE
 // their own typed signoff), this function still fires for the
-// --ack-conflict citation — that citation is about a DIFFERENT concern (a
-// Conflict node whose Members plausibly cover the tension) than the
-// Requirement's own signoff (a decision record about THIS specific
-// UPDATE), so it is not a duplicate the way --decision-ref-alone would be.
+// --ack-conflict citation — that citation names the matching unresolved
+// Conflict carrier covering the candidate/member pair, separate from the
+// Requirement's own signoff (a decision record about THIS specific UPDATE).
 func appendAckHistory(graphPath string, p proposal.Proposal, today string, ackOpts landAckOptions) error {
 	pr, ok := p.(proposal.ProposedRequirement)
 	if !ok {

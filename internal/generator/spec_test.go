@@ -240,12 +240,9 @@ func TestBuildSpec_ByteIdenticalAcrossRuns(t *testing.T) {
 }
 
 // TestBuildSpec_ByteIdenticalToGolden pins BuildSpec's exact rendered output
-// against the checked-in golden fixture (testdata/fixture/SPEC.md), the same
-// byte-identity discipline TestBuildRequirements_ByteIdenticalToFixture and
-// TestBuildTensions_ByteIdenticalToFixture already hold traceability.go's
-// sibling generators to -- any future accidental change to BuildSpec's
-// rendering shape (heading text, ordering, fact formatting) fails this test
-// with a line-level diff instead of silently drifting.
+// against the checked-in golden fixture (testdata/fixture/SPEC.md), so
+// accidental changes to its rendering shape (heading text, ordering, fact
+// formatting) fail with a line-level diff instead of silently drifting.
 func TestBuildSpec_ByteIdenticalToGolden(t *testing.T) {
 	root := writeSpecFixtureModule(t)
 	g := specFixtureGraph(root)

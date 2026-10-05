@@ -1,25 +1,25 @@
 # Proposal JSON reference
 
-Every change to a Hotam-Spec graph goes through
-`hotam apply-proposal <file.json> --domain <path> --today YYYY-MM-DD` (never a
-hand-edit — see `R-no-hand-edit-graph`). A proposal file is a single JSON
-object with a `"kind"` field selecting one of the shapes below, and every
-other field name is **snake_case** and matches its Go struct's `json` tag
-exactly — the decoder is strict (`json.Decoder.DisallowUnknownFields`), so an
-unrecognized or mistyped key (including any leftover camelCase from an older
-convention) is a hard parse error, never a silently-dropped field. This is
-the field-level reference; for the guided end-to-end walk see
-[QUICKSTART-CONSUMER.md](QUICKSTART-CONSUMER.md).
+The graph is never hand-edited (`R-no-hand-edit-graph`). This reference covers
+the JSON-proposal path, `hotam apply-proposal` / `hotam land`, for domains
+using graph-authority. A domain declaring
+`requirements_authority: "code"` authors Requirements/Rejections in its Go
+registry and projects them with `hotam sync-domain`; its Requirement proposals
+are locked. See [QUICKSTART-CONSUMER.md](QUICKSTART-CONSUMER.md) and
+[AUTHORED-SPEC-CONTRACT.md](AUTHORED-SPEC-CONTRACT.md) for that authoring path.
+
+A proposal is one JSON object with `"kind"` selecting a shape; all other keys
+are **snake_case** and match the `json` tag exactly. Decode is strict
+(`json.Decoder.DisallowUnknownFields`): an unrecognized or mistyped key,
+including an obsolete camelCase spelling, is a hard parse error, never a
+silently dropped field.
 
 Source of truth: `internal/proposal/types.go` (the `Proposed*` structs and
-their `json` tags) and `cmd/hotam/apply_proposal.go` (`parseProposal` /
-`unmarshalProposal`, the kind-dispatch + strict-decode logic) and
-`internal/proposal/*.go` (the `validate()`/`mutate()` methods that apply each
-kind to the graph). If this document and the code disagree, the code wins —
-please file an issue. Every JSON example below is checked against the actual
-decoder by `cmd/hotam/proposal_reference_test.go`, which extracts every
-` ```json ` fenced block from this file and round-trips it through
-`parseProposal`.
+their `json` tags), `cmd/hotam/apply_proposal.go` (`parseProposal` /
+`unmarshalProposal`) and `internal/proposal/*.go` (`validate()`/`mutate()`).
+If this document and code disagree, the code wins — please file an issue.
+Each fenced JSON proposal below is checked against the actual decoder by
+`cmd/hotam/proposal_reference_test.go`.
 
 Usage:
 
@@ -31,7 +31,7 @@ hotam apply-proposal proposal.json --domain domains/my-shop --today 2026-07-12
 
 Unlike the historical Python prototype (which spliced Python source inside a
 hand-authored `graph.py` via `ast` line/column edits), the Go CLI's graph is
-plain data: `domains/<name>/docs/gen/graph.json`. `hotam apply-proposal`
+plain data in `domains/<name>/graph.json`. `hotam apply-proposal`
 (`cmd/hotam/apply_proposal.go` → `internal/proposal.Apply`,
 `internal/proposal/apply.go`) does the following, in order:
 
@@ -41,18 +41,19 @@ plain data: `domains/<name>/docs/gen/graph.json`. `hotam apply-proposal`
    cross-field rules such as "`decided_by` required when `new_lifecycle`
    starts with `DECIDED`").
 3. Load `graph.json` into memory (`internal/loader.LoadGraph`).
-4. Run the struct's `mutate(graph, today)` — this is the ONLY code path that
-   ever changes graph state; there is no hand-edit path
-   (`R-no-hand-edit-graph`).
+4. Run the proposal's `mutate(graph, today)`; code-authority
+   `sync-domain`/`sync-self` are separate graph projection paths.
 5. Recompute `internal/invariants.AllViolations` before and after the
    mutation; if the mutation introduces any NEW violation that did not exist
    before, the whole apply fails closed and NOTHING is written.
 6. Only if the violation set did not grow, write the mutated graph back to
    `graph.json` (`internal/loader.WriteGraph`).
 
-There is no `--dry-run` flag today. There IS a `--batch <dir>` flag on both
-`hotam apply-proposal` and `hotam land`: point it at a directory of `*.json`
-proposal files and every one is applied atomically, in filename order
+`hotam apply-proposal` has no `--dry-run` flag; it applies one proposal unless
+`--batch <dir>` is supplied. Code-authority `sync-domain` has its separate
+dry-run-by-default / `--confirm-hash` handshake.
+The `--batch <dir>` flag on both `hotam apply-proposal` and `hotam land`
+accepts a directory of `*.json` proposals, applied atomically in filename order
 (all-or-nothing — if any proposal in the batch fails steps 1-5 above, the
 whole batch is rejected and `graph.json` is left completely untouched, not
 partially written). Without `--batch`, each `hotam apply-proposal` call
@@ -110,6 +111,33 @@ ProposedRequirement.relations`.)
 | `refines` | A supportive, non-adversarial edge -- this requirement elaborates or narrows the target. (Also covers what used to be a separate `supports` kind, merged into `refines`.) | carrier → target |
 | `depends_on` | This requirement's guarantee relies on the target holding. | carrier → target |
 | `replaces` | Anti-relitigation edge -- this requirement (the carrier) REPLACES the target (normally a REJECTED requirement). Usually written automatically by a `Rejection` proposal's `replaced_by` field, rather than hand-authored. | carrier → target (carrier replaces target) |
+
+### Requirement source links and coverage qualifications
+
+`source_refs` remains free-form provenance. `source_links` is the typed list
+of objects with `source_id` and `anchor`, resolved against the domain
+manifest's `specification_sources` (id, path, version, SHA256). Anchors are
+Markdown headings or `Lx` / `Lx-Ly` ranges. Missing/drifting bytes or unresolved
+anchors are reported by own-field-triggered invariants. Resolving a link
+does not prove semantic correspondence or completeness.
+
+`coverage` is an optional object with `status`, `rationale`, and `profile`.
+Authored statuses are `unsupported_recommendation`, `unreachable`, and
+`unverified`; all declarations need rationale. Unsupported and unreachable
+need source links, and unreachable also needs an explicit profile. Runtime
+`verified` and `discrepancy` statuses
+are observations, not declarations that authors may set to turn failures green.
+Observed failures override an authored qualification in evidence reports.
+
+On UPDATE, omitted/null `source_links` and `coverage` preserve existing values.
+See [AUTHORED-SPEC-CONTRACT.md](AUTHORED-SPEC-CONTRACT.md) for recorder/context
+details and the separate human findings review contract.
+
+Confrontation confidence is not inferred semantic contradiction:
+opposite-marker words are advisory `lexical_suspicion`, authored links may
+strengthen `linked_suspicion`, and only an explicit unresolved Conflict
+carrier produces `formal_conflict` blocking. Acknowledgement must cite the
+actual carrier; arbitrary existing Conflict IDs do not waive unrelated pairs.
 
 ### Assumption `status` / `AssumptionTransition new_status`
 
@@ -204,6 +232,11 @@ path-qualified `file:test` refs where this claim is PROVEN, e.g.
 `"spec/model/risk_test.go:TestNewRisk_RejectsMissingOwner"`; default `[]`;
 same `["<clear>"]` sentinel on UPDATE — the authored-era counterpart of
 `enforced_by`, which keeps naming engine-side `check_*`/`Test*` enforcers),
+`source_links` (typed source-id/anchor objects; omitted/null preserves an
+existing list on UPDATE; see the source links section above), `coverage`
+(authored status/rationale/profile qualification; omitted/null preserves
+an existing declaration on UPDATE; verified/discrepancy are computed),
+
 `signoff` (an `{"decided_by": "...", "date": "...", "verbatim": "...",
 "instrument": "..."}` object recording a typed human-decision provenance for
 THIS UPDATE — default omitted/`null`; UPDATE-only, rejected on CREATE;
@@ -215,6 +248,16 @@ populated instead of the free-text-only entry an UPDATE otherwise leaves.
 Prefer this over `--decision-ref` for a real judgment-call decision;
 `--decision-ref` remains best for lighter mechanical acknowledgments — see
 the semantic-conflict gate docs)
+
+Additional optional Requirement fields are `claim_texts` (language-code to
+localized claim), `atom_kind` (`"rule"` explicitly selects rule mode;
+absent/empty preserves fact mode), `cases`, `clause_links`, `strength`
+(`MUST`/`SHOULD`/`MAY`), `applicability` (`operations`, `profiles`,
+`features`) and `precedence` (`target`, `scope`, optional `applicability`).
+If `claim_texts` is supplied it covers every declared language, and its
+default-language text is exactly the primary `claim`; it is not a fallback
+map. Cases/inventories do not become mandatory because the graph is
+multilingual.
 
 ```json
 {
@@ -236,6 +279,97 @@ the semantic-conflict gate docs)
 }
 ```
 
+### Multilingual and conformance Requirement fields
+
+These fields use exact snake_case wire names and the existing Requirement
+patch semantics: an omitted optional field preserves its value.
+`languages`, `default_language` and `conformance` are manifest fields, not
+Requirement proposal fields. `conformance.rule_cases: true` permits `WithCase`
+rule mode; it does not by itself scan model methods. Automatic `sync-domain`
+discovery of rule atoms requires both `requirements_authority: "code"` and
+`self_executing_atoms: true`. Source clauses, profiles and compositions are
+declared in `manifest.json` and referenced from Requirements.
+
+In the manifest's `conformance` object, the exact keys are `rule_cases`,
+`clauses`, `profiles` and `compositions`. A clause uses `id`, `source_links`
+(`source_id` plus `anchor`), `sides`, `strength` and `applicability`; a profile
+uses `id`, `operations`, `features`, `integer_min`, `integer_max`,
+`float_domain`, `rounding`, `preserves_order` and `capabilities`; a composition
+uses `id` and `components` (`id`, `role`, `version`, `sha256`, `measured`).
+Applicability keys are `operations`, `profiles` and `features`.
+
+```json
+{
+  "kind": "Requirement",
+  "id": "R-parser-accepts",
+  "claim": "The parser accepts a valid input.",
+  "claim_texts": {
+    "en": "The parser accepts a valid input.",
+    "ru": "Парсер принимает корректный ввод."
+  },
+  "atom_kind": "rule",
+  "owner": "alice",
+  "status": "DRAFT",
+  "cases": [
+    {
+      "id": "valid-input",
+      "atom_ids": ["R-parser-accepts"],
+      "input": {"kind": "text", "text": "valid"},
+      "expected": {"kind": "text", "text": "accepted"},
+      "operation": "parse",
+      "target": "parser",
+      "producer": "in-package-parser"
+    }
+  ]
+}
+```
+
+`CaseDefinition.Input` and `.Expected` are typed independent case/oracle
+values, not the SUT's actual output. A Go case table's `WithInput` and
+independent `want`/`Expect` may project into a new graph case; an explicitly
+authored registry/proposal descriptor must agree with recorded declarations
+and is never overwritten. Its file-qualified `test` link comes from a real
+execution, not a guessed filename; it is a case/report reference, not
+`Requirement.verified_by` or proof by itself. `atom_ids`, `profile`,
+`operation`, `target`, `producer`, `fixtures`, `conditions`, `sides` and `selection`
+carry case scope and provenance; condition/selection evidence is supplied only
+when observed. One case may link multiple atoms and an atom may have multiple
+cases.
+
+These persistent `CaseDefinition` values are distinct from runtime-only
+`CaseContext.Expected`: the recorder excludes that field from the serialized
+`case` object and stores an optional shared oracle at root `case_expected`.
+Without it, root `case_expected` is supplied by `Fact`'s independent `want` or
+`Holds`' `Expect`; each `Observation.RawExpected` remains property-specific.
+
+`fixtures` entries require `id`, `category`, `path`, `role`, `sha256` and
+`raw_bytes`; `sha256` is 64 hexadecimal characters validated against exact
+bytes. `raw_bytes` is an explicit boolean serialized as both `false` and
+`true`; `true` marks raw-byte input. Roles are `input`, `expected`, `canonical`,
+`error` or `extra`; `category` is generic domain-defined data. Relative paths
+resolve from the domain specification root; explicit absolute paths are allowed.
+`input` and `expected` use `ObservedValue`'s typed fields, not replacement
+text for raw bytes. For
+`kind: "bool"`, the JSON `bool` field preserves explicit `false` separately
+from an absent value. A passing corpus or case set is not a claim of semantic
+completeness.
+
+`clause_links` identify authored `ConformanceConfig.Clauses` by `clause_id`
+and a side when the clause declares sides. Each source clause declares its
+stable `id`, typed `source_links`, `sides`, optional `strength` and applicability.
+`profiles` declare `id`, operations/features, integer bounds, float domain,
+rounding, order-preservation and string-valued capabilities. `compositions`
+declare `id` and components (`id`, `role`, `version`, `sha256`, `measured`).
+`applicability` combines its non-empty classes: operations/profiles match any
+listed value, while all listed features are required. A precedence entry is
+`{"target":"R-prior-rule","scope":"parse-selection","applicability":{"operations":["parse"],"profiles":["reference"],"features":["raw-bytes"]}}`;
+the target must resolve, and cycles within a strict scope are invalid. These
+declarations establish structural traceability/selection, not semantic proof
+or automatic component blame. See
+[AUTHORED-SPEC-CONTRACT.md §13](AUTHORED-SPEC-CONTRACT.md#13-atomic-multilingual-and-conformance-specifications)
+for the audit and evidence boundary.
+
+
 ### UPDATE semantics: a real patch, not a full replace
 
 When `id` already names an existing Requirement, `ProposedRequirement.mutate`
@@ -254,20 +388,26 @@ is written. This means a minimal UPDATE proposal —
 
 — changes ONLY `summary`; `assumptions`, `enforcement`, `enforced_by`,
 `relations`, `enforceability`, `evidence`, `source_refs`, `last_reviewed_at`,
-`review_after`, and `created_at` all keep whatever they already held on the
-node. (Prior to the Этап X / #126 fix, the UPDATE path did NOT patch — any
-field missing from the proposal JSON was silently reset to its bare default,
-which made a minimal UPDATE proposal a quiet data-loss trap. This is fixed;
-the behavior described here is current.)
+`review_after`, `created_at`, and the atomic fields `claim_texts`, `atom_kind`,
+`cases`, `clause_links`, `strength`, `applicability`, and `precedence` keep
+their existing values when omitted/defaulted. The behavior described here is
+the current patch contract.
 
-One known limitation of this patch convention: because "field omitted" and
-"field explicitly set to its own default" are indistinguishable in a plain
-JSON/dataclass proposal, there is no way to EXPLICITLY reset an optional
-field back to its bare default (e.g. clear `enforced_by` to `[]`) via a single
-UPDATE proposal — that requires setting it to a distinguishable non-default
-value first, or a direct hand-edit. In practice this is rarely a real
-constraint (fields are extended far more often than they are cleared), but
-it's the honest edge case of the coalescing rule above.
+#### Atomic fields on UPDATE
+
+Omitted or nil fields preserve their current values. Clear/reset behavior is
+explicit: `atom_kind` and `strength` accept the `"<clear>"` sentinel;
+`claim_texts` clears with the sole map entry `{"<clear>": ""}`; explicit empty
+`cases`, `clause_links` or `precedence` arrays clear those lists; and
+`applicability: {}` explicitly sets universal applicability. An omitted or
+`null` applicability preserves the current pointer. Clear sentinels are
+rejected on CREATE.
+
+When supplied, non-empty `claim_texts` must contain one non-empty phrase for
+every manifest language and the default-language entry must exactly equal
+`claim`. Case IDs must be unique and typed `Input`/`Expected` descriptors must
+validate; a supplied selection's selected value must be among its matched
+values. These fields are strict schema data, not ignored metadata.
 
 **`created_at` on UPDATE.** `created_at` is the node's birth date, not a
 repeatable transition — it is normally set once, at creation, and left alone.

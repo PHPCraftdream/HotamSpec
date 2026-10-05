@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/localization"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 )
 
@@ -17,13 +18,33 @@ func topicSlug(slug string) string {
 	return strings.Trim(t, "-")
 }
 
-// BuildThinkingDocs renders one Markdown doc per methodology section. Each
-// section's content is a pure function of that section's own fields (read
-// only, no shared mutable state), so the renders run concurrently — same
-// indexed-slice-then-merge shape as invariants.AllViolations — while the
-// final map assembly stays single-threaded (concurrent map writes are not
-// safe in Go even when keys are disjoint).
+// BuildThinkingDocs renders the legacy English/source-language methodology
+// pages. Each section is independent and may be rendered concurrently.
 func BuildThinkingDocs() map[string]string {
+	docs, _ := BuildThinkingDocsLocalized("")
+	return docs
+}
+
+// BuildThinkingDocsLocalized renders methodology registry pages in one
+// explicit locale. Section slugs and authored Canon/Narrative/Why contents
+// remain unchanged; only fixed service labels are selected from the catalog.
+func BuildThinkingDocsLocalized(language string) (map[string]string, error) {
+	banner, err := localization.Lookup(language, Banner)
+	if err != nil {
+		return nil, err
+	}
+	canonHeading, err := localization.Lookup(language, "## Canon")
+	if err != nil {
+		return nil, err
+	}
+	narrativeHeading, err := localization.Lookup(language, "## Narrative")
+	if err != nil {
+		return nil, err
+	}
+	whyHeading, err := localization.Lookup(language, "## Why")
+	if err != nil {
+		return nil, err
+	}
 	sections := methodology.Sections.All()
 	keys := make([]string, len(sections))
 	contents := make([]string, len(sections))
@@ -33,19 +54,19 @@ func BuildThinkingDocs() map[string]string {
 		go func(idx int, sec methodology.Section) {
 			defer wg.Done()
 			lines := []string{
-				Banner,
+				banner,
 				"",
 				"# " + sec.Slug,
 				"",
-				"## Canon",
+				canonHeading,
 				"",
 				sec.Canon,
 				"",
-				"## Narrative",
+				narrativeHeading,
 				"",
 				sec.Narrative,
 				"",
-				"## Why",
+				whyHeading,
 				"",
 				sec.Why,
 			}
@@ -55,8 +76,8 @@ func BuildThinkingDocs() map[string]string {
 	}
 	wg.Wait()
 	out := make(map[string]string, len(sections))
-	for i, k := range keys {
-		out[k] = contents[i]
+	for i, key := range keys {
+		out[key] = contents[i]
 	}
-	return out
+	return out, nil
 }

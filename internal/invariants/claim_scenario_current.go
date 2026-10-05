@@ -99,12 +99,12 @@ import (
 // already excludes every ComparesOnDiskProjection check for exactly this
 // reason; this check inherits that exclusion by carrying the same flag.
 func checkClaimMatchesScenario(g *ontology.Graph) []Violation {
-	if g.Discipline != loader.DisciplineFull {
+	if !g.SelfExecutingAtoms && g.Discipline != loader.DisciplineFull {
 		// Soft discipline -- honest no-op, mirroring
 		// checkSettledRequiresScenario's identical guard.
 		return nil
 	}
-	if !g.ClaimAuthorityScenario {
+	if !g.SelfExecutingAtoms && !g.ClaimAuthorityScenario {
 		// discipline:full alone is NOT enough (task #388/W0.1): a domain
 		// that flipped discipline:"full" before this check's own opt-in
 		// trigger (claim_authority:"scenario") ever existed never consented
@@ -115,11 +115,34 @@ func checkClaimMatchesScenario(g *ontology.Graph) []Violation {
 	}
 	specRoot := gate.SpecRootForGraph(g)
 	var out []Violation
+	var atomIndex *gate.AtomSourceIndex
+	var atomRuns map[string]gate.RecordingResult
+	if g.SelfExecutingAtoms {
+		_, snapshot, err := InvocationExecutionSnapshot(g)
+		if err != nil {
+			return []Violation{{Check: "check_claim_matches_scenario", ID: specRoot, Message: err.Error()}}
+		}
+		if snapshot.SourceErr != nil {
+			return []Violation{{Check: "check_claim_matches_scenario", ID: specRoot, Message: snapshot.SourceErr.Error()}}
+		}
+		atomIndex, atomRuns = snapshot.SourceIndex, snapshot.PackageRuns
+	}
 	for _, r := range g.Requirements {
 		if !selfspec.RequirementInClaimDerivationScope(r) {
 			continue
 		}
-		fresh, ok := freshDerivedClaim(specRoot, g.SelfHosting, r.VerifiedBy)
+		var fresh string
+		var ok bool
+		if g.SelfExecutingAtoms {
+			var err error
+			fresh, ok, err = freshAtomClaim(atomIndex, atomRuns, r)
+			if err != nil {
+				out = append(out, Violation{Check: "check_claim_matches_scenario", ID: r.ID, Message: err.Error()})
+				continue
+			}
+		} else {
+			fresh, ok = freshDerivedClaim(specRoot, g.SelfHosting, r.VerifiedBy)
+		}
 		if !ok {
 			// Nothing currently derivable (every verified_by entry fails to
 			// resolve/compile/pass, or records no scenario) -- cannot prove
@@ -134,11 +157,10 @@ func checkClaimMatchesScenario(g *ontology.Graph) []Violation {
 			Check: "check_claim_matches_scenario",
 			ID:    r.ID,
 			Message: fmt.Sprintf(
-				"discipline:full + claim_authority:\"scenario\" requires Claim to match its verified_by scenario description(s): %s's committed Claim "+
-					"%q does not match what a fresh derivation from its verified_by entries (%s) produces right now (%q) -- "+
-					"either the verified_by test's hotamspec.NewScenario(...) description changed without re-running "+
-					"`hotam sync-domain` to re-derive Claim, or graph.json's Claim was hand-edited despite the domain's "+
-					"code-authored requirements_authority",
+				"the domain's opted-in carrier authority requires Claim to match its verified_by scenario or atom text: %s's committed Claim "+
+					"%q does not match what a fresh derivation from its verified_by entries (%s) produces right now (%q); "+
+					"the carrier doc phrase, executed value, or scenario description changed, or Claim was hand-edited; "+
+					"run `hotam sync-domain` to re-derive Claim",
 				r.ID, r.Claim, strings.Join(r.VerifiedBy, ", "), fresh),
 		})
 	}

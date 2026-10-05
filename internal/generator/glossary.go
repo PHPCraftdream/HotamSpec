@@ -37,13 +37,10 @@ func BuildGlossary(g *ontology.Graph, consumer bool) string {
 	// g remains a parameter (callers pass it) but is intentionally unused in
 	// the body — the glossary body is a pure function of the methodology
 	// registry (glossaryTerms), not the domain graph.
-	lines := []string{Banner, ""}
-	lines = append(lines, "# GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)")
+	lines := []string{localizedBanner(g), ""}
+	lines = append(lines, serviceText(g, "# GLOSSARY.md — Methodology controlled vocabulary (Hotam-Spec)"))
 	lines = append(lines, "")
-	lines = append(lines,
-		"Generated mirror of the methodology's own canon terms — the framework's\n"+
-			"controlled vocabulary that every docstring and generated doc must use\n"+
-			"consistently. Terminology drift is invisibility (R-glossary-sync-test).")
+	lines = append(lines, serviceText(g, "Generated mirror of the methodology's own canon terms — the framework's\ncontrolled vocabulary that every docstring and generated doc must use\nconsistently. Terminology drift is invisibility (R-glossary-sync-test)."))
 	lines = append(lines, "")
 	// Under consumer, drop the "Source: `internal/generator/...`." clause — a
 	// dead-end framework-source-file reference for an external consumer with no
@@ -57,7 +54,7 @@ func BuildGlossary(g *ontology.Graph, consumer bool) string {
 			"(R-ids, axis slugs, stakeholders) live in `domains/<name>/graph.json` and are\n" +
 			"listed in REQUIREMENTS.md / TENSIONS.md — not duplicated here."
 	}
-	lines = append(lines, glossarySourceLine)
+	lines = append(lines, serviceText(g, glossarySourceLine))
 	lines = append(lines, "")
 	lines = append(lines, "---")
 	lines = append(lines, "")
@@ -67,8 +64,8 @@ func BuildGlossary(g *ontology.Graph, consumer bool) string {
 		if len(entries) == 0 {
 			continue
 		}
-		lines = append(lines, "## "+glossaryKindLabels[kind])
-		lines = append(lines, "| slug | definition |")
+		lines = append(lines, "## "+serviceText(g, glossaryKindLabels[kind]))
+		lines = append(lines, serviceText(g, "| slug | definition |"))
 		lines = append(lines, "|---|---|")
 		for _, term := range entries {
 			lines = append(lines, "| `"+Cell(term.Slug)+"` | "+Cell(term.Definition)+" |")

@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -115,8 +117,8 @@ func consumerTestNames(verifiedBy []string) string {
 	return fmt.Sprintf("%s, %s +%d", names[0], names[1], len(names)-2)
 }
 
-func consumerReqLine(r ontology.Requirement) string {
-	claim := collapseWS(shortForm(collapseWS(r.Claim), collapseWS(r.Summary)))
+func consumerReqLine(g *ontology.Graph, r ontology.Requirement) string {
+	claim := collapseWS(shortForm(collapseWS(requirementClaim(g, r)), collapseWS(r.Summary)))
 	line := fmt.Sprintf("- %s — %s [%s]", r.ID, claim, flagFor(r.Enforcement))
 	if r.Status == ontology.StatusDRAFT {
 		line += " DRAFT"
@@ -131,9 +133,9 @@ func consumerReqLine(r ontology.Requirement) string {
 func consumerFullTextPointer(g *ontology.Graph, domainName string) string {
 	switch {
 	case RequirementsMDWritten(g, true):
-		return fmt.Sprintf("`domains/%s/docs/gen/REQUIREMENTS.md`, `hotam req list --domain domains/%s`", domainName, domainName)
+		return fmt.Sprintf("`%s`, `hotam req list --domain domains/%s`", localizedDomainDocPath(g, domainName, "REQUIREMENTS.md"), domainName)
 	case g.RequirementsAuthorityCode:
-		return fmt.Sprintf("`domains/%s/docs/gen/SPEC.md`, `domains/%s/spec/requirements.go`, `hotam req list --domain domains/%s`", domainName, domainName, domainName)
+		return fmt.Sprintf("`%s`, `domains/%s/spec/requirements.go`, `hotam req list --domain domains/%s`", localizedDomainDocPath(g, domainName, "SPEC.md"), domainName, domainName)
 	}
 	return fmt.Sprintf("`hotam req list --domain domains/%s`", domainName)
 }
@@ -142,16 +144,16 @@ func consumerFullTextPointer(g *ontology.Graph, domainName string) string {
 func renderConsumerRequirements(g *ontology.Graph, domainName string) string {
 	reqs := consumerLiveRequirements(g)
 	if len(reqs) == 0 {
-		return "## Requirements\n\n_(none yet)_"
+		return serviceText(g, "## Requirements") + "\n\n" + serviceText(g, "_(none yet)_")
 	}
 	lines := make([]string, len(reqs))
 	size := 0
 	for i, r := range reqs {
-		lines[i] = consumerReqLine(r)
+		lines[i] = consumerReqLine(g, r)
 		size += utf8.RuneCountInString(lines[i]) + 1
 	}
 	if size <= ConsumerRequirementsBudget {
-		head := fmt.Sprintf("## Requirements (%d) — id — claim [E enforced|S structural|P prose] ← verified_by", len(reqs))
+		head := serviceText(g, "## Requirements (%d) — id — claim [E enforced|S structural|P prose] ← verified_by", len(reqs))
 		return head + "\n\n" + strings.Join(lines, "\n")
 	}
 	var e, s, p int
@@ -174,15 +176,43 @@ func renderConsumerRequirements(g *ontology.Graph, domainName string) string {
 		}
 	}
 	out := []string{
-		fmt.Sprintf("## Requirements (%d)", len(reqs)),
+		serviceText(g, "## Requirements (%d)", len(reqs)),
 		"",
-		fmt.Sprintf("E (enforced) %d · S (structural) %d · P (prose) %d. Inline list omitted: over %d chars.", e, s, p, ConsumerRequirementsBudget),
-		"Full text: " + consumerFullTextPointer(g, domainName) + ".",
+		serviceText(g, "E (enforced) %d · S (structural) %d · P (prose) %d. Inline list omitted: over %d chars.", e, s, p, ConsumerRequirementsBudget),
+		serviceText(g, "Full text: %s.", consumerFullTextPointer(g, domainName)),
+	}
+	groups := make(map[string][]ontology.Requirement)
+	for _, r := range reqs {
+		groups[gate.SpecPackage(r)] = append(groups[gate.SpecPackage(r)], r)
+	}
+	packages := make([]string, 0, len(groups))
+	for pkg := range groups {
+		packages = append(packages, pkg)
+	}
+	sort.Strings(packages)
+	out = append(out, "", serviceText(g, "| Package | Requirements | E | S | P |"), "|---|---:|---:|---:|---:|")
+	for _, pkg := range packages {
+		var enforced, structural, prose int
+		for _, r := range groups[pkg] {
+			switch flagFor(r.Enforcement) {
+			case "E":
+				enforced++
+			case "S":
+				structural++
+			default:
+				prose++
+			}
+		}
+		link := localizedDomainDocPath(g, domainName, "SPEC.md")
+		if g.SelfExecutingAtoms {
+			link = localizedDomainDocPath(g, domainName, "spec/"+pkg+".md")
+		}
+		out = append(out, fmt.Sprintf("| [%s](%s) | %d | %d | %d | %d |", pkg, link, len(groups[pkg]), enforced, structural, prose))
 	}
 	if len(notEnforced) == 0 {
-		out = append(out, "DRAFT or not ENFORCED: none.")
+		out = append(out, serviceText(g, "DRAFT or not ENFORCED: none."))
 	} else {
-		out = append(out, fmt.Sprintf("DRAFT or not ENFORCED (%d): %s.", len(notEnforced), strings.Join(notEnforced, ", ")))
+		out = append(out, serviceText(g, "DRAFT or not ENFORCED (%d): %s.", len(notEnforced), strings.Join(notEnforced, ", ")))
 	}
 	return strings.Join(out, "\n")
 }
@@ -190,7 +220,7 @@ func renderConsumerRequirements(g *ontology.Graph, domainName string) string {
 // renderConsumerStatus renders the 3-line status body.
 func renderConsumerStatus(g *ontology.Graph, today string, violations []invariants.Violation) string {
 	signals := diagnose.DiagnoseSignalsWithViolations(g, today, violations)
-	top := "none — graph clean"
+	top := serviceText(g, "none — graph clean")
 	if len(signals) > 0 {
 		sig := signals[0]
 		msg := collapseWS(shortForm(collapseWS(sig.Message), summaryForTarget(g, sig.Target)))
@@ -213,11 +243,11 @@ func renderConsumerStatus(g *ontology.Graph, today string, violations []invarian
 		}
 	}
 	return strings.Join([]string{
-		"## Status",
+		serviceText(g, "## Status"),
 		"",
-		"- **top action:** " + top + " (all: `hotam what-now`)",
-		fmt.Sprintf("- **debt:** %d/%d SETTLED ENFORCED · %d DRAFT · %d closeable", enforced, settled, draft, debt),
-		fmt.Sprintf("- **violations:** %d (`hotam all-violations`)", len(violations)),
+		serviceText(g, "- **top action:** %s (all: `hotam what-now`)", top),
+		serviceText(g, "- **debt:** %d/%d SETTLED ENFORCED · %d DRAFT · %d closeable", enforced, settled, draft, debt),
+		serviceText(g, "- **violations:** %d (`hotam all-violations`)", len(violations)),
 	}, "\n")
 }
 
@@ -226,54 +256,63 @@ func renderConsumerStatus(g *ontology.Graph, today string, violations []invarian
 func renderConsumerHowToChange(g *ontology.Graph, domainName string) string {
 	d := "domains/" + domainName
 	var lines []string
-	lines = append(lines, "## How to change")
+	lines = append(lines, serviceText(g, "## How to change"))
 	lines = append(lines, "")
 	switch {
+	case g.SelfExecutingAtoms:
+		lines = append(lines,
+			serviceText(g, "Requirements come from documented methods and executed values (`self_executing_atoms: true`)."),
+			serviceText(g, "1. Edit the documented value method and `hotamspec.Fact(t, object.Method, want)` test; use `hotamspec.Holds(t, object.Predicate, evidence...)` for relations."),
+			serviceText(g, "2. Keep `%s/spec/requirements.go` for REJECTED entries and explicit overrides only.", d),
+			serviceText(g, "3. `hotam sync-domain --domain %s` prints the diff and hash; present them to the owner.", d),
+			serviceText(g, "4. After approval: `hotam sync-domain --domain %s --today YYYY-MM-DD --confirm-hash <hex>`.", d),
+			serviceText(g, "5. `hotam gen-spec --domain %s --spec`, then `hotam all-violations --domain %s` must print 0.", d, d),
+		)
 	case g.RequirementsAuthorityCode:
 		lines = append(lines,
-			"Requirements live in code (`requirements_authority: code`); `hotam land` refuses Requirement/Rejection JSON here.",
-			"1. Edit the scenario test and the requirement literal in `"+d+"/spec/requirements.go`.",
-			"2. `hotam sync-domain --domain "+d+"` (dry-run) prints the diff and its hash.",
-			"3. Present the diff to the owner; the resolver decides.",
-			"4. After approval: `hotam sync-domain --domain "+d+" --today YYYY-MM-DD --confirm-hash <hex>`.",
-			"5. `hotam all-violations --domain "+d+"` must print 0.",
-			"Conflicts, assumptions and other non-requirement nodes: a Proposed* JSON, then `hotam land <file.json> --domain "+d+" --today YYYY-MM-DD`.",
+			serviceText(g, "Requirements live in code (`requirements_authority: code`); `hotam land` refuses Requirement/Rejection JSON here."),
+			serviceText(g, "1. Edit the scenario test and the requirement literal in `%s/spec/requirements.go`.", d),
+			serviceText(g, "2. `hotam sync-domain --domain %s` (dry-run) prints the diff and its hash.", d),
+			serviceText(g, "3. Present the diff to the owner; the resolver decides."),
+			serviceText(g, "4. After approval: `hotam sync-domain --domain %s --today YYYY-MM-DD --confirm-hash <hex>`.", d),
+			serviceText(g, "5. `hotam all-violations --domain %s` must print 0.", d),
+			serviceText(g, "Conflicts, assumptions and other non-requirement nodes: a Proposed* JSON, then `hotam land <file.json> --domain %s --today YYYY-MM-DD`.", d),
 		)
 	case g.Discipline == loader.DisciplineFull:
 		lines = append(lines,
-			"1. Write the scenario test (hotamspec recorder) that proves the behavior; its run also generates the requirement text.",
-			"2. Draft a ProposedRequirement JSON citing it in `verified_by`; present it with the R-ids it touches; the resolver decides.",
-			"3. After approval: `hotam land <file.json> --domain "+d+" --today YYYY-MM-DD`.",
-			"4. `hotam all-violations --domain "+d+"` must print 0.",
+			serviceText(g, "1. Write the scenario test (hotamspec recorder) that proves the behavior; its run also generates the requirement text."),
+			serviceText(g, "2. Draft a ProposedRequirement JSON citing it in `verified_by`; present it with the R-ids it touches; the resolver decides."),
+			serviceText(g, "3. After approval: `hotam land <file.json> --domain %s --today YYYY-MM-DD`.", d),
+			serviceText(g, "4. `hotam all-violations --domain %s` must print 0.", d),
 		)
 	default:
 		lines = append(lines,
-			"1. Draft a ProposedRequirement JSON (any Proposed* kind); present it with the R-ids it touches; the resolver decides.",
-			"2. After approval: `hotam land <file.json> --domain "+d+" --today YYYY-MM-DD`.",
-			"3. `hotam all-violations --domain "+d+"` must print 0.",
+			serviceText(g, "1. Draft a ProposedRequirement JSON (any Proposed* kind); present it with the R-ids it touches; the resolver decides."),
+			serviceText(g, "2. After approval: `hotam land <file.json> --domain %s --today YYYY-MM-DD`.", d),
+			serviceText(g, "3. `hotam all-violations --domain %s` must print 0.", d),
 		)
 	}
 	return strings.Join(lines, "\n")
 }
 
-func renderConsumerRules() string {
+func renderConsumerRules(g *ontology.Graph) string {
 	return strings.Join([]string{
-		"## Rules",
+		serviceText(g, "## Rules"),
 		"",
-		"1. The resolver decides: present options with their R-ids; never close a conflict or settle a requirement yourself.",
-		"2. Cite R-ids (`R-…`/`C-…`/`A-…`), not vibes.",
-		"3. Speak the domain's language, not the framework's, unless the human uses the framework's terms first.",
-		"4. Never hand-edit `graph.json`, `docs/gen/` or this file: they are generated.",
+		serviceText(g, "1. The resolver decides: present options with their R-ids; never close a conflict or settle a requirement yourself."),
+		serviceText(g, "2. Cite R-ids (`R-…`/`C-…`/`A-…`), not vibes."),
+		serviceText(g, "3. Speak the domain's language, not the framework's, unless the human uses the framework's terms first."),
+		serviceText(g, "4. Never hand-edit `graph.json`, `docs/gen/` or this file: they are generated."),
 		"",
-		"Modality: when a claim asserts a hard always/never/must/must-not/only/any, in any language, write the ALL-CAPS token (ALWAYS, NEVER, MUST, MUST NOT, ONLY, ANY) into the claim text; `hotam confront` detects conflicts by them.",
+		serviceText(g, "Modality: when a claim asserts a hard always/never/must/must-not/only/any, in any language, write the ALL-CAPS token (ALWAYS, NEVER, MUST, MUST NOT, ONLY, ANY) into the claim text; `hotam confront` detects conflicts by them."),
 	}, "\n")
 }
 
-func renderConsumerPointers(domainName string) string {
+func renderConsumerPointers(g *ontology.Graph, domainName string) string {
 	return strings.Join([]string{
-		"## Pointers",
+		serviceText(g, "## Pointers"),
 		"",
-		"`hotam what-now` — next actions · `hotam req show <id>` — one requirement · `hotam -h` — all commands · `domains/" + domainName + "/README.md` — domain guide.",
+		serviceText(g, "`hotam what-now` — next actions · `hotam req show <id>` — one requirement · `hotam -h` — all commands · `domains/%s/README.md` — domain guide.", domainName),
 	}, "\n")
 }
 
@@ -281,10 +320,11 @@ func renderConsumerPointers(domainName string) string {
 // nothing was rejected with a known replacement.
 func consumerRejectedBlock(g *ontology.Graph) string {
 	body := RenderRecentlyRejectedBlock(g)
-	if strings.Contains(body, "_(no anti-relitigation entries") {
+	emptyNotice := serviceText(g, "_(no anti-relitigation entries — nothing recently rejected.)_")
+	if strings.Contains(body, emptyNotice) {
 		return ""
 	}
-	body = strings.TrimPrefix(body, generatedHeaderComment+"\n\n")
+	body = strings.TrimPrefix(body, serviceText(g, generatedHeaderComment)+"\n\n")
 	body = strings.ReplaceAll(body, " Full list: `spec/docs/gen/HISTORY.md`.", "")
 	body = strings.ReplaceAll(body, "full history + WHY: `spec/docs/gen/HISTORY.md`, `hotam req show <id>`", "WHY: `hotam req show <id>`")
 	return body
@@ -326,13 +366,13 @@ func renderConsumerCrystal(g *ontology.Graph, domainName, repoRoot string, domai
 	m := loader.ResolveDomainPresentation(filepath.Join(repoRoot, "domains", domainName, "graph.json"))
 	var essence []string
 	if m.Charter != "" {
-		essence = append(essence, "- **charter** — "+collapseWS(m.Charter))
+		essence = append(essence, serviceText(g, "- **charter** — %s", collapseWS(m.Charter)))
 	}
 	if len(m.Goals) > 0 {
-		essence = append(essence, "- **goals** — "+strings.Join(m.Goals, ", "))
+		essence = append(essence, serviceText(g, "- **goals** — %s", strings.Join(m.Goals, ", ")))
 	}
 	if m.Director != "" {
-		essence = append(essence, "- **director** — "+m.Director)
+		essence = append(essence, serviceText(g, "- **director** — %s", m.Director))
 	}
 	add("PROJECT-ESSENCE", strings.Join(essence, "\n"))
 
@@ -341,30 +381,35 @@ func renderConsumerCrystal(g *ontology.Graph, domainName, repoRoot string, domai
 		for _, s := range NarrativeOrder(g.Stakeholders, func(s ontology.Stakeholder) int { return s.DeclOrder }) {
 			st = append(st, fmt.Sprintf("`%s` %s", s.ID, collapseWS(s.Name)))
 		}
-		add("STAKEHOLDERS", "Stakeholders: "+strings.Join(st, " · "))
+		add("STAKEHOLDERS", serviceText(g, "Stakeholders: %s", strings.Join(st, " · ")))
 	}
 
 	add("REQUIREMENTS", renderConsumerRequirements(g, domainName))
 	add("STATUS", renderConsumerStatus(g, today, viol))
 
 	if consumerDomainCount(repoRoot, domainGraphs) > 1 {
-		dm := renderDomainMapBlockWithViolations(repoRoot, domainGraphs, today, violations, selfCrystalPath)
-		dm = strings.TrimPrefix(rewriteRepoAbsPaths(repoRoot, dm), generatedHeaderComment+"\n\n")
+		dm := renderDomainMapBlockWithLanguage(g.RenderLanguage, repoRoot, domainGraphs, today, violations, selfCrystalPath)
+		dm = strings.TrimPrefix(rewriteRepoAbsPaths(repoRoot, dm), serviceText(g, generatedHeaderComment)+"\n\n")
 		add("DOMAIN-MAP", dm)
 	}
 	if g.ParentDeclared && g.Parent != "" {
-		add("PARENT-PROJECT", "Parent project: `"+g.Parent+"`.")
+		add("PARENT-PROJECT", serviceText(g, "Parent project: `%s`.", g.Parent))
 	}
-	add("RECENTLY-REJECTED", consumerRejectedBlock(g))
+	rejected := consumerRejectedBlock(g)
+	if rejected != "" {
+		historyPath := "domains/" + domainName + "/" + localizedDocumentPath(g, "docs/gen/HISTORY.md")
+		rejected = strings.ReplaceAll(rejected, "spec/docs/gen/HISTORY.md", historyPath)
+		add("RECENTLY-REJECTED", rejected)
+	}
 
 	add("HOW-TO-CHANGE", renderConsumerHowToChange(g, domainName))
-	add("RULES", renderConsumerRules())
-	add("POINTERS", renderConsumerPointers(domainName))
+	add("RULES", renderConsumerRules(g))
+	add("POINTERS", renderConsumerPointers(g, domainName))
 
 	header := consumerHeaderLine(repoRoot, domainName)
 	var sb strings.Builder
 	sb.WriteString(header + "\n\n")
-	sb.WriteString(generatedHeaderComment + "\n\n")
+	sb.WriteString(serviceText(g, generatedHeaderComment) + "\n\n")
 	sb.WriteString(strings.Join(parts, "\n\n"))
 	sb.WriteString("\n\n" + DurableNotesMarkerLine + "\n")
 	return sb.String()

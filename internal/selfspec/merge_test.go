@@ -9,43 +9,13 @@ import (
 
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/registry"
 )
 
 // domainGraphPath is the real, committed hotam-spec-self domain graph — THE
 // point of Phase 0 (task #344, RAC-0) is proving the merge mechanism against
 // real, messy, 300+-node production data, not a small synthetic fixture.
 const domainGraphPath = "../../domains/hotam-spec-self/graph.json"
-
-// wantRequirementCount is the full domains/hotam-spec-self/graph.json
-// Requirement count as of task #345 (RAC-A): 253 SETTLED + 42 REJECTED + 6
-// DRAFT = 301. TestMergeIntoGraph_AllRequirementsRegistered pins this exact
-// number so a future requirement landing in the graph without a matching
-// registry entry (or vice versa) fails loudly here instead of silently
-// leaving the registry's coverage incomplete.
-// 301 + 1: R-vendored-ontology-matches-engine-canon -- landed task #365
-// (RAC2 Phase A) via `hotam sync-self`, the self-hosting anchor for
-// check_ontology_vendor_current's orphan-enforcer gate (254 SETTLED + 42
-// REJECTED + 6 DRAFT = 302).
-// 302 + 1: R-opt-in-trigger-owns-its-own-obligations -- landed task #388
-// (W0.1) via `hotam sync-self`, the self-hosting anchor for
-// check_claim_authority_ratchet's orphan-enforcer gate (255 SETTLED + 42
-// REJECTED + 6 DRAFT = 303).
-// 303 + 2: task #395 (W1.3) via `hotam sync-self` rejected
-// R-generations-inherit-doc-test-code in place (SETTLED -> REJECTED, an
-// existing node's status flip -- not a node count change on its own) and
-// added its two atomic successors, R-requirement-generation-mechanized-by-
-// registry and R-entity-type-realized-by-go-symbol-never-generated (254
-// SETTLED + 43 REJECTED + 6 DRAFT = 303, then +2 new SETTLED successors =
-// 256 SETTLED + 43 REJECTED + 6 DRAFT = 305).
-// 305 + 1: R-public-surface-authority-owns-its-own-obligations -- landed
-// task #396 (W1.4) via `hotam sync-self`, the self-hosting anchor for
-// check_public_surface_linked_or_marked/check_public_surface_authority_ratchet's
-// orphan-enforcer gate (257 SETTLED + 43 REJECTED + 6 DRAFT = 306).
-// 306 + 1: R-scenario-authority-owns-its-own-obligations -- landed task #397
-// (W1.5) via `hotam sync-self`, the self-hosting anchor for
-// check_scenario_quality/check_scenario_authority_ratchet's orphan-enforcer
-// gate (259 SETTLED + 43 REJECTED + 6 DRAFT = 308).
-const wantRequirementCount = 308
 
 // TestMergeIntoGraph_ByteIdenticalRoundTrip is the entire point of Phase A
 // (RAC-A, task #345, scaling Phase 0/RAC-0's proof to full coverage): load
@@ -80,12 +50,8 @@ func TestMergeIntoGraph_ByteIdenticalRoundTrip(t *testing.T) {
 	diffReport(t, domainGraphPath, string(got), string(want))
 }
 
-// TestMergeIntoGraph_AllRequirementsRegistered proves Phase A's full-coverage
-// claim directly: every one of the graph's 301 Requirement nodes has a
-// matching selfspec.Requirements entry, and the registry carries no more and
-// no fewer than that — not merely that MergeIntoGraph succeeds on whatever
-// subset happens to be registered (that weaker property is what Phase 0's
-// original test proved; this test is Phase A's stronger claim).
+// TestMergeIntoGraph_AllRequirementsRegistered proves that the graph and
+// registry contain exactly the same requirement IDs, without pinning live counts.
 func TestMergeIntoGraph_AllRequirementsRegistered(t *testing.T) {
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {
@@ -98,12 +64,6 @@ func TestMergeIntoGraph_AllRequirementsRegistered(t *testing.T) {
 	}
 
 	registered := Requirements.All()
-	if len(registered) != wantRequirementCount {
-		t.Errorf("selfspec.Requirements has %d entries, want exactly %d (the full domains/hotam-spec-self/graph.json Requirement count)", len(registered), wantRequirementCount)
-	}
-	if len(g.Requirements) != wantRequirementCount {
-		t.Fatalf("domains/hotam-spec-self/graph.json has %d Requirement nodes, want %d — wantRequirementCount is stale, update it (and re-run the codegen if the registry also needs to change)", len(g.Requirements), wantRequirementCount)
-	}
 
 	inRegistry := make(map[string]bool, len(registered))
 	for _, r := range registered {
@@ -342,3 +302,60 @@ func truncate(s string, n int) string {
 	}
 	return s[:n] + "…"
 }
+func TestMergeIntoGraph_DeepCopiesConformanceMetadata(t *testing.T) {
+	empty := ""
+	requirement := ontology.Requirement{
+		ID:         "R-copy",
+		Claim:      "claim",
+		ClaimTexts: ontology.LocalizedText{"en": "claim"},
+		Applicability: &ontology.Applicability{
+			Features: []string{"feature-a"},
+		},
+		Cases: []ontology.CaseDefinition{{
+			ID: "C-copy", Test: "spec/test_test.go:TestCopy", AtomIDs: []string{"R-copy"},
+			Input: &ontology.ObservedValue{
+				Kind: "object",
+				Fields: map[string]ontology.ObservedValue{
+					"name": {Kind: "text", Text: &empty},
+				},
+			},
+			Selection: &ontology.SelectionEvidence{Matched: []string{"R-copy"}, Selected: "R-copy"},
+		}},
+		Precedence: []ontology.PrecedenceLink{{
+			Target: "R-other", Scope: "scope",
+			Applicability: &ontology.Applicability{Operations: []string{"op-a"}},
+		}},
+	}
+	reg := registry.New[ontology.Requirement]()
+	reg.MustRegister(requirement.ID, requirement)
+	g := &ontology.Graph{Requirements: []ontology.Requirement{{ID: requirement.ID}}}
+	if err := MergeIntoGraph(g, reg); err != nil {
+		t.Fatalf("MergeIntoGraph: %v", err)
+	}
+
+	entry, _ := reg.Get(requirement.ID)
+	entry.ClaimTexts["en"] = "registry changed"
+	entry.Applicability.Features[0] = "registry-feature"
+	entry.Cases[0].Input.Fields["name"] = ontology.ObservedValue{Kind: "text", Text: stringPointer("registry-name")}
+	entry.Cases[0].Selection.Matched[0] = "R-registry"
+	entry.Precedence[0].Applicability.Operations[0] = "registry-op"
+
+	got := g.Requirements[0]
+	if got.ClaimTexts["en"] != "claim" {
+		t.Fatalf("merged claim_texts aliased registry map: %v", got.ClaimTexts)
+	}
+	if got.Applicability.Features[0] != "feature-a" {
+		t.Fatalf("merged applicability aliased registry slices: %v", got.Applicability)
+	}
+	if got.Cases[0].Input.Fields["name"].Text == nil || *got.Cases[0].Input.Fields["name"].Text != "" {
+		t.Fatalf("merged typed input aliased registry nested value: %+v", got.Cases[0].Input)
+	}
+	if got.Cases[0].Selection.Matched[0] != "R-copy" {
+		t.Fatalf("merged selection aliased registry slice: %+v", got.Cases[0].Selection)
+	}
+	if got.Precedence[0].Applicability.Operations[0] != "op-a" {
+		t.Fatalf("merged precedence applicability aliased registry: %+v", got.Precedence)
+	}
+}
+
+func stringPointer(value string) *string { return &value }

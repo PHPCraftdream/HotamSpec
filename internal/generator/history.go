@@ -53,18 +53,18 @@ func HistoryMDHasContent(g *ontology.Graph) bool {
 func BuildHistory(g *ontology.Graph) string {
 	reqs := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
 	conflicts := NarrativeOrder(g.Conflicts, func(c ontology.Conflict) int { return c.DeclOrder })
-	lines := []string{Banner, ReaderHeaderLine("HISTORY", g), ""}
-	lines = append(lines, "# HISTORY.md — Methodology decision history (Hotam-Spec)")
+	lines := []string{localizedBanner(g), ReaderHeaderLine("HISTORY", g), ""}
+	lines = append(lines, serviceText(g, "# HISTORY.md — Methodology decision history (Hotam-Spec)"))
 	lines = append(lines, "")
-	lines = append(lines, "Generated from the anti-relitigation markers in the model: REJECTED\nrequirements (what was tried and discarded — REPLACES marker) and DECIDED /\nREVISIT_WHEN conflict lifecycles (what was resolved, why, and the condition\nunder which to re-open). Source of truth is the active domain's `graph.json`;\nthis text is generated so it cannot drift.")
+	lines = append(lines, serviceText(g, "Generated from the anti-relitigation markers in the model: REJECTED\nrequirements (what was tried and discarded — REPLACES marker) and DECIDED /\nREVISIT_WHEN conflict lifecycles (what was resolved, why, and the condition\nunder which to re-open). Source of truth is the active domain's `graph.json`;\nthis text is generated so it cannot drift."))
 	lines = append(lines, "")
-	lines = append(lines, "A fresh agent reads this to recover the methodology's history without\nre-litigating settled questions — the historian role of the AI made into\nsubstrate (R-history-from-rejected-markers).")
+	lines = append(lines, serviceText(g, "A fresh agent reads this to recover the methodology's history without\nre-litigating settled questions — the historian role of the AI made into\nsubstrate (R-history-from-rejected-markers)."))
 	lines = append(lines, "")
 	lines = append(lines, "---")
 	lines = append(lines, "")
 
 	if g.IsEmpty() {
-		lines = append(lines, EmptyNotice)
+		lines = append(lines, localizedEmptyNotice(g))
 		lines = append(lines, "")
 		return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n"
 	}
@@ -76,17 +76,17 @@ func BuildHistory(g *ontology.Graph) string {
 		}
 	}
 
-	lines = append(lines, "## REJECTED requirements (what we tried and discarded)")
+	lines = append(lines, serviceText(g, "## REJECTED requirements (what we tried and discarded)"))
 	lines = append(lines, "")
 	if len(rejected) == 0 {
-		lines = append(lines, "_None._")
+		lines = append(lines, serviceText(g, "_None._"))
 		lines = append(lines, "")
 	} else {
 		for _, r := range rejected {
-			lines = append(lines, "### `"+r.ID+"` — "+Cell(r.Claim))
+			lines = append(lines, "### `"+r.ID+"` — "+Cell(requirementClaim(g, r)))
 			lines = append(lines, "")
-			lines = append(lines, "- **owner:** `"+r.Owner+"`")
-			lines = append(lines, "- **why:** "+r.Why)
+			lines = append(lines, "- "+serviceText(g, "**owner:**")+" `"+r.Owner+"`")
+			lines = append(lines, "- "+serviceText(g, "**why:**")+" "+r.Why)
 			lines = append(lines, "")
 		}
 	}
@@ -98,28 +98,28 @@ func BuildHistory(g *ontology.Graph) string {
 		}
 	}
 
-	lines = append(lines, "## DECIDED conflicts (resolutions on record)")
+	lines = append(lines, serviceText(g, "## DECIDED conflicts (resolutions on record)"))
 	lines = append(lines, "")
 	if len(decided) == 0 {
-		lines = append(lines, "_None._")
+		lines = append(lines, serviceText(g, "_None._"))
 		lines = append(lines, "")
 	} else {
 		for _, c := range decided {
 			rationale := extractDecidedRationale(c.Lifecycle)
-			lines = append(lines, "### `"+c.ID+"` — axis `"+c.Axis+"`")
+			lines = append(lines, "### `"+c.ID+"` — "+serviceText(g, "axis")+" `"+c.Axis+"`")
 			lines = append(lines, "")
-			lines = append(lines, "- **context:** "+c.Context)
-			lines = append(lines, "- **members:** "+backtickedList(c.Members))
-			lines = append(lines, "- **resolver:** `"+c.Resolver+"`")
-			lines = append(lines, "- **rationale:** "+rationale)
+			lines = append(lines, "- "+serviceText(g, "**context:**")+" "+c.Context)
+			lines = append(lines, "- "+serviceText(g, "**members:**")+" "+backtickedList(c.Members))
+			lines = append(lines, "- "+serviceText(g, "**resolver:**")+" `"+c.Resolver+"`")
+			lines = append(lines, "- "+serviceText(g, "**rationale:**")+" "+rationale)
 			if c.SharedAssumption != nil && *c.SharedAssumption != "" {
-				lines = append(lines, "- **shared assumption:** `"+*c.SharedAssumption+"`")
+				lines = append(lines, "- "+serviceText(g, "**shared assumption:**")+" `"+*c.SharedAssumption+"`")
 			}
 			if len(c.Derived) > 0 {
-				lines = append(lines, "- **spawned (derived):** "+backtickedList(c.Derived))
+				lines = append(lines, "- "+serviceText(g, "**spawned (derived):**")+" "+backtickedList(c.Derived))
 			}
 			if c.RevisitMarker != "" {
-				lines = append(lines, "- **revisit when:** "+c.RevisitMarker)
+				lines = append(lines, "- "+serviceText(g, "**revisit when:**")+" "+c.RevisitMarker)
 			}
 			lines = append(lines, "")
 		}
@@ -132,25 +132,25 @@ func BuildHistory(g *ontology.Graph) string {
 		}
 	}
 
-	lines = append(lines, "## Parked decisions (REVISIT_WHEN)")
+	lines = append(lines, serviceText(g, "## Parked decisions (REVISIT_WHEN)"))
 	lines = append(lines, "")
 	if len(parked) == 0 {
-		lines = append(lines, "_None._")
+		lines = append(lines, serviceText(g, "_None._"))
 		lines = append(lines, "")
 	} else {
 		for _, c := range parked {
 			condition := extractRevisitRationale(c.Lifecycle)
-			lines = append(lines, "### `"+c.ID+"` — axis `"+c.Axis+"`")
+			lines = append(lines, "### `"+c.ID+"` — "+serviceText(g, "axis")+" `"+c.Axis+"`")
 			lines = append(lines, "")
-			lines = append(lines, "- **context:** "+c.Context)
-			lines = append(lines, "- **members:** "+backtickedList(c.Members))
-			lines = append(lines, "- **resolver:** `"+c.Resolver+"`")
-			lines = append(lines, "- **condition:** "+condition)
+			lines = append(lines, "- "+serviceText(g, "**context:**")+" "+c.Context)
+			lines = append(lines, "- "+serviceText(g, "**members:**")+" "+backtickedList(c.Members))
+			lines = append(lines, "- "+serviceText(g, "**resolver:**")+" `"+c.Resolver+"`")
+			lines = append(lines, "- "+serviceText(g, "**condition:**")+" "+condition)
 			if c.SharedAssumption != nil && *c.SharedAssumption != "" {
-				lines = append(lines, "- **shared assumption:** `"+*c.SharedAssumption+"`")
+				lines = append(lines, "- "+serviceText(g, "**shared assumption:**")+" `"+*c.SharedAssumption+"`")
 			}
 			if len(c.Derived) > 0 {
-				lines = append(lines, "- **spawned (derived):** "+backtickedList(c.Derived))
+				lines = append(lines, "- "+serviceText(g, "**spawned (derived):**")+" "+backtickedList(c.Derived))
 			}
 			lines = append(lines, "")
 		}

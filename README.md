@@ -1,41 +1,60 @@
 # HotamSpec
 
-HotamSpec is a framework for writing requirements as executable code.
+HotamSpec is a framework for authoring executable requirements and projecting
+their evidence. Each requirement is an atomic statement tied to code and, where
+declared, to real test executions. The framework checks structural contracts;
+it does not infer semantic completeness from matching words or a passing
+fixture corpus.
 
-A requirement is not prose that code later tries to match. It becomes an
-atomic object with a method that does exactly what the requirement says. The
-test that exercises the method is also the generator of the requirement's
-text: one run both proves the behavior and emits the sentence describing it.
+The ordinary `Fact` path remains a simple one-language value fact: its method
+doc phrase and actual executed value derive the claim. Explicit rule/case atoms
+keep one method-level norm while recording different inputs, expectations and
+observations as cases. Multilingual prose is authored beside that same method;
+language views share one graph and execution snapshot.
 
-The generated text is deliberately minimal — just enough to be mirrored back
-into the same code: from the sentence you can find or rewrite the method; from
-the method you can reconstruct the sentence.
+Declare `languages` and, for multilingual output, `default_language` in the
+manifest; mark translations with the single `>>>>> lang=<code>` syntax. Current
+service locales are `en`/`ru`/`zh`, with no fallback. Rule/case recording uses
+its own `conformance.rule_cases` permission; automatic method discovery needs
+both that setting and `self_executing_atoms: true`. Neither implies the other's
+obligations. The quickstart and authored contract document the complete rules.
+
+Opt a domain into `"self_executing_atoms": true` in its manifest:
 
 ```go
-s := hotamspec.NewScenario(t, "R-signoff-zero-blockers", "Sign-off requires zero blockers")
-s.Given("a package with one outstanding blocker")
-err := p.SignOff()
-s.When("SignOff is called")
-s.Then("sign-off is rejected", errors.Is(err, ErrHasBlockers))
-s.Eq("blockers outstanding:", p.BlockerCount(), 1)
+// birth year
+func (h Human) BirthYear() BirthYear { return h.born }
+
+func TestBirthYear(t *testing.T) {
+    hotamspec.Fact(t, Init().BirthYear, BirthYear(1987))
+}
 ```
 
-`hotam gen-spec --spec` runs the test and renders, under
-`R-signoff-zero-blockers` in `SPEC.md`:
+`hotam sync-domain` derives **Birth year — 1987.**, its method/test links,
+and the default ID `R-human-birth-year` from this legacy value-fact pair. The
+registry holds only REJECTED entries and explicit overrides; lifecycle defaults
+come from the manifest's `atom_defaults`. Explicit rule/case atoms instead keep
+the authored doc phrase as the norm and attach per-case inputs and results.
 
-```markdown
-**Sign-off requires zero blockers**
+`hotamspec.Holds(t, predicate, evidence...)` checks bool relations using
+already executed `Fact` evidence. Pass `hotamspec.Expect(false)` for a false
+relation. `NewScenario` remains available for multi-step scenarios, and
+domains that have not opted in keep their existing scenario contracts.
 
-- Given a package with one outstanding blocker
-- When SignOff is called
-- Then sign-off is rejected — **held**
-- Then blockers outstanding: 1 — **held**
-```
+In the one-language layout, `SPEC.md` indexes `docs/gen/spec/<pkg>.md` pages
+in source order. A multilingual layout provides one `SPEC.<lang>.md` index
+and `spec/<lang>/<pkg>.md` shards per language. Consumer crystals apply the
+6000-character budget to one view and expose package links/counters when needed.
+Package recording uses native `go test -json` caching with replayable
+stdout artifacts, not a separate disk verdict cache.
 
-The `1` comes from execution (`Eq` records the rendered `got`), not from the
-author's hand, so a value in the text cannot drift from the code it mirrors.
-
-The text appears only for a passing run. A plain `go test` stays pure asserts.
+See the [consumer quickstart](docs/QUICKSTART-CONSUMER.md#self-executing-atoms-per-domain-opt-in)
+for the plain one-language path and its
+[multilingual and rule-case guide](docs/QUICKSTART-CONSUMER.md#multilingual-and-rule-case-atoms).
+The complete authoring and evidence contract is in
+[AUTHORED-SPEC-CONTRACT.md §13](docs/AUTHORED-SPEC-CONTRACT.md#13-atomic-multilingual-and-conformance-specifications).
+Claims describe authored norms, not automatic semantic proof: translation
+parity and declared conformance inventory are structural checks only.
 
 The `hotam` CLI keeps the bookkeeping around this core: the requirement
 registry (`graph.json`), links from each requirement to the code that
@@ -98,7 +117,7 @@ go run ./cmd/hotam <command> [flags] [args]
 
 ## CLI commands
 
-The `hotam` binary (see `cmd/hotam/main.go`) implements 21 commands:
+The `hotam` binary (see `cmd/hotam/main.go`) implements these commands:
 
 ```
 hotam init <dir> [--name <domain-name>] [--profile consumer|full]
@@ -160,6 +179,20 @@ hotam gate <target-anchor> [--domain <path>]
 hotam all-violations [--domain <path>]
         Print all invariant violations; exit 1 if any are found.
 
+hotam evidence [--domain <path>] [--json] [--write]
+        Execute fresh authored evidence, retaining input/actual/expected,
+        source pins, implementation context, and per-test pass/fail/skip.
+        --write saves one docs/gen/evidence.json plus EVIDENCE.md and FINDINGS.md
+        views (language-suffixed when configured), even when checks fail;
+        discrepancies/source/execution failures then return nonzero. It never
+        mutates the graph or publishes a false passing SPEC.
+
+hotam findings <list|show|review> [finding-id] [--domain <path>] [--json]
+        Inspect the current generated findings. Review records explicit human
+        kind/status/rationale/decision-reference separately under
+        docs/reviews/finding-reviews.json; the original observations/verdict
+        stay immutable and a changed finding ID does not inherit old notes.
+
 hotam req <show|list|search|context|related> [args] [--domain <path>] [--json]
         Compact agentic read interface over the domain graph
         (hotam req -h for details).
@@ -193,8 +226,11 @@ hotam confront <text> [--domain <path>] [--file <path>] [--proposal <path>] [--j
         --proposal <path> confronts a full draft proposal JSON file instead:
         runs both the lexical check AND a structural check (shared-assumption
         / axis overlap) against the proposal's kind; mutually exclusive with
-        <text>/--file. Reuses the inspect overlap engine. Never gates; exit
-        code always 0.
+        <text>/--file. Opposite-marker words alone are lexical_suspicion;
+        authored shared links strengthen relatedness to linked_suspicion.
+        Explicit unresolved Conflict carriers naming both requirements are
+        formal_conflict and are the only hard blockers in write paths.
+        `confront` itself remains advisory; exit code always 0.
 
 hotam propose <requirement|rejection|stakeholder|axis|assumption|conflict> [flags]
         Draft a proposal JSON from flags (schema knowledge lives in the

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
 // DomainManifest is the typed, in-memory projection of a domain's manifest.json
@@ -50,8 +52,8 @@ import (
 // prefix self_hosting, purpose, goals, director, parent (hotam-spec-self then
 // adds orientation_faq). The optional fields that neither real manifest carries
 // today (charter, discipline, gen_profile, require_provenance, gate_stage_order,
-// gate_cohort) are declared after that shared prefix with omitempty, so they
-// are absent from the round-tripped bytes of the real files — byte-identical.
+// gate_cohort, languages, default_language, conformance) are declared after that
+// shared prefix with omitempty, so they are absent from the round-tripped bytes.
 //
 // AUTHOR INPUT vs DERIVED/COMPUTED (brief Q3, resolved here): EVERY field in
 // manifest.json is an AUTHOR field — a human (the resolver/domain author)
@@ -69,12 +71,11 @@ import (
 //
 // PHASE 1 LIMITATIONS (documented, not fixed — they are later phases' scope):
 //
-//   - Unknown fields are dropped on round-trip. LoadManifest uses a LENIENT
-//     decoder (no DisallowUnknownFields), matching every existing Resolve*
-//     function's tolerant contract, so a manifest carrying a field this struct
-//     does not model still loads — but that field is lost on WriteManifest.
-//     The two real manifests carry no unknown fields, so byte identity holds for
-//     them; a strict (DisallowUnknownFields) read is a Phase-2 hardening option.
+//   - Unknown top-level fields are dropped on round-trip. LoadManifest uses a
+//     LENIENT decoder for the manifest object, matching every existing Resolve*
+//     function's tolerant contract. The typed ConformanceConfig sub-object is
+//     strict about its own fields. The two real manifests carry no unknown
+//     fields, so byte identity holds for them.
 //   - Parent absent-vs-null is not distinguished. Parent is *string; both a
 //     missing "parent" key and an explicit `"parent": null` unmarshal to nil,
 //     and WriteManifest always emits `"parent": null` (no omitempty, to
@@ -104,6 +105,17 @@ type DomainManifest struct {
 	// Director is the accountable resolver role/name
 	// (ResolveDomainPresentation.Director).
 	Director string `json:"director,omitempty"`
+
+	SelfExecutingAtoms bool          `json:"self_executing_atoms,omitempty"`
+	AtomDefaults       *AtomDefaults `json:"atom_defaults,omitempty"`
+	// Languages declares the domain's language projections. Nil preserves the
+	// legacy single-language mode; a present list must be non-empty and valid.
+	Languages []string `json:"languages,omitempty"`
+	// DefaultLanguage names the authored primary language. Multiple languages
+	// require an explicit default; one language may omit it.
+	DefaultLanguage string `json:"default_language,omitempty"`
+	// Conformance carries optional rule/case and source-owned audit declarations.
+	Conformance *ontology.ConformanceConfig `json:"conformance,omitempty"`
 
 	// Parent names the parent domain, or nil for a root domain
 	// (ResolveParent). *string without omitempty so an explicit JSON null
@@ -211,6 +223,22 @@ type DomainManifest struct {
 	// (discipline:"full"/claim_authority:"scenario"/public_surface_
 	// authority:"linked" were already spent before this check existed).
 	ScenarioAuthority string `json:"scenario_authority,omitempty"`
+	// SpecificationSources pins external or authored specification bytes by
+	// stable identity, declared version, relative path, and SHA-256.
+	// Relative paths resolve from the consumer domain directory, or from the
+	// repository root for the self-hosting domain. Absolute paths are also
+	// accepted by the structural verifier.
+	// Requirement source_links refer to these entries by ID.
+	SpecificationSources []ontology.SpecificationSource `json:"specification_sources,omitempty"`
+}
+
+// AtomDefaults supplies lifecycle metadata for source-discovered requirements.
+type AtomDefaults struct {
+	Owner     string `json:"owner,omitempty"`
+	Status    string `json:"status,omitempty"`
+	Why       string `json:"why,omitempty"`
+	CreatedAt string `json:"created_at,omitempty"`
+	SettledAt string `json:"settled_at,omitempty"`
 }
 
 // LoadManifest reads and decodes the manifest.json at path into a DomainManifest.
@@ -229,10 +257,16 @@ func LoadManifest(path string) (*DomainManifest, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load manifest: read %s: %w", path, err)
 	}
+	if err := validateAtomicManifestFieldNames(data); err != nil {
+		return nil, fmt.Errorf("load manifest: validate field names %s: %w", path, err)
+	}
 	var m DomainManifest
 	dec := json.NewDecoder(bytes.NewReader(data))
 	if err := dec.Decode(&m); err != nil {
 		return nil, fmt.Errorf("load manifest: decode %s: %w", path, err)
+	}
+	if err := validateDomainManifest(&m); err != nil {
+		return nil, fmt.Errorf("load manifest: validate %s: %w", path, err)
 	}
 	return &m, nil
 }
@@ -246,6 +280,9 @@ func LoadManifest(path string) (*DomainManifest, error) {
 func WriteManifest(path string, m *DomainManifest) error {
 	if m == nil {
 		return fmt.Errorf("write manifest: nil manifest")
+	}
+	if err := validateDomainManifest(m); err != nil {
+		return fmt.Errorf("write manifest: validate: %w", err)
 	}
 	data, err := marshalManifest(m)
 	if err != nil {

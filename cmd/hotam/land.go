@@ -59,8 +59,8 @@ func cmdLand(args []string) error {
 	today := fs.String("today", "", "date in YYYY-MM-DD format (required)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (passed through to gen-spec)")
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
-	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a semantic conflict the gate detected — overrides the semantic-conflict refusal")
-	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded (ticket, meeting, resolver+date) — overrides the semantic-conflict refusal and is persisted in the requirement's History; for a real judgment-call decision, prefer a typed 'signoff' field on the ProposedRequirement/ProposedAssumptionRewrite itself (decided_by resolved against declared Stakeholders) — --decision-ref remains best for lighter mechanical acknowledgments")
+	ackConflict := fs.String("ack-conflict", "", "cite an unresolved Conflict whose members include the candidate requirement and a blocked member — overrides that formal blocker")
+	decisionRef := fs.String("decision-ref", "", "record a human decision reference to override a matching unresolved Conflict carrier; persisted in requirement History")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
 	fs.Parse(args)
 
@@ -117,23 +117,13 @@ func cmdLand(args []string) error {
 // share the same snapshot/genSpec/allViolations/rollback shape but differ in
 // the apply step (ApplyBatch vs applyProposalValue).
 //
-// The semantic-conflict gate runs in TWO halves on the batch path. The
-// BLOCKING half — opposite-marker detection (diagnose.IsBlockingHit) — now
-// runs INSIDE internal/proposal.ApplyBatch via an injected
-// proposal.ConflictChecker (batchConflictChecker, built here in cmd/hotam
-// using diagnose.IsBlockingHit, since internal/proposal cannot import
-// internal/diagnose directly — R-core-periphery-import-ratchet): each
-// ProposedRequirement is confronted against the rolling in-memory graph (so
-// it catches contradictions against pre-existing state AND against earlier
-// items of the same batch), and ANY blocking hit aborts the ENTIRE batch
-// atomically (disk untouched). The OVERRIDE half — --ack-conflict /
-// --decision-ref — does NOT
-// run in batch mode: those flags are inherently per-proposal, but batch mode
-// processes a directory of files with no per-file flag mechanism; a batch
-// item that trips the blocking gate must be pulled out and landed
-// individually via `hotam land`/`hotam apply-proposal` (single-file) with an
-// explicit ack. The advisory confront-at-gate summary (confrontBatchSummary)
-// also still runs as visibility-only.
+// The batch path injects the same formal-carrier check used by single-file
+// land/apply into internal/proposal.ApplyBatch. It evaluates each full
+// candidate Requirement against the rolling graph, blocks only when an
+// unresolved Conflict names the candidate ID and another member ID, and
+// refuses the entire batch atomically. Batch mode has no per-item decision
+// override. Lexical markers, overlap, source links, and relations remain
+// advisory and are still included in the confront summary.
 func cmdLandBatch(batchDir, domainDir, today, claudeMDPath string, asJSON bool) (*LandResult, error) {
 	// Resolve the effective crystal path once (see landProposalValue for the
 	// rationale): the forward genSpec and every rollback re-render in this
@@ -331,21 +321,12 @@ func isActiveOrUnambiguousDomain(repoRoot, domainDir string) bool {
 // transactional snapshot/rollback lives here so every caller that lands a
 // single proposal shares one implementation.
 //
-// The semantic-conflict gate runs FIRST, before the snapshot: if it refuses
-// (a ProposedRequirement whose claim carries an opposite marker against an
-// existing SETTLED requirement, with no ack supplied), nothing is mutated. See
-// semanticConflictGate for the signal definition and R-ai-presents-not-decides
-// / R-decided-needs-human-signoff for why this requires a recorded decision
-// rather than auto-resolving.
+// A matching unresolved Conflict carrier blocks before the snapshot so a
+// refusal leaves graph and docs untouched. Recorded human decisions may
+// override that formal blocker; lexical markers and metadata links never do.
+// hadConflict is reused below so ack history is written only when a formal
+// carrier actually matched, not merely because override flags were passed.
 func landProposalValue(p proposal.Proposal, domainDir, claudeMDPath, today string, ackOpts landAckOptions, asJSON bool) (*LandResult, error) {
-	// Semantic-conflict gate: refuse to land a ProposedRequirement whose claim
-	// carries an opposite marker against an existing SETTLED requirement,
-	// unless the operator supplied --ack-conflict or --decision-ref. Runs
-	// BEFORE the snapshot so a refusal leaves the graph untouched. hadConflict
-	// is reused below to gate appendAckHistory: the audit trail is written only
-	// when a real conflict was detected, not merely because ack flags were
-	// passed (prevents a false "semantic conflict acknowledged" entry on a
-	// non-conflicting land with --decision-ref).
 	hadConflict, err := semanticConflictGate(domainDir, p, ackOpts)
 	if err != nil {
 		return nil, err
