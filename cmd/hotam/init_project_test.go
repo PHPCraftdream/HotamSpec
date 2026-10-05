@@ -21,7 +21,7 @@ func TestInitProject_ScaffoldFromCleanDir(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 
-	written, err := initProject(dir, "main", "2026-07-13", false, true)
+	written, err := initProject(dir, "main", "2026-07-13", false, true, "owner")
 	if err != nil {
 		t.Fatalf("initProject: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestInitProject_RefusesWhenMarkerExists(t *testing.T) {
 		t.Fatalf("seed marker: %v", err)
 	}
 
-	_, err := initProject(dir, "main", "2026-07-13", false, true)
+	_, err := initProject(dir, "main", "2026-07-13", false, true, "owner")
 	if err == nil {
 		t.Fatal("expected a refusal error when the marker exists, got nil")
 	}
@@ -113,7 +113,7 @@ func TestInitProject_RefusesWhenClaudeMDExists(t *testing.T) {
 		t.Fatalf("seed CLAUDE.md: %v", err)
 	}
 
-	_, err := initProject(dir, "main", "2026-07-13", false, true)
+	_, err := initProject(dir, "main", "2026-07-13", false, true, "owner")
 	if err == nil {
 		t.Fatal("expected a refusal error when CLAUDE.md exists, got nil")
 	}
@@ -158,7 +158,7 @@ func TestInitAndInitProject_DefaultToSameGenProfile(t *testing.T) {
 
 	// (2) initProject (`hotam init-project`).
 	projDir := t.TempDir()
-	if _, err := initProject(projDir, "main", "2026-07-14", false, true); err != nil {
+	if _, err := initProject(projDir, "main", "2026-07-14", false, true, "owner"); err != nil {
 		t.Fatalf("initProject: %v", err)
 	}
 	projManifestPath := filepath.Join(projDir, "domains", "main", "manifest.json")
@@ -190,7 +190,7 @@ func TestInitProject_ManifestAtomsProfile(t *testing.T) {
 	t.Parallel()
 
 	projDir := t.TempDir()
-	if _, err := initProject(projDir, "main", "2026-07-14", false, true); err != nil {
+	if _, err := initProject(projDir, "main", "2026-07-14", false, true, "owner"); err != nil {
 		t.Fatalf("initProject: %v", err)
 	}
 	manifestPath := filepath.Join(projDir, "domains", "main", "manifest.json")
@@ -235,7 +235,7 @@ func TestInitProject_ManifestAtomsProfile(t *testing.T) {
 
 	// --discipline "" escape hatch stays profile-free.
 	softDir := t.TempDir()
-	if _, err := initProject(softDir, "soft", "2026-07-14", false, false); err != nil {
+	if _, err := initProject(softDir, "soft", "2026-07-14", false, false, "owner"); err != nil {
 		t.Fatalf("initProject --discipline empty: %v", err)
 	}
 	softData, err := os.ReadFile(filepath.Join(softDir, "domains", "soft", "manifest.json"))
@@ -465,4 +465,125 @@ func TestCmdInitProject_DisciplineFlagRejectsBogusValue(t *testing.T) {
 	if err := cmdInitProject([]string{"--discipline", "bogus", dir}); err == nil {
 		t.Fatal("cmdInitProject --discipline bogus should return an error, got nil")
 	}
+}
+
+// TestInitProject_SyncReadySeedsOwnerAndEnvelope pins the sync-ready
+// onboarding contract: a default init-project scaffold must (a) write
+// spec/stakeholders.go declaring the seed owner registry, (b) write the
+// manifest atom_defaults (owner/status SETTLED/created_at=settled_at=today)
+// that check_no_dangling_requirement_owner reads, and (c) make the FIRST
+// scaffoldRegistrydump pick the envelope template (because stakeholders.go
+// is written before scaffoldRegistrydump runs), so spec/registrydump/main.go
+// already marshals Stakeholders.All() — no manual re-run needed.
+func TestInitProject_SyncReadySeedsOwnerAndEnvelope(t *testing.T) {
+	t.Parallel()
+
+	projDir := t.TempDir()
+	written, err := initProject(projDir, "main", "2026-07-14", false, true, "owner")
+	if err != nil {
+		t.Fatalf("initProject: %v", err)
+	}
+
+	domainDir := filepath.Join(projDir, "domains", "main")
+
+	// (a) spec/stakeholders.go is in the written list and declares the
+	// Stakeholders registry with the owner registered.
+	foundStakeholders := false
+	for _, p := range written {
+		if strings.HasSuffix(filepath.ToSlash(p), "/spec/stakeholders.go") {
+			foundStakeholders = true
+		}
+	}
+	if !foundStakeholders {
+		t.Error("written list omits spec/stakeholders.go")
+	}
+	stkSrc, err := os.ReadFile(filepath.Join(domainDir, "spec", "stakeholders.go"))
+	if err != nil {
+		t.Fatalf("read spec/stakeholders.go: %v", err)
+	}
+	stkBody := string(stkSrc)
+	for _, want := range []string{
+		"package spec",
+		"var Stakeholders = hotamontology.New[hotamontology.Stakeholder]()",
+		`Stakeholders.MustRegister("owner"`,
+	} {
+		if !strings.Contains(stkBody, want) {
+			t.Errorf("spec/stakeholders.go missing %q, got:\n%s", want, stkBody)
+		}
+	}
+
+	// (c) the registrydump scaffolded in the SAME run already prints the
+	// envelope (Stakeholders.All()) — the decisive ordering assertion.
+	dumpSrc, err := os.ReadFile(filepath.Join(domainDir, "spec", "registrydump", "main.go"))
+	if err != nil {
+		t.Fatalf("read spec/registrydump/main.go: %v", err)
+	}
+	if !strings.Contains(string(dumpSrc), "Stakeholders.All()") {
+		t.Errorf("first-scaffolded registrydump main.go must marshal Stakeholders.All() (envelope), got:\n%s", dumpSrc)
+	}
+
+	// (b) manifest atom_defaults present with owner/status/dates, and loads
+	// through loader.LoadManifest with the expected AtomDefaults.
+	manifestPath := filepath.Join(domainDir, "manifest.json")
+	loaded, err := loader.LoadManifest(manifestPath)
+	if err != nil {
+		t.Fatalf("LoadManifest: %v", err)
+	}
+	if loaded.AtomDefaults == nil {
+		t.Fatalf("manifest has no atom_defaults after initProject; manifest:\n%s", mustReadFile(t, manifestPath))
+	}
+	if loaded.AtomDefaults.Owner != "owner" || loaded.AtomDefaults.Status != "SETTLED" {
+		t.Errorf("atom_defaults owner/status = %q/%q, want \"owner\"/\"SETTLED\"", loaded.AtomDefaults.Owner, loaded.AtomDefaults.Status)
+	}
+	if loaded.AtomDefaults.CreatedAt != "2026-07-14" || loaded.AtomDefaults.SettledAt != "2026-07-14" {
+		t.Errorf("atom_defaults created_at/settled_at = %q/%q, want both \"2026-07-14\"", loaded.AtomDefaults.CreatedAt, loaded.AtomDefaults.SettledAt)
+	}
+
+	// The scaffolded spec/ module still compiles as a whole (stakeholders.go
+	// is part of the spec package).
+	build := exec.Command("go", "build", "./...")
+	build.Dir = filepath.Join(domainDir, "spec")
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Errorf("scaffolded spec/ module does not compile: %v\n%s", err, out)
+	}
+}
+
+// TestInitProject_CustomOwnerPropagates proves the --owner flag feeds BOTH
+// seeded artifacts: spec/stakeholders.go registers the stakeholder under the
+// given id and the manifest atom_defaults names the same owner — a custom id
+// like "alice" must never desynchronize the two.
+func TestInitProject_CustomOwnerPropagates(t *testing.T) {
+	t.Parallel()
+
+	projDir := t.TempDir()
+	if _, err := initProject(projDir, "main", "2026-07-14", false, true, "alice"); err != nil {
+		t.Fatalf("initProject --owner alice: %v", err)
+	}
+	domainDir := filepath.Join(projDir, "domains", "main")
+
+	stkSrc, err := os.ReadFile(filepath.Join(domainDir, "spec", "stakeholders.go"))
+	if err != nil {
+		t.Fatalf("read spec/stakeholders.go: %v", err)
+	}
+	if !strings.Contains(string(stkSrc), `Stakeholders.MustRegister("alice"`) {
+		t.Errorf("spec/stakeholders.go must register the custom owner id \"alice\", got:\n%s", stkSrc)
+	}
+
+	loaded, err := loader.LoadManifest(filepath.Join(domainDir, "manifest.json"))
+	if err != nil {
+		t.Fatalf("LoadManifest: %v", err)
+	}
+	if loaded.AtomDefaults == nil || loaded.AtomDefaults.Owner != "alice" {
+		t.Errorf("atom_defaults owner = %+v, want owner \"alice\"", loaded.AtomDefaults)
+	}
+}
+
+// mustReadFile is a small helper for failure-message contexts.
+func mustReadFile(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	return string(data)
 }

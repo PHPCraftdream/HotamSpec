@@ -26,6 +26,8 @@ hotam init-project my-project && cd my-project
 
 This scaffolds a base domain `main` under `domains/main`: a manifest `{"profile": "atoms"}` (expanding at load to `discipline: "full"`, `requirements_authority: "code"`, `self_executing_atoms: true` and the consumer gen-spec profile), an EMPTY 0-node `graph.json`, a `spec/` Go module (vendored `hotamspec` recorder, `hotamontology` mirror, `registrydump` bridge, empty `requirements.go`), `docs/gen/SPEC.md`, and the root crystal `CLAUDE.md`/`AGENTS.md`/`GEMINI.md`. The command ends with `initialized project at my-project (base domain "main" under domains\main)` plus printed next steps.
 
+Two things the first `sync-domain` needs are seeded for you: `spec/stakeholders.go` declares a seed requirement owner (default id `owner`; customize with `hotam init-project my-project --owner alice`) and the manifest carries `"atom_defaults"` naming that owner — and because `stakeholders.go` exists at scaffold time, the `registrydump` bridge already prints the `{"requirements":[...],"stakeholders":[...]}` envelope `sync-domain` reads. No manual owner-registration step is required.
+
 ### 3. Write the first atom
 
 Two files — methods in `spec/model/`, the test in a `_test.go` file (go test only runs `_test.go`):
@@ -63,32 +65,16 @@ func TestBirthYear(t *testing.T) {
 }
 ```
 
-### 4. Register the owner so the graph gate passes
+### 4. (already done by init-project)
 
-Add `spec/stakeholders.go`:
+There is no owner-registration step anymore: `init-project` already wrote
+`spec/stakeholders.go` (a seed stakeholder registered under the default id
+`owner`), added `"atom_defaults"` to the manifest, and scaffolded the
+`registrydump` bridge in envelope mode (`{"requirements":[...],"stakeholders":[...]}`) —
+so the first `sync-domain` passes `check_no_dangling_requirement_owner` with zero
+manual follow-up.
 
-```go
-package spec
-
-import hotamontology "main-spec/hotamontology"
-
-var Stakeholders = hotamontology.New[hotamontology.Stakeholder]()
-
-var _ = Stakeholders.MustRegister("alice", hotamontology.Stakeholder{ID: "alice", Name: "Alice", Domain: "product"})
-```
-
-and add `"atom_defaults"` to `domains/main/manifest.json` so it reads:
-
-```json
-{"self_hosting": false, "parent": null, "profile": "atoms", "atom_defaults": {"owner": "alice", "status": "SETTLED", "why": "Confirmed by the owner.", "created_at": "2026-10-05", "settled_at": "2026-10-05"}}
-```
-
-The default `scaffold-registrydump` stub prints a bare requirements array, so re-run to emit the `{"requirements":[...],"stakeholders":[...]}` envelope that `sync-domain` reads:
-
-```bash
-hotam vendor-ontology --domain domains/main
-hotam scaffold-registrydump --domain domains/main
-```
+To use a different owner, pass it at init time (`hotam init-project my-project --owner alice`) — or, for an existing project, edit the registration in `spec/stakeholders.go` and the `atom_defaults.owner` field in `domains/main/manifest.json` to the same id.
 
 ### 5. Test and project onto the graph (dry-run by default)
 
@@ -98,12 +84,18 @@ ok  	main-spec/model
 $ hotam sync-domain --domain domains/main
 hotam sync-domain — DRY RUN (default mode; pass --confirm-hash <hex> to write)
 
+[ADDED stakeholder] owner
+    name: owner
+    domain: main
 [ADDED] R-human-birth-year
-gate preview (7-9): all clear
-diff-hash: b213163c81f51ab5086b46dbd365e73a79a5f2a3e5ce26d2eb1455af0d1e8f72
-```
 
-Note: without the stakeholder step the pre/post-violations gate BLOCKS with `check_no_dangling_requirement_owner`.
+gate preview (7-9 — what a real --confirm-hash run would enforce):
+  [7 confront] clear — no unresolved formal conflict carriers
+  [8 pre/post-violations] clear — no new invariant violations
+  [9 append-only] clear
+
+diff-hash: 975fc7f03ce20c8772bd69ca9af85d69ebe1efc6a5034a44db24bbe69da5dd09
+```
 
 ### 6. Land it and read the generated text
 
@@ -113,6 +105,7 @@ hotam sync-domain --domain domains/main --today 2026-10-05 --confirm-hash <hex>
 
 ```
 synced 0 changed, 1 added requirement(s), 1 stakeholder(s) added into domains\main\graph.json
+regenerated 6 doc(s)
 sync-domain landed: graph synced, docs regenerated, 0 violations
 ```
 
@@ -122,7 +115,7 @@ sync-domain landed: graph synced, docs regenerated, 0 violations
 - R-human-birth-year — Birth year — 1987. [E] ← TestBirthYear
 ```
 
-and `docs/gen/spec/spec/model.md` shows `**Claim:** Birth year — 1987.` with the link to `spec/model/human_test.go:TestBirthYear`.
+and `docs/gen/spec/model.md` shows `**Claim:** Birth year — 1987.` with the link to `spec/model/human_test.go:TestBirthYear`.
 
 ### 7. Change the value and watch the text follow
 

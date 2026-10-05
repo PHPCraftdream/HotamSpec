@@ -21,7 +21,7 @@ import (
 const defaultInitProjectDomain = "main"
 
 // cmdInitProject implements `hotam init-project <dir> [--domain <name>]
-// [--today YYYY-MM-DD]` — the single onboarding command that bootstraps an
+// [--today YYYY-MM-DD] [--owner <id>]` — the single onboarding command that bootstraps an
 // EXTERNAL business project's full Hotam-Spec layout in one call. Where
 // `hotam init <dir>` scaffolds only one bare domain, init-project additionally
 // creates the project-root marker (<dir>/.hotam-spec-project) and renders the
@@ -65,10 +65,11 @@ func cmdInitProject(args []string) error {
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — embedded in freshness/status lines of the generated docs and root crystal; pin this for reproducible/byte-identical regeneration")
 	requireProvenance := fs.Bool("require-provenance", false, "require source_refs/last_reviewed_at/review_after on every SETTLED requirement landed into the base domain (writes require_provenance: true into its manifest.json; see internal/loader.ResolveRequireProvenance)")
 	discipline := fs.String("discipline", "full", "discipline mode for the scaffolded base domain: \"full\" (default — BORN FULLY OBLIGATED: vendors the hotamspec scenario recorder + spec/go.mod, requires every SETTLED requirement to carry a scenario-narrated verified_by test) or \"\" (off — no discipline field, no spec/ scaffolding; implemented_by/verified_by with a plain go test is enough, matching a bare `hotam init` domain — turn discipline:full on later via `hotam vendor-recorder` if the auto-generated SPEC.md narrative is ever wanted)")
+	owner := fs.String("owner", "owner", "id of the seed requirement owner scaffolded into spec/stakeholders.go and named in the manifest's atom_defaults (requirements_authority \"code\" projects requirements under this owner; pick the real person/team id here so the first sync-domain passes check_no_dangling_requirement_owner with no manual follow-up)")
 	fs.Parse(args)
 
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD] [--require-provenance] [--discipline full|\"\"]")
+		return fmt.Errorf("usage: hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD] [--owner <id>] [--require-provenance] [--discipline full|\"\"]")
 	}
 	rawDir := fs.Arg(0)
 
@@ -94,7 +95,7 @@ func cmdInitProject(args []string) error {
 		today = time.Now().Format("2006-01-02")
 	}
 
-	written, err := initProject(dir, domainNameResolved, today, *requireProvenance, *discipline == "full")
+	written, err := initProject(dir, domainNameResolved, today, *requireProvenance, *discipline == "full", *owner)
 	if err != nil {
 		return err
 	}
@@ -144,6 +145,25 @@ import hotamontology "%[1]s/hotamontology"
 var Requirements = hotamontology.New[hotamontology.Requirement]()
 `
 
+// emptyStakeholdersGoTemplate is the spec/stakeholders.go a code-authority
+// project is born with: the seed requirement owner every code-discovered
+// requirement is attributed to via manifest atom_defaults. Writing it BEFORE
+// scaffoldRegistrydump runs makes declaresStakeholders pick the envelope
+// registrydump template on the very first scaffold, so the first sync-domain
+// never blocks on check_no_dangling_requirement_owner. %[1]s is the spec
+// module path (documentation only; the import is module-relative), %[2]s the
+// owner id, %[3]s the domain name.
+const emptyStakeholdersGoTemplate = `// Seed stakeholder of this domain: the default requirement owner
+// referenced by manifest atom_defaults (requirements_authority "code").
+package spec
+
+import hotamontology "%[1]s/hotamontology"
+
+var Stakeholders = hotamontology.New[hotamontology.Stakeholder]()
+
+var _ = Stakeholders.MustRegister("%[2]s", hotamontology.Stakeholder{ID: "%[2]s", Name: "%[2]s", Domain: "%[3]s"})
+`
+
 // initProject performs the full project bootstrap and returns every path it
 // wrote, in write order, so cmdInitProject and the init-project tests can both
 // assert on exactly what landed on disk (mirroring initDomain's return-list-of-
@@ -157,7 +177,7 @@ var Requirements = hotamontology.New[hotamontology.Requirement]()
 // Both checks mirror initDomain's own "refusing to init: %s already exists"
 // discipline for graph.json — same spirit (never silently destroy existing
 // work), new guard points appropriate to a project-root scaffold.
-func initProject(dir, domainName, today string, requireProvenance bool, disciplineFull bool) ([]string, error) {
+func initProject(dir, domainName, today string, requireProvenance bool, disciplineFull bool, owner string) ([]string, error) {
 	// (1) Refuse to overwrite an existing project. Check both guard points
 	// BEFORE writing anything, so a refusal leaves the target untouched.
 	markerPath := filepath.Join(dir, paths.MarkerFilename)
@@ -210,6 +230,10 @@ func initProject(dir, domainName, today string, requireProvenance bool, discipli
 		manifest := "{\"self_hosting\": false, \"parent\": null"
 		if disciplineFull {
 			manifest += ", \"profile\": \"atoms\""
+			// atom_defaults names the code-discovered requirements' default
+			// owner/lifecycle — without it the first sync-domain blocks on
+			// check_no_dangling_requirement_owner until the user hand-writes it.
+			manifest += fmt.Sprintf(", \"atom_defaults\": {\"owner\": %q, \"status\": \"SETTLED\", \"why\": %q, \"created_at\": %q, \"settled_at\": %q}", owner, "Confirmed by the owner.", today, today)
 		}
 		if requireProvenance {
 			manifest += ", \"require_provenance\": true"
@@ -274,6 +298,21 @@ func initProject(dir, domainName, today string, requireProvenance bool, discipli
 			return written, fmt.Errorf("vendor ontology into %s: %w", domainDir, err)
 		}
 		written = append(written, ontologyPaths...)
+
+		// (iii-b) Seed the requirement owner BEFORE scaffoldRegistrydump: the
+		// registrydump scaffold scans spec/ via declaresStakeholders, so a
+		// Stakeholders registry present at that point makes the FIRST
+		// scaffolded main.go already print the {"requirements":[...],
+		// "stakeholders":[...]} envelope sync-domain reads — no manual
+		// vendor-ontology/scaffold-registrydump re-run needed. Together with
+		// the manifest atom_defaults written in (2b), the first sync-domain
+		// passes check_no_dangling_requirement_owner with zero manual steps.
+		stakeholdersPath := filepath.Join(domainDir, "spec", "stakeholders.go")
+		stakeholdersSrc := fmt.Sprintf(emptyStakeholdersGoTemplate, domainName+"-spec", owner, domainName)
+		if err := writeFileMkdir(stakeholdersPath, []byte(stakeholdersSrc)); err != nil {
+			return written, fmt.Errorf("write %s: %w", stakeholdersPath, err)
+		}
+		written = append(written, stakeholdersPath)
 
 		dumpPath, err := scaffoldRegistrydump(domainDir)
 		if err != nil {

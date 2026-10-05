@@ -28,6 +28,15 @@ History predating this file is not backfilled — see `git log` and
 
 ### Atomic multilingual and conformance specifications
 
+- `hotam init-project` now seeds the first `sync-domain`'s prerequisites with
+  zero manual steps: it writes `spec/stakeholders.go` (seed requirement owner,
+  `--owner <id>`, default `owner`), adds `atom_defaults` (owner, status
+  SETTLED, created_at=settled_at=today) to the scaffolded manifest, and —
+  because stakeholders.go exists before the registrydump scaffold runs — the
+  first `spec/registrydump/main.go` already prints the
+  `{"requirements":[...],"stakeholders":[...]}` envelope, so the first
+  `sync-domain` no longer blocks on `check_no_dangling_requirement_owner`.
+
 - Atom order in CLAUDE.md/SPEC projections now follows the authored test
   narrative instead of model source positions: test files and `TestXxx`
   functions in source order, proofs in `Fact`/`Holds` call order; a `Holds`
