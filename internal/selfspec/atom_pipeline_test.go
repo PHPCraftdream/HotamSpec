@@ -155,10 +155,13 @@ func TestDiscoverAtomsRuleHoldsRetainsFalseAndTrueOracles(t *testing.T) {
 type Box struct { value int }
 // >>>>> lang=en
 // positive values satisfy the rule
+// not: the value does not satisfy the positivity rule
 // >>>>> lang=ru
 // положительные значения удовлетворяют правилу
+// not: значение не удовлетворяет правилу положительности
 // >>>>> lang=zh
 // 正值满足规则
+// not: 值不满足正数规则
 func (b Box) Valid() bool { return b.value > 0 }
 `
 	root := atomDiscoveryFixture(t, multilingualRuleManifest, model, `package model

@@ -79,6 +79,8 @@ type AtomSource struct {
 	File, Symbol, Phrase string
 	Phrases              ontology.LocalizedText
 	PhrasePositions      map[string]token.Position
+	NotPhrases           ontology.LocalizedText
+	NotPositions         map[string]token.Position
 	Method               *ast.FuncDecl
 	Position             token.Position
 	DocPosition          token.Position
@@ -209,7 +211,7 @@ func newAtomSourceIndex(specRoot string, languages []string, defaultLanguage str
 			if fn.Doc != nil {
 				source.DocPosition = fs.Position(fn.Doc.Pos())
 			}
-			source.Phrases, source.Phrase, source.PhrasePositions, err = parseAtomPhrases(fn.Doc, fs, source, langs)
+			source.Phrases, source.Phrase, source.PhrasePositions, source.NotPhrases, source.NotPositions, err = parseAtomPhrases(fn.Doc, fs, source, langs)
 			if err != nil {
 				return err
 			}
@@ -344,9 +346,9 @@ func atomPhraseError(source AtomSource, language, reason string) error {
 	return atomDocError(source, position.Line, language, reason)
 }
 
-func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSource, languages []string) (ontology.LocalizedText, string, map[string]token.Position, error) {
+func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSource, languages []string) (ontology.LocalizedText, string, map[string]token.Position, ontology.LocalizedText, map[string]token.Position, error) {
 	if group == nil {
-		return nil, "", nil, nil
+		return nil, "", nil, nil, nil, nil
 	}
 	docText := strings.TrimSpace(strings.Split(group.Text(), "\n")[0])
 	lines := atomCommentLines(group, fs)
@@ -361,7 +363,7 @@ func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSou
 		if hasMarker {
 			for _, line := range lines {
 				if strings.HasPrefix(strings.TrimSpace(line.text), ">>>>>") {
-					return nil, "", nil, atomDocError(source, line.pos.Line, "", "language markers require a multilingual languages configuration")
+					return nil, "", nil, nil, nil, atomDocError(source, line.pos.Line, "", "language markers require a multilingual languages configuration")
 				}
 			}
 		}
@@ -369,24 +371,18 @@ func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSou
 		if len(languages) == 1 {
 			language = languages[0]
 		}
-		positions := make(map[string]token.Position, 1)
-		for _, line := range lines {
-			if strings.TrimSpace(line.text) != "" {
-				positions[language] = line.pos
-				break
-			}
+		phrases, positions, notPhrases, notPositions, err := plainPhrases(lines, source, docText, language)
+		if err != nil {
+			return nil, "", nil, nil, nil, err
 		}
-		return ontology.LocalizedText{language: docText}, docText, positions, nil
+		return phrases, docText, positions, notPhrases, notPositions, nil
 	}
 	if !hasMarker {
-		positions := make(map[string]token.Position, 1)
-		for _, line := range lines {
-			if strings.TrimSpace(line.text) != "" {
-				positions[""] = line.pos
-				break
-			}
+		phrases, positions, notPhrases, notPositions, err := plainPhrases(lines, source, docText, "")
+		if err != nil {
+			return nil, "", nil, nil, nil, err
 		}
-		return ontology.LocalizedText{"": docText}, docText, positions, nil
+		return phrases, docText, positions, notPhrases, notPositions, nil
 	}
 
 	declared := make(map[string]bool, len(languages))
@@ -395,6 +391,8 @@ func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSou
 	}
 	phrases := make(ontology.LocalizedText, len(languages))
 	positions := make(map[string]token.Position, len(languages))
+	notPhrases := make(ontology.LocalizedText, len(languages))
+	notPositions := make(map[string]token.Position, len(languages))
 	currentLanguage := ""
 	markerLine := 0
 	var block []atomDocLine
@@ -404,6 +402,8 @@ func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSou
 		}
 		var content []string
 		var phrasePosition token.Position
+		var notPhrase string
+		var notPosition token.Position
 		endedParagraph := false
 		for _, line := range block {
 			text := strings.TrimSpace(line.text)
@@ -413,7 +413,21 @@ func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSou
 				}
 				continue
 			}
-			if endedParagraph {
+			if strings.HasPrefix(line.text, "not:") {
+				if notPosition.Filename != "" {
+					return atomDocError(source, line.pos.Line, currentLanguage, "duplicate `not:` negation phrase")
+				}
+				if phrasePosition.Filename == "" {
+					return atomDocError(source, line.pos.Line, currentLanguage, "`not:` negation phrase must follow the main phrase")
+				}
+				not := strings.TrimSpace(strings.TrimPrefix(line.text, "not:"))
+				if not == "" {
+					return atomDocError(source, line.pos.Line, currentLanguage, "empty `not:` negation phrase")
+				}
+				notPhrase, notPosition = not, line.pos
+				continue
+			}
+			if endedParagraph || notPosition.Filename != "" {
 				return atomDocError(source, line.pos.Line, currentLanguage, "language block must contain one short phrase")
 			}
 			if phrasePosition.Filename == "" {
@@ -427,50 +441,92 @@ func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSou
 		}
 		phrases[currentLanguage] = phrase
 		positions[currentLanguage] = phrasePosition
+		if notPhrase != "" {
+			notPhrases[currentLanguage], notPositions[currentLanguage] = notPhrase, notPosition
+		}
 		return nil
 	}
 	for _, line := range lines {
 		text := strings.TrimSpace(line.text)
 		if strings.HasPrefix(text, ">>>>>") {
 			if err := finishBlock(); err != nil {
-				return nil, "", nil, err
+				return nil, "", nil, nil, nil, err
 			}
 			if !strings.HasPrefix(text, ">>>>> lang=") {
-				return nil, "", nil, atomDocError(source, line.pos.Line, "", "invalid marker; expected exactly `>>>>> lang=<code>`")
+				return nil, "", nil, nil, nil, atomDocError(source, line.pos.Line, "", "invalid marker; expected exactly `>>>>> lang=<code>`")
 			}
 			language := strings.TrimPrefix(text, ">>>>> lang=")
 			if language == "" || strings.TrimSpace(language) != language || strings.ContainsAny(language, " \t/\\<>") {
-				return nil, "", nil, atomDocError(source, line.pos.Line, language, "invalid language code in marker")
+				return nil, "", nil, nil, nil, atomDocError(source, line.pos.Line, language, "invalid language code in marker")
 			}
 			if !declared[language] {
-				return nil, "", nil, atomDocError(source, line.pos.Line, language, "language marker is not declared in manifest")
+				return nil, "", nil, nil, nil, atomDocError(source, line.pos.Line, language, "language marker is not declared in manifest")
 			}
 			if _, duplicate := phrases[language]; duplicate || currentLanguage == language {
-				return nil, "", nil, atomDocError(source, line.pos.Line, language, "duplicate language block")
+				return nil, "", nil, nil, nil, atomDocError(source, line.pos.Line, language, "duplicate language block")
 			}
 			currentLanguage, markerLine, block = language, line.pos.Line, nil
 			continue
 		}
 		if currentLanguage == "" {
 			if text != "" {
-				return nil, "", nil, atomDocError(source, line.pos.Line, "", "text outside language blocks")
+				return nil, "", nil, nil, nil, atomDocError(source, line.pos.Line, "", "text outside language blocks")
 			}
 			continue
 		}
 		block = append(block, line)
 	}
 	if err := finishBlock(); err != nil {
-		return nil, "", nil, err
+		return nil, "", nil, nil, nil, err
 	}
 	for _, language := range languages {
 		if _, ok := phrases[language]; !ok {
-			return nil, "", nil, atomDocError(source, source.DocPosition.Line, language, "missing language block")
+			return nil, "", nil, nil, nil, atomDocError(source, source.DocPosition.Line, language, "missing language block")
 		}
 	}
 	if len(phrases) != len(languages) {
-		return nil, "", nil, atomDocError(source, source.DocPosition.Line, "", "language blocks do not match declared languages")
+		return nil, "", nil, nil, nil, atomDocError(source, source.DocPosition.Line, "", "language blocks do not match declared languages")
 	}
-	return phrases, phrases[languages[0]], positions, nil
+	return phrases, phrases[languages[0]], positions, notPhrases, notPositions, nil
+}
+
+// plainPhrases splits an unmarked doc into the main phrase and an optional
+// following `not:` negation line.
+func plainPhrases(lines []atomDocLine, source AtomSource, docText, language string) (ontology.LocalizedText, map[string]token.Position, ontology.LocalizedText, map[string]token.Position, error) {
+	positions := make(map[string]token.Position, 1)
+	notPositions := make(map[string]token.Position, 1)
+	var notPhrase string
+	phraseSeen := false
+	for _, line := range lines {
+		text := strings.TrimSpace(line.text)
+		if text == "" {
+			continue
+		}
+		if !phraseSeen {
+			if strings.HasPrefix(line.text, "not:") {
+				return nil, nil, nil, nil, atomDocError(source, line.pos.Line, language, "`not:` negation phrase must follow the main phrase")
+			}
+			phraseSeen = true
+			positions[language] = line.pos
+			continue
+		}
+		if !strings.HasPrefix(line.text, "not:") {
+			continue
+		}
+		if notPhrase != "" {
+			return nil, nil, nil, nil, atomDocError(source, line.pos.Line, language, "duplicate `not:` negation phrase")
+		}
+		not := strings.TrimSpace(strings.TrimPrefix(line.text, "not:"))
+		if not == "" {
+			return nil, nil, nil, nil, atomDocError(source, line.pos.Line, language, "empty `not:` negation phrase")
+		}
+		notPhrase, notPositions[language] = not, line.pos
+	}
+	phrases := ontology.LocalizedText{language: docText}
+	if notPhrase == "" {
+		return phrases, positions, nil, nil, nil
+	}
+	return phrases, positions, ontology.LocalizedText{language: notPhrase}, notPositions, nil
 }
 func normalizedAtomPhrase(phrase, language string) (string, error) {
 	punctuation := ".!?;:… "
@@ -500,10 +556,45 @@ func atomText(language, template string, args ...any) (string, error) {
 	return fmt.Sprintf(localized, args...), nil
 }
 
-func atomPhraseText(language, phrase, value string, hasValue bool) (string, error) {
+// returnsBool reports whether the subject method returns exactly one bare
+// `bool`. Aliases (`type Bit bool`) are intentionally not recognized: typed
+// values from the recorder are absent for plain fact/holds steps, so the AST
+// return type is the only reliable bool signal.
+func (s AtomSource) returnsBool() bool {
+	if s.Method == nil || s.Method.Type == nil || s.Method.Type.Results == nil || len(s.Method.Type.Results.List) != 1 {
+		return false
+	}
+	field := s.Method.Type.Results.List[0]
+	if len(field.Names) > 1 {
+		return false
+	}
+	ident, ok := field.Type.(*ast.Ident)
+	return ok && ident.Name == "bool"
+}
+
+// atomPhraseText renders a fact/holds step: a bool method renders the bare
+// phrase on "true" and needs an authored `not:` negation on "false", other
+// methods render "phrase — value.".
+func atomPhraseText(language, phrase, notPhrase, value string, hasValue, boolMethod bool) (string, error) {
 	normalized, err := normalizedAtomPhrase(phrase, language)
 	if err != nil {
 		return "", err
+	}
+	if hasValue && boolMethod && value == "true" {
+		if language == "" {
+			return normalized + ".", nil
+		}
+		return atomText(language, "%s.", normalized)
+	}
+	if hasValue && boolMethod && value == "false" {
+		not, err := normalizedAtomPhrase(notPhrase, language)
+		if err != nil {
+			return "", fmt.Errorf("bool atom evaluated to false without a `not:` negation phrase")
+		}
+		if language == "" {
+			return not + ".", nil
+		}
+		return atomText(language, "%s.", not)
 	}
 	if hasValue {
 		if language == "" {
@@ -537,8 +628,12 @@ func (index *AtomSourceIndex) primaryLanguage() string {
 }
 
 // DeriveClaims uses one AST snapshot to derive each declared normative view.
-// Legacy facts retain their phrase-plus-executed-value semantics; rule claims
-// contain only authored phrases and are independent of case sample values.
+// Contract: rule and holds claims carry only the first (predicate) step's
+// authored phrases — evidence methods stay in the artifact and SPEC views.
+// Fact claims keep the phrase-plus-executed-value semantics, except bool
+// atoms: value "true" renders the bare phrase and "false" renders the
+// authored `not:` negation phrase; a false verdict without a `not:` phrase is
+// an error, never an auto-generated "не ..." wording.
 func (index *AtomSourceIndex) DeriveClaims(a AtomArtifact) (ontology.LocalizedText, error) {
 	if a.Mode != "fact" && a.Mode != "holds" && a.Mode != "rule" {
 		return nil, fmt.Errorf("unknown atom mode %q", a.Mode)
@@ -560,7 +655,7 @@ func (index *AtomSourceIndex) DeriveClaims(a AtomArtifact) (ontology.LocalizedTe
 	parts := make(map[string][]string, len(languages))
 	seen := map[string]bool{}
 	for _, step := range a.Steps {
-		if a.Mode == "rule" && len(seen) > 0 {
+		if a.Mode != "fact" && len(seen) > 0 {
 			break
 		}
 		if seen[step.Subject] {
@@ -571,12 +666,17 @@ func (index *AtomSourceIndex) DeriveClaims(a AtomArtifact) (ontology.LocalizedTe
 		if err != nil {
 			return nil, err
 		}
+		boolMethod := source.returnsBool()
 		for _, language := range languages {
 			phrase, ok := source.Phrases[language]
 			if !ok || strings.TrimSpace(phrase) == "" {
 				return nil, atomPhraseError(source, language, "missing non-empty source phrase")
 			}
-			part, err := atomPhraseText(language, phrase, step.Value, a.Mode != "rule")
+			notPhrase := strings.TrimSpace(source.NotPhrases[language])
+			if boolMethod && step.Value == "false" && notPhrase == "" {
+				return nil, atomPhraseError(source, language, "bool atom evaluated to false without a `not:` negation phrase")
+			}
+			part, err := atomPhraseText(language, phrase, notPhrase, step.Value, a.Mode != "rule", boolMethod)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", source.Link(), err)
 			}

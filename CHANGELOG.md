@@ -18,6 +18,15 @@ History predating this file is not backfilled — see `git log` and
 
 ### Atomic multilingual and conformance specifications
 
+- Added authored `not:` negation phrases for bool atoms (including one per
+  `>>>>> lang=<code>` block): bool `true` renders the bare phrase, `false`
+  renders the negation, and a `false` verdict without a `not:` phrase is an
+  error. `Holds` claims now carry only the predicate phrase; evidence methods
+  stay in the artifact and SPEC observations. Existing bool-fact domains that
+  can record `false` must add `not:` phrases or their claims error.
+  Migration: after each bool-atom phrase that may record `false`, add a
+  `// not: <negated phrase>` line (in every `>>>>> lang=<code>` block of
+  multilingual methods); without it, claim derivation fails with an error.
 - Added opt-in `languages` / `default_language` views with authored per-method
   `>>>>> lang=<code>` phrase blocks, localized claim maps and a single shared
   graph. Plain one-language comments and `Fact` behavior remain unchanged;

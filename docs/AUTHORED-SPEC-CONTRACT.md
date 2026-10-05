@@ -562,6 +562,18 @@ not add alternate tags, IDs,
 headings, tables, templates or translation dictionaries to ordinary method
 comments.
 
+Bool atom methods (`func (...) T bool` in fact/holds mode) may author a
+negation phrase: a doc line after the main phrase starting with `not: ` (in
+multilingual mode, its own `not: ...` line inside each language block, paired
+with that block's phrase). A `not:` line is never part of the main phrase;
+misplaced, empty or duplicate `not:` lines are errors. Claim rendering for
+bool steps: value `true` renders the bare phrase (`Фраза.`); value `false`
+renders the authored negation phrase (`Not-фраза.`); a `false` verdict
+without a `not:` phrase for the language is an error — the wording is never
+auto-generated. Non-bool value-facts keep the `Фраза — значение.` form. For
+`Holds`, the claim is only the predicate's phrase; evidence methods remain in
+the artifact and SPEC observations, never concatenated into the claim.
+
 The source index retains each language's phrase and source position. One
 `Requirement` keeps one ID, method/test links and relation graph. Its typed
 `ClaimTexts` (`claim_texts`, `ontology.LocalizedText`) carries the derived
