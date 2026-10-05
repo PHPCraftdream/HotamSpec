@@ -18,6 +18,12 @@ History predating this file is not backfilled — see `git log` and
 
 ### Atomic multilingual and conformance specifications
 
+- Atom order in CLAUDE.md/SPEC projections now follows the authored test
+  narrative instead of model source positions: test files and `TestXxx`
+  functions in source order, proofs in `Fact`/`Holds` call order; a `Holds`
+  relation sits at its own call site, so evidence `Fact` calls nested in its
+  arguments follow the relation.
+
 - Added authored `not:` negation phrases for bool atoms (including one per
   `>>>>> lang=<code>` block): bool `true` renders the bare phrase, `false`
   renders the negation, and a `false` verdict without a `not:` phrase is an

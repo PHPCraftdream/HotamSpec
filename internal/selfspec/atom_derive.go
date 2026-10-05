@@ -84,6 +84,20 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 	tests := map[string]map[string]string{}
 	expectedTests := map[string]bool{}
 	recordedTests := map[string]bool{}
+	// proofOrder captures the authored narrative order of Fact/Holds calls:
+	// test files keep their package order, TestXxx functions follow source
+	// order, and proofs inside a test follow call order. A Holds relation
+	// sits at its own call site, so evidence Facts nested in its arguments
+	// follow it.
+	type proofSite struct {
+		method string
+		offset int
+	}
+	type proofSeq struct {
+		fnOffset int
+		sites    []proofSite
+	}
+	proofOrder := map[string]proofSeq{}
 	hasRuleCaseOption := false
 	dirs := make([]string, 0, len(snapshot.TestFiles))
 	for dir := range snapshot.TestFiles {
@@ -109,8 +123,9 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 		}
 		sort.Strings(testFiles)
 		for _, testFile := range testFiles {
+			fset := token.NewFileSet()
 			path := filepath.Join(specRoot, filepath.FromSlash(testFile))
-			f, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+			f, err := parser.ParseFile(fset, path, nil, 0)
 			if err != nil {
 				return nil, err
 			}
@@ -140,6 +155,7 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 				if mapped := tests[dir][fn.Name.Name]; mapped != testFile {
 					return nil, fmt.Errorf("snapshot test map for %s is inconsistent at %s", fn.Name.Name, testFile)
 				}
+				seq := proofSeq{fnOffset: fset.Position(fn.Pos()).Offset}
 				ast.Inspect(fn.Body, func(n ast.Node) bool {
 					call, ok := n.(*ast.CallExpr)
 					if !ok {
@@ -162,9 +178,19 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 					}
 					if sel.Sel.Name == "Fact" || sel.Sel.Name == "Holds" {
 						expectedTests[testFile+":"+fn.Name.Name] = true
+						if len(call.Args) > 1 {
+							subject := ast.Unparen(call.Args[1])
+							if subjectSel, ok := subject.(*ast.SelectorExpr); ok {
+								seq.sites = append(seq.sites, proofSite{
+									method: subjectSel.Sel.Name,
+									offset: fset.Position(call.Pos()).Offset,
+								})
+							}
+						}
 					}
 					return true
 				})
+				proofOrder[testFile+":"+fn.Name.Name] = seq
 			}
 		}
 	}
@@ -236,7 +262,24 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 					seen[link] = true
 				}
 				if position == "" {
-					position = fmt.Sprintf("%s:%09d", source.File, source.Position.Offset)
+					// Narrative order: the atom sits at its first proof call
+					// site (for Holds -- at the Holds call itself, before its
+					// nested evidence Facts), keyed by test file, TestXxx
+					// source order, and call order. Falls back to the test
+					// declaration when the subject is not statically resolvable.
+					method := source.Symbol
+					if i := strings.LastIndex(method, "."); i >= 0 {
+						method = method[i+1:]
+					}
+					seq := proofOrder[file+":"+rootTest]
+					callOffset := seq.fnOffset
+					for _, site := range seq.sites {
+						if site.method == method {
+							callOffset = site.offset
+							break
+						}
+					}
+					position = fmt.Sprintf("%s:%09d:%09d", file, seq.fnOffset, callOffset)
 				}
 			}
 			r := ontology.Requirement{
@@ -362,6 +405,12 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 				old.Cases, err = mergeCaseDefinitions(old.Cases, r.Cases)
 				if err != nil {
 					return nil, fmt.Errorf("atom %s: %w", r.ID, err)
+				}
+				// The atom keeps the earliest narrative position across all its
+				// proving tests, so ordering stays deterministic regardless of
+				// artifact file-name order.
+				if position < atoms[idx].position {
+					atoms[idx].position = position
 				}
 			} else {
 				byID[r.ID] = len(atoms)
