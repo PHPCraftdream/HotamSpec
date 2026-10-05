@@ -394,6 +394,14 @@ func TestCompileCache_Cleanup_RemovesAllBinaries(t *testing.T) {
 	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/cleanupmod", "model", passingImplSrc, passingTestSrc)
 
+	// Redirect the temp dir to a private root BEFORE populating the cache:
+	// any surviving hotam-compile-* dir there is then attributable to this
+	// call, immune to sibling processes creating dirs in the shared TEMP.
+	privateTmp := t.TempDir()
+	t.Setenv("TMPDIR", privateTmp)
+	t.Setenv("TMP", privateTmp)
+	t.Setenv("TEMP", privateTmp)
+
 	// Populate the cache with at least one real compile.
 	result := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
 	if result.Err != nil || !result.Passed {
