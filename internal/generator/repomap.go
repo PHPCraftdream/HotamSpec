@@ -52,7 +52,7 @@ func RepoMapMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildRepoMap(g *ontology.Graph, domainName string, genDocs []GenDocEntry, frameworkDocs []GenDocEntry, decisionsWritten, entitiesWritten, tensionsWritten, pipelineWritten, modelsWritten bool, consumer bool) string {
-	lines := []string{localizedBanner(g), ReaderHeaderLine("REPO_MAP", g), ""}
+	lines := docHeaderLines("REPO_MAP", g)
 	lines = append(lines, serviceText(g, "# REPO-MAP.md — Repository file index (Hotam-Spec)"))
 	lines = append(lines, "")
 	if !consumer {

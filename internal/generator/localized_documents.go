@@ -255,13 +255,21 @@ func renderLocalizedView(outputs map[string]string, g *ontology.Graph, layout do
 	specOutputPaths := make(map[string]struct{})
 	specOutputPaths[filepath.ToSlash(specIndexPath)] = struct{}{}
 	if g.SelfExecutingAtoms {
-		packages := make(map[string]struct{})
+		packageSet := make(map[string]struct{})
 		for _, req := range g.Requirements {
 			if req.Status != ontology.StatusREJECTED {
-				packages[gate.SpecPackage(req)] = struct{}{}
+				packageSet[gate.SpecPackage(req)] = struct{}{}
 			}
 		}
-		for packagePath := range packages {
+		packagePaths := make([]string, 0, len(packageSet))
+		for packagePath := range packageSet {
+			packagePaths = append(packagePaths, packagePath+".md")
+		}
+		sort.Strings(packagePaths)
+		if _, err := docbundle.SpecShardNames(packagePaths); err != nil {
+			return fmt.Errorf("render SPEC shard paths: %w", err)
+		}
+		for packagePath := range packageSet {
 			shardPath, err := layout.SpecShardPath(language, packagePath+".md")
 			if err != nil {
 				return fmt.Errorf("render %s SPEC shard path for %s: %w", language, packagePath, err)

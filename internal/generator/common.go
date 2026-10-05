@@ -136,9 +136,23 @@ func localizedEmptyNotice(g *ontology.Graph) string {
 func ReaderHeaderLine(docKind string, g *ontology.Graph) string {
 	reader := ResolveReader(docKind, ontology.StakeholderIDs(g), DomainDocReaders)
 	if reader == UnresolvedReader {
-		return serviceText(g, "reader: (unresolved-reader)")
+		// No named reader for this graph (e.g. consumer domains without a
+		// "domain-user" stakeholder): omit the line entirely instead of
+		// printing an "(unresolved-reader)" placeholder.
+		return ""
 	}
 	return serviceText(g, "reader: %s", reader)
+}
+
+// docHeaderLines renders the shared document opening: the localized banner,
+// an optional resolved reader line (omitted when unresolved), and the blank
+// separator before the title.
+func docHeaderLines(docKind string, g *ontology.Graph) []string {
+	lines := []string{localizedBanner(g)}
+	if reader := ReaderHeaderLine(docKind, g); reader != "" {
+		lines = append(lines, reader)
+	}
+	return append(lines, "")
 }
 
 func localizedDocumentPath(g *ontology.Graph, path string) string {

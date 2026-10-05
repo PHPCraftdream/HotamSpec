@@ -53,7 +53,7 @@ func HistoryMDHasContent(g *ontology.Graph) bool {
 func BuildHistory(g *ontology.Graph) string {
 	reqs := NarrativeOrder(g.Requirements, func(r ontology.Requirement) int { return r.DeclOrder })
 	conflicts := NarrativeOrder(g.Conflicts, func(c ontology.Conflict) int { return c.DeclOrder })
-	lines := []string{localizedBanner(g), ReaderHeaderLine("HISTORY", g), ""}
+	lines := docHeaderLines("HISTORY", g)
 	lines = append(lines, serviceText(g, "# HISTORY.md — Methodology decision history (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines, serviceText(g, "Generated from the anti-relitigation markers in the model: REJECTED\nrequirements (what was tried and discarded — REPLACES marker) and DECIDED /\nREVISIT_WHEN conflict lifecycles (what was resolved, why, and the condition\nunder which to re-open). Source of truth is the active domain's `graph.json`;\nthis text is generated so it cannot drift."))

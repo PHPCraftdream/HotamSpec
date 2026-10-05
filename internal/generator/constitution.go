@@ -90,7 +90,7 @@ func BuildConstitution(g *ontology.Graph, domainName string, consumer bool) stri
 		reqByID[r.ID] = r
 	}
 
-	lines := []string{localizedBanner(g), ReaderHeaderLine("CONSTITUTION", g), ""}
+	lines := docHeaderLines("CONSTITUTION", g)
 	lines = append(lines, serviceText(g, "# CONSTITUTION.md — The operator's boot sequence (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines, serviceText(g, "You — the AI agent reading this cold — are the prospective Operator of this\nrepository. Read this file end-to-end before any action. It is generated from\nthe methodology's SETTLED laws (the active domain's `graph.json`). It is your\n*reconstitution from the substrate*: you do not need a session checkpoint\nto know what to do."))

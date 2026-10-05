@@ -92,7 +92,6 @@ func TestNamedSectionVariables(t *testing.T) {
 	}
 }
 
-
 // TestStatusToolRegisteredImplemented enforces R-status-single-command-summary's
 // existence half: the `status` tool must be registered in the methodology
 // registry as Implemented, with a non-empty Purpose describing the composed
@@ -121,4 +120,3 @@ func TestStatusToolRegisteredImplemented(t *testing.T) {
 		t.Error("status tool has empty Purpose")
 	}
 }
-

@@ -75,19 +75,49 @@ func (l Layout) SpecIndexPath(language string) (string, error) {
 	return l.DocumentPath("docs/gen/SPEC.md", language)
 }
 
-// SpecShardPath maps a source package shard to its language-local output path.
-// packagePath is a relative .md path and may contain nested package segments.
-func (l Layout) SpecShardPath(language, packagePath string) (string, error) {
+// SpecShardName maps a source package path (a relative .md path such as
+// "spec/model.md" or "pkg/model.md") to its shard name relative to the
+// docs/gen/spec/ directory. Packages under the authored spec/ tree drop the
+// redundant "spec/" prefix so their shards never nest under spec/spec/.
+func SpecShardName(packagePath string) (string, error) {
 	if !safeRelativePath(packagePath) || !strings.HasSuffix(packagePath, ".md") {
 		return "", fmt.Errorf("invalid SPEC package shard path %q", packagePath)
+	}
+	return strings.TrimPrefix(packagePath, "spec/"), nil
+}
+
+// SpecShardNames maps package paths to shard names relative to docs/gen/spec/
+// and rejects collisions: two distinct packages must never share one shard.
+func SpecShardNames(packagePaths []string) (map[string]string, error) {
+	names := make(map[string]string, len(packagePaths))
+	for _, packagePath := range packagePaths {
+		name, err := SpecShardName(packagePath)
+		if err != nil {
+			return nil, err
+		}
+		if other, ok := names[name]; ok {
+			return nil, fmt.Errorf("SPEC packages %q and %q collide on shard name %q", other, packagePath, name)
+		}
+		names[name] = packagePath
+	}
+	return names, nil
+}
+
+// SpecShardPath maps a source package shard to its language-local output path.
+// packagePath is a relative .md path and may contain nested package segments;
+// a leading "spec/" segment is dropped so the shard is never doubled.
+func (l Layout) SpecShardPath(language, packagePath string) (string, error) {
+	name, err := SpecShardName(packagePath)
+	if err != nil {
+		return "", err
 	}
 	if !l.hasLanguage(language) {
 		return "", fmt.Errorf("language %q is not declared in the output layout", language)
 	}
 	if l.Multilingual() {
-		return "docs/gen/spec/" + language + "/" + packagePath, nil
+		return "docs/gen/spec/" + language + "/" + name, nil
 	}
-	return "docs/gen/spec/" + packagePath, nil
+	return "docs/gen/spec/" + name, nil
 }
 
 // IsSpecPath reports whether a candidate under genDir is a SPEC index or
@@ -111,7 +141,11 @@ func (l Layout) IsSpecPath(genDir, candidate string) bool {
 	if strings.HasPrefix(relative, "spec/") {
 		shard := strings.TrimPrefix(relative, "spec/")
 		if !l.Multilingual() {
-			return safeRelativePath(shard) && strings.HasSuffix(shard, ".md")
+			// Under the new naming a shard never starts with "spec/": all
+			// authored spec/ packages drop that prefix. Legacy shards with the
+			// doubled path (spec/spec/...) are NOT ours, so a non-spec run must
+			// not preserve them -- cleanup removes them as stale.
+			return !strings.HasPrefix(shard, "spec/") && safeRelativePath(shard) && strings.HasSuffix(shard, ".md")
 		}
 		separator := strings.IndexByte(shard, '/')
 		return separator > 0 && l.hasLanguage(shard[:separator])

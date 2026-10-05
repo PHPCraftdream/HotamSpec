@@ -110,6 +110,101 @@ func TestLocaleRemovalCleanupInventoryPreservesAuthoredFiles(t *testing.T) {
 	}
 }
 
+func TestSpecShardPathDropsSpecPrefix(t *testing.T) {
+	legacy, err := NewLayout(nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := legacy.SpecShardPath("", "spec/model.md"); err != nil || got != "docs/gen/spec/model.md" {
+		t.Fatalf("legacy spec/ shard path = %q, %v", got, err)
+	}
+	multi, err := NewLayout([]string{"ru", "en"}, "ru")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := multi.SpecShardPath("ru", "spec/model.md"); err != nil || got != "docs/gen/spec/ru/model.md" {
+		t.Fatalf("localized spec/ shard path = %q, %v", got, err)
+	}
+	// Packages outside the authored spec/ tree keep their nested path.
+	if got, err := legacy.SpecShardPath("", "pkg/model.md"); err != nil || got != "docs/gen/spec/pkg/model.md" {
+		t.Fatalf("legacy non-spec shard path = %q, %v", got, err)
+	}
+}
+
+func TestIsSpecPathRejectsDoubledSpecShards(t *testing.T) {
+	legacy, err := NewLayout(nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if legacy.IsSpecPath("docs/gen", "docs/gen/spec/spec/model.md") {
+		t.Fatal("legacy layout must not recognize the doubled spec/spec shard as its own (it must be removed as stale)")
+	}
+	if !legacy.IsSpecPath("docs/gen", "docs/gen/spec/model.md") {
+		t.Fatal("legacy layout must recognize the un-doubled shard")
+	}
+	multi, err := NewLayout([]string{"ru", "en"}, "ru")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if multi.IsSpecPath("docs/gen", "docs/gen/spec/spec/model.md") {
+		t.Fatal("multilingual layout must not recognize the doubled spec/spec shard")
+	}
+}
+
+func TestLegacyStaleDoubledSpecShardsAreRemoved(t *testing.T) {
+	root := t.TempDir()
+	genDir := filepath.Join(root, "docs", "gen")
+	for relative := range map[string]struct{}{
+		"SPEC.md":            {},
+		"spec/model.md":      {},
+		"spec/spec/model.md": {},
+	} {
+		path := filepath.Join(genDir, filepath.FromSlash(relative))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte("banner\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	layout, err := NewLayout(nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidates, err := DomainCandidates(genDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var present, current []string
+	for _, path := range candidates {
+		if _, err := os.Stat(path); err == nil {
+			present = append(present, path)
+			if layout.IsSpecPath(genDir, path) {
+				current = append(current, path)
+			}
+		}
+	}
+	stale := StalePaths(present, current, nil)
+	want := filepath.Join(genDir, "spec", "spec", "model.md")
+	if len(stale) != 1 || stale[0] != want {
+		t.Fatalf("stale = %v; want [%s]", stale, want)
+	}
+}
+
+func TestSpecShardNamesRejectCollisions(t *testing.T) {
+	names, err := SpecShardNames([]string{"pkg/model.md", "spec/pkg/model.md"})
+	if err == nil {
+		t.Fatalf("SpecShardNames accepted colliding packages, got %v", names)
+	}
+	names, err = SpecShardNames([]string{"spec/model.md", "spec/relations.md"})
+	if err != nil {
+		t.Fatalf("SpecShardNames rejected distinct packages: %v", err)
+	}
+	if names["model.md"] != "spec/model.md" || names["relations.md"] != "spec/relations.md" {
+		t.Fatalf("SpecShardNames = %v", names)
+	}
+}
+
 func TestLayoutRejectsUnsafeOrAmbiguousOutputLocales(t *testing.T) {
 	for _, languages := range [][]string{{"en", "../ru"}, {"en", "EN"}, {"en", "ru"}} {
 		defaultLanguage := "en"

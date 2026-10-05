@@ -76,7 +76,7 @@ func CoverageMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildCoverage(g *ontology.Graph) string {
-	lines := []string{localizedBanner(g), ReaderHeaderLine("COVERAGE", g), ""}
+	lines := docHeaderLines("COVERAGE", g)
 	lines = append(lines, serviceText(g, "# COVERAGE.md — authored-spec discipline coverage (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines,

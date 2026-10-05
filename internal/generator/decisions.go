@@ -40,7 +40,7 @@ func BuildDecisions(g *ontology.Graph) string {
 		return ni < nj
 	})
 
-	lines := []string{localizedBanner(g), ReaderHeaderLine("DECISIONS", g), ""}
+	lines := docHeaderLines("DECISIONS", g)
 	lines = append(lines, serviceText(g, "# DECISIONS.md — Open methodology decisions (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines, serviceText(g, "Generated mirror of the M-registry. The SINGLE source of truth is the\ngraph's OPEN requirements with non-empty `m_tag` in the active domain's\n`graph.json`. This file retires the hand-maintained M-table\nthat lived in CLAUDE.md — per `R-drift-structurally-impossible` and the\ndev-coin Param.status + HOLES.md precedent: one source of truth,\ngenerated mirror."))

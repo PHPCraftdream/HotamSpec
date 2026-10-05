@@ -120,15 +120,17 @@ func specClaim(g *ontology.Graph, r ontology.Requirement, language string) (stri
 	return r.Claim, nil
 }
 
-// specReaderHeaderLine mirrors generator.ReaderHeaderLine("SPEC", g) exactly:
-// SPEC.md's DocReaderRoles entry is RoleDomainResolver, and its
+// specReaderHeaderLine mirrors generator.ReaderHeaderLine("SPEC", g) except
+// that an unresolved reader yields an empty line: consumer domains have no
+// "domain-user" stakeholder, and a "reader: (unresolved-reader)" line carries
+// no information. SPEC.md's DocReaderRoles entry is RoleDomainResolver and its
 // DomainDocReaders binding is "domain-user" -- both hardcoded here since
 // this file only ever renders the one "SPEC" docKind, unlike
 // generator.ReaderHeaderLine's general docKind lookup table.
 func specReaderHeaderLine(g *ontology.Graph, language string) (string, error) {
 	boundID := "domain-user"
 	if _, exists := ontology.StakeholderIDs(g)[boundID]; !exists {
-		return specText(language, "reader: (unresolved-reader)")
+		return "", nil
 	}
 	return specText(language, "reader: %s", boundID)
 }
@@ -643,7 +645,11 @@ func renderSpecFromRows(g *ontology.Graph, rows map[string]SpecRow, language str
 	if err != nil {
 		return "", err
 	}
-	lines := []string{banner, reader, "", title, "", intro, ""}
+	lines := []string{banner}
+	if reader != "" {
+		lines = append(lines, reader)
+	}
+	lines = append(lines, "", title, "", intro, "")
 	if g.IsEmpty() {
 		emptyNotice, err := specText(language, specEmptyNotice)
 		if err != nil {
@@ -1432,6 +1438,13 @@ func BuildSpecDocumentsFromRows(g *ontology.Graph, rows map[string]SpecRow) (map
 		packages = append(packages, pkg)
 	}
 	sort.Strings(packages)
+	packagePaths := make([]string, 0, len(packages))
+	for _, pkg := range packages {
+		packagePaths = append(packagePaths, pkg+".md")
+	}
+	if _, err := docbundle.SpecShardNames(packagePaths); err != nil {
+		return nil, err
+	}
 	languages := layout.LanguagesForViews()
 	docs := make(map[string]string, len(packages)*len(languages)+len(languages))
 	for _, language := range languages {
@@ -1507,7 +1520,11 @@ func buildSpecPackageIndex(g *ontology.Graph, language, indexPath string, packag
 	if err != nil {
 		return "", err
 	}
-	lines := []string{banner, reader, "", title, "", header, "|---|---:|"}
+	lines := []string{banner}
+	if reader != "" {
+		lines = append(lines, reader)
+	}
+	lines = append(lines, "", title, "", header, "|---|---:|")
 	for _, pkg := range packages {
 		link, err := filepath.Rel(filepath.Dir(filepath.FromSlash(indexPath)), filepath.FromSlash(shardPaths[pkg]))
 		if err != nil {

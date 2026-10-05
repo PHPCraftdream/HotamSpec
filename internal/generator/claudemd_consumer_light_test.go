@@ -255,4 +255,3 @@ func TestConsumerDocPredicates_OwnData(t *testing.T) {
 		t.Error("a REJECTED requirement feeds HISTORY.md")
 	}
 }
-

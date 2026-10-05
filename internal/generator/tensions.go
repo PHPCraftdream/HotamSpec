@@ -34,7 +34,7 @@ func TensionsMDHasContent(g *ontology.Graph) bool {
 func BuildTensions(g *ontology.Graph) string {
 	conflicts := NarrativeOrder(g.Conflicts, func(c ontology.Conflict) int { return c.DeclOrder })
 	axes := NarrativeOrder(g.Axes, func(a ontology.Axis) int { return a.DeclOrder })
-	lines := []string{localizedBanner(g), ReaderHeaderLine("TENSIONS", g), ""}
+	lines := docHeaderLines("TENSIONS", g)
 	lines = append(lines, serviceText(g, "# TENSIONS.md — The tension map (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines, serviceText(g, "Generated from the active domain's `graph.json` (the requirement store). Conflicts are secondary bookkeeping around the executable-requirement core: a **Conflict** is a first-class connector NODE — `R-a -> C <- R-b` — carrying the tension axis, the colliding context, and the shared assumption that belong to neither requirement. Conflicts CLUSTER by axis: a cluster of size > 1 is one unresolved architectural choice, not N local disputes."))

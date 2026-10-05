@@ -27,19 +27,19 @@ func TestBuildSpecDocumentsFromRowsRendersLanguageIndexesAndPackageShards(t *tes
 	}
 	for _, path := range []string{
 		"SPEC.ru.md", "SPEC.en.md",
-		"spec/ru/spec/model.md", "spec/en/spec/model.md",
+		"spec/ru/model.md", "spec/en/model.md",
 	} {
 		if _, ok := documents[path]; !ok {
 			t.Errorf("localized bundle missing %q; got %v", path, documents)
 		}
 	}
-	if !strings.Contains(documents["spec/ru/spec/model.md"], "Русская норма.") {
-		t.Errorf("Russian shard did not use its exact ClaimTexts entry:\n%s", documents["spec/ru/spec/model.md"])
+	if !strings.Contains(documents["spec/ru/model.md"], "Русская норма.") {
+		t.Errorf("Russian shard did not use its exact ClaimTexts entry:\n%s", documents["spec/ru/model.md"])
 	}
-	if !strings.Contains(documents["spec/en/spec/model.md"], "The English rule.") {
-		t.Errorf("English shard did not use its exact ClaimTexts entry:\n%s", documents["spec/en/spec/model.md"])
+	if !strings.Contains(documents["spec/en/model.md"], "The English rule.") {
+		t.Errorf("English shard did not use its exact ClaimTexts entry:\n%s", documents["spec/en/model.md"])
 	}
-	if !strings.Contains(documents["SPEC.ru.md"], "spec/ru/spec/model.md") || strings.Contains(documents["SPEC.ru.md"], "spec/en/spec/model.md") {
+	if !strings.Contains(documents["SPEC.ru.md"], "spec/ru/model.md") || strings.Contains(documents["SPEC.ru.md"], "spec/en/model.md") {
 		t.Errorf("Russian index links do not remain in the Russian bundle:\n%s", documents["SPEC.ru.md"])
 	}
 }
@@ -73,13 +73,13 @@ func TestBuildSpecDocumentsDoesNotLeakPrimaryAtomTitleAcrossLocales(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(documents["spec/en/spec/model.md"], "The English rule.") ||
-		strings.Contains(documents["spec/en/spec/model.md"], "**Русская норма.**") {
-		t.Errorf("English rule view leaked the primary-language artifact title:\n%s", documents["spec/en/spec/model.md"])
+	if !strings.Contains(documents["spec/en/model.md"], "The English rule.") ||
+		strings.Contains(documents["spec/en/model.md"], "**Русская норма.**") {
+		t.Errorf("English rule view leaked the primary-language artifact title:\n%s", documents["spec/en/model.md"])
 	}
-	if !strings.Contains(documents["spec/ru/spec/model.md"], "Русская норма.") ||
-		strings.Contains(documents["spec/ru/spec/model.md"], "**The English rule.**") {
-		t.Errorf("Russian rule view leaked an English artifact title:\n%s", documents["spec/ru/spec/model.md"])
+	if !strings.Contains(documents["spec/ru/model.md"], "Русская норма.") ||
+		strings.Contains(documents["spec/ru/model.md"], "**The English rule.**") {
+		t.Errorf("Russian rule view leaked an English artifact title:\n%s", documents["spec/ru/model.md"])
 	}
 }
 
@@ -117,7 +117,7 @@ func TestBuildSpecRendersExplicitCaseTestWithoutVerifiedByAsCaseEvidence(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	document := documents["spec/en/spec/model.md"]
+	document := documents["spec/en/model.md"]
 	if !strings.Contains(document, "case-only") ||
 		!strings.Contains(document, "The English rule.") {
 		t.Fatalf("explicit case test did not become a localized case view without inventing verified_by:\n%s", document)
@@ -166,8 +166,11 @@ func TestBuildSpecDocumentsExplicitSingleLanguageKeepsLegacyAtomShardPath(t *tes
 	if err != nil {
 		t.Fatal(err)
 	}
-	if documents["SPEC.md"] == "" || documents["spec/spec/model.md"] == "" {
+	if documents["SPEC.md"] == "" || documents["spec/model.md"] == "" {
 		t.Fatalf("single-language atom layout = %v, want legacy unsuffixed index and shard", documents)
+	}
+	if _, exists := documents["spec/spec/model.md"]; exists {
+		t.Fatalf("spec/ package kept the doubled shard path: %v", documents)
 	}
 	if _, exists := documents["SPEC.ru.md"]; exists {
 		t.Fatalf("single language acquired a suffixed SPEC index: %v", documents)
@@ -185,5 +188,23 @@ func TestBuildSpecDocumentsRejectsMissingServiceCatalogBeforeBundleReturn(t *tes
 	}
 	if documents != nil {
 		t.Fatalf("catalog error returned a partial bundle: %v", documents)
+	}
+}
+
+func TestBuildSpecDocumentsRejectsShardPathCollisions(t *testing.T) {
+	graph := &ontology.Graph{
+		Languages: []string{"ru", "en"}, DefaultLanguage: "ru",
+		SelfExecutingAtoms: true,
+		Requirements: []ontology.Requirement{
+			{ID: "R-plain", Claim: "A.", ImplementedBy: []string{"pkg/model/rule.go:Rule"}},
+			{ID: "R-spec", Claim: "B.", ImplementedBy: []string{"spec/pkg/model/rule.go:Rule"}},
+		},
+	}
+	documents, err := BuildSpecDocumentsFromRows(graph, map[string]SpecRow{})
+	if err == nil {
+		t.Fatalf("colliding packages produced a bundle: %v", documents)
+	}
+	if documents != nil {
+		t.Fatalf("collision error returned a partial bundle: %v", documents)
 	}
 }

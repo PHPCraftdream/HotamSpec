@@ -197,7 +197,7 @@ func BuildFrameworkInvariants(g *ontology.Graph, domainName string) string {
 	rosterPath := localizedDomainDocPath(g, domainName, "REQUIREMENTS.md")
 	unenforcedPath := localizedDomainDocPath(g, domainName, "UNENFORCED.md")
 
-	lines := []string{localizedBanner(g), ReaderHeaderLine("FRAMEWORK_INVARIANTS", g), ""}
+	lines := docHeaderLines("FRAMEWORK_INVARIANTS", g)
 	lines = append(lines, serviceText(g, "# FRAMEWORK-INVARIANTS.md — Framework-plumbing index (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines, serviceText(g, "Hotam-Spec is the framework modeling ITSELF (hotam-spec-self domain), so most of its SETTLED requirements are internal guarantees of the framework's own machinery (Entity/Agent/Domain/Process/Operator-internals/Lifecycle-keystone/Generator/bijection/anchor mechanics/CLAUDE.md machinery), not business claims the operator mediates as reality. This index holds exactly those framework-internal atoms, relocated out of the root CLAUDE.md CONSTITUTION index (R-constitution-separates-plumbing, Phase 3, task #9)."))

@@ -85,4 +85,3 @@ func TestBuildRequirements_ConsumerClosingSectionPointsAtHotamH(t *testing.T) {
 		t.Errorf("consumer closing section must point at `hotam -h`, got:\n%s", consumer)
 	}
 }
-

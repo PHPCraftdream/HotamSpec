@@ -101,7 +101,7 @@ func ModelsMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildModels(g *ontology.Graph) string {
-	lines := []string{localizedBanner(g), ReaderHeaderLine("MODELS", g), ""}
+	lines := docHeaderLines("MODELS", g)
 	lines = append(lines, serviceText(g, "# MODELS.md — authored object model overview (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines,

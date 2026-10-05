@@ -63,7 +63,7 @@ func BuildUnenforced(g *ontology.Graph) string {
 		}
 	}
 
-	lines := []string{localizedBanner(g), ReaderHeaderLine("UNENFORCED", g), ""}
+	lines := docHeaderLines("UNENFORCED", g)
 	lines = append(lines, serviceText(g, "# UNENFORCED.md — Burn-down meter (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines,

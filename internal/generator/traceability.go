@@ -102,7 +102,7 @@ func TraceabilityMDHasContent(g *ontology.Graph) bool {
 }
 
 func BuildTraceability(g *ontology.Graph) string {
-	lines := []string{localizedBanner(g), ReaderHeaderLine("TRACEABILITY", g), ""}
+	lines := docHeaderLines("TRACEABILITY", g)
 	lines = append(lines, serviceText(g, "# TRACEABILITY.md — requirement -> implemented_by -> verified_by (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines,

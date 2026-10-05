@@ -60,7 +60,7 @@ func BuildRequirements(g *ontology.Graph, domainName string, consumer bool) stri
 	operators := NarrativeOrder(g.Operators, func(o ontology.Operator) int { return o.DeclOrder })
 	processes := NarrativeOrder(g.Processes, func(p ontology.Process) int { return p.DeclOrder })
 	goals := NarrativeOrder(g.Goals, func(gl ontology.Goal) int { return gl.DeclOrder })
-	lines := []string{localizedBanner(g), ReaderHeaderLine("REQUIREMENTS", g), ""}
+	lines := docHeaderLines("REQUIREMENTS", g)
 	lines = append(lines, serviceText(g, "# REQUIREMENTS.md — Requirement roster & methodology (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines, serviceText(g, "Generated from the executable model: the methodology narrative comes from the framework's own methodology registry (RULE + `Canon:§` + WHY); the roster below comes from `domains/<name>/graph.json`. Source of truth is the code + graph; this text is generated, so it cannot drift from the model."))

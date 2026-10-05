@@ -16,6 +16,16 @@ History predating this file is not backfilled — see `git log` and
 
 ## [Unreleased]
 
+### SPEC generation polish
+
+- SPEC shard paths no longer double the `spec` segment: packages under the
+  authored `spec/` tree map to `docs/gen/spec/<rest>.md` (previously
+  `docs/gen/spec/spec/...`); packages outside `spec/` keep their nested path,
+  colliding package→shard mappings are now a generation error, legacy doubled
+  shards are removed as stale, and shard links in CLAUDE.md use the same
+  mapping. Documents whose reader stakeholder cannot be resolved no longer
+  print a `reader: (unresolved-reader)` line; resolved readers are unchanged.
+
 ### Atomic multilingual and conformance specifications
 
 - Atom order in CLAUDE.md/SPEC projections now follows the authored test

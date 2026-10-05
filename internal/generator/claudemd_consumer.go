@@ -10,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/docbundle"
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
@@ -205,7 +206,11 @@ func renderConsumerRequirements(g *ontology.Graph, domainName string) string {
 		}
 		link := localizedDomainDocPath(g, domainName, "SPEC.md")
 		if g.SelfExecutingAtoms {
-			link = localizedDomainDocPath(g, domainName, "spec/"+pkg+".md")
+			shardName, nameErr := docbundle.SpecShardName(pkg + ".md")
+			if nameErr != nil {
+				panic(nameErr)
+			}
+			link = localizedDomainDocPath(g, domainName, "spec/"+shardName)
 		}
 		out = append(out, fmt.Sprintf("| [%s](%s) | %d | %d | %d | %d |", pkg, link, len(groups[pkg]), enforced, structural, prose))
 	}

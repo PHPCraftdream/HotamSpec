@@ -36,7 +36,7 @@ func BuildOpen(g *ontology.Graph) string {
 		}
 	}
 
-	lines := []string{localizedBanner(g), ReaderHeaderLine("OPEN", g), ""}
+	lines := docHeaderLines("OPEN", g)
 	lines = append(lines, serviceText(g, "# OPEN.md — Open registry (Hotam-Spec)"))
 	lines = append(lines, "")
 	lines = append(lines, serviceText(g, "Generated mirror of what is still open: OPEN(question) requirements and conflicts not yet resolved by a resolver (DETECTED / ACKNOWLEDGED). This is the visibility-of-the-open layer; run `hotam what-now` for the prioritized next actions that close these."))
