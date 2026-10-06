@@ -819,13 +819,13 @@ func atomRecordingOutcome(sourceIndex *AtomSourceIndex, req ontology.Requirement
 			}
 			out.artifacts = append(out.artifacts, art)
 		} else {
+			// A failed atom is a diagnostic: when its text cannot be derived (e.g. a
+			// false bool without a `not:` phrase) it keeps its recorded steps instead
+			// of blocking the whole SPEC. Passing atoms stay strict above.
 			if art.Mode != "" {
-				steps, err := humanizeAtomSteps(sourceIndex, atom)
-				if err != nil {
-					out.sourceError = err
-					return out
+				if steps, err := humanizeAtomSteps(sourceIndex, atom); err == nil {
+					art.Steps = steps
 				}
-				art.Steps = steps
 			}
 			out.failedArtifacts = append(out.failedArtifacts, art)
 		}

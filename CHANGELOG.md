@@ -23,6 +23,10 @@ History predating this file is not backfilled — see `git log` and
   narratives render that human sentence instead of the qualified method
   symbol; Holds/rule evidence and a failed atom's observed value appear as
   separate `Given` lines.
+- A failing atom no longer blocks the whole SPEC when its text cannot be
+  derived (e.g. a false bool without a `not:` phrase): it is reported as a
+  failed artifact with its recorded steps, while passing atoms keep strict text
+  validation.
 - Atom SPEC narratives preserve localized claim and evidence text per language,
   render the requested language, and reject missing translations; single-language
   output remains unchanged. The SPEC introduction and Russian/Chinese catalog

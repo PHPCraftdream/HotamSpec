@@ -186,3 +186,54 @@ func TestValue(t *testing.T) {
 		t.Fatalf("SPEC bundle should refuse the source translation failure without partial output: documents=%v err=%v", documents, err)
 	}
 }
+
+// A failing bool atom whose false value has no `not:` phrase must stay a
+// reported failure, not a source error that blocks the rest of the SPEC.
+func TestAtomRecordingOutcomeKeepsFailedBoolWithoutNotPhrase(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom-recording integration: compiles and executes a real fixture Go module and test subprocess; skipped in -short")
+	}
+	for _, defaultLanguage := range []string{"ru", "en"} {
+		t.Run("default_"+defaultLanguage, func(t *testing.T) {
+			root := writeAtomPipelineFixture(t, map[string]string{
+				"manifest.json": `{"self_hosting":false,"parent":null}`,
+				"spec/model/flag.go": `package model
+
+type Box struct{}
+// >>>>> lang=ru
+// Флаг поднят
+// >>>>> lang=en
+// The flag is raised
+func (Box) Flag() bool { return false }
+`,
+				"spec/model/flag_test.go": `package model
+
+import (
+	"testing"
+	"example.test/pipeline/hotamspec"
+)
+
+func TestFlag(t *testing.T) { hotamspec.Fact(t, (Box{}).Flag, true) }
+`,
+			})
+			graph := &ontology.Graph{DomainDir: root, Languages: []string{"ru", "en"}, DefaultLanguage: defaultLanguage}
+			index, err := NewAtomSourceIndexForGraph(graph)
+			if err != nil {
+				t.Fatal(err)
+			}
+			entry := "spec/model/flag_test.go:TestFlag"
+			result := RunAtomPackageRecording(root, "spec/model/flag_test.go")
+			if result.Err != nil || result.CompileFailed {
+				t.Fatalf("fixture recording failed to execute: %+v", result)
+			}
+			requirement := ontology.Requirement{ID: "R-box-flag", Claim: "The flag is raised.", ImplementedBy: []string{"spec/model/flag.go:Box.Flag"}, VerifiedBy: []string{entry}}
+			outcome := atomRecordingOutcome(index, requirement, entry, "TestFlag", result)
+			if outcome.sourceError != nil {
+				t.Fatalf("failed bool atom must not become a source error: %v", outcome.sourceError)
+			}
+			if outcome.passed || len(outcome.failedArtifacts) != 1 {
+				t.Fatalf("failed bool atom must be reported as one failed artifact, got passed=%v failed=%d", outcome.passed, len(outcome.failedArtifacts))
+			}
+		})
+	}
+}
