@@ -17,6 +17,12 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Fixed
+- Atom narrative order now follows the recorder's actual call order when one
+  test proves same-named methods of different types (e.g. w.Role().Practice
+  and w.Actually().Practice): each Fact/Holds artifact is matched back to its
+  own call site by replaying the recorder's LIFO cleanup write stream, so the
+  i-th call of a method name takes the i-th same-name call site instead of
+  every same-named atom pinning to the first one.
 
 - The binary compile cache is now invalidated on the record-mode path too:
   both RunVerifiedByTest and RunVerifiedByTestRecording hash the module

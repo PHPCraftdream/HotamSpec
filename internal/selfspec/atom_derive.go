@@ -96,14 +96,6 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 	// order, and proofs inside a test follow call order. A Holds relation
 	// sits at its own call site, so evidence Facts nested in its arguments
 	// follow it.
-	type proofSite struct {
-		method string
-		offset int
-	}
-	type proofSeq struct {
-		fnOffset int
-		sites    []proofSite
-	}
 	proofOrder := map[string]proofSeq{}
 	hasRuleCaseOption := false
 	dirs := make([]string, 0, len(snapshot.TestFiles))
@@ -226,11 +218,16 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 		if result.Skipped || result.Err != nil || result.CompileFailed || !result.Passed {
 			return nil, fmt.Errorf("atom recording %s failed or skipped: %+v", packages[dir], result.TestRunResult)
 		}
-		for _, raw := range result.Artifacts {
+		atomArtifacts := make([]gate.AtomArtifact, len(result.Artifacts))
+		for i, raw := range result.Artifacts {
 			a, err := gate.DecodeAtomArtifact(raw.RawJSON)
 			if err != nil {
 				return nil, err
 			}
+			atomArtifacts[i] = a
+		}
+		callOffsets := rankAtomCallOffsets(atomArtifacts, proofOrder, tests[dir])
+		for ai, a := range atomArtifacts {
 			if a.Mode == "" {
 				continue
 			}
@@ -284,10 +281,14 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 					}
 					seq := proofOrder[file+":"+rootTest]
 					callOffset := seq.fnOffset
-					for _, site := range seq.sites {
-						if site.method == method {
-							callOffset = site.offset
-							break
+					if ranked, ok := callOffsets[ai]; ok {
+						callOffset = ranked
+					} else {
+						for _, site := range seq.sites {
+							if site.method == method {
+								callOffset = site.offset
+								break
+							}
 						}
 					}
 					position = fmt.Sprintf("%s:%09d:%09d", file, seq.fnOffset, callOffset)
@@ -510,6 +511,93 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 		}
 	}
 	return out, nil
+}
+
+// proofSite is one Fact/Holds call in a test's AST: the subject selector's
+// method name and the call's byte offset.
+type proofSite struct {
+	method string
+	offset int
+}
+
+// proofSeq is one TestXxx function's narrative skeleton: the function's byte
+// offset and its proof call sites in source order.
+type proofSeq struct {
+	fnOffset int
+	sites    []proofSite
+}
+
+// rankAtomCallOffsets maps artifact indexes to the byte offset of the
+// Fact/Holds call that produced them. The recorder writes every atom artifact
+// from a t.Cleanup registered at call time and cleanups run last-in-first-out,
+// so within one test scope the artifact write order is the exact reverse of
+// the call order, and subtest scopes complete before their parent. Artifacts
+// are replayed scope by scope in reverse, root scope last -- the exact call
+// order for straight-line tests -- and the i-th call of a method name attaches
+// to the i-th same-name call site in source order, so same-named methods of
+// different receiver types bind to their own call sites instead of all
+// claiming the first one. The names are only the join key between a bound
+// method and its static selector; the ORDER comes from the recorder's write
+// stream, never from the names themselves.
+func rankAtomCallOffsets(artifacts []gate.AtomArtifact, proofOrder map[string]proofSeq, testFiles map[string]string) map[int]int {
+	type scopeArtifacts struct {
+		test  string
+		index []int
+	}
+	arrival := map[string][]scopeArtifacts{}
+	for i, a := range artifacts {
+		if a.Mode == "" || len(a.Steps) == 0 {
+			continue
+		}
+		root := strings.SplitN(a.Test, "/", 2)[0]
+		groups := arrival[root]
+		if len(groups) == 0 || groups[len(groups)-1].test != a.Test {
+			groups = append(groups, scopeArtifacts{test: a.Test})
+			arrival[root] = groups
+		}
+		group := &groups[len(groups)-1]
+		group.index = append(group.index, i)
+	}
+	offsets := make(map[int]int)
+	for root, groups := range arrival {
+		seq, ok := proofOrder[testFiles[root]+":"+root]
+		if !ok || len(seq.sites) == 0 {
+			continue
+		}
+		byName := map[string][]int{}
+		for _, site := range seq.sites {
+			byName[site.method] = append(byName[site.method], site.offset)
+		}
+		var callOrder []int
+		rootScope := -1
+		for gi, group := range groups {
+			if group.test == root {
+				rootScope = gi
+				continue
+			}
+			for j := len(group.index) - 1; j >= 0; j-- {
+				callOrder = append(callOrder, group.index[j])
+			}
+		}
+		if rootScope >= 0 {
+			for j := len(groups[rootScope].index) - 1; j >= 0; j-- {
+				callOrder = append(callOrder, groups[rootScope].index[j])
+			}
+		}
+		seen := map[string]int{}
+		for _, i := range callOrder {
+			subject := artifacts[i].Steps[0].Subject
+			method := subject[strings.LastIndexByte(subject, '.')+1:]
+			sites := byName[method]
+			if len(sites) == 0 {
+				continue
+			}
+			n := seen[method]
+			seen[method] = n + 1
+			offsets[i] = sites[n%len(sites)]
+		}
+	}
+	return offsets
 }
 
 // snapshotDirAllowed filters snapshot package dirs: the consumer spec/model
