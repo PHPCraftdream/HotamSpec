@@ -94,3 +94,46 @@ CONTRACT 877 строк, QUICKSTART 553, PROPOSAL-REFERENCE 912; корнево�
 
 ### P3-3. Старый worktree #23
 `.claude/worktrees/agent-a5efcd28f4546ff38` сохранён ради идеи инвалидации скомпилированных бинарников. Нужно решение: оформить идею задачей и удалить worktree.
+
+## Цикл 2 (2026-10-06)
+
+База: `bf6dbc4` (23 коммита 19f3160..bf6dbc4 закрывают находки цикла 1).
+Метод: замеры по репозиторию; `go build ./...` (ok, 9 с) и `go vet ./...` (чисто); `go test -count=1 -short ./...` — дважды: 3м51с холодный, 2м40с тёплый, все пакеты ok; узкие прогоны по gate / selfspec / localization / loader / repohygiene; `hotam all-violations` — hotam-spec-self: 0 нарушений, hotam-dev: 0; `hotam what-now` self-домена; `hotam req show` по трём атомам локализации; ручная запись артефактов рекордера (`HOTAM_RECORD_DIR` во временный каталог ОС, репозиторий не тронут — `git status` чист). `apps/Human` не отслеживается git'ом, поэтому потребительские сценарии проверялись на тестах движка и двух закоммиченных доменах. Нумерация новых находок продолжает нумерацию задач цикла 1 (там заняты P1-1b, P1-6, P1-7, P2-7, P3-4, P3-5).
+
+### Статус находок цикла 1
+
+| Находка | Статус | Доказательство |
+|---|---|---|
+| P0-1 пути машины | закрыта | guard-тест `internal/repohygiene/repohygiene_test.go` зелёный (`go test -run TestNoPrivateMachinePathsInTrackedFiles ./internal/repohygiene/` → ok); по регэкспам guard'а в docs/checkpoints/, CHANGELOG.md, PLAN-atomic-*.md — 0 совпадений; остатки путей только в задокументированных allowlist-исключениях (frozen-история графа и proposals) |
+| P1-1 не живёт по принципу | закрыта (дыра пилота → P1-8) | manifest self-домена: `self_executing_atoms` + пакет `internal/localization`; 3 атома `canon.Holds`/`canon.Fact` (internal/localization/atoms_test.go), в графе ENFORCED с реальными implemented_by/verified_by; какие классы остаются `check_*` и почему — docs/AUTHORED-SPEC-CONTRACT.md:951-952 |
+| P1-2 медленный цикл | частично | 52 тест-файла с `testing.Short()`, внешний e2e скипается (cmd/hotam/external_e2e_test.go:52); полный `-short`: 3м51с холодно / 2м40с тепло — цель «< 2 мин» не достигнута (→ P3-8); тяжелейшие в тёплом прогоне: cmd/hotam 152с, selfspec 82с, gate 46с (у selfspec самый медленный одиночный тест 2.4с — время в сборке, не в тестах); против ≈25 мин полного прогона в цикле 1 — ускорение ~7-9x |
+| P1-3 комбинаторика флагов | закрыта | `"profile": "atoms"` разворачивается при загрузке, неизвестный профиль — ошибка (internal/loader/profile.go); init-project пишет профиль; противоречие QUICKSTART устранено: «`rule_cases` нужен ONLY для `WithCase`» (docs/QUICKSTART-CONSUMER.md:227-228) |
+| P1-4 значения не переводятся | закрыта | internal/gate/atom_source_values.go: `>>>>> lang=` у типизированных констант, `>>>>> lang=*` — verbatim; неполное покрытие языка и непереведённая константа в многоязычном домене — отказ (TestAtomValueIncompleteLanguageCoverageRejected, TestAtomValueUntranslatedStringConstantRejectedInMultilingualDomain — PASS) |
+| P1-5 bool и отношения | закрыта | `not:`-фразы с валидацией дублей и порядка (internal/gate/atom_source_phrases.go:142-151); evidence убран из claim (internal/gate/atom_source_claims.go:29); edge-тесты selfspec — PASS |
+| P2-1 порядок не по коду | закрыта | порядок по нарративу авторского теста (internal/selfspec/atom_derive.go:94-96); одноимённые методы разных типов — по фактическим call-site'ам (bfd5665); TestDiscoverAtomsFollowsTestNarrativeOrder, TestDiscoverAtomsOrdersSameNamedMethodsByCallOrder — PASS |
+| P2-2 вендоринг | закрыта | `hotam upgrade -domain` (cmd/hotam/upgrade.go): перевендор рекордера/онтологии/registrydump + регенерация; banner-less (hand-modified) `registrydump/main.go` не перезаписывает (upgrade.go:144); рекордер и онтология — вендоренные копии под `check_recorder_current`/`check_ontology_vendor_current`, их перезапись при отличии — по контракту; вариант «рекордер как Go-модуль» не реализован (остаётся опцией) |
+| P2-3 i18n-реестр | закрыта | пустой Claim выводится из `claim_texts[default]` (internal/selfspec/sync.go:119, 177); REJECTED-история одноязычна; смена языка по умолчанию ловится проекцией кода + exact-match валидацией (internal/loader/code_projection_test.go: переходы add/remove/default — PASS) |
+| P2-4 монолиты | в основном | localization.go 1873→83 (каталоги разнесены по языкам, по 900), test_exec.go 1839→628, gen_spec.go 1656→1138, spec_build.go 1523→938; статический AST-тест покрытия каталога (TestCatalogCoversAllTextLookupTemplates) — PASS; canon/hotamspec.go (1645) не делился — он вендорится одним файлом, это часть контракта вендоринга (см. P2-2) |
+| P2-5 объём документации | закрыта | QUICKSTART-CONSUMER.md 553→301 строка; Part 1 — один сквозной проверенный путь (init-project → Fact → sync-domain → текст), остальное свёрнуто ссылками в AUTHORED-SPEC-CONTRACT |
+| P2-6 процесс и статусы | закрыта | в PLAN-atomic-*.md статусы «реализация не начата» отсутствуют; 23 коммита после базы — по одной теме на коммит |
+| P3-1 мелочи генерации | закрыта | шарды плоские: `docs/gen/spec/internal/localization.md` (двойного `spec/en/spec` нет нигде в domains/**); шапка — `reader: domain-user`, `unresolved-reader` не встречается |
+| P3-2 долги самохостинга | частично | 4 из 6 закрыты в ENFORCED (docs/reviews/2026-10-06-self-debt-decisions.md §3), 2 — честно не закрыты с объяснением и предложением резолверу; конфликт C-d20cf537 по-прежнему DETECTED — материалы и варианты подготовлены (§1 того же документа), ждёт решения человека; ревью-долг: 27 никогда (было 24), 40 просрочено |
+| P3-3 worktree #23 | закрыта | каталога `.claude/worktrees/agent-*` на диске нет; идея реализована как код: content-hash инвалидация кэша бинарников на путях verdict и recording (internal/gate/compile_cache.go, 234ad7b) |
+
+### Новые находки
+
+### P1-8. Артефакты `canon.Holds`/`canon.Fact` не несут человеческого текста — ложный вечный STALE и машинное «доказательство» в SPEC
+`atomScenario` строит сценарий только из qualified-символа метода (internal/recorder/canon/hotamspec.go:1393) — заголовок артефакта пустой: прогон атомных тестов с `HOTAM_RECORD_DIR` даёт `"title": ""` и шаг `desc: "github.com/...localization.Catalog.Supported true"`. Следствия: (а) свежий вывод claim строится из title артефакта (internal/selfspec/claim_derive.go:214-227), получает пустую строку, и `hotam req show` по всем трём пилотным атомам отдаёт `proof state: STALE` (internal/selfspec/requirement_state.go:100-109: тесты прошли, но committed Claim ≠ «свежему выводу») — сигнал дрейфа ложный и вечный, до PROVEN атом добраться не может; (б) SPEC-шард рендерит доказательство машинной строкой — docs/gen/spec/internal/localization.md:22: «`github.com/PHPCraftdream/HotamSpec/internal/localization.Catalog.Supported` — true» вместо предложения, вопреки обещанию SPEC.md (нарратив из реальных прогонов, не hand-written). При этом `all-violations` = 0: proof state считается только по запросу карточки (internal/query/show.go:90), инвариантов поверх него нет — реальный дрейф неотличим от этого ложного.
+**Сделать:** рекордеру — класть в атомный артефакт человеческий заголовок (фраза метода: параметр `Holds`/`Fact`, штамп при discovery или разбор doc-комментария); в claim_derive — пустой title трактовать как «наррации нет» (`ok=false` → PROVEN), а не как дрейф; SPEC-шарду — рендерить доказательство атома из фразы/claim, а не из qualified-символа; surfaced-ость: показывать STALE-атомы в `what-now`/`UNENFORCED.md`, пока инварианта нет.
+
+### P3-6. Guard машинных путей исключает каталоги целиком — новые файлы не проверяются
+`allowSuffix` (internal/repohygiene/repohygiene_test.go:32-40) exempt'ит префиксы `proposals/`, `domains/hotam-spec-self/proposals/`, `domains/hotam-spec-self/docs/gen/`, `graph.json` — не только конкретные замороженные исторические файлы. Каталог proposals/ пополняется (task226, task236…): новый файл там с машинным путём guard молча пропустит — ослабляет обещание P0-1 «ищет абсолютные пути в отслеживаемых файлах».
+**Сделать:** сузить allowlist до поимённого перечня замороженных файлов; всё, что не перечислено, сканируется на общих основаниях.
+
+### P3-7. Fixpoint gen-spec: граница 3 итерации без ошибки при не-сходимости; список readers захардкожен дважды
+Имена двух crystal-reading проверок повторяются в двух местах: internal/invariants/crystal_readers.go:14 и фильтр cmd/hotam/gen_spec_fixpoint.go:27. Добавление третьей проверки только в один список даст склейку pre-write и post-write нарушений. Граница `iteration < 3` (gen_spec_fixpoint.go:23) по исчерпании возвращает `nil` — несошедшийся кристалл запишется молча, без диагностики.
+**Сделать:** единый источник списка readers (один экспортируемый набор имён, используемый обоими местами); при выходе по границе без сходимости — ошибка или явная диагностика в выводе gen-spec.
+
+### P3-8. Быстрый слой `-short` выше цели 2 минуты
+Полный `go test -short ./...`: 3м51с холодно, 2м40с тепло; основное время — сборка тестовых бинарников (cmd/hotam 152 с, selfspec 82 с при самом медленном одиночном тесте 2,4 с).
+**Сделать:** измерить, что именно собирается в `-short` у cmd/hotam и selfspec (`go test -short -json`, время сборки против времени тестов); убрать из `-short` пути, которые компилируют вложенные бинарники/домены, или переиспользовать один собранный бинарник на пакет.
