@@ -135,6 +135,13 @@ func checkDomainClaudeMDCurrentReal(g *ontology.Graph, priorViolations []invaria
 		return nil
 	}
 
+	// Judge the crystal as of the date its own gen-spec run stamped (see
+	// domainGenerationDate): the render depends on `today` through the
+	// freshness pulse, and the calendar day alone must not make it stale.
+	if date, ok := domainGenerationDate(g.DomainDir); ok {
+		today = date
+	}
+
 	domainName := domainNameFromDir(g.DomainDir)
 	repoRoot := repoRootForDomain(g.DomainDir)
 	domainGraphs := map[string]*ontology.Graph{domainName: g}

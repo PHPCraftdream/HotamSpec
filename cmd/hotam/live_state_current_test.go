@@ -188,3 +188,38 @@ func TestLiveStateCurrent_LocalizedDomainHonestNoOp(t *testing.T) {
 		t.Fatalf("graph without DomainDir must be an honest no-op, got %v", got)
 	}
 }
+
+// The crystal depends on `today` through the freshness pulse (a review_after
+// crossing changes DOMAIN-MAP's open-actions count). Judged as of the
+// calendar day it would turn red on an unchanged tree; it is judged as of the
+// date its own gen-spec run stamped instead.
+func TestCrystalCurrent_PinnedToGenerationDate(t *testing.T) {
+	_, domainDir, crystalPath, _ := p3_12Fixture(t, "p2-8-crystal-pin")
+	graphPath := filepath.Join(domainDir, "graph.json")
+	graph, err := loader.LoadGraph(graphPath)
+	if err != nil {
+		t.Fatalf("load graph.json: %v", err)
+	}
+	// review_after between the generation date and the probe date: the freshness
+	// pulse differs between the two, so the pin is observable.
+	graph.Requirements = append(graph.Requirements, ontology.Requirement{
+		ID: "R-p2-8-future-review", Claim: "date-sensitivity probe for the crystal pin",
+		Status: ontology.StatusSETTLED, ReviewAfter: "2027-01-12",
+		Enforcement: ontology.EnforcementENFORCED, Enforceability: "ENFORCEABLE",
+	})
+	if err := loader.WriteGraph(graphPath, graph); err != nil {
+		t.Fatalf("write graph.json: %v", err)
+	}
+	if _, _, err := genSpec(domainDir, crystalPath, "2026-10-05", "full", false); err != nil {
+		t.Fatalf("regen genSpec: %v", err)
+	}
+	violations, err := allViolationsAsOf(domainDir, "2030-01-01")
+	if err != nil {
+		t.Fatalf("allViolationsAsOf: %v", err)
+	}
+	for _, v := range violations {
+		if v.Check == "check_domain_claude_md_current" {
+			t.Errorf("unchanged crystal flagged stale on a later day (generation-date pin broken): %s", v.Message)
+		}
+	}
+}
