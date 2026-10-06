@@ -115,6 +115,9 @@ func TestGenSpec_ConsumerLeavesFrameworkAloneWhenAnotherDomainIsFull(t *testing.
 // TestGenSpec_ConsumerVsFullDelta: the full profile is a strict superset of
 // the consumer file set for the same graph.
 func TestGenSpec_ConsumerVsFullDelta(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 
 	rootC, dirC := initDomainUnderRoot(t, "ext-consumer", "2026-07-13")

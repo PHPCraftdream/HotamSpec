@@ -19,6 +19,9 @@ import (
 // which asserted freshness properties of a seed Requirement that no longer
 // exists.
 func TestInitDomain_ScaffoldsGenuinelyEmptyGraph(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 
 	domainDir := t.TempDir()

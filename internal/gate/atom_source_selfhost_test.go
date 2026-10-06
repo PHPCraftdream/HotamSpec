@@ -62,6 +62,9 @@ func rootModuleAtomGraph(root string) *ontology.Graph {
 // Without the root-module layout the index reads <specRoot>/spec/go.mod
 // (absent here) and walks spec/model (absent), so both halves must fail.
 func TestCollectAtomExecutionSnapshotForPackagesFiltersReferences(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom snapshot integration: compiles and executes fixture Go packages through shared execution snapshots; skipped in -short")
+	}
 	root := writeRootModuleAtomFixture(t)
 	files := map[string]string{
 		"internal/other/other_test.go": "package other\nimport \"testing\"\nfunc TestOther(t *testing.T) {}\n",
@@ -104,6 +107,9 @@ func TestCollectAtomExecutionSnapshotForPackagesFiltersReferences(t *testing.T) 
 }
 
 func TestCollectSpecRowsUsesLegacyFallbackOutsideDeclaredAtomPackages(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spec-row integration: runs a fixture test package through atom execution snapshot and legacy recording fallback; skipped in -short")
+	}
 	root := writeRootModuleAtomFixture(t)
 	other := filepath.Join(root, "internal", "other", "other_test.go")
 	if err := os.MkdirAll(filepath.Dir(other), 0o755); err != nil {

@@ -113,6 +113,9 @@ func TestSemanticGate_OnlyAnyAcrossUnrelatedDutiesRemainAdvisory(t *testing.T) {
 }
 
 func TestSemanticGate_UnresolvedFormalConflictBlocksWithoutLexicalEvidence(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupGateTestDomain(t)
 	conflictID := seedFormalGateConflict(
@@ -171,6 +174,9 @@ func TestSemanticGate_UnrelatedAckCannotOverrideMatchingCarrier(t *testing.T) {
 }
 
 func TestLandGate_RecordedDecisionsOverrideFormalCarrier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupGateTestDomain(t)
 	conflictID := seedFormalGateConflict(
@@ -212,6 +218,9 @@ func TestLandGate_RecordedDecisionsOverrideFormalCarrier(t *testing.T) {
 }
 
 func TestSemanticGate_DecidedConflictDoesNotBlock(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupGateTestDomain(t)
 	conflictID := seedFormalGateConflict(
@@ -235,6 +244,9 @@ func TestSemanticGate_DecidedConflictDoesNotBlock(t *testing.T) {
 }
 
 func TestApplyProposalGate_ExplicitCarrierLeavesGraphUnchanged(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupGateTestDomain(t)
 	seedFormalGateConflict(
@@ -262,6 +274,9 @@ func TestApplyProposalGate_ExplicitCarrierLeavesGraphUnchanged(t *testing.T) {
 }
 
 func TestApplyProposalBatch_ExplicitCarrierRefusesAtomically(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupGateTestDomain(t)
 	seedFormalGateConflict(

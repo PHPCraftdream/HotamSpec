@@ -81,6 +81,9 @@ func TestCmdReq_Help(t *testing.T) {
 }
 
 func TestCmdReqShow_SmokeOnSelfDomain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	g, err := loadDomainGraph(domainDir)
@@ -99,6 +102,9 @@ func TestCmdReqShow_SmokeOnSelfDomain(t *testing.T) {
 }
 
 func TestCmdReqContext_SmokeShowsConflict(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	// R-ai-presents-not-decides is a member of conflict C-186c4347 in the
@@ -111,6 +117,9 @@ func TestCmdReqContext_SmokeShowsConflict(t *testing.T) {
 }
 
 func TestCmdReqList_SmokeNoPanic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := copySelfDomain(t)
 	if err := cmdReqList([]string{"--domain", domainDir, "--status", "SETTLED"}); err != nil {

@@ -152,6 +152,9 @@ func TestCmdLand_Batch_InvalidNth_AppliesNothing(t *testing.T) {
 // files before any graph I/O, so a bad-JSON file fails the batch before the
 // graph is even loaded.
 func TestCmdLand_Batch_UnparseableNth_AppliesNothing(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	gp := graphPathForDomain(domainDir)

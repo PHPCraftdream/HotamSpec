@@ -13,6 +13,9 @@ import (
 // the `not:` claim, which the merge guard rejects. Runs the localization
 // package tests through the shared snapshot (fast, no engine round-trip).
 func TestDiscoverAtomsPilotSelfHostPackages(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: discovers the live self-hosted domain across real repository packages; skipped in -short")
+	}
 	if _, err := DiscoverAtoms("../..", "../../domains/hotam-spec-self", registry.New[ontology.Requirement]()); err != nil {
 		t.Fatalf("discover atoms: %v", err)
 	}

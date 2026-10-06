@@ -14,6 +14,9 @@ import (
 // resolves to the engine root only for Go source indexing. Discovery must
 // read the manifest from the domain dir even when the two differ.
 func TestDiscoverAtomsReadsManifestFromDomainDir(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := rootModulePackageFixture(t)
 	domainDir := filepath.Join(root, "domains", "selfdomain")
 	if err := os.MkdirAll(domainDir, 0o755); err != nil {

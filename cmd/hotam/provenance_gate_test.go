@@ -86,6 +86,9 @@ func writeCompleteSettledReqJSON(t *testing.T, dir, id string) string {
 // --- Scenario 1: default manifest (no require_provenance) — bare SETTLED lands fine ---
 
 func TestProvenanceGate_DefaultManifest_BareSettledLands_Land(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupProvenanceTestDomain(t, false)
 	p := writeBareSettledReqJSON(t, t.TempDir(), "R-prov-default-land")
@@ -95,6 +98,9 @@ func TestProvenanceGate_DefaultManifest_BareSettledLands_Land(t *testing.T) {
 }
 
 func TestProvenanceGate_DefaultManifest_BareSettledLands_ApplyProposal(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupProvenanceTestDomain(t, false)
 	p := writeBareSettledReqJSON(t, t.TempDir(), "R-prov-default-apply")
@@ -106,6 +112,9 @@ func TestProvenanceGate_DefaultManifest_BareSettledLands_ApplyProposal(t *testin
 // --- Scenario 2: require_provenance: true — bare SETTLED refused on all 4 surfaces ---
 
 func TestProvenanceGate_RequireProvenance_BareSettledRefused_Land(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupProvenanceTestDomain(t, true)
 	p := writeBareSettledReqJSON(t, t.TempDir(), "R-prov-bare-land")
@@ -184,6 +193,9 @@ func TestProvenanceGate_RequireProvenance_CompleteProvenanceLands_ApplyProposal(
 }
 
 func TestProvenanceGate_RequireProvenance_CompleteProvenanceLands_ApplyProposalBatch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupProvenanceTestDomain(t, true)
 	batchDir := t.TempDir()
@@ -194,6 +206,9 @@ func TestProvenanceGate_RequireProvenance_CompleteProvenanceLands_ApplyProposalB
 }
 
 func TestProvenanceGate_RequireProvenance_CompleteProvenanceLands_LandBatch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	domainDir := setupProvenanceTestDomain(t, true)
 	batchDir := t.TempDir()

@@ -240,6 +240,9 @@ func extractDiffHash(t *testing.T, stdout string) string {
 // byte-identical to what was on disk before the call, no matter how many
 // other flags are passed.
 func TestCmdSyncSelf_DryRunNeverWrites(t *testing.T) {
+	if testing.Short() {
+		t.Skip("heavy real self-domain dryrun/preview gates skipped in -short")
+	}
 	fx := newSyncSelfFixture(t, mutateSummary(syncSelfSummaryTargetID, "diverged placeholder summary"))
 	before, err := os.ReadFile(fx.graphPath)
 	if err != nil {
@@ -277,6 +280,9 @@ func TestCmdSyncSelf_DryRunNeverWrites(t *testing.T) {
 // scenario: passing a stale/incorrect --confirm-hash must refuse with a
 // "diff changed since PRESENT" error and leave the graph untouched.
 func TestCmdSyncSelf_HashMismatchRefusesAndDoesNotWrite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	fx := newSyncSelfFixture(t, mutateSummary(syncSelfSummaryTargetID, "diverged placeholder summary"))
 	before, err := os.ReadFile(fx.graphPath)
 	if err != nil {
@@ -339,6 +345,9 @@ func TestCmdSyncSelf_AppendOnlyViolationRefuses(t *testing.T) {
 // expected CHANGED entry, docs are regenerated, and all-violations is clean
 // afterward.
 func TestCmdSyncSelf_FullRoundTrip(t *testing.T) {
+	if testing.Short() {
+		t.Skip("sync-self full self-domain round trip runs genSpec and all-violations; skipped in -short")
+	}
 	fx := newSyncSelfFixture(t, mutateSummary(syncSelfSummaryTargetID, "diverged placeholder summary"))
 
 	dryOut, _, err := runSyncSelf(t, []string{"--domain", fx.domainDir})
@@ -415,6 +424,9 @@ func TestCmdSyncSelf_FullRoundTrip(t *testing.T) {
 // a full dry-run -> confirm-hash round-trip, with a "created via sync-self"
 // History seed entry (see selfspec.SyncGraph's own doc comment).
 func TestCmdSyncSelf_AddedEntryRoundTrip(t *testing.T) {
+	if testing.Short() {
+		t.Skip("sync-self added-entry round trip runs genSpec and all-violations on the full self domain; skipped in -short")
+	}
 	const targetID = syncSelfSummaryTargetID
 	fx := newSyncSelfFixture(t, removeRequirement(targetID))
 
@@ -476,6 +488,9 @@ func TestCmdSyncSelf_AddedEntryRoundTrip(t *testing.T) {
 // the ROOT crystal default (<root>/CLAUDE.md, not a local one) — the
 // blocking directory is placed there.
 func TestCmdSyncSelf_RollbackOnPostWriteFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("sync-self rollback scenario runs full self-domain gates and genSpec; skipped in -short")
+	}
 	fx := newSyncSelfFixture(t, mutateSummary(syncSelfSummaryTargetID, "diverged placeholder summary"))
 
 	dryOut, _, err := runSyncSelf(t, []string{"--domain", fx.domainDir})

@@ -370,6 +370,9 @@ func TestRollbackLand_RestoresFilesAndRegeneratesDocs(t *testing.T) {
 // spurious rollback (graph.lock stays in place). This would FAIL if the
 // refactor accidentally rolled back on success.
 func TestCmdLand_SuccessPathDoesNotRollBack(t *testing.T) {
+	if testing.Short() {
+		t.Skip("land success path runs full domain all-violations and genSpec; skipped in -short")
+	}
 	t.Parallel()
 	domainDir := copyNonSelfHostingDomain(t)
 	genDir := filepath.Join(domainDir, "docs", "gen")
@@ -1169,6 +1172,9 @@ func TestCmdLand_AutoCrystal_RepoRootIsDomainDir(t *testing.T) {
 // check_spec_md_current. Land must re-render SPEC.md on such domains the same
 // way sync-domain does, so the first land succeeds.
 func TestCmdLand_FreshDisciplineFullProject_DoesNotRollBack(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	dir := t.TempDir()
 	if err := cmdInitProject([]string{dir}); err != nil {

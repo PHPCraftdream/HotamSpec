@@ -28,6 +28,9 @@ func writeAtomPipelineFixture(t *testing.T, files map[string]string) string {
 }
 
 func TestAtomRecordingOutcomeKeepsPassingSubtestBesideFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom-recording integration: compiles and executes a real fixture Go module and test subprocess to record nested pass/fail cases; skipped in -short")
+	}
 	root := writeAtomPipelineFixture(t, map[string]string{
 		"manifest.json": `{"self_hosting":false,"parent":null,"conformance":{"rule_cases":true}}`,
 		"spec/model/value.go": `package model

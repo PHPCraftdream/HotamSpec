@@ -53,6 +53,9 @@ func TestAge(t *testing.T) {
 }
 
 func TestDiscoverAtomsFollowsTestNarrativeOrder(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := atomOrderFixture(t)
 	discovered, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err != nil {
@@ -73,6 +76,9 @@ func TestDiscoverAtomsFollowsTestNarrativeOrder(t *testing.T) {
 }
 
 func TestDiscoverAtomsNarrativeOrderStableAcrossRuns(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := atomOrderFixture(t)
 	first, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err != nil {
@@ -138,6 +144,9 @@ import (
 }
 
 func TestDiscoverAtomsOrdersSameNamedMethodsByCallOrder(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := atomSameNameFixture(t, `func TestNarrative(t *testing.T) {
 	h := Human{}
 	hotamspec.Fact(t, h.Role().Practice, "drill")
@@ -161,6 +170,9 @@ func TestDiscoverAtomsOrdersSameNamedMethodsByCallOrder(t *testing.T) {
 }
 
 func TestDiscoverAtomsSameNamedMethodsReverseCallOrder(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := atomSameNameFixture(t, `func TestNarrative(t *testing.T) {
 	h := Human{}
 	hotamspec.Fact(t, h.Actually().Practice, 7)

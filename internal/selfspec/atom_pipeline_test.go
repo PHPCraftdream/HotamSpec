@@ -49,6 +49,9 @@ func atomDiscoveryFixture(t *testing.T, manifest, model, test string) string {
 }
 
 func TestDiscoverAtomsRuleCasesPreserveClaimsMetadataAndSourceOrder(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := atomDiscoveryFixture(t, multilingualRuleManifest, multilingualRuleModel, `package model
 
 import (
@@ -150,6 +153,9 @@ func TestRuleCases(t *testing.T) {
 }
 
 func TestDiscoverAtomsRuleHoldsRetainsFalseAndTrueOracles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	model := `package model
 
 type Box struct { value int }
@@ -216,6 +222,9 @@ func TestValidityCases(t *testing.T) {
 }
 
 func TestDiscoverAtomsKeepsLegacyFactConflict(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := atomDiscoveryFixture(t, plainAtomManifest, `package model
 
 type Box struct { value int }
@@ -275,6 +284,9 @@ func TestRule(t *testing.T) {
 }
 
 func TestDiscoverAtomsRejectsCaseIDDescriptorCollision(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := atomDiscoveryFixture(t, multilingualRuleManifest, multilingualRuleModel, `package model
 
 import (
@@ -459,6 +471,9 @@ func TestAtomSourceRuleRequiresRuleCasesTrigger(t *testing.T) {
 // method; a legacy requirement without implemented_by passes through
 // unchanged instead of failing discovery (self-hosting pilot merge).
 func TestDiscoverAtomsCarriesHandOverridesWithoutImplementedBy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom discovery integration: executes fixture package tests; skipped in -short")
+	}
 	root := atomDiscoveryFixture(t, plainAtomManifest, `package model
 
 type Box struct { value int }

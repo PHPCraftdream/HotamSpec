@@ -52,9 +52,16 @@ History predating this file is not backfilled — see `git log` and
 - New fast test layer: ~100 slow tests (real-domain crystal/gen-spec renders,
   compile-cache binary builds, `go build`/`go test` subprocess tests, e2e)
   now carry `testing.Short()` skip gates with explicit reasons, so `go test
-  -short ./...` / `make test-fast` runs in about a minute (excluding
-  cmd/hotam's sync-self round-trip tests, which still run under `-short`);
-  the full `go test ./...` mode is unchanged and still runs everything.
+  -short ./...` / `make test-fast` skips them; the full `go test ./...` mode
+  is unchanged and still runs everything.
+- Fast layer tightened to a measured wall time: 38 more end-to-end tests
+  (24 cmd/hotam sync-self/land/apply-proposal/gen-spec flows,
+  11 internal/selfspec atom-discovery fixtures that compile and run a nested
+  module, 3 internal/gate atom-recording tests) are skipped under `-short`
+  with reasons. A single `go test -short -count=1 ./...` went from 192 s to
+  77 s wall (warm build cache, weak machine, all packages ok); the cheap
+  atom-discovery checks and one apply-proposal end-to-end stay in the fast
+  layer, and `go test ./...` still runs every test.
 
 - All-violations cost profile measured and documented: the three most
   expensive invariants are check_scenario_executes_impl (~10s

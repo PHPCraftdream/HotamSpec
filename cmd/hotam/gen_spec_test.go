@@ -135,6 +135,9 @@ func TestGenSpec_MissingGraph_MalformedStillErrors(t *testing.T) {
 // test seeds minimal real content first (seedMinimalRequirement) so all
 // three files actually render under both modes.
 func TestGenSpec_SharedProjectionsModeIndependent(t *testing.T) {
+	if testing.Short() {
+		t.Skip("end-to-end land/apply/gen-spec flow (15-45s); skipped in -short, covered by the full run")
+	}
 	t.Parallel()
 	root := t.TempDir()
 	domainDir := filepath.Join(root, "domains", "shared-mode-test")
