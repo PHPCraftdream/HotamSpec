@@ -17,6 +17,10 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Fixed
+- Repo-hygiene scanning now exempts only exact frozen historical files; new
+  proposal files are scanned for private machine paths. Gen-spec fixpoint shares
+  the crystal-reader check-name set with invariants and reports checks that
+  remain unconverged after its bounded iterations.
 - Atom narrative order now follows the recorder's actual call order when one
   test proves same-named methods of different types (e.g. w.Role().Practice
   and w.Actually().Practice): each Fact/Holds artifact is matched back to its

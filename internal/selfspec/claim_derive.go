@@ -123,7 +123,7 @@ func DeriveClaimsFromScenarios(reg *registry.Registry[ontology.Requirement], spe
 		if !RequirementInClaimDerivationScope(r) {
 			continue
 		}
-		derived, ok := deriveClaimFromVerifiedBy(specRoot, selfHosting, r.VerifiedBy)
+		derived, ok := deriveClaimFromVerifiedBy(specRoot, selfHosting, r.VerifiedBy, nil)
 		if !ok || derived == r.Claim {
 			continue
 		}
@@ -198,7 +198,7 @@ func RequirementInClaimDerivationScope(r ontology.Requirement) bool {
 //     property callers (and human readers comparing verified_by's length
 //     to Claim's clause count) may reasonably lean on. Cross-entry
 //     duplication is therefore left visible on purpose, not swallowed here.
-func deriveClaimFromVerifiedBy(specRoot string, selfHosting bool, verifiedBy []string) (claim string, ok bool) {
+func deriveClaimFromVerifiedBy(specRoot string, selfHosting bool, verifiedBy []string, atoms *gate.AtomSourceIndex) (claim string, ok bool) {
 	var titles []string
 	for _, entry := range verifiedBy {
 		file, testName, parsedOK := gate.ParseFileColonSymbol(strings.TrimSpace(entry))
@@ -213,7 +213,23 @@ func deriveClaimFromVerifiedBy(specRoot string, selfHosting bool, verifiedBy []s
 		seen := make(map[string]bool, len(result.Artifacts))
 		for _, art := range result.Artifacts {
 			title, verdictOK := scenarioArtifactTitleIfPass(art.RawJSON)
-			if !verdictOK || seen[title] {
+			if !verdictOK {
+				continue
+			}
+			if strings.TrimSpace(title) == "" {
+				// Atoms carry no recorded title: their text is derived from the method source.
+				if atoms == nil {
+					continue
+				}
+				atom, err := gate.DecodeAtomArtifact(art.RawJSON)
+				if err != nil || atom.Mode == "" {
+					continue
+				}
+				if title, err = atoms.DeriveClaim(atom); err != nil || strings.TrimSpace(title) == "" {
+					continue
+				}
+			}
+			if seen[title] {
 				continue
 			}
 			seen[title] = true

@@ -87,7 +87,11 @@ func ShowRequirement(g *ontology.Graph, id string) (RequirementCard, error) {
 	}
 	card := requirementToCard(r)
 	specRoot := gate.SpecRootForGraph(g)
-	card.State = selfspec.RequirementState(r, specRoot, g.SelfHosting)
+	var atoms *gate.AtomSourceIndex
+	if g.SelfExecutingAtoms {
+		atoms, _ = gate.NewAtomSourceIndexForGraph(g)
+	}
+	card.State = selfspec.RequirementState(r, specRoot, g.SelfHosting, atoms)
 	return card, nil
 }
 

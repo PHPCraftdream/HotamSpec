@@ -18,25 +18,29 @@ var (
 	reDevDrives = regexp.MustCompile(`(?i)[Dd]:[/\\](dev|ai_dev|system_artefact)(?:$|[^A-Za-z0-9_-])`)
 )
 
-// allowSuffix lists tracked files exempt from the scan:
-//   - internal/generator/relpath_test.go: synthetic Windows roots (C:\proj and
-//     a dev-drive project root) that never existed on any real machine;
-//   - internal/loader/testdata: synthetic graph fixture;
-//   - domains/hotam-spec-self/graph.json and docs/gen/**: FROZEN signed-off
-//     graph history and its generated projections — hand-editing them would
-//     break check_graph_lock_pins_graph_json; their evidence strings record
-//     the pre-rename repo location as historical fact;
-//   - proposals/**: frozen applied-proposal records (same evidence history);
-//   - docs/reviews/2026-10-05-framework-review.md: the review that reported
-//     this finding, quoting the pattern shapes themselves.
-var allowSuffix = []string{
-	"internal/generator/relpath_test.go",
-	"internal/loader/testdata/",
-	"domains/hotam-spec-self/graph.json",
-	"domains/hotam-spec-self/docs/gen/",
-	"domains/hotam-spec-self/proposals/",
-	"proposals/",
-	"docs/reviews/2026-10-05-framework-review.md",
+// allowFiles lists exact files carrying frozen historical machine-path evidence
+// (signed-off graph history, its generated projections and applied proposals;
+// synthetic test roots; the review quoting the patterns). Anything else is scanned.
+var allowFiles = map[string]bool{
+	"internal/generator/relpath_test.go":                                                                                    true,
+	"internal/loader/testdata/hotam-spec-self.graph.json":                                                                   true,
+	"domains/hotam-spec-self/graph.json":                                                                                    true,
+	"domains/hotam-spec-self/docs/gen/graph.json":                                                                           true,
+	"domains/hotam-spec-self/docs/gen/atoms-check.md":                                                                       true,
+	"domains/hotam-spec-self/proposals/task226-recursion/001-R-lifecycle-type-exists-authored.json":                         true,
+	"domains/hotam-spec-self/proposals/task226-recursion/002-R-conflict-is-connector-node-authored.json":                    true,
+	"domains/hotam-spec-self/proposals/task226-recursion/003-R-no-hand-edit-graph-authored.json":                            true,
+	"domains/hotam-spec-self/proposals/task226-recursion/004-R-requirement-freshness-fields-authored.json":                  true,
+	"domains/hotam-spec-self/proposals/task236-selfexample/001-R-spec-link-embodied-vs-proven-authored.json":                true,
+	"domains/hotam-spec-self/proposals/task236-selfexample/002-R-structural-floor-vs-mirror-audit-authored.json":            true,
+	"domains/hotam-spec-self/proposals/task236-selfexample/003-R-authored-spec-projections-are-derived-authored.json":       true,
+	"domains/hotam-spec-self/proposals/task236-selfexample/004-R-authored-spec-links-mechanically-checked-authored.json":    true,
+	"domains/hotam-spec-self/proposals/task236-selfexample/005-R-enforced-requires-enforcer-or-authored-link-authored.json": true,
+	"proposals/update-R-authored-spec-links-mechanically-checked-f1.json":                                                   true,
+	"proposals/wave9-lexical-fn-validation/02-R-no-hand-edit-graph-runtime-check.json":                                      true,
+	"proposals/wave9-lexical-fn-validation/03-R-spec-link-embodied-vs-proven-orthogonal-carrier.json":                       true,
+	"proposals/wave9-lexical-fn-validation/04-R-structural-floor-vs-mirror-audit-boundary-carrier.json":                     true,
+	"docs/reviews/2026-10-05-framework-review.md":                                                                           true,
 }
 
 var binExt = map[string]bool{
@@ -45,12 +49,7 @@ var binExt = map[string]bool{
 }
 
 func allowed(path string) bool {
-	for _, s := range allowSuffix {
-		if strings.HasSuffix(path, s) || strings.HasPrefix(path, s) {
-			return true
-		}
-	}
-	return false
+	return allowFiles[path]
 }
 
 func repoRoot(t *testing.T) string {
@@ -70,7 +69,17 @@ func TestNoPrivateMachinePathsInTrackedFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("git ls-files: %v", err)
 	}
-	for _, name := range bytes.Split(out, []byte{0}) {
+	tracked := bytes.Split(out, []byte{0})
+	// Untracked proposal additions are scanned too, so a new file cannot slip past before staging.
+	_ = filepath.WalkDir(filepath.Join(root, "proposals"), func(path string, d os.DirEntry, err error) error {
+		if err == nil && !d.IsDir() {
+			if rel, relErr := filepath.Rel(root, path); relErr == nil {
+				tracked = append(tracked, []byte(filepath.ToSlash(rel)))
+			}
+		}
+		return nil
+	})
+	for _, name := range tracked {
 		path := string(name)
 		if path == "" || allowed(path) {
 			continue

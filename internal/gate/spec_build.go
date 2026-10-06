@@ -809,9 +809,17 @@ func atomRecordingOutcome(sourceIndex *AtomSourceIndex, req ontology.Requirement
 					continue
 				}
 				art.Title = claim
+				art.Steps = humanizeAtomSteps(sourceIndex, atom, claim)
 			}
 			out.artifacts = append(out.artifacts, art)
 		} else {
+			if art.Mode != "" {
+				passing := atom
+				passing.Verdict = "pass"
+				if claim, err := sourceIndex.DeriveClaim(passing); err == nil {
+					art.Steps = humanizeAtomSteps(sourceIndex, atom, claim)
+				}
+			}
 			out.failedArtifacts = append(out.failedArtifacts, art)
 		}
 	}
@@ -825,6 +833,35 @@ func atomRecordingOutcome(sourceIndex *AtomSourceIndex, req ontology.Requirement
 		out.problem = "verified_by test passed but recorded no matching atom evidence"
 	}
 	return out
+}
+
+// humanizeAtomSteps renders an atom as its derived claim plus its evidence as
+// phrase-plus-value text: for holds and rule atoms each distinct evidence
+// method; for a failed atom also the predicate's observed value.
+func humanizeAtomSteps(index *AtomSourceIndex, atom AtomArtifact, claim string) []specArtifactStep {
+	passed := atom.Verdict == "pass"
+	steps := []specArtifactStep{{Kind: "then", Desc: claim, Passed: passed}}
+	if len(atom.Steps) == 0 || (passed && atom.Mode == "fact") {
+		return steps
+	}
+	evidence := atom.Steps[1:]
+	seen := map[string]bool{atom.Steps[0].Subject: true}
+	if !passed {
+		evidence = atom.Steps
+		seen = map[string]bool{}
+	}
+	for _, step := range evidence {
+		if seen[step.Subject] {
+			continue
+		}
+		seen[step.Subject] = true
+		text, err := index.DeriveClaim(AtomArtifact{ReqID: atom.ReqID, Mode: "fact", Verdict: "pass", Steps: []AtomStep{step}})
+		if err != nil {
+			text = step.Subject + " — " + step.Value
+		}
+		steps = append(steps, specArtifactStep{Kind: "given", Desc: text})
+	}
+	return steps
 }
 
 func atomCaseDefinition(atom AtomArtifact, entry string) (*ontology.CaseDefinition, error) {

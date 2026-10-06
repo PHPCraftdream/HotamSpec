@@ -3,10 +3,63 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
+
+func TestCrystalFixpointStopsWhenReadersSettle(t *testing.T) {
+	reader := invariants.CrystalReaderCheckNames[0]
+	other := invariants.Violation{Check: "check_other", ID: "x"}
+	settled := []invariants.Violation{{Check: reader, ID: "a", Message: "stable"}}
+	renders := 0
+	written, err := runCrystalFixpoint([]invariants.Violation{other}, func() []invariants.Violation { return settled }, func(patched []invariants.Violation) ([]string, error) {
+		renders++
+		if len(patched) != 2 || patched[0] != other {
+			t.Fatalf("non-reader violations must survive the patch, got %v", patched)
+		}
+		return []string{"CLAUDE.md"}, nil
+	})
+	if err != nil || renders != 1 || len(written) != 1 {
+		t.Fatalf("want one render and success, got renders=%d written=%v err=%v", renders, written, err)
+	}
+}
+
+func TestCrystalFixpointFailsWhenReadersNeverSettle(t *testing.T) {
+	reader := invariants.CrystalReaderCheckNames[0]
+	calls := 0
+	_, err := runCrystalFixpoint(nil, func() []invariants.Violation {
+		calls++
+		return []invariants.Violation{{Check: reader, ID: "a", Message: strconv.Itoa(calls)}}
+	}, func([]invariants.Violation) ([]string, error) { return nil, nil })
+	if err == nil {
+		t.Fatal("a fixpoint that never settles must fail, not succeed silently")
+	}
+	if !strings.Contains(err.Error(), reader) || strings.Contains(err.Error(), invariants.CrystalReaderCheckNames[1]) {
+		t.Fatalf("diagnostic must name exactly the moving check, got %v", err)
+	}
+}
+
+func TestCrystalFixpointFailsWhenLastRenderStillChanges(t *testing.T) {
+	reader := invariants.CrystalReaderCheckNames[0]
+	calls := 0
+	// Violations disappear only after the final allowed render: the post-write
+	// state differs from the last snapshot, so the bound is exhausted unconverged.
+	_, err := runCrystalFixpoint(nil, func() []invariants.Violation {
+		calls++
+		if calls > maxCrystalFixpointRenders {
+			return nil
+		}
+		return []invariants.Violation{{Check: reader, ID: "a", Message: strconv.Itoa(calls)}}
+	}, func([]invariants.Violation) ([]string, error) { return nil, nil })
+	if err == nil {
+		t.Fatal("a change after the last allowed render must be reported")
+	}
+}
 
 func TestGenSpec_CrystalReadersConvergeInOnePass(t *testing.T) {
 	projectRoot, domainDir := initDomainUnderRoot(t, "crystal-converge", "2026-10-05")

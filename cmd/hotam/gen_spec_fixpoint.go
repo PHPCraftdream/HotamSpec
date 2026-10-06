@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/docbundle"
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
@@ -15,24 +16,11 @@ import (
 )
 
 func convergeCrystalReaders(g *ontology.Graph, domainName, domainDir, repoRoot, genDir, today string, consumer bool, claudeMDPath string, localizedConfigured, liveStateWritten, agentContextWritten bool, resolvedProfile string, snapshot []invariants.Violation) ([]string, error) {
-	written := []string{}
 	layout, err := docbundle.NewLayout(g.Languages, g.DefaultLanguage)
 	if err != nil {
 		return nil, fmt.Errorf("gen-spec fixpoint: output languages: %w", err)
 	}
-	for iteration := 0; iteration < 3; iteration++ {
-		fresh := invariants.CrystalReaderViolations(g)
-		patched := make([]invariants.Violation, 0, len(snapshot)+len(fresh))
-		for _, v := range snapshot {
-			if v.Check != "check_orientation_faq_answered" && v.Check != "check_operator_within_budget" {
-				patched = append(patched, v)
-			}
-		}
-		patched = append(patched, fresh...)
-		if sameViolationMultiset(patched, snapshot) {
-			return written, nil
-		}
-
+	return runCrystalFixpoint(snapshot, func() []invariants.Violation { return invariants.CrystalReaderViolations(g) }, func(patched []invariants.Violation) ([]string, error) {
 		var paths []string
 		var contents [][]byte
 		add := func(p string, content []byte) {
@@ -161,10 +149,63 @@ func convergeCrystalReaders(g *ontology.Graph, domainName, domainDir, repoRoot, 
 		if err := writeFilesParallel(paths, contents); err != nil {
 			return nil, err
 		}
+		return paths, nil
+	})
+}
+
+// maxCrystalFixpointRenders bounds how many times the crystal is re-rendered.
+const maxCrystalFixpointRenders = 3
+
+// runCrystalFixpoint re-renders until the crystal-reader violations stop changing.
+// It fails, naming the checks still moving, when the bound is exhausted.
+func runCrystalFixpoint(snapshot []invariants.Violation, readers func() []invariants.Violation, render func(patched []invariants.Violation) ([]string, error)) ([]string, error) {
+	readerChecks := make(map[string]bool, len(invariants.CrystalReaderCheckNames))
+	for _, name := range invariants.CrystalReaderCheckNames {
+		readerChecks[name] = true
+	}
+	written := []string{}
+	for renders := 0; ; renders++ {
+		patched := make([]invariants.Violation, 0, len(snapshot))
+		for _, v := range snapshot {
+			if !readerChecks[v.Check] {
+				patched = append(patched, v)
+			}
+		}
+		patched = append(patched, readers()...)
+		if sameViolationMultiset(patched, snapshot) {
+			return written, nil
+		}
+		if renders == maxCrystalFixpointRenders {
+			return written, nonConvergedCrystalReaders(snapshot, patched)
+		}
+		paths, err := render(patched)
+		if err != nil {
+			return nil, err
+		}
 		written = append(written, paths...)
 		snapshot = patched
 	}
-	return written, nil
+}
+
+// nonConvergedCrystalReaders names the crystal-reader checks whose violations differ between two passes.
+func nonConvergedCrystalReaders(prev, next []invariants.Violation) error {
+	var names []string
+	for _, name := range invariants.CrystalReaderCheckNames {
+		if !sameViolationMultiset(filterViolations(prev, name), filterViolations(next, name)) {
+			names = append(names, name)
+		}
+	}
+	return fmt.Errorf("gen-spec fixpoint did not converge after %d renders; crystal-reader checks still changing: %s", maxCrystalFixpointRenders, strings.Join(names, ", "))
+}
+
+func filterViolations(in []invariants.Violation, check string) []invariants.Violation {
+	var out []invariants.Violation
+	for _, v := range in {
+		if v.Check == check {
+			out = append(out, v)
+		}
+	}
+	return out
 }
 
 func sameViolationMultiset(a, b []invariants.Violation) bool {

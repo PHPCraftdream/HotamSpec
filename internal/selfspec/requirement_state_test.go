@@ -52,7 +52,7 @@ func TestBrdPackage_SignOff_DoesNotCompile(t *testing.T) {
 // entries is NO_CARRIER -- nothing to prove or disprove.
 func TestRequirementState_NoCarrier(t *testing.T) {
 	r := requirementStateFixtureReq("R-state-no-carrier", "some claim", nil)
-	got := RequirementState(r, t.TempDir(), false)
+	got := RequirementState(r, t.TempDir(), false, nil)
 	if got != "NO_CARRIER" {
 		t.Fatalf("RequirementState = %q, want NO_CARRIER", got)
 	}
@@ -67,7 +67,7 @@ func TestRequirementState_NoCarrier(t *testing.T) {
 func TestRequirementState_UnverifiedWhenEntryUnresolvable(t *testing.T) {
 	r := requirementStateFixtureReq("R-state-unverified", "some claim",
 		[]string{"model/does_not_exist_test.go:TestNoSuchTest"})
-	got := RequirementState(r, t.TempDir(), false)
+	got := RequirementState(r, t.TempDir(), false, nil)
 	if got != "UNVERIFIED" {
 		t.Fatalf("RequirementState = %q, want UNVERIFIED", got)
 	}
@@ -80,7 +80,7 @@ func TestRequirementState_UnverifiedWhenEntryUnresolvable(t *testing.T) {
 func TestRequirementState_UnverifiedWhenEntryMalformed(t *testing.T) {
 	r := requirementStateFixtureReq("R-state-malformed", "some claim",
 		[]string{"not-a-file-colon-symbol-entry"})
-	got := RequirementState(r, t.TempDir(), false)
+	got := RequirementState(r, t.TempDir(), false, nil)
 	if got != "UNVERIFIED" {
 		t.Fatalf("RequirementState = %q, want UNVERIFIED", got)
 	}
@@ -97,7 +97,7 @@ func TestRequirementState_FailingWhenTestFails(t *testing.T) {
 	})
 	r := requirementStateFixtureReq("R-state-failing", "some claim",
 		[]string{"model/impl_test.go:TestBrdPackage_SignOff_AlwaysFails"})
-	got := RequirementState(r, root, false)
+	got := RequirementState(r, root, false, nil)
 	if got != "FAILING" {
 		t.Fatalf("RequirementState = %q, want FAILING", got)
 	}
@@ -115,7 +115,7 @@ func TestRequirementState_FailingWhenCompileFails(t *testing.T) {
 	})
 	r := requirementStateFixtureReq("R-state-compilefail", "some claim",
 		[]string{"model/impl_test.go:TestBrdPackage_SignOff_DoesNotCompile"})
-	got := RequirementState(r, root, false)
+	got := RequirementState(r, root, false, nil)
 	if got != "FAILING" {
 		t.Fatalf("RequirementState = %q, want FAILING", got)
 	}
@@ -134,7 +134,7 @@ func TestRequirementState_ProvenWhenClaimMatchesFreshScenario(t *testing.T) {
 	claim := "sign-off is rejected while a blocker is outstanding"
 	r := requirementStateFixtureReq("R-state-proven", claim,
 		[]string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"})
-	got := RequirementState(r, root, false)
+	got := RequirementState(r, root, false, nil)
 	if got != "PROVEN" {
 		t.Fatalf("RequirementState = %q, want PROVEN", got)
 	}
@@ -154,7 +154,7 @@ func TestRequirementState_ProvenWhenNoScenarioNarrated(t *testing.T) {
 	})
 	r := requirementStateFixtureReq("R-state-plain-proven", "a hand-authored claim, never derived",
 		[]string{"model/impl_test.go:TestBrdPackage_SignOff_Plain"})
-	got := RequirementState(r, root, false)
+	got := RequirementState(r, root, false, nil)
 	if got != "PROVEN" {
 		t.Fatalf("RequirementState = %q, want PROVEN", got)
 	}
@@ -164,6 +164,44 @@ func TestRequirementState_ProvenWhenNoScenarioNarrated(t *testing.T) {
 // verified_by test passes and narrates a scenario, but the committed Claim
 // disagrees with the CURRENT scenario title -> STALE, mirroring
 // check_claim_matches_scenario's own RED case exactly.
+func TestRequirementState_ProvenWhenEmptyAtomTitleFallsBackToSourcePhrase(t *testing.T) {
+	if testing.Short() {
+		t.Skip("atom title fallback runs real recording; skipped in -short")
+	}
+	root := writeClaimDeriveFixtureModule(t, map[string]string{
+		"impl.go": `package model
+type Catalog struct{}
+// catalog covers the language
+func (Catalog) Supported() bool { return true }
+`,
+		"impl_test.go": `package model
+import (
+ "testing"
+ "example.com/claimderive/hotamspec"
+)
+func TestCatalogSupported(t *testing.T) { hotamspec.Holds(t, (Catalog{}).Supported) }
+`,
+	})
+	// Real atom recording leaves Title empty. Fresh derivation must recover
+	// the source phrase rather than treating the empty title as drift.
+	r := requirementStateFixtureReq("R-catalog-supported", "catalog covers the language", []string{"model/impl_test.go:TestCatalogSupported"})
+	if got := RequirementState(r, root, false, nil); got != "PROVEN" {
+		t.Fatalf("RequirementState = %q, want PROVEN for blank atom title", got)
+	}
+	atoms, err := gate.NewAtomSourceIndexForGraph(&ontology.Graph{DomainDir: root, SelfExecutingAtoms: true, SelfExecutingAtomPackages: []string{"model"}, AtomRecorderImportPath: "example.com/claimderive/hotamspec"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.Claim = "Catalog covers the language."
+	if got := RequirementState(r, root, false, atoms); got != "PROVEN" {
+		t.Fatalf("RequirementState = %q, want PROVEN when Claim matches the atom's derived text", got)
+	}
+	r.Claim = "catalog covers every language"
+	if got := RequirementState(r, root, false, atoms); got != "STALE" {
+		t.Fatalf("RequirementState = %q, want STALE when Claim drifted from the atom's derived text", got)
+	}
+}
+
 func TestRequirementState_StaleWhenClaimDrifted(t *testing.T) {
 	if testing.Short() {
 		t.Skip("requirement-state e2e: a real fixture module is compiled and run TWICE via gate.RunVerifiedByTestRecording (verdict + deriveClaimFromVerifiedBy) to drive the drift verdict to STALE; skipped in -short")
@@ -173,7 +211,7 @@ func TestRequirementState_StaleWhenClaimDrifted(t *testing.T) {
 	})
 	r := requirementStateFixtureReq("R-state-stale", "a stale claim that no longer matches the scenario",
 		[]string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"})
-	got := RequirementState(r, root, false)
+	got := RequirementState(r, root, false, nil)
 	if got != "STALE" {
 		t.Fatalf("RequirementState = %q, want STALE", got)
 	}
@@ -195,7 +233,7 @@ func TestRequirementState_MultiVerifiedByAllMustPass(t *testing.T) {
 		"model/scenario_test.go:TestBrdPackage_SignOff_RejectsBlockers",
 		"model/failing_test.go:TestBrdPackage_SignOff_AlwaysFails",
 	})
-	got := RequirementState(r, root, false)
+	got := RequirementState(r, root, false, nil)
 	if got != "FAILING" {
 		t.Fatalf("RequirementState = %q, want FAILING (one of two verified_by entries fails)", got)
 	}
@@ -217,7 +255,7 @@ func TestRequirementState_MUTATION_TransitionsAcrossLifecycle(t *testing.T) {
 
 	// 1. NO_CARRIER: no verified_by at all yet.
 	r := requirementStateFixtureReq(reqID, "placeholder claim", nil)
-	if got := RequirementState(r, t.TempDir(), false); got != "NO_CARRIER" {
+	if got := RequirementState(r, t.TempDir(), false, nil); got != "NO_CARRIER" {
 		t.Fatalf("step 1 (no carrier): got %q, want NO_CARRIER", got)
 	}
 
@@ -227,7 +265,7 @@ func TestRequirementState_MUTATION_TransitionsAcrossLifecycle(t *testing.T) {
 	// lookup fails), which RequirementState treats identically to Skipped:
 	// no verdict either way, contributing nothing.
 	r.VerifiedBy = []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}
-	if got := RequirementState(r, t.TempDir(), false); got != "UNVERIFIED" {
+	if got := RequirementState(r, t.TempDir(), false, nil); got != "UNVERIFIED" {
 		t.Fatalf("step 2 (unverified): got %q, want UNVERIFIED", got)
 	}
 
@@ -251,7 +289,7 @@ func TestBrdPackage_SignOff_RejectsBlockers(t *testing.T) {
 `), 0o644); err != nil {
 		t.Fatalf("WriteFile impl_test.go (failing): %v", err)
 	}
-	if got := RequirementState(r, root, false); got != "FAILING" {
+	if got := RequirementState(r, root, false, nil); got != "FAILING" {
 		t.Fatalf("step 3 (failing): got %q, want FAILING", got)
 	}
 
@@ -278,18 +316,18 @@ func TestBrdPackage_SignOff_RejectsBlockers(t *testing.T) {
 	// earlier step's stale compiled binary (see claim_scenario_current_test.go's
 	// identical mutation-test precedent for this exact gotcha).
 	gate.ResetRunCacheForTest()
-	if got := RequirementState(r, root, false); got != "STALE" {
+	if got := RequirementState(r, root, false, nil); got != "STALE" {
 		t.Fatalf("step 4 (stale): got %q, want STALE", got)
 	}
 
 	// 5. PROVEN: Claim is re-derived (mirroring `hotam sync-domain`) to match
 	// the currently-passing scenario.
-	fresh, ok := deriveClaimFromVerifiedBy(root, false, r.VerifiedBy)
+	fresh, ok := deriveClaimFromVerifiedBy(root, false, r.VerifiedBy, nil)
 	if !ok {
 		t.Fatalf("step 5 setup: expected a derivable fresh Claim")
 	}
 	r.Claim = fresh
-	if got := RequirementState(r, root, false); got != "PROVEN" {
+	if got := RequirementState(r, root, false, nil); got != "PROVEN" {
 		t.Fatalf("step 5 (proven): got %q, want PROVEN", got)
 	}
 }

@@ -19,7 +19,7 @@ Generated from this domain's `graph.json` claims plus REAL, currently-passing `g
 
 ### `internal/localization/atoms_test.go:TestAtomCatalogSupported`
 
-- `github.com/PHPCraftdream/HotamSpec/internal/localization.Catalog.Supported` — true
+- Then The catalog covers the language. — **held**
 
 ## `R-catalog-translated`
 
@@ -29,7 +29,7 @@ Generated from this domain's `graph.json` claims plus REAL, currently-passing `g
 
 ### `internal/localization/atoms_test.go:TestAtomCatalogTranslated`
 
-- `github.com/PHPCraftdream/HotamSpec/internal/localization.Catalog.Translated` — true
+- Then The template has an authored translation. — **held**
 
 ## `R-missing-translation-message`
 
@@ -39,7 +39,7 @@ Generated from this domain's `graph.json` claims plus REAL, currently-passing `g
 
 ### `internal/localization/atoms_test.go:TestAtomMissingTranslationMessage`
 
-- `github.com/PHPCraftdream/HotamSpec/internal/localization.MissingTranslation.Message` — missing authored translation for locale "de" and template "## Status"
+- Then The missing-translation error names the locale and template — missing authored translation for locale "de" and template "## Status". — **held**
 
 ## Without a scenario (no verified_by — honest gap)
 

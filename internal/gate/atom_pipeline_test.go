@@ -94,6 +94,15 @@ func TestCases(t *testing.T) {
 		t.Fatal(err)
 	}
 	document := strings.Join(lines, "\n")
+	if !strings.Contains(document, "Values follow the rule.") || strings.Contains(document, "example.test/pipeline/model.Box.Value") {
+		t.Fatalf("SPEC atom narrative must use authored human text, not qualified method evidence:\n%s", document)
+	}
+	if !strings.Contains(document, "- Then Values follow the rule.") {
+		t.Fatalf("SPEC atom title must render as a human-readable sentence:\n%s", document)
+	}
+	if !strings.Contains(document, "**FAILED**") || !strings.Contains(document, "- Given Values follow the rule — 9.") {
+		t.Fatalf("a failed atom must show its claim as FAILED and the observed value as human text:\n%s", document)
+	}
 	if !strings.Contains(document, "case-good") || !strings.Contains(document, "case-bad") {
 		t.Fatalf("SPEC view lost a passing/failing sibling case:\n%s", document)
 	}

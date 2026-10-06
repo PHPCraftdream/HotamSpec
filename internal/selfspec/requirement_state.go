@@ -61,7 +61,7 @@ import (
 // check_settled_requires_scenario carrier demands elsewhere); State() answers
 // "is the evidence that exists actually current and passing", a strictly
 // narrower question than "is this requirement in Claim-derivation scope".
-func RequirementState(r ontology.Requirement, specRoot string, selfHosting bool) string {
+func RequirementState(r ontology.Requirement, specRoot string, selfHosting bool, atoms *gate.AtomSourceIndex) string {
 	if len(r.VerifiedBy) == 0 {
 		return "NO_CARRIER"
 	}
@@ -97,7 +97,7 @@ func RequirementState(r ontology.Requirement, specRoot string, selfHosting bool)
 		return "FAILING"
 	}
 
-	fresh, ok := deriveClaimFromVerifiedBy(specRoot, selfHosting, r.VerifiedBy)
+	fresh, ok := deriveClaimFromVerifiedBy(specRoot, selfHosting, r.VerifiedBy, atoms)
 	if !ok || fresh == r.Claim {
 		// Either nothing narrated (a plain, non-scenario passing test -- no
 		// drift is even computable, so the passing evidence alone is enough
