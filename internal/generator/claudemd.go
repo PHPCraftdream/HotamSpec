@@ -1032,7 +1032,7 @@ func renderBusinessContentWithViolations(g *ontology.Graph, domainName, repoRoot
 	// fix.
 	var liveState, domainMap string
 	if violations != nil {
-		liveState = buildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, violations.Violations)
+		liveState = buildLiveStateWithViolations(g, domainName, claudeMDCharCount, today, violations.Violations, false)
 		domainMap = renderDomainMapBlockWithLanguage(g.RenderLanguage, repoRoot, domainGraphs, today, violations, selfCrystalPath)
 	} else {
 		liveState = BuildLiveState(g, domainName, claudeMDCharCount, today)

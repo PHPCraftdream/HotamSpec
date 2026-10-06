@@ -101,7 +101,7 @@ func convergeCrystalReaders(g *ontology.Graph, domainName, domainDir, repoRoot, 
 			}
 		}
 		if liveStateWritten && !localizedConfigured {
-			add(filepath.Join(genDir, "live-state.md"), []byte(generator.BuildLiveStateWithViolationsRoot(g, domainName, charCount, today, patched, repoRoot)))
+			add(filepath.Join(genDir, "live-state.md"), []byte(generator.BuildStandaloneLiveStateRoot(g, domainName, charCount, today, patched, repoRoot)))
 		}
 		if agentContextWritten && !localizedConfigured {
 			add(filepath.Join(genDir, "AGENT-CONTEXT.md"), []byte(generator.BuildAgentContextRootWithViolations(g, domainName, charCount, today, consumer, patched, repoRoot)))

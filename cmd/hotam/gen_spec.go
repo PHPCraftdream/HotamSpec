@@ -813,7 +813,7 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 	var liveStateAndAgentContextContents [][]byte
 	if liveStateWritten && !localizedConfigured {
 		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "live-state.md"))
-		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildLiveStateWithViolationsRoot(g, domainName, charCount, today, activeViolations, repoRoot)))
+		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildStandaloneLiveStateRoot(g, domainName, charCount, today, activeViolations, repoRoot)))
 	}
 	if agentContextWritten && !localizedConfigured {
 		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "AGENT-CONTEXT.md"))

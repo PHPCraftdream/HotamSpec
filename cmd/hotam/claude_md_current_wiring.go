@@ -69,8 +69,12 @@ func withCheckDomainClaudeMDCurrent(inv invariants.Invariant) *invariants.Invari
 // explicit override) carries a committed CLAUDE.md, its GENERATED portion
 // (everything up to and including generator.DurableNotesMarkerLine) must be
 // byte-identical to a fresh render computed via
-// generator.RenderClaudeMDFromTemplateWithViolations, fed priorViolations
-// (this AllViolations pass's own phase-1 result — see
+// generator.RenderClaudeMDFromTemplateWithViolations, fed the
+// publication-flavored violation snapshot (invariants.
+// PublicationViolationsFromPhaseOne of priorViolations — this AllViolations
+// pass's own phase-1 result filtered to the SAME flavor genSpec threads into
+// the written file; see internal/invariants/publication_snapshot.go for why
+// every comparative render must use that one flavor selector, and
 // internal/invariants/invariant.go's PostProcessCheck doc comment for why
 // this avoids recursing back into AllViolations for the same graph). Content
 // after the marker line (the operator's own durable notes) is never read for
@@ -135,6 +139,7 @@ func checkDomainClaudeMDCurrentReal(g *ontology.Graph, priorViolations []invaria
 	repoRoot := repoRootForDomain(g.DomainDir)
 	domainGraphs := map[string]*ontology.Graph{domainName: g}
 	consumer := loader.ResolveGenProfile(graphPathForDomain(g.DomainDir)) == loader.GenProfileConsumer
+	publication := invariants.PublicationViolationsFromPhaseOne(priorViolations)
 
 	// selfCrystalPath == claudeMDPath: this check just confirmed a real file
 	// exists at claudeMDPath (the os.ReadFile above succeeded), so the
@@ -149,7 +154,7 @@ func checkDomainClaudeMDCurrentReal(g *ontology.Graph, priorViolations []invaria
 	// file exists), not about this one call site in isolation — passing it
 	// here keeps every RenderClaudeMDFromTemplateWithViolations call site in
 	// this codebase using the same deterministic rule.
-	override := &generator.ViolationsOverride{For: g, Violations: priorViolations}
+	override := &generator.ViolationsOverride{For: g, Violations: publication}
 	charCount, err := generator.ComputeCrystalCharCountFixpointWithViolations(g, domainName, repoRoot, domainGraphs, today, consumer, override, claudeMDPath)
 	if err != nil {
 		return []invariants.Violation{{

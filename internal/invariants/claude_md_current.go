@@ -90,14 +90,20 @@ var _ = All.MustRegister("check_domain_claude_md_current", Invariant{
 	Canon:                    methodology.Domain,
 	Claim: "a domain's committed root or local CLAUDE.md, if present, has its GENERATED portion (everything up to and " +
 		"including the durable-notes marker line) byte-identical to what a fresh `hotam gen-spec` render produces right " +
-		"now; a domain with no CLAUDE.md yet, or whose project has not adopted the crystal convention at all, is an " +
-		"honest no-op; content the operator authored below the durable-notes marker is never compared and never flagged.",
+		"now, where the fresh render is fed the SAME publication-flavored violation snapshot (invariants." +
+		"PublicationViolationsFromPhaseOne of the current pass's phase-1 result) genSpec threads into the written " +
+		"file itself; a domain with no CLAUDE.md yet, or whose project has not adopted the crystal convention at " +
+		"all, is an honest no-op; content the operator authored below the durable-notes marker is never compared " +
+		"and never flagged.",
 	Rule: "IF a file exists at the domain's resolved crystal path (repo-root CLAUDE.md for the active/unambiguous " +
 		"domain, or <domainDir>/CLAUDE.md for a non-active consumer domain under domains/<name> -- the SAME resolution " +
 		"`hotam land`/`hotam gen-spec` already use), the bytes from the start of the file THROUGH the durable-notes " +
 		"marker line MUST equal internal/generator.RenderClaudeMDFromTemplateWithViolations's own output over that same " +
-		"span, computed against the CURRENT graph and the SAME violation snapshot every other check in the current " +
-		"all-violations pass just saw. Bytes AFTER the marker line (the operator's own durable notes) are never read for " +
+		"span, computed against the CURRENT graph and fed the SAME publication-flavored violation snapshot " +
+		"(invariants.PublicationViolationsFromPhaseOne of this pass's phase-1 result) genSpec embeds in the written " +
+		"file -- so an unrelated, transiently stale on-disk projection (a tampered ENGINE-VERSION stamp, say) never " +
+		"makes a re-run-identical crystal read as stale. Bytes AFTER the marker line (the operator's own durable " +
+		"notes) are never read for " +
 		"comparison. A domain with no committed CLAUDE.md, or whose project root carries neither a CLAUDE.md nor a " +
 		"crystal-convention marker, is an honest NO-OP -- mirrors check_spec_md_current's own opt-in-when-absent shape, " +
 		"except CLAUDE.md is the domain's mandatory boot crystal once the convention is adopted at all, not an " +

@@ -50,6 +50,14 @@ func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Vio
 	if g == nil || len(g.Languages) == 0 || g.DomainDir == "" {
 		return nil
 	}
+	// Every comparative render below (the localized document bundle and the
+	// localized boot crystals) must be fed the SAME publication flavor genSpec
+	// writes with — invariants.PublicationViolationsFromPhaseOne of the phase-1
+	// list, THE one shared flavor selector (review finding P3-13). Feeding the
+	// unfiltered prior would report false staleness whenever an unrelated
+	// on-disk projection (e.g. a tampered ENGINE-VERSION stamp) is transiently
+	// stale, even though a re-run rewrites every file byte-identically.
+	publication := invariants.PublicationViolationsFromPhaseOne(prior)
 	layout, err := docbundle.NewLayout(g.Languages, g.DefaultLanguage)
 	if err != nil {
 		return []invariants.Violation{{Check: "check_language_outputs_current", ID: g.DomainDir, Message: fmt.Sprintf("invalid language output layout: %v", err)}}
@@ -111,7 +119,7 @@ func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Vio
 
 	crystalPaths := localizedCrystalPaths(layout, resolveClaudeMDPath(g.DomainDir, ""))
 	localized, err := generator.BuildLocalizedDocumentsWithSnapshotAndCrystalPathsForProfile(
-		graphView, filepath.Base(graphView.DomainDir), repoRoot, today, prior, specDocs, crystalPaths, loader.ResolveGenProfile(graphPathForDomain(graphView.DomainDir)),
+		graphView, filepath.Base(graphView.DomainDir), repoRoot, today, publication, specDocs, crystalPaths, loader.ResolveGenProfile(graphPathForDomain(graphView.DomainDir)),
 	)
 	if err != nil {
 		return []invariants.Violation{{Check: "check_language_outputs_current", ID: g.DomainDir, Message: fmt.Sprintf("render complete localized document bundle: %v", err)}}
@@ -178,7 +186,7 @@ func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Vio
 	}
 	violations = append(violations, compareLanguageOutputs(expected)...)
 	violations = append(violations, obsoleteLanguageOutputs(genDir, expected, layout)...)
-	violations = append(violations, checkLocalizedCrystalsCurrent(graphView, layout, repoRoot, prior, today)...)
+	violations = append(violations, checkLocalizedCrystalsCurrent(graphView, layout, repoRoot, publication, today)...)
 	if !hasOtherFullFrameworkOwner(repoRoot, g.DomainDir) {
 		violations = append(violations, obsoleteProjectLanguageOutputs(filepath.Join(repoRoot, "framework"), expected, layout)...)
 	}
@@ -416,7 +424,9 @@ func hasOtherFullFrameworkOwner(repoRoot, activeDomainDir string) bool {
 	return false
 }
 
-func checkLocalizedCrystalsCurrent(g *ontology.Graph, layout docbundle.Layout, repoRoot string, prior []invariants.Violation, today string) []invariants.Violation {
+func checkLocalizedCrystalsCurrent(g *ontology.Graph, layout docbundle.Layout, repoRoot string, publication []invariants.Violation, today string) []invariants.Violation {
+	// publication (not the raw phase-one list) feeds every comparative crystal
+	// render — see checkLanguageOutputsCurrentStaged's flavor-selector comment.
 	consumer := loader.ResolveGenProfile(graphPathForDomain(g.DomainDir)) == loader.GenProfileConsumer
 	basePath := resolveClaudeMDPath(g.DomainDir, "")
 	if basePath == "" {
@@ -447,7 +457,7 @@ func checkLocalizedCrystalsCurrent(g *ontology.Graph, layout docbundle.Layout, r
 		view := *g
 		view.RenderLanguage = language
 		viewGraphs := map[string]*ontology.Graph{domainNameFromDir(g.DomainDir): &view}
-		override := &generator.ViolationsOverride{For: &view, Violations: prior}
+		override := &generator.ViolationsOverride{For: &view, Violations: publication}
 		charCount, err := generator.ComputeCrystalCharCountFixpointWithViolations(&view, domainNameFromDir(g.DomainDir), repoRoot, viewGraphs, today, consumer, override, path)
 		if err != nil {
 			violations = append(violations, invariants.Violation{Check: "check_language_outputs_current", ID: path, Message: fmt.Sprintf("compute localized boot crystal: %v", err)})

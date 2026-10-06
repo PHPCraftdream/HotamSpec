@@ -302,3 +302,25 @@ func TestBuildAtoms_GroupsSettledByTopicAndRendersNonEmpty(t *testing.T) {
 		}
 	}
 }
+
+// Only the standalone live-state.md stamps its generation date: the crystal's
+// embedded LIVE-STATE block and AGENT-CONTEXT use the unstamped builders, or
+// CLAUDE.md would be rewritten every day.
+func TestStandaloneLiveStateStampsDateOthersDoNot(t *testing.T) {
+	t.Parallel()
+	g := loadFixtureGraph(t)
+	stamp := "- **generated:** 2026-07-12"
+	standalone := BuildStandaloneLiveStateRoot(g, "", 5000, "2026-07-12", nil, "")
+	if !strings.Contains(standalone, stamp) {
+		t.Fatalf("standalone live-state must carry the generation stamp %q:\n%s", stamp, standalone)
+	}
+	if strings.Contains(BuildLiveState(g, "", 5000, "2026-07-12"), "**generated:**") {
+		t.Fatal("BuildLiveState (crystal LIVE-STATE block) must not carry a date stamp")
+	}
+	if strings.Contains(BuildLiveStateWithViolationsRoot(g, "", 5000, "2026-07-12", nil, ""), "**generated:**") {
+		t.Fatal("BuildLiveStateWithViolationsRoot (localized view) must not carry a date stamp")
+	}
+	if strings.Contains(BuildAgentContext(g, "", 5000, "2026-07-12", false), "**generated:**") {
+		t.Fatal("AGENT-CONTEXT embeds the unstamped live-state block")
+	}
+}

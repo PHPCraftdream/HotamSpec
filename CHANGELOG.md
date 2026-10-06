@@ -23,6 +23,14 @@ History predating this file is not backfilled — see `git log` and
   narratives render that human sentence instead of the qualified method
   symbol; Holds/rule evidence and a failed atom's observed value appear as
   separate `Given` lines.
+- `docs/gen/live-state.md` now has a freshness check (`check_live_state_md_current`,
+  anchored by R-live-state-md-current): the standalone file stamps its
+  generation date and is judged as of that date; the crystal and AGENT-CONTEXT
+  use the unstamped block, so CLAUDE.md does not change daily. Every
+  comparative render (crystal, AGENT-CONTEXT, live-state, localized bundle) is
+  fed the one publication violation flavor gen-spec writes with, so a
+  transiently stale unrelated projection no longer makes a re-run-identical
+  crystal read as stale.
 - AGENT-CONTEXT.md is rendered from the same publication violation snapshot as
   live-state.md and the crystal, so one `gen-spec` run after an engine change no
   longer leaves already-fixed STRUCTURE signals in it (a second run used to

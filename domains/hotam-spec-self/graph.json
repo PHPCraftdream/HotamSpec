@@ -8773,6 +8773,42 @@
       "decl_order": 119
     },
     {
+      "id": "R-live-state-md-current",
+      "claim": "A domain's committed docs/gen/live-state.md, once the standalone projection is written at all, shall stay byte-identical to a fresh hotam gen-spec render of the current graph -- the render embedding the SAME publication violation snapshot gen-spec threads into the file and pinned to the generation date the file stamps itself with (`- **generated:** <date>`), so a content-identical file never goes stale at midnight -- mechanically checked by check_live_state_md_current; a domain that never gets the file (empty graph, or explicit language configurations) is an honest no-op.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "Review finding P3-12: docs/gen/live-state.md was the last non-localized docs/gen projection with no freshness check -- fully overwriting the committed file with garbage yielded 0 violations from `hotam all-violations`. The render genuinely depends on `today` (diagnose.DiagnoseSignalsWithViolations embeds it: OVERDUE counts vs review_after, the `--today` advisory), yet the file carried no date at all, so the fix is two-sided: generator.BuildLiveStateWithViolationsRoot now stamps the generation date into the file (the self-carried pin), and check_live_state_md_current (internal/invariants/live_state_current.go, real implementation wired in from cmd/hotam/live_state_current_wiring.go via registry.Update -- the same pattern check_agent_context_md_current establishes, needed because internal/invariants must never import internal/generator) compares as of that stamped date over the publication flavor (PublicationViolationsFromPhaseOne, the same single selector P3-13 established). This requirement is the self-hosting anchor (mirrors R-agent-context-md-current's identical role) that satisfies check_bijection_r_to_enforcer for the new check.",
+      "assumptions": null,
+      "relations": null,
+      "enforcement": "ENFORCED",
+      "enforced_by": [
+        "check_live_state_md_current"
+      ],
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "2026-10-06",
+      "settled_at": "2026-10-06",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": [
+        "cmd/hotam/gen_spec.go",
+        "internal/generator/livestate.go",
+        "internal/invariants/live_state_current.go",
+        "cmd/hotam/live_state_current_wiring.go",
+        "internal/invariants/publication_snapshot.go"
+      ],
+      "history": [
+        {
+          "at": "2026-10-06",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 0
+    },
+    {
       "id": "R-m-tag-format-valid",
       "claim": "Every Requirement.m_tag (when non-empty) shall match `^M[1-9][0-9]*$`, be unique across the graph, and appear only on OPEN requirements.",
       "owner": "framework-author",

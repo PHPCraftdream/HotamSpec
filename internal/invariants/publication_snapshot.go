@@ -46,6 +46,16 @@ func PriorToPostProcessViolationsForPublicationWithEvidence(g *ontology.Graph, i
 // Violations whose check is a registered ComparesOnDiskProjection invariant
 // are dropped, EXCEPT check_spec_md_current, mirroring
 // publicationCandidates(false) exactly.
+//
+// SINGLE FLAVOR SELECTOR: this function is THE one shared entry point for
+// every comparative (fresh-render) projection in the codebase — genSpec's
+// write path (via PriorToPostProcessViolationsForPublication*) AND every
+// freshness check's comparative render (check_domain_claude_md_current,
+// check_agent_context_md_current, check_language_outputs_current) must feed
+// the SAME publication flavor into their renders. A check that renders from
+// the unfiltered phase-one list instead reports false staleness whenever an
+// unrelated on-disk projection is transiently stale, even though a re-run
+// would rewrite the file byte-identically (review finding P3-13).
 func PublicationViolationsFromPhaseOne(prior []Violation) []Violation {
 	drop := make(map[string]bool, len(All.All()))
 	for _, inv := range All.All() {
