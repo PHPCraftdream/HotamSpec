@@ -137,3 +137,47 @@ CONTRACT 877 строк, QUICKSTART 553, PROPOSAL-REFERENCE 912; корнево�
 ### P3-8. Быстрый слой `-short` выше цели 2 минуты
 Полный `go test -short ./...`: 3м51с холодно, 2м40с тепло; основное время — сборка тестовых бинарников (cmd/hotam 152 с, selfspec 82 с при самом медленном одиночном тесте 2,4 с).
 **Сделать:** измерить, что именно собирается в `-short` у cmd/hotam и selfspec (`go test -short -json`, время сборки против времени тестов); убрать из `-short` пути, которые компилируют вложенные бинарники/домены, или переиспользовать один собранный бинарник на пакет.
+
+## Цикл 3 (2026-10-06)
+
+База: `340c685`; diff: `9c22615..HEAD` (3 коммита). `go build ./...` и `go vet ./...` завершились с кодом 0, без вывода. Отдельные `go test -count=1 -short` успешны: `cmd/hotam` 28,238 с; `internal/selfspec` 48,995 с; `internal/gate` 5,923 с; `internal/localization` 0,366 с; `internal/repohygiene` 0,789 с. Узкие проверки: `go test -count=1 -short -run '^TestCrystalFixpoint' ./cmd/hotam` — ok, 0,915 с; `go test -count=1 -run TestRequirementState_ProvenWhenEmptyAtomTitleFallsBackToSourcePhrase ./internal/selfspec` — ok, 0,811 с. `go test ./...` и агрегированный `go test -count=1 -short ./...` по ограничению не запускались: полное время до 2 минут независимо не подтверждено. Запись CHANGELOG о 77 с в тёплом режиме не является измерением этого прогона.
+
+Структурный просмотр затронутых объектов и методов, документации, мультиязычного рендеринга и добавленных пропусков `-short` дополнял команды; это не аудит универсального соответствия. Команды проверки ограничены перечисленными пакетами и тестами; `go test ./...` и агрегированный `go test -count=1 -short ./...` не запускались.
+
+### Статус находок цикла 2
+
+| Находка | Статус | Доказательство |
+|---|---|---|
+| P1-8 артефакты атомов без человеческого текста | частично | Исправлены proof-state и человекочитаемый текст пилота; мультиязычная регрессия — P1-9. |
+| P3-6 allowlist guard путей | закрыта | `internal/repohygiene/repohygiene_test.go:24-52`; точный `allowFiles`, guard проходит. |
+| P3-7 инварианты Crystal fixpoint | закрыта | `internal/invariants/crystal_readers.go:9-18` и `cmd/hotam/gen_spec_fixpoint.go:161-199`; общие `CrystalReaderCheckNames`, три узких теста проходят. |
+| P3-8 цель быстрого слоя | частично | 38 существующих guard'ов (24 cmd, 11 self, 3 gate), все в первой инструкции, плюс новый proof-тест — 39. Только условные пропуски; тело вне short не изменено. Отдельные пакеты зелёные, агрегированный target по времени не измерен. |
+
+### Новые находки
+
+### P1-9. SPEC сохраняет исходный язык фраз атома при рендеринге другого языка
+
+Реальный временный unit-тест `TestReviewCycle3EvidenceUsesRequestedLanguage` (удалён после проверки) создал in-memory AtomSourceIndex: languages ru/en, default ru; фразы предиката Русский предикат/English predicate и evidence Русское свидетельство/Evidence; артефакт holds с Verdict pass и шагами true/7. Вызвал `humanizeAtomSteps(index, atom, claim)`, затем `BuildSpecFromRowsForLanguage(graph, rows, "en")` с ClaimTexts для обоих языков. Авторские методы/рекордер в этой фикстуре не запускались: проверялся путь рендера записанного артефакта. Команда завершилась exit 1 из-за отсутствия Evidence — 7. Ниже выдержка реального вывода:
+
+```text
+go test -count=1 -run '^TestReviewCycle3EvidenceUsesRequestedLanguage$' ./internal/gate
+FAIL TestReviewCycle3EvidenceUsesRequestedLanguage
+**Claim:** English predicate.
+- Then Русский предикат — true. — **held**
+- Given Русское свидетельство — 7.
+FAIL .../internal/gate
+```
+
+Причина: `internal/gate/spec_build.go:812,820,839-862` и `internal/gate/atom_source_claims.go:112-119` выбирают исходный язык; `internal/gate/spec_render.go:475-486` форматирует описание без локализации, а `internal/gate/spec_shards.go:133-169` повторно использует эти строки. Затронуты и Then, и Given; оба проявились в одном и том же пути вывода.
+
+**Сделать:** формировать локализованные claim/evidence для каждого языка рендера; сохранять структурированные локализуемые шаги вместо замороженного первичного `Desc`. Добавить тесты ru/en, перестановки default language, holds/rule и failure-сценариев, включая текстовые значения.
+
+### P3-9. Вводный текст SPEC называет действующий check будущим
+
+Наблюдаемое устаревшее обещание в `domains/hotam-spec-self/docs/gen/spec/internal/localization.md:6`: «a future `check_spec_md_current`». Устаревший шаблон исходного текста находится в `internal/gate/spec_render.go:75`; фактическая регистрация check — `internal/invariants/spec_md_current.go:221-255`. Оба запуска `go run ./cmd/hotam all-violations --domain domains/hotam-spec-self` и `go run ./cmd/hotam all-violations --domain domains/hotam-dev` завершились без нарушений. Это остаток старого текста, а не изменение цикла 2.
+
+**Сделать:** обновить вводный текст и эквиваленты в каталоге языков, затем регенерировать поддерживаемые проекции; не редактировать сгенерированные документы вручную.
+
+`go run ./cmd/hotam req show <id> --domain domains/hotam-spec-self` для `R-catalog-supported`, `R-catalog-translated` и `R-missing-translation-message` показал `proof state: PROVEN`; `domains/hotam-spec-self/docs/gen/spec/internal/localization.md:22,32,42` содержит человеческие Then-строки. Оба запуска `all-violations` дали `0 violations — graph clean`. `what-now` self-домена: `C-d20cf537` без движения, 33 feature-blocked, 27 никогда не ревьюились, 40 просрочены; старую P3-2 не дублируем.
+
+Итог цикла: две новые находки — P1-9 и P3-9; новых P0/P2 нет. Ревью не завершено до исправления находок.
