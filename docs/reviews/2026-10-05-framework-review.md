@@ -309,3 +309,33 @@ CRLF files: 0
 **Сделать:** скармливать обоим сравнительным рендерам тот же publication-флейвор (`invariants.PublicationViolationsFromPhaseOne`), что и записи, — выбор флейвора вынести в одно место рядом с `publication_snapshot.go`.
 
 Итог: P3-11 закрыта по существу, регрессий нет; новых находок три — P2-7 (ложное срабатывание новой проверки от календарной даты на hotam-dev), P3-12 (live-state.md без проверки свежести), P3-13 (флейвор-асимметрия запись/сравнение у кристалла и локализованного бандла).
+
+## Цикл 7 (2026-10-06)
+
+**База:** HEAD 2a07ce9 (дерево чистое). **Метод:** `go build ./...`, `go vet` (cmd/hotam, internal/invariants, internal/generator) — чисто; идемпотентность gen-spec обоих доменов (`go run ./cmd/hotam gen-spec --domain domains/hotam-spec-self --claude-md CLAUDE.md --spec`; `go run ./cmd/hotam gen-spec --domain domains/hotam-dev --claude-md domains/hotam-dev/CLAUDE.md`; `git status --porcelain` до/после — пусто оба раза); `all-violations` обоих доменов — «0 violations — graph clean»; пробы дат и строк через временный тест в cmd/hotam (использовал `allViolationsAsOf` и `generator.RenderClaudeMDFromTemplate` на реальных графах, удалён после ревью); узкий прогон новых тестов репозитория `go test -run 'TestClaudeMDCurrent_UsesPublicationFlavor_ComparativeRender|TestLiveStateCurrent|TestGenSpec_AgentContextConvergesInOnePass' ./cmd/hotam` — ok.
+
+### Статус находок цикла 6
+
+| Находка | Статус | Факт закрытия |
+|---|---|---|
+| P2-7 (AGENT-CONTEXT краснеет от календарной даты) | закрыта | дата берётся из первого совпадения `(as of YYYY-MM-DD)` либо `--today YYYY-MM-DD` (`cmd/hotam/agent_context_current_wiring.go:55-68,117-120`); в AGENT-CONTEXT обоих доменов теперь безусловная строка счётчиков «… (as of 2026-10-06)» (`domains/hotam-dev/docs/gen/AGENT-CONTEXT.md:23`, `domains/hotam-spec-self/docs/gen/AGENT-CONTEXT.md:24`); проба `allViolationsAsOf` по обоим доменам: 0 нарушений на 2026-10-06 и 2026-11-01 |
+| P3-12 (live-state.md без проверки свежести) | закрыта | новая `check_live_state_md_current` (`internal/invariants/live_state_current.go`, реальная логика в `cmd/hotam/live_state_current_wiring.go`), якорь R-live-state-md-current (SETTLED/ENFORCED, `internal/selfspec/requirements_crystal.go:97-115`); тесты: перезапись мусором даёт ровно 1 нарушение, дата-пин — `TestLiveStateCurrent_StampedDatePin`, `TestLiveStateCurrent_GarbageYieldsExactlyOneViolation` (pass) |
+| P3-13 (флейвор-асимметрия запись/сравнение) | закрыта | единый селектор `invariants.PublicationViolationsFromPhaseOne` теперь скармливают все сравнительные рендеры: кристалл (`cmd/hotam/claude_md_current_wiring.go:142,157`), AGENT-CONTEXT и live-state (`cmd/hotam/live_state_current_wiring.go:121`), локализованный бандл и кристаллы (`cmd/hotam/language_freshness_wiring.go:57,122,427,460`); пиннинг — `TestClaudeMDCurrent_UsesPublicationFlavor_ComparativeRender` (подмена штампа ENGINE-VERSION при чистом остальном даёт ровно 1 честное fingerprint-нарушение и 0 ложных про кристалл/AGENT-CONTEXT; pass) |
+
+Штамп `- **generated:** <дата>` присутствует только в `docs/gen/live-state.md` обоих доменов (`:3`); в CLAUDE.md/AGENT-CONTEXT его нет — кристалл и AGENT-CONTEXT используют нестампованный блок (`internal/generator/livestate.go:53-62,88,177-186`). Регрессий не найдено: gen-spec обоих доменов идемпотентен, `all-violations` зелёный, честные no-op и publication-флейвор на месте.
+
+### Ответ на отдельный вопрос цикла: зависит ли кристалл от календарной даты
+
+Да, зависит — и это оставшаяся находка. Проба на реальных, полностью чистых деревьях: `allViolationsAsOf` даёт 0 нарушений на 2026-10-06 и 2026-11-01, но ровно 1 `check_domain_claude_md_current` на обоих доменах на 2027-06-01 при неизменном дереве (live-state и AGENT-CONTEXT при этом молчат — их пины работают). Механизм локализован рендером кристалла на две даты через `generator.RenderClaudeMDFromTemplate`: различие ровно одна строка — блок DOMAIN-MAP, `- **open actions** — 3 (top: …)` превращается в `- **open actions** — 4 …`, когда ближайший будущий `review_after` графа пересекается (`domains/hotam-dev/graph.json:77` — `2027-01-12`; в hotam-spec-self их 701). Проверка сравнивает как на календарное «сегодня» (`cmd/hotam/claude_md_current_wiring.go:55`), сам кристалл дату генерации не несёт, а флаг `--today` у `hotam all-violations` отсутствует (`cmd/hotam/all_violations.go` — флага нет; `allViolationsAsOf` доступен только тестам), т.е. в день пересечения ближайшего review_after автономный `all-violations` на неизменном дереве ложно краснеет, и «полечить» его нечем, кроме регенерации.
+
+### Новые находки
+
+### P2-8. check_domain_claude_md_current краснеет на неизменном дереве в день пересечения ближайшего review_after — пина даты у кристалла нет и задать дату вручную нельзя
+
+**Наблюдалось:** пробы описаны выше (1 ложное нарушение `check_domain_claude_md_current` на обоих реальных доменах на 2027-06-01; строка-виновник `- **open actions**` в DOMAIN-MAP, смена 3→4). Штамповать дату в видимой части кристалла нельзя — тогда CLAUDE.md будет переписываться ежедневно (это осознанно исключено в `internal/generator/livestate.go:54-57`), поэтому наивное копирование пина P2-7/P3-12 не подходит.
+
+**Сделать:** дать сравнительному рендеру кристалла честный пин без штампа в видимом тексте — например: (а) неявный HTML-комментарий-штамп в сгенерированной части (`<!-- generated: YYYY-MM-DD -->`), по которому `checkDomainClaudeMDCurrentReal` судит как на дату файла (по аналогии с `agentContextStampedDate`/`liveStateStampedDate`), либо (б) пин от штампа того же прогона в `docs/gen/live-state.md` (файл уже несёт `- **generated:**` и пишется тем же `genSpec`), либо (в) флаг `--today` у `hotam all-violations` с прокидыванием в `AllViolationsAsOf`. В любом варианте — тест «кристалл домена с будущим review_after остаётся зелёным на день пересечения при неизменном дереве».
+
+Находок P0/P1/P3 нет. Гигиена: машинных путей в отслеживаемых файлах нет (только синтетика в тестах `internal/generator/relpath_test.go` и описание старой находки в самом отчёте); счётчики после добавления инварианта и требования сходятся (269 SETTLED, 345 узлов, `Other (103)`, R-live-state-md-current [E] в AGENT-CONTEXT `:42`); мусорных файлов нет; `.tmp-agent` удалён, временный тест удалён.
+
+Цикл ревью завершён: P2-7, P3-12, P3-13 закрыты по существу, регрессий нет; одна новая находка P2-8.
