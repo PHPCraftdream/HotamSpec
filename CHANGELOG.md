@@ -315,6 +315,16 @@ shared workspace; its top recommendation (one full-suite run per commit boundary
 with another agent) informed how later tasks in this wave were verified.
 
 ### Changed
+- Split the five largest engine files by responsibility — move-only, no behavior or generated-output
+  change (review P2-4): `internal/localization/localization.go` → per-locale catalog files
+  (`catalog_ru.go`/`catalog_zh.go`); `internal/gate/test_exec.go` → execution / record-mode /
+  input-hashing / concurrency-control; `internal/gate/spec_build.go` → row collection / rendering /
+  shards+index; `internal/gate/atom_source.go` → source index / doc-phrase parsing / value constants /
+  claim derivation; `cmd/hotam/gen_spec.go` → command+pipeline / loading / cleanup / project-framework
+  files. Added `TestCatalogCoversAllTextLookupTemplates`: a static go/ast completeness check — following
+  templates through wrapper functions whose template parameter reaches `localization.Text`/`Lookup`
+  (resolved transitively, e.g. generator.serviceText, gate.specText/atomText) — that every
+  literal-or-constant template across internal/ and cmd/ exists in both the ru and zh catalogs.
 - **Documentation reconciliation: corrected five claims where the docs described a different reality
   than the code (task #402, W4.1).** An agent reading the docs got two incompatible instructions about
   who generates what and what counts as truth; this task closes those gaps with no graph-content change

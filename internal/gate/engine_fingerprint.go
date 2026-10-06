@@ -13,7 +13,7 @@ import (
 
 // hashDirContent walks a single directory recursively and returns a sha256
 // content-hash over every regular file found (rel-path + bytes, sorted), in
-// the SAME algorithm philosophy hashPackageInputs (test_exec.go) already
+// the SAME algorithm philosophy hashPackageInputs (test_exec_inputs.go) already
 // established — but scoped to ONE directory, not the whole module. This is a
 // deliberately separate, scope-limited reimplementation: hashPackageInputs
 // ignores its pkgDir parameter and hashes the entire module tree (it is
