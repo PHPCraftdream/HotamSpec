@@ -339,3 +339,25 @@ CRLF files: 0
 Находок P0/P1/P3 нет. Гигиена: машинных путей в отслеживаемых файлах нет (только синтетика в тестах `internal/generator/relpath_test.go` и описание старой находки в самом отчёте); счётчики после добавления инварианта и требования сходятся (269 SETTLED, 345 узлов, `Other (103)`, R-live-state-md-current [E] в AGENT-CONTEXT `:42`); мусорных файлов нет; `.tmp-agent` удалён, временный тест удалён.
 
 Цикл ревью завершён: P2-7, P3-12, P3-13 закрыты по существу, регрессий нет; одна новая находка P2-8.
+
+## Цикл 8 (2026-10-06)
+
+**База:** HEAD c2f3fcb (дерево чистое). **Метод:** `go build ./...`, `go vet ./cmd/hotam` — чисто; идемпотентность gen-spec обоих доменов (`go run ./cmd/hotam gen-spec --domain domains/hotam-spec-self --claude-md CLAUDE.md --spec`; `go run ./cmd/hotam gen-spec --domain domains/hotam-dev --claude-md domains/hotam-dev/CLAUDE.md`; `git status --porcelain` до/после — пусто оба раза); `all-violations` обоих доменов — «0 violations — graph clean»; пробы через временный тест в cmd/hotam на фикстуре `p3_12Fixture` (кристалл + `allViolationsAsOf`, файл удалён после ревью, дерево чистое); узкий прогон `go test -run 'TestCrystalCurrent_PinnedToGenerationDate|TestLiveStateCurrent|TestAgentContextCurrent' ./cmd/hotam` — ok. Полный `go test ./...` не запускался (зелёный на HEAD по условиям цикла).
+
+### Статус находок цикла 7
+
+| Находка | Статус | Факт закрытия |
+|---|---|---|
+| P2-8 (кристалл краснеет от календарной даты в день пересечения review_after) | закрыта | `checkDomainClaudeMDCurrentReal` теперь судит кристалл как на дату генерации: `domainGenerationDate` (`cmd/hotam/generation_date.go:21-29`) читает `- **generated:** <дата>` из `docs/gen/live-state.md`, иначе `(as of <дата>)` из `docs/gen/AGENT-CONTEXT.md`, и подменяет `today` сравнительного рендера (`cmd/hotam/claude_md_current_wiring.go:138-142`); домены без штампа остаются на календарном дне. Пиннинг: `TestCrystalCurrent_PinnedToGenerationDate` (`cmd/hotam/live_state_current_test.go:196-225`, pass). Пробы: (1) на минимальном fixture-домене `allViolationsAsOf(dir, "2030-01-01")` после генерации на 2026-10-05 — 0 нарушений `check_domain_claude_md_current`; (2) реальный дрейф ловится: добавление требования в graph.json без регенерации даёт нарушение «…does not match what a fresh `hotam gen-spec --claude-md` run produces right now…» на 2026-10-06; (3) оба реальных домена идемпотентны, `all-violations` = 0 на обоих. Регрессий нет |
+
+### Остаточный риск consumer-домена без штампа (принятый)
+
+Проба на минимальном consumer-домене (`gen_profile: "consumer"`, непустой граф, `docs/gen/live-state.md` не пишется, `domainGenerationDate` → `ok=false`): `allViolationsAsOf` на 2030-01-01 НЕ даёт `check_domain_claude_md_current` — кристалл consumer-профиля не зависит от пульса свежести (нет DOMAIN-MAP open-actions для одиночного домена), поэтому ложного красного при смене календарного дня не возникает. Сформулированный в фикс-коммите остаток («localized/empty/consumer остаются календарно-зависимыми») для кристалла consumer-профиля не воспроизводится как ложное красное; за локализованными доменами (`check_language_outputs_current`) остаток фиксируется как принятый, без воспроизведения.
+
+### Новые находки
+
+Находок P0–P3 нет, цикл ревью завершён.
+
+Гигиена: машинных путей в отслеживаемых файлах нет (единственное вхождение — синтетические фикстуры `D:\dev\proj` в тесте `internal/generator/relpath_test.go:12,31,34,40-41` — это тестовые данные, не утечка); мусорных файлов нет, `.tmp-agent` и временный тест удалены, `git status --porcelain` чист; счётчики и проекции свежие (gen-spec обоих доменов прошёл без изменений дерева; штамп `2026-10-06` в `docs/gen/live-state.md` обоих доменов; 269 SETTLED / 345 узлов / `Other (103)` в AGENT-CONTEXT). `what-now` показывает только известное: P3-2 (конфликт C-d20cf537 ждёт решения человека) и advisory по review-freshness (29 never-reviewed / 40 overdue — известный, сознательно отложенный пункт заполнения freshness-метаданных).
+
+Дополнение оркестратора: пробы на реальных доменах, которых не хватало ревью. Временный тест в `cmd/hotam` (удалён) вызвал `allViolationsAsOf` для `domains/hotam-dev` и `domains/hotam-spec-self` на датах 2026-11-01, 2027-06-01 и 2030-01-01 — 0 нарушений на каждой дате обоих доменов (до фикса P2-8 на 2027-06-01 было по одному `check_domain_claude_md_current`). Вывод ревью о consumer-профиле принят как «не воспроизведено», не как доказанное отсутствие зависимости.
