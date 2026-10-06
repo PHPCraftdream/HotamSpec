@@ -139,6 +139,22 @@ func TestGenSpec_AgentContextConvergesInOnePass(t *testing.T) {
 	for _, v := range violations {
 		t.Errorf("violation survived second genSpec pass: [%s] %s: %s", v.Check, v.ID, v.Message)
 	}
+
+	// A later calendar day must not turn a content-identical file stale: the
+	// check judges AGENT-CONTEXT.md as of the date it stamps itself with, also
+	// when it carries no freshness advisory (no `--today` in its text).
+	if strings.Contains(string(agentContext), "--today") {
+		t.Fatal("precondition: this fixture must carry no freshness advisory, only the counters-line date")
+	}
+	later, err := allViolationsAsOf(domainDir, "2030-01-01")
+	if err != nil {
+		t.Fatalf("allViolations on a later day: %v", err)
+	}
+	for _, v := range later {
+		if v.Check == "check_agent_context_md_current" {
+			t.Errorf("unchanged AGENT-CONTEXT.md flagged stale on a later day: %s", v.Message)
+		}
+	}
 }
 
 // snapshotGeneratedTree hashes every regular file of the generated set: the

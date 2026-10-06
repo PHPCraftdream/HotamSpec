@@ -52,6 +52,21 @@ func withCheckAgentContextMDCurrent(inv invariants.Invariant) *invariants.Invari
 	return &inv
 }
 
+var (
+	agentContextAsOfRE  = regexp.MustCompile(`\(as of (\d{4}-\d{2}-\d{2})\)`)
+	agentContextTodayRE = regexp.MustCompile(`--today (\d{4}-\d{2}-\d{2})`)
+)
+
+// agentContextStampedDate returns the generation date a committed AGENT-CONTEXT.md carries.
+func agentContextStampedDate(committed []byte) (string, bool) {
+	for _, re := range []*regexp.Regexp{agentContextAsOfRE, agentContextTodayRE} {
+		if m := re.FindSubmatch(committed); m != nil {
+			return string(m[1]), true
+		}
+	}
+	return "", false
+}
+
 // checkAgentContextMDCurrentReal is the real check_agent_context_md_current
 // logic: IF a domain's committed docs/gen/AGENT-CONTEXT.md exists, its WHOLE
 // content (the projection carries no durable-notes tail, so there is nothing
@@ -75,8 +90,6 @@ func withCheckAgentContextMDCurrent(inv invariants.Invariant) *invariants.Invari
 //   - the file does not exist on disk: this domain has never had
 //     AGENT-CONTEXT.md generated yet (consumer-profile domains never get it
 //     at all) — nothing to be stale YET.
-var agentContextTodayRE = regexp.MustCompile(`--today (\d{4}-\d{2}-\d{2})`)
-
 func checkAgentContextMDCurrentReal(g *ontology.Graph, priorViolations []invariants.Violation, today string) []invariants.Violation {
 	if g.DomainDir == "" {
 		return nil
@@ -101,12 +114,12 @@ func checkAgentContextMDCurrentReal(g *ontology.Graph, priorViolations []invaria
 		}}
 	}
 
-	// The file embeds its generation date (the review-freshness advisory's
-	// `hotam due --today <date>`), so judging it as of the calendar day would
-	// flag a content-identical file every midnight. Compare as of the date the
-	// file itself carries; a file without one has no date-dependent content.
-	if m := agentContextTodayRE.FindSubmatch(committed); m != nil {
-		today = string(m[1])
+	// The file stamps its own generation date (the unconditional counters line
+	// "... (as of <date>)", and the freshness advisory's `--today <date>`), so
+	// judging it as of the calendar day would flag a content-identical file
+	// every midnight. Compare as of the date the file itself carries.
+	if date, ok := agentContextStampedDate(committed); ok {
+		today = date
 	}
 
 	publication := invariants.PublicationViolationsFromPhaseOne(priorViolations)
