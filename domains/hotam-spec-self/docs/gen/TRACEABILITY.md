@@ -4,7 +4,7 @@
 
 Generated from `implemented_by`/`verified_by` on each requirement in this domain's `graph.json` (PLAN-authored-spec-discipline.md §4/§7). Each authored link is RE-RESOLVED here (same resolver the mechanical gate uses — internal/gate/spec_resolver.go) purely for display: `resolves` means the named file:symbol / file:test was found by parsing that file; `ORPHANED` means it was not (stale reference, typo, or renamed/deleted symbol) — the mechanical gate (internal/invariants/authored_links.go) is the actual enforcement point, this doc only reports its verdict for navigation. The `scenario` column (PLAN-scenario-generated-spec.md §3 W1.4) is a CHEAP, AST-only signal (no test execution) that a verified_by test's body calls `hotamspec.NewScenario(...)` — this is the only scenario signal this document ever renders, so it stays byte-identical on every `gen-spec` run. The REAL, executed narrative — Given/When/Then/Value steps from an actually-passing `go test` run — lives in `docs/gen/SPEC.md`, generated only by `hotam gen-spec --spec` (real, but expensive: a full compile+run per verified_by entry); that file's own freshness is separately enforced by `check_spec_md_current`, so this document does not need to (and must not) overlay its outcome here.
 
-**19 requirement(s) carry authored links; 181 are engine-enforced (enforced_by, no authored carrier); 118 are prose/roadmap-debt (no code carrier yet).**
+**19 requirement(s) carry authored links; 182 are engine-enforced (enforced_by, no authored carrier); 118 are prose/roadmap-debt (no code carrier yet).**
 
 ---
 
@@ -38,6 +38,7 @@ SETTLED+ENFORCED requirements proven by the engine mechanism (a `check_*` invari
 
 | id | enforced_by | claim |
 |---|---|---|
+| `R-agent-context-md-current` | check_agent_context_md_current | A domain's committed docs/gen/AGENT-CONTEXT.md, once generated, shall stay byte-identical to a fresh hotam gen-spec render of the current graph -- the render embedding the SAME publication violation snapshot gen-spec threads into the file (its live-state pulse and top actions), never the full pre-write AllViolations set whose disk-projection signals the same run's publication makes false -- mechanically checked by check_agent_context_md_current; a domain that has never generated the file is an honest no-op. |
 | `R-agent-never-lost` | TestTopAction_RealGraph | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`. |
 | `R-claude-md-current` | check_domain_claude_md_current | A domain's committed root or local CLAUDE.md, once the crystal convention is adopted for its project, shall keep its generated portion (everything up to and including the durable-notes marker line) byte-identical to a fresh hotam gen-spec render of the current graph, mechanically checked by check_domain_claude_md_current; content the operator authors below that marker line is outside this check's scope. |
 | `R-committed-code-no-home-writes` | TestLaunchDirWriteScope_NoHomeWriteColocation | Committed framework Go source (internal/*, cmd/hotam/*) shall never reference the host home directory co-located with a filesystem-write sink -- the framework writes only within its launch directory, never into the host home. |

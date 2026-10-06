@@ -42,6 +42,20 @@ The atomic requirements that constitute the operator's role, identity, and disci
 
 - 2026-07-12 — last_reviewed_at: →2026-07-05; review_after: →2027-01-05
 
+## `R-agent-context-md-current` (ENFORCED)
+
+**Claim.** A domain's committed docs/gen/AGENT-CONTEXT.md, once generated, shall stay byte-identical to a fresh hotam gen-spec render of the current graph -- the render embedding the SAME publication violation snapshot gen-spec threads into the file (its live-state pulse and top actions), never the full pre-write AllViolations set whose disk-projection signals the same run's publication makes false -- mechanically checked by check_agent_context_md_current; a domain that has never generated the file is an honest no-op.
+
+**Why.** Review finding P3-11: AGENT-CONTEXT.md was the one projection that self-computed invariants.AllViolations at render time (cmd/hotam/gen_spec.go, internal/generator/agentcontext.go) -- BEFORE the staged bundle (fresh ENGINE-VERSION.md stamp + crystal) was published -- so one gen-spec run could leave the file listing two [P1] STRUCTURE signals (check_engine_docs_fingerprint_current, check_domain_claude_md_current) that the run itself had already made false, reproduced by changing the engine fingerprint and diffing AGENT-CONTEXT.md across two runs. Fixed by threading the publication snapshot (the same set live-state.md and the crystal already embed) through generator.BuildAgentContextRootWithViolations at both render sites. check_agent_context_md_current (internal/invariants/agent_context_current.go, real implementation wired in from cmd/hotam/agent_context_current_wiring.go via registry.Update -- the same pattern check_domain_claude_md_current establishes) closes the freshness gap so `hotam all-violations` can no longer return 0 while the committed file lists violations; its comparison embeds the publication flavor deliberately, so an unrelated transiently-stale disk projection never makes the check fire on a file a re-run would rewrite byte-identically. This requirement is the self-hosting anchor (mirrors R-claude-md-current's identical role) that satisfies check_bijection_r_to_enforcer for the new check.
+
+**Enforced by:** `check_agent_context_md_current`
+
+**Sources.** cmd/hotam/gen_spec.go, internal/generator/agentcontext.go, internal/invariants/agent_context_current.go, cmd/hotam/agent_context_current_wiring.go, internal/invariants/publication_snapshot.go
+
+**Change history.**
+
+- 2026-10-06 — created via sync-self
+
 ## `R-agent-declares-purpose` (PROSE)
 
 **Claim.** Every agent at domains/<name>/agents/<name>/ shall declare a non-empty PURPOSE describing what the agent resolvers in one line (machine-readable, alongside its SCOPE).

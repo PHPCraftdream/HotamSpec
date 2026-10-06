@@ -12,4 +12,4 @@ reader: domain-user
 | [internal/localization](spec/internal/localization.md) | 3 |
 | [internal/ontology](spec/internal/ontology.md) | 3 |
 | [internal/proposal](spec/internal/proposal.md) | 3 |
-| [root](spec/root.md) | 254 |
+| [root](spec/root.md) | 255 |

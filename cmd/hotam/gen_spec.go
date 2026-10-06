@@ -579,9 +579,14 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 	if shouldWriteAtoms(atomsCheck) {
 		mdDocs = append(mdDocs, docEntry{"atoms-check.md", atomsCheck})
 	}
-	// live-state.md/AGENT-CONTEXT.md need the phase-one violation snapshot;
-	// they are rendered into the staged bundle below, before any file is
-	// published.
+	// live-state.md and AGENT-CONTEXT.md are BOTH rendered from the SAME
+	// phase-one publication snapshot (activeViolations). AGENT-CONTEXT must
+	// not self-compute invariants.AllViolations at render time: the full set
+	// includes disk-projection checks evaluated against the STALE pre-write
+	// disk, and the staged bundle's publication below makes those signals
+	// false in the same run — embedding them would leave STRUCTURE signals in
+	// the written file that the run itself has already invalidated (review
+	// finding P3-11).
 	if decisionsWritten {
 		mdDocs = append(mdDocs, docEntry{"DECISIONS.md", decisionsMD})
 	}
@@ -812,7 +817,7 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 	}
 	if agentContextWritten && !localizedConfigured {
 		liveStateAndAgentContextPaths = append(liveStateAndAgentContextPaths, filepath.Join(genDir, "AGENT-CONTEXT.md"))
-		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildAgentContextRoot(g, domainName, charCount, today, consumer, repoRoot)))
+		liveStateAndAgentContextContents = append(liveStateAndAgentContextContents, []byte(generator.BuildAgentContextRootWithViolations(g, domainName, charCount, today, consumer, activeViolations, repoRoot)))
 	}
 	if err := addStagedFiles(liveStateAndAgentContextPaths, liveStateAndAgentContextContents); err != nil {
 		return nil, nil, err

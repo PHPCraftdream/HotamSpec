@@ -23,6 +23,12 @@ History predating this file is not backfilled — see `git log` and
   narratives render that human sentence instead of the qualified method
   symbol; Holds/rule evidence and a failed atom's observed value appear as
   separate `Given` lines.
+- AGENT-CONTEXT.md is rendered from the same publication violation snapshot as
+  live-state.md and the crystal, so one `gen-spec` run after an engine change no
+  longer leaves already-fixed STRUCTURE signals in it (a second run used to
+  rewrite it). New `check_agent_context_md_current` (anchored by
+  R-agent-context-md-current) keeps `all-violations` from returning 0 while the
+  committed file is stale.
 - A failing atom no longer blocks the whole SPEC when its text cannot be
   derived (e.g. a false bool without a `not:` phrase): it is reported as a
   failed artifact with its recorded steps, while passing atoms keep strict text

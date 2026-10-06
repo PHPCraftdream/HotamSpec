@@ -208,7 +208,7 @@ Sub-operator = THIS SAME seed, narrowed: same Role text + narrower scope line, s
 - **goals** — burn down SETTLED-unenforced to zero, atomize all compound check_*, every CLAUDE.md section auto-generated from substrate
 - **director** — director
 - **path** — `domains/hotam-spec-self/`
-- **atoms-count** — 267 SETTLED
+- **atoms-count** — 268 SETTLED
 - **open actions** — 4 (top: [P3] C-d20cf537: conflict 'C-d20cf537' on axis 'reviewability-vs-code-authority' is DETECTED with no resolver movement; resolver 'framework-reviewer' must ACKNOWLEDGE it)
 <!-- DOMAIN-MAP:END -->
 <!-- PARENT-PROJECT:BEGIN -->

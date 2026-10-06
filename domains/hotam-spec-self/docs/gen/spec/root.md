@@ -5,7 +5,7 @@ reader: domain-user
 
 Generated from this domain's `graph.json` claims plus REAL, currently-passing `go test` runs of every `verified_by` entry, recorded via the `hotamspec` scenario API (PLAN-scenario-generated-spec.md §1/§2 D1/D2, task W1.3): the normative body under each requirement is not hand-written prose — it is the Given/When/Then/Value narrative a real test run just produced. `graph.json` remains the bookkeeping layer (id, short authored claim, status); this document is the derived projection, never the other way around. Not an enforcement gate itself — `check_spec_md_current` (W2.3) is the mechanical staleness floor; this generator only renders what the CURRENT run reports.
 
-**0 requirement(s) carry `verified_by`; 0 have at least one recorded scenario narrative; 254 carry no `verified_by` yet (no code carrier, honest gap).**
+**0 requirement(s) carry `verified_by`; 0 have at least one recorded scenario narrative; 255 carry no `verified_by` yet (no code carrier, honest gap).**
 
 ---
 
@@ -19,6 +19,7 @@ Requirements with no `verified_by` entry at all: SETTLED without a code carrier 
 
 | id | status | claim |
 |---|---|---|
+| `R-agent-context-md-current` | SETTLED | A domain's committed docs/gen/AGENT-CONTEXT.md, once generated, shall stay byte-identical to a fresh hotam gen-spec render of the current graph -- the render embedding the SAME publication violation snapshot gen-spec threads into the file (its live-state pulse and top actions), never the full pre-write AllViolations set whose disk-projection signals the same run's publication makes false -- mechanically checked by check_agent_context_md_current; a domain that has never generated the file is an honest no-op. |
 | `R-agent-never-lost` | SETTLED | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`. |
 | `R-authored-spec-layer-progression` | SETTLED | Authored spec/ coverage of a domain SHALL proceed in layer order, general before specific, the same skeleton-first discipline R-domain-founded-in-wave-order already applies to graph founding: (1) MODELS -- first author the full skeleton of the domain's object model, every aggregate/entity/value-object that exists, before any one of them is fleshed out; (2) FIELDS -- then author each model's fields/attributes; (3) METHODS -- then author operations/methods, ALL the interactions between models (behavior, invariants, error paths), not just one model's; (4) TESTS -- then author the executable tests that prove requirements against that code. An agent building authored spec/ shall NOT take one requirement all the way from model to test before starting the next; it shall complete each layer across the WHOLE domain before advancing to the next layer. |
 | `R-claude-md-current` | SETTLED | A domain's committed root or local CLAUDE.md, once the crystal convention is adopted for its project, shall keep its generated portion (everything up to and including the durable-notes marker line) byte-identical to a fresh hotam gen-spec render of the current graph, mechanically checked by check_domain_claude_md_current; content the operator authors below that marker line is outside this check's scope. |

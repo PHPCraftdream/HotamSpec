@@ -8,7 +8,7 @@ Not an enforcement gate itself — `internal/invariants/authored_links.go` is th
 Every scenario signal below (the Layer table's scenarios column, the scenario ratchet) is the CHEAP, AST-only `hotamspec.NewScenario(...)` detection — never a real executed verdict — so this document stays byte-identical regardless of mode.
 The REAL, executed narrative lives in `docs/gen/SPEC.md` (`hotam gen-spec --spec` only); its freshness is separately enforced by `check_spec_md_current`.
 
-**267 SETTLED requirement(s): 12 authored-carrier, 184 engine-carrier, 35 roadmap-debt, 36 permanent discipline.**
+**268 SETTLED requirement(s): 12 authored-carrier, 185 engine-carrier, 35 roadmap-debt, 36 permanent discipline.**
 
 ---
 
@@ -66,6 +66,7 @@ SETTLED requirements proven by the engine mechanism (a `check_*` invariant or re
 
 | id | enforced_by | claim |
 |---|---|---|
+| `R-agent-context-md-current` | check_agent_context_md_current | A domain's committed docs/gen/AGENT-CONTEXT.md, once generated, shall stay byte-identical to a fresh hotam gen-spec render of the current graph -- the render embedding the SAME publication violation snapshot gen-spec threads into the file (its live-state pulse and top actions), never the full pre-write AllViolations set whose disk-projection signals the same run's publication makes false -- mechanically checked by check_agent_context_md_current; a domain that has never generated the file is an honest no-op. |
 | `R-agent-never-lost` | TestTopAction_RealGraph | The system shall let an agent dropped into the repo in any state, at any moment, deterministically derive the next correct action via `hotam what-now`. |
 | `R-claude-md-current` | check_domain_claude_md_current | A domain's committed root or local CLAUDE.md, once the crystal convention is adopted for its project, shall keep its generated portion (everything up to and including the durable-notes marker line) byte-identical to a fresh hotam gen-spec render of the current graph, mechanically checked by check_domain_claude_md_current; content the operator authors below that marker line is outside this check's scope. |
 | `R-committed-code-no-home-writes` | TestLaunchDirWriteScope_NoHomeWriteColocation | Committed framework Go source (internal/*, cmd/hotam/*) shall never reference the host home directory co-located with a filesystem-write sink -- the framework writes only within its launch directory, never into the host home. |

@@ -35,6 +35,33 @@ func PriorToPostProcessViolationsForPublicationWithEvidence(g *ontology.Graph, i
 	return violations, report, collectErr
 }
 
+// PublicationViolationsFromPhaseOne filters an already-computed phase-one
+// (ordinary-check) violation list down to the publication snapshot's
+// candidate set with includeSpec == false — the same filter
+// publicationCandidates(false) applies when collecting, but as a pure
+// filter over violations the caller already holds, so a caller that needs
+// the publication flavor a second time (e.g. a post-process check
+// rendering a projection for comparison) does not re-run the ordinary
+// checks, including the expensive check_spec_md_current test execution.
+// Violations whose check is a registered ComparesOnDiskProjection invariant
+// are dropped, EXCEPT check_spec_md_current, mirroring
+// publicationCandidates(false) exactly.
+func PublicationViolationsFromPhaseOne(prior []Violation) []Violation {
+	drop := make(map[string]bool, len(All.All()))
+	for _, inv := range All.All() {
+		if inv.ComparesOnDiskProjection && inv.Name != "check_spec_md_current" {
+			drop[inv.Name] = true
+		}
+	}
+	filtered := make([]Violation, 0, len(prior))
+	for _, v := range prior {
+		if !drop[v.Check] {
+			filtered = append(filtered, v)
+		}
+	}
+	return filtered
+}
+
 func publicationCandidates(includeSpec bool) []Invariant {
 	candidates := make([]Invariant, 0, len(All.All()))
 	for _, inv := range All.All() {
