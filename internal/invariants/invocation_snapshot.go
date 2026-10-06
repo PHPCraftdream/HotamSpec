@@ -34,9 +34,11 @@ func withGraphInvocation(g *ontology.Graph, run func(*ontology.Graph) []Violatio
 	return run(&view)
 }
 
-// InvocationExecutionSnapshot returns the one atom-package recording snapshot
-// associated with this graph invocation. It uses a shallow Graph view so the
-// caller's persistent graph is never mutated.
+// InvocationExecutionSnapshot returns the one recording snapshot associated
+// with this graph invocation. It covers declared atom packages; manual
+// verified_by entries are proven through legacy real-execution paths and must
+// not consult this snapshot. It uses a shallow Graph view so the caller's
+// persistent graph is never mutated.
 func InvocationExecutionSnapshot(g *ontology.Graph) (*ontology.Graph, *gate.AtomExecutionSnapshot, error) {
 	if g == nil {
 		return nil, nil, nil
@@ -48,7 +50,7 @@ func InvocationExecutionSnapshot(g *ontology.Graph) (*ontology.Graph, *gate.Atom
 	}
 	view.InvocationState = invocation
 	invocation.executionOnce.Do(func() {
-		invocation.execution, invocation.executionErr = gate.CollectAtomExecutionSnapshot(&view)
+		invocation.execution, invocation.executionErr = gate.CollectAtomExecutionSnapshotForPackages(&view, view.SelfExecutingAtomPackages)
 	})
 	return &view, invocation.execution, invocation.executionErr
 }

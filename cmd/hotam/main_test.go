@@ -10,6 +10,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/proposal"
@@ -29,6 +30,10 @@ const selfDomainManifest = "../../domains/hotam-spec-self/manifest.json"
 // sibling domains — both cross-test contamination. Tests that need to control
 // whether the project root carries a crystal/marker use
 // copySelfDomainUnderRoot directly.
+//
+// The fixture is an honest NON-ATOM double of the real domain: the §14 atom
+// opt-in and atom-derived requirement nodes are stripped (orientation_faq is
+// stripped too), so no atom-pipeline check ever fires against it.
 func copySelfDomain(t *testing.T) string {
 	t.Helper()
 	_, domainDir := copySelfDomainUnderRoot(t)
@@ -46,6 +51,11 @@ func copySelfDomain(t *testing.T) string {
 // contaminated by any land auto-crystal-write). Callers that WANT the land
 // auto-crystal-write to fire create <root>/CLAUDE.md or .hotam-spec-project;
 // callers that DON'T leave the root empty so resolveClaudeMDPath returns "".
+//
+// After the manifest+graph copy, the §14 atom opt-in keys are stripped from
+// the manifest and the atom-derived requirements are stripped from the graph:
+// the fixture is an honest NON-ATOM double of the real domain, so no
+// atom-pipeline check ever fires against it.
 func copySelfDomainUnderRoot(t *testing.T) (projectRoot, domainDir string) {
 	t.Helper()
 	projectRoot = t.TempDir()
@@ -54,7 +64,8 @@ func copySelfDomainUnderRoot(t *testing.T) (projectRoot, domainDir string) {
 		t.Fatalf("mkdir domain: %v", err)
 	}
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
-	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
+	copySelfDomainManifestSansLocalOptIns(t, filepath.Join(domainDir, "manifest.json"))
+	stripSelfAtomRequirements(t, domainDir)
 	return projectRoot, domainDir
 }
 
@@ -217,7 +228,7 @@ func copyFile(t *testing.T, src, dst string) {
 	}
 }
 
-// copySelfDomainManifestSansOrientationFAQ copies selfDomainManifest to dst
+// copySelfDomainManifestSansLocalOptIns copies selfDomainManifest to dst
 // with its "orientation_faq" field stripped. The real hotam-spec-self
 // manifest.json opts into that field (R-orientation-faq-answerable /
 // check_orientation_faq_answered): every declared question's answer must be
@@ -241,7 +252,17 @@ func copyFile(t *testing.T, src, dst string) {
 // Stripping the field here keeps every one of those fixtures an honest no-op
 // for this check, the same "no committed opt-in = no lie" boundary the check
 // itself documents.
-func copySelfDomainManifestSansOrientationFAQ(t *testing.T, dst string) {
+//
+// The same boundary now covers the §14 self-executing-atom opt-in keys
+// (self_executing_atoms, self_executing_atom_packages,
+// atom_recorder_import_path, atom_defaults): they point at ROOT-module
+// packages (e.g. internal/localization) and a recorder import path that exist
+// only in the real repo, which a temp fixture never carries. Carrying the
+// opt-in into a copy would make check_spec_md_current demand a generated
+// SPEC.md and loadGraphForGenSpec's code-projection branch refuse
+// non-self-hosting doubles — fixtures never meant to exercise the atom
+// pipeline must be an honest no-op for it (no committed opt-in = no lie).
+func copySelfDomainManifestSansLocalOptIns(t *testing.T, dst string) {
 	t.Helper()
 	data, err := os.ReadFile(selfDomainManifest)
 	if err != nil {
@@ -252,12 +273,131 @@ func copySelfDomainManifestSansOrientationFAQ(t *testing.T, dst string) {
 		t.Fatalf("unmarshal %s: %v", selfDomainManifest, err)
 	}
 	delete(m, "orientation_faq")
+	delete(m, "self_executing_atoms")
+	delete(m, "self_executing_atom_packages")
+	delete(m, "atom_recorder_import_path")
+	delete(m, "atom_defaults")
 	out, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		t.Fatalf("marshal stripped manifest: %v", err)
 	}
 	if err := os.WriteFile(dst, out, 0o644); err != nil {
 		t.Fatalf("write %s: %v", dst, err)
+	}
+}
+
+// stripSelfAtomRequirements removes atom-derived requirements (any
+// requirement with a verified_by entry pointing inside one of the real
+// manifest's atom packages) from the fixture graph at domainDir, so the
+// graph matches the manifest copy whose §14 opt-in was stripped. The real
+// graph's atom requirements (R-catalog-supported, R-catalog-translated,
+// R-missing-translation-message) verify against internal/localization
+// symbols resolvable only in the real repo, so invariants like
+// check_self_requirements_match_registry would fire against a copy that kept
+// them while the manifest no longer opts in. Mirrors makeNonSelfHosting's
+// write-then-clean step: the fixture's contract is to start with NO graph.lock.
+func stripSelfAtomRequirements(t *testing.T, domainDir string) {
+	t.Helper()
+	manifest, err := loader.LoadManifest(selfDomainManifest)
+	if err != nil {
+		t.Fatalf("load %s: %v", selfDomainManifest, err)
+	}
+	if len(manifest.SelfExecutingAtomPackages) == 0 {
+		return
+	}
+	pkgs := make([]string, 0, len(manifest.SelfExecutingAtomPackages))
+	for _, pkg := range manifest.SelfExecutingAtomPackages {
+		pkgs = append(pkgs, strings.TrimSuffix(pkg, "/"))
+	}
+	gp := filepath.Join(domainDir, "graph.json")
+	g, err := loader.LoadGraph(gp)
+	if err != nil {
+		t.Fatalf("load graph %s: %v", gp, err)
+	}
+	kept := g.Requirements[:0]
+	for _, r := range g.Requirements {
+		atom := false
+		for _, entry := range r.VerifiedBy {
+			file, _, ok := gate.ParseFileColonSymbol(entry)
+			if !ok {
+				continue
+			}
+			file = filepath.ToSlash(file)
+			for _, pkg := range pkgs {
+				if file == pkg || strings.HasPrefix(file, pkg+"/") {
+					atom = true
+				}
+			}
+		}
+		if !atom {
+			kept = append(kept, r)
+		}
+	}
+	g.Requirements = kept
+	if err := loader.WriteGraph(gp, g); err != nil {
+		t.Fatalf("write graph %s: %v", gp, err)
+	}
+	if err := os.Remove(loader.LockPath(gp)); err != nil && !os.IsNotExist(err) {
+		t.Fatalf("remove stray graph.lock %s: %v", loader.LockPath(gp), err)
+	}
+}
+
+// TestCopySelfDomainFixture_IsHonestNonAtomDouble pins copySelfDomainUnderRoot's
+// fixture to be an honest NON-ATOM double of the real domain: the §14 atom
+// opt-in is gone from the manifest copy and the atom-derived requirements are
+// gone from the graph copy, while self_hosting and the rest of the corpus
+// remain intact. Fails if the real manifest gains atom opt-ins the fixture
+// stripping doesn't cover.
+func TestCopySelfDomainFixture_IsHonestNonAtomDouble(t *testing.T) {
+	t.Parallel()
+	projectRoot, domainDir := copySelfDomainUnderRoot(t)
+	_ = projectRoot
+
+	m, err := loader.LoadManifest(filepath.Join(domainDir, "manifest.json"))
+	if err != nil {
+		t.Fatalf("load fixture manifest: %v", err)
+	}
+	if !m.SelfHosting {
+		t.Errorf("SelfHosting = false, want true (double keeps self-hosting lock semantics)")
+	}
+	if m.SelfExecutingAtoms {
+		t.Errorf("SelfExecutingAtoms = true, want false")
+	}
+	if len(m.SelfExecutingAtomPackages) != 0 {
+		t.Errorf("SelfExecutingAtomPackages = %v, want empty", m.SelfExecutingAtomPackages)
+	}
+	if m.AtomRecorderImportPath != "" {
+		t.Errorf("AtomRecorderImportPath = %q, want empty", m.AtomRecorderImportPath)
+	}
+
+	realManifest, err := loader.LoadManifest(selfDomainManifest)
+	if err != nil {
+		t.Fatalf("load real manifest: %v", err)
+	}
+	var pkgs []string
+	for _, pkg := range realManifest.SelfExecutingAtomPackages {
+		pkgs = append(pkgs, strings.TrimSuffix(pkg, "/"))
+	}
+	g, err := loader.LoadGraph(filepath.Join(domainDir, "graph.json"))
+	if err != nil {
+		t.Fatalf("load fixture graph: %v", err)
+	}
+	for _, r := range g.Requirements {
+		for _, entry := range r.VerifiedBy {
+			file, _, ok := gate.ParseFileColonSymbol(entry)
+			if !ok {
+				continue
+			}
+			file = filepath.ToSlash(file)
+			for _, pkg := range pkgs {
+				if file == pkg || strings.HasPrefix(file, pkg+"/") {
+					t.Errorf("requirement %s still verified_by atom package %s (%s)", r.ID, pkg, entry)
+				}
+			}
+		}
+	}
+	if len(g.Requirements) <= 200 {
+		t.Errorf("len(Requirements) = %d, want > 200 (fixture still carries the real corpus)", len(g.Requirements))
 	}
 }
 

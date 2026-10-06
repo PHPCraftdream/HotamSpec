@@ -12,9 +12,11 @@ import (
 	"time"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/diagnose"
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/invariants"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/registry"
 	"github.com/PHPCraftdream/HotamSpec/internal/selfspec"
 )
 
@@ -115,7 +117,11 @@ func cmdSyncSelf(args []string) error {
 	if err != nil {
 		return fmt.Errorf("sync-self: load working graph: %w", err)
 	}
-	report, err := selfspec.SyncGraph(after, selfspec.Requirements, syncToday)
+	reg, err := mergeSelfAtoms(before, selfspec.Requirements)
+	if err != nil {
+		return fmt.Errorf("sync-self: discover atoms: %w", err)
+	}
+	report, err := selfspec.SyncGraph(after, reg, syncToday)
 	if err != nil {
 		return fmt.Errorf("sync-self: SyncGraph: %w", err)
 	}
@@ -220,6 +226,32 @@ func checkSelfspecBinaryFresh(domainDir string) error {
 			selfspecDir, strings.Join(stale, ", "))
 	}
 	return nil
+}
+
+// mergeSelfAtoms mirrors sync-domain's pre-SyncGraph atom merge
+// (cmd/hotam/sync_domain.go): when the domain opts into self-executing
+// atoms, discovered atoms are ADDED to the hand registry (overrides keyed by
+// implemented_by[0], REJECTED entries carried through verbatim), and any
+// previous non-REJECTED requirement that lost its atom must have explicit
+// REJECTED/replaces metadata first — graph append-only, no new machinery.
+// A domain without the atom opt-in is returned unchanged (honest no-op).
+func mergeSelfAtoms(before *ontology.Graph, hand *registry.Registry[ontology.Requirement]) (*registry.Registry[ontology.Requirement], error) {
+	if !before.SelfExecutingAtoms {
+		return hand, nil
+	}
+	reg, err := selfspec.DiscoverAtoms(gate.SpecRootForGraph(before), before.DomainDir, hand)
+	if err != nil {
+		return nil, err
+	}
+	for _, previous := range before.Requirements {
+		if previous.Status == "REJECTED" {
+			continue
+		}
+		if _, exists := reg.Get(previous.ID); !exists {
+			return nil, fmt.Errorf("requirement %s no longer has an executed atom; declare explicit REJECTED/replaces metadata for method removal or rename", previous.ID)
+		}
+	}
+	return reg, nil
 }
 
 // computeSyncDiffHash is gate 5 (the "hash of the diff"): sha256 over the

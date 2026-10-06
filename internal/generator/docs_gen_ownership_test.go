@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/docbundle"
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/loader"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
@@ -75,6 +77,36 @@ func ownedGenRelPaths(t *testing.T, g *ontology.Graph) map[string]struct{} {
 	owned := map[string]struct{}{}
 	for _, f := range genTopLevelOwned {
 		owned[f] = struct{}{}
+	}
+	layout, err := docbundle.NewLayout(g.Languages, g.DefaultLanguage)
+	if err != nil {
+		t.Fatalf("docbundle.NewLayout: %v", err)
+	}
+	if g.SelfExecutingAtoms || layout.Multilingual() {
+		// SPEC shards are generator-owned because only `gen-spec --spec` writes
+		// them (W1.3); staleness/cleanup belongs to check_spec_md_current's
+		// compareSpecDocuments (obsolete-shard detection; see
+		// internal/invariants/spec_shards_test.go). Derive this inventory the
+		// same way BuildSpecDocumentsFromRows does, so a renamed writer cannot
+		// strand an orphan unnoticed.
+		packages := map[string]struct{}{}
+		for _, req := range g.Requirements {
+			if req.Status != ontology.StatusREJECTED {
+				packages[gate.SpecPackage(req)] = struct{}{}
+			}
+		}
+		for _, language := range layout.LanguagesForViews() {
+			if indexPath, err := layout.SpecIndexPath(language); err == nil {
+				key := strings.TrimPrefix(filepath.ToSlash(indexPath), "docs/gen/")
+				owned[key] = struct{}{}
+			}
+			for pkg := range packages {
+				if shardPath, err := layout.SpecShardPath(language, pkg+".md"); err == nil {
+					key := strings.TrimPrefix(filepath.ToSlash(shardPath), "docs/gen/")
+					owned[key] = struct{}{}
+				}
+			}
+		}
 	}
 	if DecisionsMDHasContent(g) {
 		owned["DECISIONS.md"] = struct{}{}

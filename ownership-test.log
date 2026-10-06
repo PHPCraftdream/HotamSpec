@@ -1,0 +1,14 @@
+=== RUN   TestDomainOwnsDocsGen_NoForeignOrOrphanFiles
+=== PAUSE TestDomainOwnsDocsGen_NoForeignOrOrphanFiles
+=== CONT  TestDomainOwnsDocsGen_NoForeignOrOrphanFiles
+=== RUN   TestDomainOwnsDocsGen_NoForeignOrOrphanFiles/hotam-spec-self
+=== PAUSE TestDomainOwnsDocsGen_NoForeignOrOrphanFiles/hotam-spec-self
+=== RUN   TestDomainOwnsDocsGen_NoForeignOrOrphanFiles/hotam-dev
+=== PAUSE TestDomainOwnsDocsGen_NoForeignOrOrphanFiles/hotam-dev
+=== CONT  TestDomainOwnsDocsGen_NoForeignOrOrphanFiles/hotam-spec-self
+=== CONT  TestDomainOwnsDocsGen_NoForeignOrOrphanFiles/hotam-dev
+--- PASS: TestDomainOwnsDocsGen_NoForeignOrOrphanFiles (0.00s)
+    --- PASS: TestDomainOwnsDocsGen_NoForeignOrOrphanFiles/hotam-dev (0.01s)
+    --- PASS: TestDomainOwnsDocsGen_NoForeignOrOrphanFiles/hotam-spec-self (0.61s)
+PASS
+ok  	github.com/PHPCraftdream/HotamSpec/internal/generator	0.656s

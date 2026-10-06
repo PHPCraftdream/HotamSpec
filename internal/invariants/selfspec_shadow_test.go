@@ -187,6 +187,48 @@ func TestCheckSelfRequirementsMatchRegistry_MUTATION_DetectsStructuralFieldDrift
 	}
 }
 
+// TestCheckSelfRequirementsMatchRegistry_ManualCitingAtomTestIsNotExempt is
+// the anti-heuristic regression: exemption from the registry bijection comes
+// ONLY from the atom_discovered provenance marker stamped by discovery —
+// NEVER from a verified_by link-path heuristic. A manual requirement that
+// merely cites an atom test path inside a declared atom package is NOT
+// discovery-derived and must stay registered (violation expected); a real
+// discovered atom carrying the marker is legitimately unregistered (no
+// violation).
+func TestCheckSelfRequirementsMatchRegistry_ManualCitingAtomTestIsNotExempt(t *testing.T) {
+	t.Parallel()
+	const manualID = "R-manual-citing-atom-test"
+	const realAtomID = "R-real-atom"
+	g := &ontology.Graph{
+		SelfHosting:               true,
+		SelfExecutingAtoms:        true,
+		SelfExecutingAtomPackages: []string{"internal/localization"},
+		Requirements: []ontology.Requirement{
+			{ID: manualID, Claim: "manual", VerifiedBy: []string{"internal/localization/atoms_test.go:TestAtomCatalogSupported"}},
+			{ID: realAtomID, Claim: "atom", AtomDiscovered: true, VerifiedBy: []string{"internal/localization/atoms_test.go:TestAtomCatalogTranslated"}},
+		},
+	}
+	got := checkSelfRequirementsMatchRegistry(g)
+	manualHit, atomHit := false, false
+	for _, v := range got {
+		if v.Check != "check_self_requirements_match_registry" {
+			continue
+		}
+		if v.ID == manualID {
+			manualHit = true
+		}
+		if v.ID == realAtomID {
+			atomHit = true
+		}
+	}
+	if !manualHit {
+		t.Fatalf("expected a violation for %q (a manual requirement citing an atom test path is NOT discovery-derived and must stay registered), got %+v", manualID, got)
+	}
+	if atomHit {
+		t.Fatalf("unexpected violation for %q (a discovery-stamped atom is legitimately unregistered), got %+v", realAtomID, got)
+	}
+}
+
 func TestFirstStructuralFieldDiffIncludesSourceEvidence(t *testing.T) {
 	registryValue := ontology.Requirement{
 		ID:          "R-source-fields",

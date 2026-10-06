@@ -269,6 +269,8 @@
     "R-boot-from-substrate",
     "R-boot-reload-three-facts",
     "R-budget-measure",
+    "R-catalog-supported",
+    "R-catalog-translated",
     "R-check-method-is-atomic",
     "R-claude-md-budget-phi-cap",
     "R-claude-md-consolidates-when-single-agent",
@@ -411,6 +413,7 @@
     "R-machine-check-syntactic",
     "R-measure-context-size",
     "R-method-matches-docstring",
+    "R-missing-translation-message",
     "R-no-hand-edit-graph",
     "R-no-observation-type",
     "R-observation-evidence-scope",
@@ -2015,6 +2018,38 @@
       "why": "PLAN-scenario-generated-spec.md §2 D1: the scenario-recorder (the hotamspec Scenario/Given/When/Then API) is VENDORED into a consumer domain's own spec/ module as a generated single-package file -- the same crystal-style copy pattern, NOT a cross-module `replace` (which would reopen the NEW-2-bis dependency debt). Vendoring means the domain compiles and runs its OWN copy; without an integrity check that copy could silently drift from the engine canon (a partial update, a local patch, a stale vendoring), so a domain's scenario artifacts would be produced by a DIFFERENT contract than the engine documents and generates SPEC.md from -- defeating the byte-identical-across-domains guarantee the recorder's deterministic renderer exists to provide. check_recorder_current closes that the same filesystem-aware, honest-no-op-when-absent shape check_graph_lock_pins_graph_json already established for graph.json+graph.lock integrity (R-no-hand-edit-graph): a vendored recorder that diverges from the canon is the recorder-side analog of a hand-edited graph, and is detected the same way (sha256, content-addressed). This requirement is the self-hosting anchor (W3.2 spirit) for the orphan-enforcer gate check_bijection_r_to_enforcer flagged on hotam-spec-self: the engine holds its own vendored-recorder integrity obligation, symmetric to the one it imposes on consumer domains."
     },
     {
+      "assumptions": [],
+      "claim": "The catalog covers the language.",
+      "enforced_by": [],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        },
+        {
+          "at": "2026-10-06",
+          "decided_by": "",
+          "summary": "field AtomDiscovered: false -> true"
+        }
+      ],
+      "id": "R-catalog-supported",
+      "implemented_by": [
+        "internal/localization/atoms.go:Catalog.Supported"
+      ],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [],
+      "status": "SETTLED",
+      "verified_by": [
+        "internal/localization/atoms_test.go:TestAtomCatalogSupported"
+      ],
+      "why": ""
+    },
+    {
       "assumptions": [
         "A-python-stack"
       ],
@@ -2063,6 +2098,38 @@
       "status": "SETTLED",
       "verified_by": [],
       "why": "Anti-drift meta-test — direct lift of dev-coin's pattern. The human layer (docs/gen) cannot be hand-edited without regeneration catching the drift. ENFORCED by TestGenerator_GraphJSONDoubleRegenerateIsIdentical (internal/generator/determinism_test.go), which rebuilds graph.json twice from the same in-memory graph and asserts byte-identity; its sibling TestGenerator_DoubleRegenerateIsIdentical covers every generated doc (Requirements, Tensions, Open, Unenforced, Glossary, History, Decisions, Constitution, Entities, RepoMap, FrameworkInvariants, LiveState, Atoms*). The generators are pure functions of (graph, today) — sorted iteration via internal/loader/sort.go, no hidden time/random sources — so regeneration over an unchanged graph AND an unchanged explicit today value always reproduces the committed bytes. UPDATED 2026-07-13 (task #96, external-review P0): BuildLiveState/BuildAgentContext/RenderClaudeMDFromTemplate and their transitive callees (diagnose.DiagnoseSignals, diagnose.FreshnessSignals) formerly called time.Now() internally to compute today's date embedded in freshness/status text, which made two regenerations on different calendar days non-identical even with zero graph changes — a hole in this requirement's byte-identity guarantee that let the committed root CLAUDE.md/AGENTS.md/GEMINI.md drift (233/116/91 vs the graph's real 236/160/43) without CI's regen-idempotency check reliably catching it, since a same-day local regen looked clean while the next day's regen would show date-only noise. Fixed by threading today as an explicit parameter through every affected generator/diagnose function (`hotam gen-spec` gained a `--today YYYY-MM-DD` flag, defaulting to time.Now() only at the CLI edge when omitted, matching the existing hotam status/due/land/apply-proposal convention) — see TestBuildLiveState_TodayIsInjectable, TestBuildLiveState_SameTodayIsByteIdentical, TestBuildAgentContext_TodayIsInjectable, TestBuildAgentContext_SameTodayIsByteIdentical, TestRenderClaudeMDFromTemplate_SameTodayIsByteIdentical, TestDiagnoseSignals_TodayIsInjectable, TestDiagnoseSignals_SameTodayIsByteIdentical, and the CLI-level TestGenSpec_SameTodayIsByteIdenticalIncludingCrystal. The byte-identity claim now holds precisely as originally stated once today is held fixed — CI's regen-idempotency step regenerates the root crystals from the committed graph and diffs against the committed tree in one pipeline run (same real-world moment, hence same --today), so it is unaffected by this fix in the common case, but the injectability closes the previously-impossible 'pin a golden fixture and compare byte-for-byte on any day' path and eliminates the class of same-day-only false negatives. UPDATED 2026-07-13 (task #102): a SECOND byte-identity hole, independent of today-threading, lived in the SAME \"resident crystal N chars\" LIVE-STATE line: cmd/hotam/gen_spec.go computed the embedded count by reading the PRE-EXISTING CLAUDE.md on disk (written by the previous run) BEFORE regenerating it, so pass 2 embedded pass 1's file size into a differently-sized file — the line changed every gen-spec pass and never converged, which is exactly why CI's regen-idempotency check (regen twice, diff) was permanently red. The AGENT-CONTEXT.md code path never computed a real count at all (stuck at \"0 chars\" when --claude-md was omitted). Fixed by making the measurement a fixpoint (generator.ComputeCrystalCharCountFixpoint) computed unconditionally per pass and shared by every LIVE-STATE carrier — see TestComputeCrystalCharCountFixpoint_RealDomainGraph, TestGenSpec_CrystalFixpointConvergesAcrossRuns, TestGenSpec_CrystalCharCountIsRenderedFixpoint. The byte-identity claim now holds for two consecutive gen-spec passes over the same tree, which is precisely what CI checks."
+    },
+    {
+      "assumptions": [],
+      "claim": "The template has an authored translation.",
+      "enforced_by": [],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        },
+        {
+          "at": "2026-10-06",
+          "decided_by": "",
+          "summary": "field AtomDiscovered: false -> true"
+        }
+      ],
+      "id": "R-catalog-translated",
+      "implemented_by": [
+        "internal/localization/atoms.go:Catalog.Translated"
+      ],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [],
+      "status": "SETTLED",
+      "verified_by": [
+        "internal/localization/atoms_test.go:TestAtomCatalogTranslated"
+      ],
+      "why": ""
     },
     {
       "assumptions": [
@@ -2137,6 +2204,38 @@
       "status": "REJECTED",
       "verified_by": [],
       "why": "REJECTED — REPLACES split into R-content-free-no-business-data + R-content-free-no-examples + R-content-free-no-seed-graph (D1, decided by domain-user 2026-06-30) — (was: Hotam-Spec is a blank kit. Business content lives under spec/content/; the worked example is a test fixture. REPLACES the earlier design where seed data lived in src/hotam_spec/graph.py.)"
+    },
+    {
+      "assumptions": [],
+      "claim": "The missing-translation error names the locale and template — missing authored translation for locale \"de\" and template \"## Status\".",
+      "enforced_by": [],
+      "enforcement": "ENFORCED",
+      "evidence": [],
+      "history": [
+        {
+          "at": "2026-10-05",
+          "decided_by": "",
+          "summary": "created via sync-self"
+        },
+        {
+          "at": "2026-10-06",
+          "decided_by": "",
+          "summary": "field AtomDiscovered: false -> true"
+        }
+      ],
+      "id": "R-missing-translation-message",
+      "implemented_by": [
+        "internal/localization/atoms.go:MissingTranslation.Message"
+      ],
+      "last_reviewed_at": "",
+      "owner": "framework-author",
+      "review_after": "",
+      "source_refs": [],
+      "status": "SETTLED",
+      "verified_by": [
+        "internal/localization/atoms_test.go:TestAtomMissingTranslationMessage"
+      ],
+      "why": ""
     },
     {
       "assumptions": [

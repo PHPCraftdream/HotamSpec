@@ -176,7 +176,7 @@ func checkVerifiedByTestResolvable(g *ontology.Graph) []Violation {
 				})
 				continue
 			}
-			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
+			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil {
 				out = append(out, Violation{
 					Check: "check_verified_by_test_resolvable",
@@ -241,7 +241,7 @@ func checkVerifiedByTestHasTeeth(g *ontology.Graph) []Violation {
 				// authored scope.
 				continue
 			}
-			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
+			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil || !result.Found {
 				continue
 			}
@@ -304,7 +304,7 @@ func checkVerifiedByTestNoSkip(g *ontology.Graph) []Violation {
 				// outside the domain's own authored scope.
 				continue
 			}
-			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
+			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil || !result.Found {
 				continue
 			}
@@ -450,7 +450,7 @@ func collectVerifiedByTestJobs(g *ontology.Graph, specRoot string) []verifiedByT
 			if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
 				continue
 			}
-			resolved, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
+			resolved, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil || !resolved.Found {
 				continue
 			}
@@ -475,8 +475,30 @@ func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
 		return nil
 	}
 
+	// §14 root-module split, mirroring scenario_coverage.go's switch: with no
+	// declared atom packages every job resolves via the shared snapshot
+	// (byte-identical to pre-split behavior); otherwise only verified_by
+	// entries INSIDE the declared packages are snapshot-proven -- manual
+	// entries elsewhere keep the legacy real-execution path, so a package
+	// missing from the snapshot no longer fabricates a blocking violation.
+	type indexedJob struct {
+		idx int
+		job verifiedByTestJob
+	}
+	var atomJobs, manualJobs []indexedJob
+	for i, j := range jobs {
+		switch {
+		case !g.SelfExecutingAtoms:
+			manualJobs = append(manualJobs, indexedJob{i, j})
+		case len(g.SelfExecutingAtomPackages) == 0 || fileInAtomPackages(j.entry.file, g.SelfExecutingAtomPackages):
+			atomJobs = append(atomJobs, indexedJob{i, j})
+		default:
+			manualJobs = append(manualJobs, indexedJob{i, j})
+		}
+	}
+
 	results := make([]verifiedByTestJobResult, len(jobs))
-	if g.SelfExecutingAtoms {
+	if len(atomJobs) > 0 {
 		_, snapshot, snapshotErr := InvocationExecutionSnapshot(g)
 		if snapshotErr == nil && snapshot != nil {
 			snapshotErr = snapshot.SourceErr
@@ -484,10 +506,11 @@ func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
 				snapshotErr = snapshot.DiscoveryErr
 			}
 		}
-		for i, job := range jobs {
+		for _, ij := range atomJobs {
+			j := ij.job
 			run := gate.TestRunResult{Err: snapshotErr}
 			if snapshotErr == nil {
-				key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(job.entry.file)))
+				key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(j.entry.file)))
 				if snapshot != nil {
 					if recorded, exists := snapshot.PackageRuns[key]; exists {
 						run = recorded.TestRunResult
@@ -498,14 +521,16 @@ func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
 					run.Err = fmt.Errorf("verified_by execution snapshot missing")
 				}
 			}
-			violation, warning := verifiedByTestRunViolation(job.reqID, job.entry, run)
-			results[i] = verifiedByTestJobResult{reqID: job.reqID, violation: violation, skipWarning: warning}
+			violation, warning := verifiedByTestRunViolation(j.reqID, j.entry, run)
+			results[ij.idx] = verifiedByTestJobResult{reqID: j.reqID, violation: violation, skipWarning: warning}
 		}
+	}
+	if len(manualJobs) == 0 {
 		return results
 	}
 	sem := make(chan struct{}, runExecWorkers)
 	var wg sync.WaitGroup
-	for i, j := range jobs {
+	for _, ij := range manualJobs {
 		wg.Add(1)
 		sem <- struct{}{}
 		go func(idx int, j verifiedByTestJob) {
@@ -513,10 +538,23 @@ func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
 			defer func() { <-sem }()
 			violation, skipWarning := verifiedByTestPassesViolation(specRoot, j.reqID, j.entry)
 			results[idx] = verifiedByTestJobResult{reqID: j.reqID, violation: violation, skipWarning: skipWarning}
-		}(i, j)
+		}(ij.idx, ij.job)
 	}
 	wg.Wait()
 	return results
+}
+
+// fileInAtomPackages reports whether a spec-relative file lives inside one of
+// the declared atom packages (path == pkg or pkg+"/" prefix).
+func fileInAtomPackages(file string, pkgs []string) bool {
+	file = filepath.ToSlash(filepath.FromSlash(file))
+	for _, pkg := range pkgs {
+		pkg = strings.TrimSuffix(filepath.ToSlash(filepath.FromSlash(pkg)), "/")
+		if file == pkg || strings.HasPrefix(file, pkg+"/") {
+			return true
+		}
+	}
+	return false
 }
 
 // HonoredSkipWarnings reports every verified_by entry whose RunVerifiedByTest

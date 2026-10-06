@@ -146,6 +146,13 @@ type Requirement struct {
 	// AtomKind is empty for legacy value facts and "rule" for an explicitly
 	// authored rule atom. Rule semantics are never inferred from test count.
 	AtomKind string `json:"atom_kind,omitempty"`
+	// AtomDiscovered is a provenance marker: it is set ONLY by atom discovery
+	// (internal/selfspec discoverAtomsFromSnapshot) on requirements derived
+	// from executed recorder runs — never authored by hand. Invariants use it
+	// (instead of verified_by link-path heuristics) to exempt discovery-derived
+	// nodes from the hand-registry bijection. omitempty keeps manual
+	// requirements' serialized bytes unchanged.
+	AtomDiscovered bool `json:"atom_discovered,omitempty"`
 	// Cases may be projected from executed Go test cases; Input/Expected remain
 	// independent declared values and are never replaced by SUT actual results.
 	Cases []CaseDefinition `json:"cases,omitempty"`

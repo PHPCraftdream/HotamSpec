@@ -7,6 +7,15 @@
     "every CLAUDE.md section auto-generated from substrate"
   ],
   "director": "director",
+  "self_executing_atoms": true,
+  "self_executing_atom_packages": [
+    "internal/localization"
+  ],
+  "atom_recorder_import_path": "github.com/PHPCraftdream/HotamSpec/internal/recorder/canon",
+  "atom_defaults": {
+    "owner": "framework-author",
+    "status": "SETTLED"
+  },
   "parent": null,
   "orientation_faq": [
     {

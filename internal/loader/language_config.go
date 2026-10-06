@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -22,6 +24,9 @@ func validateDomainManifest(m *DomainManifest) error {
 	if err := validateLanguages(m.Languages, m.DefaultLanguage); err != nil {
 		return err
 	}
+	if err := validateSelfExecutingAtomPackages(m.SelfExecutingAtomPackages, m.AtomRecorderImportPath); err != nil {
+		return err
+	}
 	issues := ontology.ValidateConformance(&ontology.Graph{
 		Conformance:          m.Conformance,
 		SpecificationSources: m.SpecificationSources,
@@ -32,6 +37,34 @@ func validateDomainManifest(m *DomainManifest) error {
 			parts[i] = fmt.Sprintf("%s: %s", issue.ID, issue.Message)
 		}
 		return fmt.Errorf("invalid manifest conformance: %s", strings.Join(parts, "; "))
+	}
+	return nil
+}
+
+// validateSelfExecutingAtomPackages enforces the root-module atom opt-in
+// contract (§14): entries are clean slash-separated relative paths without
+// "..", duplicates are rejected, and the recorder import path is required.
+// Both keys absent is the honest no-op consumer layout.
+func validateSelfExecutingAtomPackages(packages []string, recorderImportPath string) error {
+	if len(packages) == 0 {
+		return nil
+	}
+	if strings.TrimSpace(recorderImportPath) == "" {
+		return fmt.Errorf("atom_recorder_import_path is required when self_executing_atom_packages is set")
+	}
+	seen := make(map[string]struct{}, len(packages))
+	for i, pkg := range packages {
+		if pkg == "" {
+			return fmt.Errorf("self_executing_atom_packages[%d] is empty", i)
+		}
+		if filepath.IsAbs(pkg) || filepath.ToSlash(pkg) != pkg || path.Clean(pkg) != pkg ||
+			pkg == "." || pkg == ".." || strings.HasPrefix(pkg, "../") || strings.Contains(pkg, "/./") {
+			return fmt.Errorf("self_executing_atom_packages[%d] %q is not a clean relative path", i, pkg)
+		}
+		if _, duplicate := seen[pkg]; duplicate {
+			return fmt.Errorf("self_executing_atom_packages contains duplicate entry %q", pkg)
+		}
+		seen[pkg] = struct{}{}
 	}
 	return nil
 }

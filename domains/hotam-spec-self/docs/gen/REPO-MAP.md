@@ -71,10 +71,18 @@ Registered in the methodology but not yet implemented as `hotam` subcommands: at
 - `domains/hotam-spec-self/docs/gen/PIPELINE.md` — Domain overview: how this is put together, stage by stage
 - `domains/hotam-spec-self/docs/gen/REPO-MAP.md` — Repository file index
 - `domains/hotam-spec-self/docs/gen/REQUIREMENTS.md` — Requirement roster & methodology
-- `domains/hotam-spec-self/docs/gen/SPEC.md` — generated normative text
+- `domains/hotam-spec-self/docs/gen/SPEC.md` — package index
 - `domains/hotam-spec-self/docs/gen/TENSIONS.md` — The tension map
 - `domains/hotam-spec-self/docs/gen/TRACEABILITY.md` — requirement -> implemented_by -> verified_by
 - `domains/hotam-spec-self/docs/gen/UNENFORCED.md` — Burn-down meter
+- `domains/hotam-spec-self/docs/gen/spec/cmd/hotam.md` — generated normative text
+- `domains/hotam-spec-self/docs/gen/spec/internal/generator.md` — generated normative text
+- `domains/hotam-spec-self/docs/gen/spec/internal/graphfacts.md` — generated normative text
+- `domains/hotam-spec-self/docs/gen/spec/internal/invariants.md` — generated normative text
+- `domains/hotam-spec-self/docs/gen/spec/internal/localization.md` — generated normative text
+- `domains/hotam-spec-self/docs/gen/spec/internal/ontology.md` — generated normative text
+- `domains/hotam-spec-self/docs/gen/spec/internal/proposal.md` — generated normative text
+- `domains/hotam-spec-self/docs/gen/spec/root.md` — generated normative text
 - `domains/hotam-spec-self/docs/gen/DECISIONS.md` — _(not written: M-registry empty)_
 - `domains/hotam-spec-self/docs/gen/ENTITIES.md` — _(not written: no entity_types declared)_
 

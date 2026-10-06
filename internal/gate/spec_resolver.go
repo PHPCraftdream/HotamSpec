@@ -354,7 +354,11 @@ func receiverBaseTypeName(recv *ast.FieldList) string {
 // existence check). When found, also reports HasTeeth (anti-vacuousness) and
 // HasSkip (no escape-hatch skip) so callers can build the ENFORCED-gate
 // prohibition checks without re-parsing.
-func ResolveSpecTest(specRoot, file, testName string) (SpecTestResult, error) {
+// ResolveSpecTest parses the domain-relative file (joined onto specRoot) and
+// reports whether testName exists as a real test, with teeth/scenario/skip
+// flags. A §14 root-module domain passes its manifest-declared recorder
+// import path so canon.Fact/Holds calls count as atom calls and teeth.
+func ResolveSpecTest(specRoot, file, testName string, declaredRecorderImportPaths ...string) (SpecTestResult, error) {
 	path := filepath.Join(specRoot, filepath.FromSlash(file))
 	fset := token.NewFileSet()
 	astFile, err := parser.ParseFile(fset, path, nil, 0)
@@ -378,8 +382,8 @@ func ResolveSpecTest(specRoot, file, testName string) (SpecTestResult, error) {
 		if !isRealTestSignature(fn) {
 			continue
 		}
-		atoms := testBodyHasAtomCalls(fn.Body, astFile)
-		teeth := testBodyHasTeeth(fn.Body, importsHotamspec(astFile)) || atoms
+		atoms := testBodyHasAtomCalls(fn.Body, astFile, declaredRecorderImportPaths...)
+		teeth := testBodyHasTeeth(fn.Body, importsHotamspec(astFile, declaredRecorderImportPaths...)) || atoms
 		skip := testBodyHasTopLevelSkip(fn.Body)
 		scenario := testBodyHasScenarioConstructor(fn.Body) || atoms
 		return SpecTestResult{Found: true, HasTeeth: teeth, HasSkip: skip, HasScenario: scenario}, nil
@@ -504,7 +508,10 @@ func isTeethCall(call *ast.CallExpr, hotamspecImported bool) bool {
 // importsHotamspec reports whether f imports a package whose path is
 // "hotamspec" or ends in "/hotamspec" (the vendored scenario recorder),
 // under any alias except blank.
-func importsHotamspec(f *ast.File) bool {
+// importsHotamspec reports whether the file imports the recorder API: the
+// consumer hotamspec package or a §14 manifest-declared recorder path
+// (e.g. .../internal/recorder/canon).
+func importsHotamspec(f *ast.File, declared ...string) bool {
 	for _, imp := range f.Imports {
 		if imp.Name != nil && imp.Name.Name == "_" {
 			continue
@@ -513,7 +520,16 @@ func importsHotamspec(f *ast.File) bool {
 		if err != nil {
 			continue
 		}
-		if p == "hotamspec" || strings.HasSuffix(p, "/hotamspec") {
+		if p == "hotamspec" || strings.HasSuffix(p, "/hotamspec") || recorderDeclared(p, declared) {
+			return true
+		}
+	}
+	return false
+}
+
+func recorderDeclared(path string, declared []string) bool {
+	for _, d := range declared {
+		if d != "" && path == d {
 			return true
 		}
 	}
@@ -522,14 +538,14 @@ func importsHotamspec(f *ast.File) bool {
 
 // testBodyHasAtomCalls resolves the call's qualifier against recorder imports,
 // so aliases work without treating unrelated packages' Fact/Holds as proofs.
-func testBodyHasAtomCalls(body *ast.BlockStmt, file *ast.File) bool {
+func testBodyHasAtomCalls(body *ast.BlockStmt, file *ast.File, declared ...string) bool {
 	if body == nil {
 		return false
 	}
 	names := make(map[string]bool)
 	for _, imp := range file.Imports {
 		path, err := strconv.Unquote(imp.Path.Value)
-		if err != nil || (path != "hotamspec" && !strings.HasSuffix(path, "/hotamspec")) {
+		if err != nil || (path != "hotamspec" && !strings.HasSuffix(path, "/hotamspec") && !recorderDeclared(path, declared)) {
 			continue
 		}
 		name := "hotamspec"
@@ -834,4 +850,29 @@ func isSystemTempRoot(dir string) bool {
 		return false
 	}
 	return os.SameFile(a, b)
+}
+
+// AtomLinkShaped reports whether the first implemented_by link names a
+// METHOD ("file.go:Type.Method" -- atom subjects are always bound methods).
+// Package-level invariant/builder funcs ("file.go:checkX") have no dot in
+// the symbol and are never atoms: snapshot phrase validation and the
+// discovery merge must not treat them as atom subjects (§14 root-module
+// layout indexes only the listed atom packages, so an unresolvable
+// non-method link is normal, not an error).
+func AtomLinkShaped(links []string) bool {
+	if len(links) == 0 {
+		return false
+	}
+	return atomLinkShaped(strings.TrimSpace(links[0]))
+}
+
+func atomLinkShaped(link string) bool {
+	_, symbol, ok := ParseFileColonSymbol(link)
+	if !ok {
+		return false
+	}
+	if i := strings.LastIndexByte(symbol, '/'); i >= 0 {
+		symbol = symbol[i+1:]
+	}
+	return strings.ContainsRune(symbol, '.')
 }

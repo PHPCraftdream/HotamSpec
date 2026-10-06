@@ -129,6 +129,14 @@ func checkSelfRequirementsMatchRegistry(g *ontology.Graph) []Violation {
 	var missingFromRegistry []string
 	for id := range inGraph {
 		if _, ok := inRegistry[id]; !ok {
+			// §14 self-executing atoms are DERIVED from executed code, not
+			// registered in the hand mirror; a node carrying the atom_discovered
+			// provenance marker stamped by discovery is legitimate without a
+			// registry entry. A manual requirement merely citing an atom test
+			// path is NOT exempt.
+			if atomDerived(g, inGraph[id]) {
+				continue
+			}
 			missingFromRegistry = append(missingFromRegistry, id)
 		}
 	}
@@ -168,7 +176,8 @@ func checkSelfRequirementsMatchRegistry(g *ontology.Graph) []Violation {
 // the authoritative list — Claim, Owner, Status, Why, Assumptions,
 // Relations, Enforcement, EnforcedBy, MTag, Enforceability, Summary,
 // CreatedAt, SettledAt, SourceRefs, DeclOrder, BlockedOn, ImplementedBy,
-// VerifiedBy, SourceLinks, Coverage, ClaimTexts, AtomKind, Cases, ClauseLinks,
+// VerifiedBy, SourceLinks, Coverage, ClaimTexts, AtomKind, AtomDiscovered,
+// Cases, ClauseLinks,
 // Strength, Applicability, and Precedence) between reg (a registry entry)
 // and graphReq (the current node with the SAME ID), deliberately IGNORING
 // the event fields
@@ -209,6 +218,7 @@ func firstStructuralFieldDiff(reg, graphReq ontology.Requirement) string {
 		{"coverage", reg.Coverage, graphReq.Coverage},
 		{"claim_texts", reg.ClaimTexts, graphReq.ClaimTexts},
 		{"atom_kind", reg.AtomKind, graphReq.AtomKind},
+		{"atom_discovered", reg.AtomDiscovered, graphReq.AtomDiscovered},
 		{"cases", reg.Cases, graphReq.Cases},
 		{"clause_links", reg.ClauseLinks, graphReq.ClauseLinks},
 		{"strength", reg.Strength, graphReq.Strength},
@@ -251,3 +261,12 @@ var _ = All.MustRegister("check_self_requirements_match_registry", Invariant{
 		"Requirement nodes mechanically detectable, closing the orphan-enforcer gap check_bijection_r_to_enforcer would otherwise flag (a registered check_* function named by no SETTLED/ENFORCED requirement's enforced_by).",
 	Check: checkSelfRequirementsMatchRegistry,
 })
+
+// atomDerived reports whether r is a §14 self-executing atom via the
+// atom_discovered provenance marker stamped ONLY by discovery — not a
+// verified_by link-path heuristic — so a manual requirement citing an atom
+// test is NOT exempt from the registry bijection. The SelfExecutingAtoms gate
+// keeps a removed opt-in from exempting stale marked nodes.
+func atomDerived(g *ontology.Graph, r ontology.Requirement) bool {
+	return g.SelfExecutingAtoms && r.AtomDiscovered
+}

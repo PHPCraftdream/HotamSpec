@@ -58,6 +58,24 @@ History predating this file is not backfilled — see `git log` and
   (informational — the exit code stays 0 unless a real error occurs).
   Idempotent: a second run on an already-current domain rewrites nothing.
 
+### Self-executing atoms in self-hosting
+
+- Manifest fields `self_executing_atom_packages` and `atom_recorder_import_path`
+  opt a domain into the atom pipeline without a separate spec module: the listed
+  root-module packages are walked for atom subjects, and the recorder import
+  path is taken explicitly from the manifest instead of derived from the spec
+  module's `go.mod`.
+- The atom pipeline is generalized from `spec/model` to any listed root-module
+  package (subject walk, snapshot test discovery, discovery directory filter);
+  consumer domains with a spec module are unchanged. `hotam sync-self` now
+  merges atoms discovered by `selfspec.DiscoverAtoms` into the hand-maintained
+  registry before `SyncGraph` (overrides resolved by `implemented_by[0]`, as in
+  `sync-domain`).
+- Localization pilot atoms: `internal/localization` ships self-hosted atoms
+  (`Catalog.Supported`, `Catalog.Translated`, `MissingTranslation.Message`)
+  proven by `hotamspec.Fact`/`Holds` tests, so `domains/hotam-spec-self` runs
+  its own dogfood atoms from the root module.
+
 ### SPEC generation polish
 
 - SPEC shard paths no longer double the `spec` segment: packages under the

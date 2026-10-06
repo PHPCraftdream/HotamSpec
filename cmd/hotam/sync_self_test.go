@@ -45,6 +45,17 @@ type syncSelfFixture struct {
 // caller introduce a controlled ADDED/CHANGED divergence (see
 // syncSelfSummaryTargetID's doc comment and the ADDED-entry tests' own
 // removal of a node) before sync-self ever runs against it.
+//
+// The fixture is an honest NON-ATOM double of the real domain: the atom
+// opt-in is stripped from the manifest (copySelfDomainManifestSansLocalOptIns)
+// AND the atom-derived requirement nodes are stripped from the graph via
+// stripSelfAtomRequirements, mirroring copySelfDomainUnderRoot — so
+// cmdSyncSelf's mergeSelfAtoms is an honest no-op and no atom-pipeline
+// invariant (check_self_requirements_match_registry, check_verified_by_test_has_teeth
+// via the declared recorder path) ever fires against it. mutateGraph is
+// applied to the map BEFORE the graph is written and stripSelfAtomRequirements
+// rewrites graph.json afterwards, so the two compose (mutators target manual
+// registry IDs, never the atom IDs).
 func newSyncSelfFixture(t *testing.T, mutateGraph func(m map[string]any)) *syncSelfFixture {
 	t.Helper()
 	root := t.TempDir()
@@ -73,7 +84,8 @@ func newSyncSelfFixture(t *testing.T, mutateGraph func(m map[string]any)) *syncS
 		t.Fatalf("write graph.json: %v", err)
 	}
 
-	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
+	copySelfDomainManifestSansLocalOptIns(t, filepath.Join(domainDir, "manifest.json"))
+	stripSelfAtomRequirements(t, domainDir)
 
 	// Mirror the real internal/selfspec/*.go sources so the stale-binary
 	// guard (checkSelfspecBinaryFresh) finds byte-identical files.

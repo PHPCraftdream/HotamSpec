@@ -55,7 +55,7 @@ func (p Person) Sex() Sex { return constMale }
 
 func TestAtomValueTranslationsSubstituteInProjections(t *testing.T) {
 	root := writeAtomValueFixture(t, map[string]string{"spec/model/person.go": sexValueModel})
-	index, err := newAtomSourceIndex(root, []string{"en", "ru"}, "en", false)
+	index, err := newAtomSourceIndex(root, atomSourceOptions{languages: []string{"en", "ru"}, defaultLanguage: "en"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func (i Interest) Kind() Kind { return constSerious }
 		"spec/model/work/work.go":   work,
 		"spec/model/hobby/hobby.go": hobby,
 	})
-	index, err := newAtomSourceIndex(root, []string{"en", "ru"}, "en", false)
+	index, err := newAtomSourceIndex(root, atomSourceOptions{languages: []string{"en", "ru"}, defaultLanguage: "en"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func (t Task) Kind() hobby.Kind { return hobby.ConstSerious }
 		"spec/model/hobby/hobby.go": hobby,
 		"spec/model/work/work.go":   work,
 	})
-	index, err := newAtomSourceIndex(root, []string{"en", "ru"}, "en", false)
+	index, err := newAtomSourceIndex(root, atomSourceOptions{languages: []string{"en", "ru"}, defaultLanguage: "en"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +218,7 @@ type Person struct{}
 func (p Person) Sex() Sex { return constMale }
 `
 	root := writeAtomValueFixture(t, map[string]string{"spec/model/person.go": source})
-	_, err := newAtomSourceIndex(root, []string{"en", "ru"}, "en", false)
+	_, err := newAtomSourceIndex(root, atomSourceOptions{languages: []string{"en", "ru"}, defaultLanguage: "en"})
 	if err == nil {
 		t.Fatal("constant with incomplete language coverage accepted")
 	}
@@ -242,7 +242,7 @@ func TestAtomValueUnknownAndDuplicateConstantBlocksRejected(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			source := "package model\n\ntype Sex string\n\n" + tc.doc + "const constMale Sex = \"М\"\n"
 			root := writeAtomValueFixture(t, map[string]string{"spec/model/person.go": source})
-			_, err := newAtomSourceIndex(root, []string{"en", "ru"}, "en", false)
+			_, err := newAtomSourceIndex(root, atomSourceOptions{languages: []string{"en", "ru"}, defaultLanguage: "en"})
 			if err == nil {
 				t.Fatal("invalid constant language blocks accepted")
 			}
@@ -272,7 +272,7 @@ type Person struct{}
 func (p Person) Sex() Sex { return constMale }
 `
 	root := writeAtomValueFixture(t, map[string]string{"spec/model/person.go": source})
-	index, err := newAtomSourceIndex(root, []string{"en", "ru"}, "en", false)
+	index, err := newAtomSourceIndex(root, atomSourceOptions{languages: []string{"en", "ru"}, defaultLanguage: "en"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -301,7 +301,7 @@ type Person struct{}
 func (p Person) Sex() Sex { return constMale }
 `
 	root := writeAtomValueFixture(t, map[string]string{"spec/model/person.go": source})
-	index, err := newAtomSourceIndex(root, []string{"en", "ru"}, "en", false)
+	index, err := newAtomSourceIndex(root, atomSourceOptions{languages: []string{"en", "ru"}, defaultLanguage: "en"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -379,7 +379,7 @@ func (p Person) Age() int { return 7 }
 func (p Person) Adult() bool { return p.adult }
 `
 	root := writeAtomValueFixture(t, map[string]string{"spec/model/person.go": source})
-	index, err := newAtomSourceIndex(root, []string{"en", "ru"}, "en", false)
+	index, err := newAtomSourceIndex(root, atomSourceOptions{languages: []string{"en", "ru"}, defaultLanguage: "en"})
 	if err != nil {
 		t.Fatal(err)
 	}

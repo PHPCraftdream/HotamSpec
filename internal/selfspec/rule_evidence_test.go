@@ -43,7 +43,7 @@ func TestRuleHold(t *testing.T) {
 	hotamspec.Holds(t, box.Valid, support, hotamspec.WithCase(holdContext))
 }
 `)
-	discovered, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	discovered, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err != nil {
 		t.Fatal(err)
 	}

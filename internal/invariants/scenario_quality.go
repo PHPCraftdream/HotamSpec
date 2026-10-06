@@ -175,7 +175,21 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 	var out []Violation
 	var atomIndex *gate.AtomSourceIndex
 	var atomRuns map[string]gate.RecordingResult
+	needAtomSnapshot := false
 	if g.SelfExecutingAtoms {
+		for _, r := range g.Requirements {
+			for _, e := range parseSpecEntries(r.VerifiedBy) {
+				if e.ok && strings.HasPrefix(e.symbol, "Test") && fileInAtomPackages(e.file, g.SelfExecutingAtomPackages) {
+					needAtomSnapshot = true
+					break
+				}
+			}
+			if needAtomSnapshot {
+				break
+			}
+		}
+	}
+	if g.SelfExecutingAtoms && (len(g.SelfExecutingAtomPackages) == 0 || needAtomSnapshot) {
 		_, snapshot, err := InvocationExecutionSnapshot(g)
 		if err != nil {
 			return []Violation{{Check: "check_scenario_quality", ID: specRoot, Message: err.Error()}}
@@ -198,7 +212,7 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 			if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
 				continue
 			}
-			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
+			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil || !result.Found || !result.HasScenario {
 				continue
 			}
@@ -215,7 +229,7 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 		var diagnostics []string
 		for _, e := range scenarioEntries {
 			var result gate.RecordingResult
-			if g.SelfExecutingAtoms {
+			if g.SelfExecutingAtoms && (len(g.SelfExecutingAtomPackages) == 0 || fileInAtomPackages(e.file, g.SelfExecutingAtomPackages)) {
 				key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(e.file)))
 				var exists bool
 				result, exists = atomRuns[key]

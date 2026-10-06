@@ -2347,6 +2347,86 @@
       "decl_order": 59
     },
     {
+      "id": "R-catalog-supported",
+      "claim": "The catalog covers the language.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "",
+      "assumptions": null,
+      "relations": null,
+      "enforcement": "ENFORCED",
+      "enforced_by": null,
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": null,
+      "history": [
+        {
+          "at": "2026-10-05",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-10-06",
+          "summary": "field AtomDiscovered: false -> true",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 1,
+      "implemented_by": [
+        "internal/localization/atoms.go:Catalog.Supported"
+      ],
+      "verified_by": [
+        "internal/localization/atoms_test.go:TestAtomCatalogSupported"
+      ],
+      "atom_discovered": true
+    },
+    {
+      "id": "R-catalog-translated",
+      "claim": "The template has an authored translation.",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "",
+      "assumptions": null,
+      "relations": null,
+      "enforcement": "ENFORCED",
+      "enforced_by": null,
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": null,
+      "history": [
+        {
+          "at": "2026-10-05",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-10-06",
+          "summary": "field AtomDiscovered: false -> true",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 2,
+      "implemented_by": [
+        "internal/localization/atoms.go:Catalog.Translated"
+      ],
+      "verified_by": [
+        "internal/localization/atoms_test.go:TestAtomCatalogTranslated"
+      ],
+      "atom_discovered": true
+    },
+    {
       "id": "R-check-method-is-atomic",
       "claim": "Each `check_*` invariant shall enforce exactly one rule, with multi-rule enforcers split into separate `check_*` functions.",
       "owner": "framework-reviewer",
@@ -8797,6 +8877,46 @@
         }
       ],
       "decl_order": 172
+    },
+    {
+      "id": "R-missing-translation-message",
+      "claim": "The missing-translation error names the locale and template — missing authored translation for locale \"de\" and template \"## Status\".",
+      "owner": "framework-author",
+      "status": "SETTLED",
+      "why": "",
+      "assumptions": null,
+      "relations": null,
+      "enforcement": "ENFORCED",
+      "enforced_by": null,
+      "m_tag": "",
+      "enforceability": "ENFORCEABLE",
+      "summary": "",
+      "created_at": "",
+      "settled_at": "",
+      "last_reviewed_at": "",
+      "review_after": "",
+      "evidence": null,
+      "source_refs": null,
+      "history": [
+        {
+          "at": "2026-10-05",
+          "summary": "created via sync-self",
+          "decided_by": ""
+        },
+        {
+          "at": "2026-10-06",
+          "summary": "field AtomDiscovered: false -> true",
+          "decided_by": ""
+        }
+      ],
+      "decl_order": 3,
+      "implemented_by": [
+        "internal/localization/atoms.go:MissingTranslation.Message"
+      ],
+      "verified_by": [
+        "internal/localization/atoms_test.go:TestAtomMissingTranslationMessage"
+      ],
+      "atom_discovered": true
     },
     {
       "id": "R-no-hand-edit-graph",

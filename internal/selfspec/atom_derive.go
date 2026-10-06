@@ -22,8 +22,10 @@ import (
 // records each authored model package once. Rule/case artifacts additionally
 // require `conformance.rule_cases`; that permission never enables scanning.
 // Registry values provide identity, lifecycle, and authored metadata overrides.
-func DiscoverAtoms(specRoot string, overrides *registry.Registry[ontology.Requirement]) (*registry.Registry[ontology.Requirement], error) {
-	manifest, err := loader.LoadManifest(filepath.Join(specRoot, "manifest.json"))
+// specRoot indexes Go source (engine root for self-hosting domains); the
+// manifest.json itself lives next to the graph, in domainDir.
+func DiscoverAtoms(specRoot, domainDir string, overrides *registry.Registry[ontology.Requirement]) (*registry.Registry[ontology.Requirement], error) {
+	manifest, err := loader.LoadManifest(filepath.Join(domainDir, "manifest.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +35,12 @@ func DiscoverAtoms(specRoot string, overrides *registry.Registry[ontology.Requir
 	sourceGraph := &ontology.Graph{
 		DomainDir: specRoot, SelfHosting: manifest.SelfHosting,
 		SelfExecutingAtoms: true,
-		Languages:          manifest.Languages, DefaultLanguage: manifest.DefaultLanguage,
+		// §14 root-module opt-in: the package list and explicit recorder
+		// import path drive the source index layout (empty list = consumer
+		// spec/model layout, unchanged).
+		SelfExecutingAtomPackages: manifest.SelfExecutingAtomPackages,
+		AtomRecorderImportPath:    manifest.AtomRecorderImportPath,
+		Languages:                 manifest.Languages, DefaultLanguage: manifest.DefaultLanguage,
 		Conformance: manifest.Conformance,
 	}
 	snapshot, err := gate.CollectAtomExecutionSnapshot(sourceGraph)
@@ -45,8 +52,8 @@ func DiscoverAtoms(specRoot string, overrides *registry.Registry[ontology.Requir
 
 // DiscoverAtomsFromSnapshot projects recorder output already collected for
 // this invocation; it never starts another package run.
-func DiscoverAtomsFromSnapshot(specRoot string, overrides *registry.Registry[ontology.Requirement], snapshot *gate.AtomExecutionSnapshot) (*registry.Registry[ontology.Requirement], error) {
-	manifest, err := loader.LoadManifest(filepath.Join(specRoot, "manifest.json"))
+func DiscoverAtomsFromSnapshot(specRoot, domainDir string, overrides *registry.Registry[ontology.Requirement], snapshot *gate.AtomExecutionSnapshot) (*registry.Registry[ontology.Requirement], error) {
+	manifest, err := loader.LoadManifest(filepath.Join(domainDir, "manifest.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +108,7 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 	hasRuleCaseOption := false
 	dirs := make([]string, 0, len(snapshot.TestFiles))
 	for dir := range snapshot.TestFiles {
-		if dir == "spec/model" || strings.HasPrefix(dir, "spec/model/") {
+		if snapshotDirAllowed(dir, manifest.SelfExecutingAtomPackages) {
 			dirs = append(dirs, dir)
 		}
 	}
@@ -140,7 +147,11 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 				if imp.Name != nil {
 					name = imp.Name.Name
 				}
-				if value == sources.RecorderImportPath {
+				recorderPath := sources.RecorderImportPath
+				if recorderPath == "" {
+					recorderPath = manifest.AtomRecorderImportPath
+				}
+				if value == recorderPath {
 					recorderAliases[name] = true
 				}
 				if value == "testing" {
@@ -287,6 +298,10 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 				Why: defaults.Why, CreatedAt: defaults.CreatedAt, SettledAt: defaults.SettledAt,
 				ImplementedBy: links, VerifiedBy: []string{file + ":" + rootTest},
 				Enforcement: "ENFORCED", Enforceability: "ENFORCEABLE",
+				// Provenance marker: ONLY discovery sets this; the registry-
+				// override merge below overrides specific fields but never
+				// resets it, so the marker survives renames/overrides.
+				AtomDiscovered: true,
 			}
 			if len(manifest.Languages) > 0 {
 				r.ClaimTexts = claimTexts
@@ -482,11 +497,34 @@ func discoverAtomsFromSnapshot(specRoot string, manifest *loader.DomainManifest,
 				return nil, fmt.Errorf("rejected requirement %s still has an executed atom", o.ID)
 			}
 			out.MustRegister(o.ID, o)
-		} else if !usedOverrides[o.ID] {
+		} else if usedOverrides[o.ID] {
+			continue
+		} else if gate.AtomLinkShaped(o.ImplementedBy) {
 			return nil, fmt.Errorf("registry override %s has no executed atom; method renames require explicit REJECTED/replaces", o.ID)
+		} else {
+			// Hand-authored requirement (self-hosting pilot): legacy
+			// entries implement via package-level invariant funcs (no
+			// method dot) and pass through unchanged; only overrides whose
+			// implemented_by names a method must keep an executed atom.
+			out.MustRegister(o.ID, o)
 		}
 	}
 	return out, nil
+}
+
+// snapshotDirAllowed filters snapshot package dirs: the consumer spec/model
+// layout when no root-module package list is declared, otherwise only the
+// listed packages (recursively). An empty list keeps the old filter verbatim.
+func snapshotDirAllowed(dir string, packages []string) bool {
+	if len(packages) == 0 {
+		return dir == "spec/model" || strings.HasPrefix(dir, "spec/model/")
+	}
+	for _, pkg := range packages {
+		if dir == pkg || strings.HasPrefix(dir, pkg+"/") {
+			return true
+		}
+	}
+	return false
 }
 
 func appendUnique(dst []string, values ...string) []string {

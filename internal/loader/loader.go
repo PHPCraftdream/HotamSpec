@@ -126,6 +126,8 @@ func loadGraph(path string, codeProjection bool) (*ontology.Graph, error) {
 	}
 	if manifest, manifestErr := LoadManifest(filepath.Join(filepath.Dir(path), "manifest.json")); manifestErr == nil {
 		g.SelfExecutingAtoms = manifest.SelfExecutingAtoms
+		g.SelfExecutingAtomPackages = append([]string(nil), manifest.SelfExecutingAtomPackages...)
+		g.AtomRecorderImportPath = manifest.AtomRecorderImportPath
 		g.SpecificationSources = manifest.SpecificationSources
 		g.Languages = append([]string(nil), manifest.Languages...)
 		g.DefaultLanguage = manifest.DefaultLanguage

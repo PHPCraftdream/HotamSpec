@@ -111,7 +111,7 @@ func cmdSyncDomain(args []string) error {
 		return fmt.Errorf("sync-domain: load working graph: %w", err)
 	}
 	if before.SelfExecutingAtoms {
-		reg, err = selfspec.DiscoverAtoms(gate.SpecRootForGraph(before), reg)
+		reg, err = selfspec.DiscoverAtoms(gate.SpecRootForGraph(before), before.DomainDir, reg)
 		if err != nil {
 			return fmt.Errorf("sync-domain: discover atoms: %w", err)
 		}

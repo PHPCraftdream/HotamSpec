@@ -832,7 +832,7 @@ func addSecondDomain(t *testing.T, projectRoot, domainName string) string {
 		t.Fatalf("mkdir second domain: %v", err)
 	}
 	copyFile(t, selfDomainGraph, filepath.Join(domainDir, "graph.json"))
-	copySelfDomainManifestSansOrientationFAQ(t, filepath.Join(domainDir, "manifest.json"))
+	copySelfDomainManifestSansLocalOptIns(t, filepath.Join(domainDir, "manifest.json"))
 	// task #350/RAC-B3: applyToGraph now refuses ProposedRequirement/
 	// ProposedRejection when the target graph's manifest says
 	// self_hosting: true — this fixture is a copy of the real hotam-spec-

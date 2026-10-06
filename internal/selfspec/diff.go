@@ -26,8 +26,8 @@ type FieldDiff struct {
 // Claim, Owner, Status, Why, Assumptions, Relations, Enforcement,
 // EnforcedBy, MTag, Enforceability, Summary, CreatedAt, SettledAt,
 // SourceRefs, DeclOrder, BlockedOn, ImplementedBy, VerifiedBy, SourceLinks,
-// Coverage, ClaimTexts, AtomKind, Cases, ClauseLinks, Strength,
-// Applicability, and Precedence.
+// Coverage, ClaimTexts, AtomKind, AtomDiscovered, Cases, ClauseLinks,
+// Strength, Applicability, and Precedence.
 //
 // Deliberately excluded: the EVENT fields MergeIntoGraph passes through
 // untouched — History, GateSignoffs, LastReviewedAt, ReviewAfter, Evidence.
@@ -82,6 +82,7 @@ func StructuralFieldDiffs(reg, graph ontology.Requirement) []FieldDiff {
 		{"Coverage", reg.Coverage, graph.Coverage},
 		{"ClaimTexts", reg.ClaimTexts, graph.ClaimTexts},
 		{"AtomKind", reg.AtomKind, graph.AtomKind},
+		{"AtomDiscovered", reg.AtomDiscovered, graph.AtomDiscovered},
 		{"Cases", reg.Cases, graph.Cases},
 		{"ClauseLinks", reg.ClauseLinks, graph.ClauseLinks},
 		{"Strength", reg.Strength, graph.Strength},

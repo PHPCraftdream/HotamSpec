@@ -106,8 +106,20 @@ type DomainManifest struct {
 	// (ResolveDomainPresentation.Director).
 	Director string `json:"director,omitempty"`
 
-	SelfExecutingAtoms bool          `json:"self_executing_atoms,omitempty"`
-	AtomDefaults       *AtomDefaults `json:"atom_defaults,omitempty"`
+	SelfExecutingAtoms bool `json:"self_executing_atoms,omitempty"`
+	// SelfExecutingAtomPackages opts the atom pipeline into the ROOT-module
+	// layout (§14): an explicit list of package directories relative to the
+	// repository root (e.g. ["internal/localization"]). When set,
+	// newAtomSourceIndex reads the ROOT go.mod, walks these directories for
+	// atom subjects/constants instead of spec/model, and takes the recorder
+	// import path from AtomRecorderImportPath. Absent: consumer layout
+	// (spec/go.mod + spec/model) unchanged.
+	SelfExecutingAtomPackages []string `json:"self_executing_atom_packages,omitempty"`
+	// AtomRecorderImportPath is the explicit recorder import path
+	// (§14: "RecorderImportPath задаётся явно в манифесте"); required when
+	// SelfExecutingAtomPackages is set.
+	AtomRecorderImportPath string        `json:"atom_recorder_import_path,omitempty"`
+	AtomDefaults           *AtomDefaults `json:"atom_defaults,omitempty"`
 	// Languages declares the domain's language projections. Nil preserves the
 	// legacy single-language mode; a present list must be non-empty and valid.
 	Languages []string `json:"languages,omitempty"`

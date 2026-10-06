@@ -3,6 +3,7 @@ package invariants
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
@@ -417,6 +418,27 @@ func TestCheckScenarioQuality_NoOpForNonSettled(t *testing.T) {
 	vs := runCheck(t, "check_scenario_quality", g)
 	if len(vs) != 0 {
 		t.Fatalf("expected zero violations for a DRAFT (non-SETTLED) requirement, got %+v", vs)
+	}
+}
+
+func TestCheckScenarioQuality_OutsideDeclaredAtomPackageUsesLegacyRecording(t *testing.T) {
+	if testing.Short() {
+		t.Skip("compiles real scenario test binaries through the compile cache; skipped in -short")
+	}
+	t.Parallel()
+	modulePath := "example.com/scenariooutside"
+	src := sprintfSrc(scenarioQualityEmptyTitleSrc, modulePath)
+	domainDir := writeScenarioQualityFixture(t, modulePath, "model", src)
+	r := settledReqWithVerified("R-1", "sa", []string{"spec/model/impl_test.go:TestEmptyTitle"})
+	g := scenarioQualityGraph(domainDir, true, r)
+	g.SelfExecutingAtoms = true
+	g.SelfExecutingAtomPackages = []string{"internal/localization"}
+	vs := runCheck(t, "check_scenario_quality", g)
+	if len(vs) != 1 {
+		t.Fatalf("expected the legacy recording path to inspect the scenario and report its empty title, got %+v", vs)
+	}
+	if !strings.Contains(vs[0].Message, "rule 1") {
+		t.Fatalf("expected scenario-quality failure, not a missing-snapshot failure: %+v", vs[0])
 	}
 }
 

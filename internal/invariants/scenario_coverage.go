@@ -247,7 +247,30 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 		return out
 	}
 
-	if g.SelfExecutingAtoms {
+	// P1-1b (§14 root-module split): when the graph declares atom packages,
+	// only implemented_by entries INSIDE those packages are proven via the
+	// atom execution snapshot; every other (hand-written, manual)
+	// requirement keeps the legacy real-coverage path -- its tests are plain
+	// go tests with no recorded hotamspec steps, so the snapshot could never
+	// prove them. With no declared packages (consumer spec-module domains)
+	// every job still goes to the snapshot path -- byte-identical behavior.
+	var atomJobs, manualJobs []job
+	switch {
+	case !g.SelfExecutingAtoms:
+		manualJobs = jobs
+	case len(g.SelfExecutingAtomPackages) == 0:
+		atomJobs = jobs
+	default:
+		for _, j := range jobs {
+			if implFileInAtomPackages(j.implRaw, g.SelfExecutingAtomPackages) {
+				atomJobs = append(atomJobs, j)
+			} else {
+				manualJobs = append(manualJobs, j)
+			}
+		}
+	}
+
+	if len(atomJobs) > 0 {
 		_, snapshot, err := InvocationExecutionSnapshot(g)
 		if err != nil {
 			return append(out, Violation{Check: "check_scenario_executes_impl", ID: specRoot, Message: err.Error()})
@@ -255,7 +278,7 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 		if snapshot.SourceErr != nil {
 			return append(out, Violation{Check: "check_scenario_executes_impl", ID: specRoot, Message: snapshot.SourceErr.Error()})
 		}
-		for _, j := range jobs {
+		for _, j := range atomJobs {
 			proven, skipped := false, false
 			for _, test := range j.tests {
 				key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(test.file)))
@@ -284,13 +307,16 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 					Message: fmt.Sprintf("implemented_by entry %q has no passing executed method subject in its declared tests", j.implRaw)})
 			}
 		}
+	}
+
+	if len(manualJobs) == 0 {
 		return out
 	}
 
 	sem := make(chan struct{}, runExecWorkers)
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	for _, j := range jobs {
+	for _, j := range manualJobs {
 		wg.Add(1)
 		sem <- struct{}{}
 		go func(j job) {
@@ -307,6 +333,24 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 	wg.Wait()
 
 	return out
+}
+
+// implFileInAtomPackages reports whether a "file:symbol" implemented_by
+// entry's file lives inside one of the declared atom packages
+// (path == pkg or pkg+"/" prefix).
+func implFileInAtomPackages(implRaw string, pkgs []string) bool {
+	file, _, ok := gate.ParseFileColonSymbol(implRaw)
+	if !ok {
+		return false
+	}
+	file = filepath.ToSlash(filepath.FromSlash(file))
+	for _, pkg := range pkgs {
+		pkg = strings.TrimSuffix(filepath.ToSlash(filepath.FromSlash(pkg)), "/")
+		if file == pkg || strings.HasPrefix(file, pkg+"/") {
+			return true
+		}
+	}
+	return false
 }
 
 // eligibleVerifiedByEntries mirrors collectVerifiedByTestJobs' own

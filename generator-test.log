@@ -1,0 +1,820 @@
+panic: test timed out after 10m0s
+	running tests:
+		TestComputeCrystalCharCountFixpoint_RealDomainGraph (7m49s)
+		TestGenSpec_SmokeOnRealDomain (8m3s)
+		TestGenerator_DoubleRegenerateIsIdentical (8m0s)
+		TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty (8m3s)
+
+goroutine 6469 [running]:
+testing.(*M).startAlarm.func1()
+	C:/Program Files/Go/src/testing/testing.go:2802 +0x34b
+created by time.goFunc
+	C:/Program Files/Go/src/time/sleep.go:215 +0x2d
+
+goroutine 1 [chan receive, 7 minutes]:
+testing.tRunner.func1()
+	C:/Program Files/Go/src/testing/testing.go:1993 +0x431
+testing.tRunner(0x2be15fa8ec00, 0x2be15fab5c58)
+	C:/Program Files/Go/src/testing/testing.go:2042 +0xfc
+testing.runTests({0x7ff7c212d711, 0x22}, {0x7ff7c213df45, 0x35}, 0x2be15f992108, {0x7ff7c25004e0, 0xb1, 0xb1}, {0xc2a92d47a4c783e0, 0x8bb3768a11, ...})
+	C:/Program Files/Go/src/testing/testing.go:2583 +0x4f0
+testing.(*M).Run(0x2be15fb2eaa0)
+	C:/Program Files/Go/src/testing/testing.go:2443 +0x6ac
+main.main()
+	_testmain.go:398 +0x9b
+
+goroutine 31 [sync.WaitGroup.Wait, 7 minutes]:
+sync.runtime_SemacquireWaitGroup(0x2be161696e80?, 0x20?)
+	C:/Program Files/Go/src/runtime/sema.go:114 +0x2e
+sync.(*WaitGroup).Wait(0x2be1615a76c0)
+	C:/Program Files/Go/src/sync/waitgroup.go:206 +0x85
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations(0x2be164c96b40, {0x2be1626f5808?, 0x7ff7c2502a60?, 0x7ff7c2116510?}, {0x2be1615a76b0, 0xa})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:209 +0x6aa
+github.com/PHPCraftdream/HotamSpec/internal/invariants.AllViolations.func1(0x2be164c96b40)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:44 +0x190
+github.com/PHPCraftdream/HotamSpec/internal/invariants.withGraphInvocation(...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/invocation_snapshot.go:34
+github.com/PHPCraftdream/HotamSpec/internal/invariants.AllViolations(0x2be1605a9680)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:43 +0xfd
+github.com/PHPCraftdream/HotamSpec/internal/generator.BuildLiveState(0x2be1605a9680, {0x7ff7c211a3c2, 0xf}, 0x6bfe, {0x7ff7c211601a, 0xa})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/livestate.go:42 +0x34
+github.com/PHPCraftdream/HotamSpec/internal/generator.TestGenSpec_SmokeOnRealDomain.func10(0x2be15fc98000?)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/byteidentical_test.go:159 +0x31
+github.com/PHPCraftdream/HotamSpec/internal/generator.TestGenSpec_SmokeOnRealDomain(0x2be15fb4e600)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/byteidentical_test.go:162 +0x222
+testing.tRunner(0x2be15fb4e600, 0x7ff7c222dba8)
+	C:/Program Files/Go/src/testing/testing.go:2036 +0xc3
+created by testing.(*T).Run in goroutine 1
+	C:/Program Files/Go/src/testing/testing.go:2101 +0x4a9
+
+goroutine 32 [sync.WaitGroup.Wait, 7 minutes]:
+sync.runtime_SemacquireWaitGroup(0x2be161d9ce80?, 0x0?)
+	C:/Program Files/Go/src/runtime/sema.go:114 +0x2e
+sync.(*WaitGroup).Wait(0x2be16172b7c0)
+	C:/Program Files/Go/src/sync/waitgroup.go:206 +0x85
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations(0x2be160cf8960, {0x2be160fa0808?, 0x7ff7c2502a60?, 0x7ff7c2116510?}, {0x2be16172b7b0, 0xa})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:209 +0x6aa
+github.com/PHPCraftdream/HotamSpec/internal/invariants.AllViolations.func1(0x2be160cf8960)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:44 +0x190
+github.com/PHPCraftdream/HotamSpec/internal/invariants.withGraphInvocation(...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/invocation_snapshot.go:34
+github.com/PHPCraftdream/HotamSpec/internal/invariants.AllViolations(0x2be16190c3c0)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:43 +0xfd
+github.com/PHPCraftdream/HotamSpec/internal/generator.BuildLiveState(0x2be16190c3c0, {0x7ff7c211a3c2, 0xf}, 0x6bfe, {0x7ff7c211601a, 0xa})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/livestate.go:42 +0x34
+github.com/PHPCraftdream/HotamSpec/internal/generator.renderBusinessContentWithViolations(0x2be16190c3c0, {0x7ff7c211a3c2, 0xf}, {0x2be160044780, 0x5b}, 0x0?, 0x0, {0x7ff7c211601a, 0xa}, 0x0, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/claudemd.go:1038 +0x128
+github.com/PHPCraftdream/HotamSpec/internal/generator.RenderClaudeMDFromTemplateWithViolations(0x2be16190c3c0, {0x7ff7c211a3c2, 0xf}, {0x2be160044780, 0x5b}, 0x6bfe, 0x0, {0x7ff7c211601a, 0xa}, 0x0, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/claudemd.go:1155 +0x14f
+github.com/PHPCraftdream/HotamSpec/internal/generator.RenderClaudeMDFromTemplate(...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/claudemd.go:1122
+github.com/PHPCraftdream/HotamSpec/internal/generator.TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty.func10(0x2be16190c3c0?)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/byteidentical_test.go:220 +0x50
+github.com/PHPCraftdream/HotamSpec/internal/generator.TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty.func13(0x2be1612b6000?, 0x0?, {{0x7ff7c21150f2?, 0x7ff7c2410338?}, 0x2be160da8df8?}, 0x2be161445d08, 0x7ff7c1d8bf0e?)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/byteidentical_test.go:237 +0x6f
+github.com/PHPCraftdream/HotamSpec/internal/generator.TestSmoke_EveryBuildTemplateOnRealDomainNoPanicNoEmpty(0x2be15fb4e800)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/byteidentical_test.go:238 +0x305
+testing.tRunner(0x2be15fb4e800, 0x7ff7c222de18)
+	C:/Program Files/Go/src/testing/testing.go:2036 +0xc3
+created by testing.(*T).Run in goroutine 1
+	C:/Program Files/Go/src/testing/testing.go:2101 +0x4a9
+
+goroutine 6430 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be160f11a70?, 0x2be160f11aa8?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x80?, {0x2be160f11a70?, 0x0?, 0x19d0?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.readFile(0x6dc, {0x2be15fb22000?, 0x200, 0x7ff7c1de7c5f?}, 0x7ff7c20a78e0?, 0x7ff7c1de7cd7?)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1030 +0xba
+syscall.ReadFile(...)
+	C:/Program Files/Go/src/syscall/syscall_windows.go:510
+internal/poll.(*FD).Read.func1(0x7ff7c24f5940?)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:572 +0x4a
+internal/poll.(*FD).execIO(0x2be162d409c0, 0x72, 0x2be160f11c90)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:290 +0x2c9
+internal/poll.(*FD).Read(0x2be162d409c0, {0x2be15fb22000, 0x200, 0x200})
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:571 +0x290
+os.(*File).read(...)
+	C:/Program Files/Go/src/os/file_posix.go:29
+os.(*File).Read(0x2be15fd86228, {0x2be15fb22000?, 0x2be160f11d48?, 0x0?})
+	C:/Program Files/Go/src/os/file.go:144 +0x4f
+bytes.(*Buffer).ReadFrom(0x2be15fe34120, {0x7ff7c22327e8, 0x2be15fd86228})
+	C:/Program Files/Go/src/bytes/buffer.go:229 +0x98
+io.copyBuffer({0x7ff7c22329c0, 0x2be15fe34120}, {0x7ff7c22327e8, 0x2be15fd86228}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:415 +0x151
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os.genericWriteTo(0x0?, {0x7ff7c22329c0?, 0x2be15fe34120?})
+	C:/Program Files/Go/src/os/file.go:295 +0x35
+os.(*File).WriteTo(0x7ff7c24f0130?, {0x7ff7c22329c0?, 0x2be15fe34120?})
+	C:/Program Files/Go/src/os/file.go:273 +0x49
+io.copyBuffer({0x7ff7c22329c0, 0x2be15fe34120}, {0x7ff7c2232900, 0x2be15fd86228}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:411 +0x9d
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	C:/Program Files/Go/src/os/exec/exec.go:602 +0x34
+os/exec.(*Cmd).Start.func2(0x2be160601180?)
+	C:/Program Files/Go/src/os/exec/exec.go:757 +0x2c
+created by os/exec.(*Cmd).Start in goroutine 6429
+	C:/Program Files/Go/src/os/exec/exec.go:756 +0x9c5
+
+goroutine 6431 [select]:
+os/exec.(*Cmd).watchCtx(0x2be15fe50680, 0x2be162d5e0e0)
+	C:/Program Files/Go/src/os/exec/exec.go:797 +0xb1
+created by os/exec.(*Cmd).Start in goroutine 6429
+	C:/Program Files/Go/src/os/exec/exec.go:783 +0x989
+
+goroutine 6524 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be164b57a70?, 0x2be1607ba3c0?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x2be15feb9990?, {0x2be164b57a70?, 0x0?, 0x19d1?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.readFile(0x544, {0x2be164c04000?, 0x200, 0x7ff7c1d259c9?}, 0x7ff7c20a78e0?, 0x4a?)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1030 +0xba
+syscall.ReadFile(...)
+	C:/Program Files/Go/src/syscall/syscall_windows.go:510
+internal/poll.(*FD).Read.func1(0x7ff7c24f5940?)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:572 +0x4a
+internal/poll.(*FD).execIO(0x2be162e8ad80, 0x72, 0x2be164b57c90)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:290 +0x2c9
+internal/poll.(*FD).Read(0x2be162e8ad80, {0x2be164c04000, 0x200, 0x200})
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:571 +0x290
+os.(*File).read(...)
+	C:/Program Files/Go/src/os/file_posix.go:29
+os.(*File).Read(0x2be15fac4a40, {0x2be164c04000?, 0x0?, 0x0?})
+	C:/Program Files/Go/src/os/file.go:144 +0x4f
+bytes.(*Buffer).ReadFrom(0x2be161f7c180, {0x7ff7c22327e8, 0x2be15fac4a40})
+	C:/Program Files/Go/src/bytes/buffer.go:229 +0x98
+io.copyBuffer({0x7ff7c22329c0, 0x2be161f7c180}, {0x7ff7c22327e8, 0x2be15fac4a40}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:415 +0x151
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os.genericWriteTo(0x0?, {0x7ff7c22329c0?, 0x2be161f7c180?})
+	C:/Program Files/Go/src/os/file.go:295 +0x35
+os.(*File).WriteTo(0x7ff7c24f0130?, {0x7ff7c22329c0?, 0x2be161f7c180?})
+	C:/Program Files/Go/src/os/file.go:273 +0x49
+io.copyBuffer({0x7ff7c22329c0, 0x2be161f7c180}, {0x7ff7c2232900, 0x2be15fac4a40}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:411 +0x9d
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	C:/Program Files/Go/src/os/exec/exec.go:602 +0x34
+os/exec.(*Cmd).Start.func2(0x2?)
+	C:/Program Files/Go/src/os/exec/exec.go:757 +0x2c
+created by os/exec.(*Cmd).Start in goroutine 6369
+	C:/Program Files/Go/src/os/exec/exec.go:756 +0x9c5
+
+goroutine 102 [sync.WaitGroup.Wait, 7 minutes]:
+sync.runtime_SemacquireWaitGroup(0x2be16009ec00?, 0x40?)
+	C:/Program Files/Go/src/runtime/sema.go:114 +0x2e
+sync.(*WaitGroup).Wait(0x2be161150390)
+	C:/Program Files/Go/src/sync/waitgroup.go:206 +0x85
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations(0x2be164c97a40, {0x2be161621008?, 0x7ff7c2502a60?, 0x7ff7c2116510?}, {0x2be161150380, 0xa})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:209 +0x6aa
+github.com/PHPCraftdream/HotamSpec/internal/invariants.AllViolations.func1(0x2be164c97a40)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:44 +0x190
+github.com/PHPCraftdream/HotamSpec/internal/invariants.withGraphInvocation(...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/invocation_snapshot.go:34
+github.com/PHPCraftdream/HotamSpec/internal/invariants.AllViolations(0x2be1608c23c0)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:43 +0xfd
+github.com/PHPCraftdream/HotamSpec/internal/generator.BuildLiveState(0x2be1608c23c0, {0x7ff7c211a3c2, 0xf}, 0x0, {0x7ff7c211601a, 0xa})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/livestate.go:42 +0x34
+github.com/PHPCraftdream/HotamSpec/internal/generator.renderBusinessContentWithViolations(0x2be1608c23c0, {0x7ff7c211a3c2, 0xf}, {0x2be161ce82a0, 0x59}, 0x0?, 0x0, {0x7ff7c211601a, 0xa}, 0x0, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/claudemd.go:1038 +0x128
+github.com/PHPCraftdream/HotamSpec/internal/generator.RenderClaudeMDFromTemplateWithViolations(0x2be1608c23c0, {0x7ff7c211a3c2, 0xf}, {0x2be161ce82a0, 0x59}, 0x0, 0x0, {0x7ff7c211601a, 0xa}, 0x0, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/claudemd.go:1155 +0x14f
+github.com/PHPCraftdream/HotamSpec/internal/generator.ComputeCrystalCharCountFixpointWithViolations(0x2be1608c23c0, {0x7ff7c211a3c2, 0xf}, {0x2be161ce82a0, 0x59}, 0x0, {0x7ff7c211601a, 0xa}, 0x0, 0x0, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/claudemd.go:1283 +0x110
+github.com/PHPCraftdream/HotamSpec/internal/generator.ComputeCrystalCharCountFixpoint(...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/claudemd.go:1271
+github.com/PHPCraftdream/HotamSpec/internal/generator.TestComputeCrystalCharCountFixpoint_RealDomainGraph(0x2be15fbfe200)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/claudemd_fixpoint_test.go:69 +0xfc
+testing.tRunner(0x2be15fbfe200, 0x7ff7c222daf8)
+	C:/Program Files/Go/src/testing/testing.go:2036 +0xc3
+created by testing.(*T).Run in goroutine 1
+	C:/Program Files/Go/src/testing/testing.go:2101 +0x4a9
+
+goroutine 11 [sync.WaitGroup.Wait, 7 minutes]:
+sync.runtime_SemacquireWaitGroup(0x2be164b5ad00?, 0x40?)
+	C:/Program Files/Go/src/runtime/sema.go:114 +0x2e
+sync.(*WaitGroup).Wait(0x2be1613f59a0)
+	C:/Program Files/Go/src/sync/waitgroup.go:206 +0x85
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations(0x2be1604c21e0, {0x2be1649e6008?, 0x7ff7c2502a60?, 0x7ff7c2116510?}, {0x2be1613f5990, 0xa})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:209 +0x6aa
+github.com/PHPCraftdream/HotamSpec/internal/invariants.AllViolations.func1(0x2be1604c21e0)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:44 +0x190
+github.com/PHPCraftdream/HotamSpec/internal/invariants.withGraphInvocation(...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/invocation_snapshot.go:34
+github.com/PHPCraftdream/HotamSpec/internal/invariants.AllViolations(0x2be1631a6000)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:43 +0xfd
+github.com/PHPCraftdream/HotamSpec/internal/generator.BuildLiveState(0x2be1631a6000, {0x7ff7c211a3c2, 0xf}, 0x3e8, {0x7ff7c211601a, 0xa})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/livestate.go:42 +0x34
+github.com/PHPCraftdream/HotamSpec/internal/generator.TestGenerator_DoubleRegenerateIsIdentical(0x2be15f87ac00)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/generator/determinism_test.go:28 +0x4f5
+testing.tRunner(0x2be15f87ac00, 0x7ff7c222dbb0)
+	C:/Program Files/Go/src/testing/testing.go:2036 +0xc3
+created by testing.(*T).Run in goroutine 1
+	C:/Program Files/Go/src/testing/testing.go:2101 +0x4a9
+
+goroutine 6445 [sync.Mutex.Lock]:
+internal/sync.runtime_SemacquireMutex(0x3c?, 0x0?, 0x2be15fa10020?)
+	C:/Program Files/Go/src/runtime/sema.go:95 +0x25
+internal/sync.(*Mutex).lockSlow(0x2be1626fa164)
+	C:/Program Files/Go/src/internal/sync/mutex.go:149 +0x15d
+internal/sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/sync/mutex.go:46
+sync.(*Once).doSlow(0x7ff7c2502700?, 0x2be160303a20)
+	C:/Program Files/Go/src/sync/once.go:74 +0x49
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage({{0x2be160e335c0, 0x29}, {0x2be160e335ea, 0x32}, {0x2be1609c43e0, 0x1a}}, {0x2be162116700, 0x40}, 0x2be160303d20)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:458 +0x171
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation({0x2be15faa3200, 0x2b}, {0x2be16191cf60, 0x14}, {0x2be15f9a2960, 0x20}, {{0x2be15f894ff0, 0x46}, 0x124, 0x136}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:557 +0xa29
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl.func1({{0x2be16191cf60, 0x14}, {0x2be15f9a2960, 0x20}, {{0x2be15f894ff0, 0x46}, 0x124, 0x136}, {0x2be1610d2c80, 0x3d}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:325 +0x15a
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl in goroutine 5137
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:322 +0x1b2a
+
+goroutine 6525 [select]:
+os/exec.(*Cmd).watchCtx(0x2be161db21a0, 0x2be162f21b90)
+	C:/Program Files/Go/src/os/exec/exec.go:797 +0xb1
+created by os/exec.(*Cmd).Start in goroutine 6369
+	C:/Program Files/Go/src/os/exec/exec.go:783 +0x989
+
+goroutine 6180 [chan send]:
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl(0x2be164c97a40)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:321 +0x1bd9
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations.func1(0x5d, {{0x7ff7c21279eb, 0x1c}, 0x2be15f9fc000, {0x7ff7c2189560, 0x135}, {0x7ff7c21cb98c, 0x467}, {0x7ff7c21ee3b7, 0x697}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:206 +0x6d
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations in goroutine 102
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:204 +0x4a5
+
+goroutine 4395 [chan send]:
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs(0x2be164c97a40)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:535 +0xdbe
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkVerifiedByTestPasses(0x2be160ca21e0?)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:400 +0x1f
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations.func1(0x4, {{0x7ff7c2128c54, 0x1d}, 0x2be15f9fc000, {0x7ff7c215d508, 0x75}, {0x7ff7c21aaf19, 0x28b}, {0x7ff7c21c8e15, 0x440}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:206 +0x6d
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations in goroutine 102
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:204 +0x4a5
+
+goroutine 4935 [sync.Mutex.Lock]:
+internal/sync.runtime_SemacquireMutex(0x34?, 0x0?, 0x2be1626da198?)
+	C:/Program Files/Go/src/runtime/sema.go:95 +0x25
+internal/sync.(*Mutex).lockSlow(0x2be15fa94634)
+	C:/Program Files/Go/src/internal/sync/mutex.go:149 +0x15d
+internal/sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/sync/mutex.go:46
+sync.(*Once).doSlow(0x7ff7c2502700?, 0x2be1612fda20)
+	C:/Program Files/Go/src/sync/once.go:74 +0x49
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage({{0x2be1609dab80, 0x32}, {0x2be1609dabb3, 0x47}, {0x2be1615de780, 0x2d}}, {0x2be162116700, 0x40}, 0x2be1612fdd20)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:458 +0x171
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation({0x2be15faa24e0, 0x2b}, {0x2be160e02240, 0x22}, {0x2be160827b80, 0x43}, {{0x2be1609af2c0, 0x59}, 0x28, 0x9d}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:557 +0xa29
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl.func1({{0x2be160e02240, 0x22}, {0x2be160827b80, 0x43}, {{0x2be1609af2c0, 0x59}, 0x28, 0x9d}, {0x2be16242d860, 0x50}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:325 +0x15a
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl in goroutine 6180
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:322 +0x1b2a
+
+goroutine 2007 [chan send]:
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs(0x2be1604c21e0)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:535 +0xdbe
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkVerifiedByTestPasses(0x7ff7c21575b4?)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:400 +0x1f
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations.func1(0x4, {{0x7ff7c2128c54, 0x1d}, 0x2be15f9fc000, {0x7ff7c215d508, 0x75}, {0x7ff7c21aaf19, 0x28b}, {0x7ff7c21c8e15, 0x440}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:206 +0x6d
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations in goroutine 11
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:204 +0x4a5
+
+goroutine 6495 [chan receive]:
+github.com/PHPCraftdream/HotamSpec/internal/gate.singleflightRun({{0x2be1620333c0, 0x3e}, {0x2be1609dbaae, 0x46}}, {0x2be160d64240, 0x40}, 0x2be1617dfcf8)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1321 +0x108
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest({0x2be160716060, 0x2b}, {0x2be1609dba80, 0x2d}, {0x2be1609dbaae, 0x46})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1259 +0x614
+github.com/PHPCraftdream/HotamSpec/internal/invariants.verifiedByTestPassesViolation({0x2be160716060?, 0x7ff7c1f9610d?}, {0x2be160dc1f20, 0x29}, {{0x2be1609dba80, 0x74}, {0x2be1609dba80, 0x2d}, {0x2be1609dbaae, 0x46}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:630 +0x57
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs.func1(0xe, {{0x2be160dc1f20, 0x29}, {{0x2be1609dba80, 0x74}, {0x2be1609dba80, 0x2d}, {0x2be1609dbaae, 0x46}, 0x1}})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:539 +0xe7
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs in goroutine 2007
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:536 +0xd30
+
+goroutine 6367 [chan receive]:
+github.com/PHPCraftdream/HotamSpec/internal/gate.singleflightRun({{0x2be1626a4500, 0x3b}, {0x2be160ab67aa, 0x32}}, {0x2be16351c280, 0x40}, 0x2be161affcf8)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1321 +0x108
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest({0x2be15fdae210, 0x2b}, {0x2be160ab6780, 0x29}, {0x2be160ab67aa, 0x32})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1259 +0x614
+github.com/PHPCraftdream/HotamSpec/internal/invariants.verifiedByTestPassesViolation({0x2be15fdae210?, 0x7ff7c1f9610d?}, {0x2be1623a0828, 0x14}, {{0x2be160ab6780, 0x5c}, {0x2be160ab6780, 0x29}, {0x2be160ab67aa, 0x32}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:630 +0x57
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs.func1(0xd, {{0x2be1623a0828, 0x14}, {{0x2be160ab6780, 0x5c}, {0x2be160ab6780, 0x29}, {0x2be160ab67aa, 0x32}, 0x1}})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:539 +0xe7
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs in goroutine 4395
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:536 +0xd30
+
+goroutine 6564 [select]:
+os/exec.(*Cmd).watchCtx(0x2be1626b8340, 0x2be1636870a0)
+	C:/Program Files/Go/src/os/exec/exec.go:797 +0xb1
+created by os/exec.(*Cmd).Start in goroutine 6562
+	C:/Program Files/Go/src/os/exec/exec.go:783 +0x989
+
+goroutine 3716 [chan send]:
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs(0x2be160cf8960)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:535 +0xdbe
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkVerifiedByTestPasses(0x2be1601dfc20?)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:400 +0x1f
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations.func1(0x4, {{0x7ff7c2128c54, 0x1d}, 0x2be15f9fc000, {0x7ff7c215d508, 0x75}, {0x7ff7c21aaf19, 0x28b}, {0x7ff7c21c8e15, 0x440}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:206 +0x6d
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations in goroutine 32
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:204 +0x4a5
+
+goroutine 6467 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be15ff79a70?, 0x138fdc11200?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x2be15ff79a80?, {0x2be15ff79a70?, 0x7ff7c1db67ab?, 0x2be15ff79ab0?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.readFile(0x7b8, {0x2be15fb22200?, 0x200, 0x7?}, 0x0?, 0x7?)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1030 +0xba
+syscall.ReadFile(...)
+	C:/Program Files/Go/src/syscall/syscall_windows.go:510
+internal/poll.(*FD).Read.func1(0x7ff7c24f5940?)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:572 +0x4a
+internal/poll.(*FD).execIO(0x2be162db6180, 0x72, 0x2be15ff79c90)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:290 +0x2c9
+internal/poll.(*FD).Read(0x2be162db6180, {0x2be15fb22200, 0x200, 0x200})
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:571 +0x290
+os.(*File).read(...)
+	C:/Program Files/Go/src/os/file_posix.go:29
+os.(*File).Read(0x2be15f87e570, {0x2be15fb22200?, 0x7ff7c1da2134?, 0x0?})
+	C:/Program Files/Go/src/os/file.go:144 +0x4f
+bytes.(*Buffer).ReadFrom(0x2be160fb20c0, {0x7ff7c22327e8, 0x2be15f87e570})
+	C:/Program Files/Go/src/bytes/buffer.go:229 +0x98
+io.copyBuffer({0x7ff7c22329c0, 0x2be160fb20c0}, {0x7ff7c22327e8, 0x2be15f87e570}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:415 +0x151
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os.genericWriteTo(0x0?, {0x7ff7c22329c0?, 0x2be160fb20c0?})
+	C:/Program Files/Go/src/os/file.go:295 +0x35
+os.(*File).WriteTo(0x7ff7c24f0130?, {0x7ff7c22329c0?, 0x2be160fb20c0?})
+	C:/Program Files/Go/src/os/file.go:273 +0x49
+io.copyBuffer({0x7ff7c22329c0, 0x2be160fb20c0}, {0x7ff7c2232900, 0x2be15f87e570}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:411 +0x9d
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	C:/Program Files/Go/src/os/exec/exec.go:602 +0x34
+os/exec.(*Cmd).Start.func2(0x2be16095d0a0?)
+	C:/Program Files/Go/src/os/exec/exec.go:757 +0x2c
+created by os/exec.(*Cmd).Start in goroutine 2525
+	C:/Program Files/Go/src/os/exec/exec.go:756 +0x9c5
+
+goroutine 6442 [chan receive]:
+github.com/PHPCraftdream/HotamSpec/internal/gate.singleflightRun({{0x2be161168b00, 0x3e}, {0x2be160d2562e, 0x46}}, {0x2be1631d1200, 0x40}, 0x2be162275cf8)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1321 +0x108
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest({0x2be15fb3a000, 0x2b}, {0x2be160d25600, 0x2d}, {0x2be160d2562e, 0x46})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1259 +0x614
+github.com/PHPCraftdream/HotamSpec/internal/invariants.verifiedByTestPassesViolation({0x2be15fb3a000?, 0x7ff7c1f9610d?}, {0x2be161c6dc20, 0x29}, {{0x2be160d25600, 0x74}, {0x2be160d25600, 0x2d}, {0x2be160d2562e, 0x46}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:630 +0x57
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs.func1(0xe, {{0x2be161c6dc20, 0x29}, {{0x2be160d25600, 0x74}, {0x2be160d25600, 0x2d}, {0x2be160d2562e, 0x46}, 0x1}})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:539 +0xe7
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs in goroutine 3716
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:536 +0xd30
+
+goroutine 6562 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be1617db198?, 0x8?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x1ffffffffffff?, {0x2be1617db198?, 0x3?, 0x3?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.WaitForSingleObject(0x300, 0xffffffff)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1159 +0x6a
+os.(*Process).wait(0x2be1615abd40)
+	C:/Program Files/Go/src/os/exec_windows.go:28 +0x89
+os.(*Process).Wait(...)
+	C:/Program Files/Go/src/os/exec.go:346
+os/exec.(*Cmd).Wait(0x2be1626b8340)
+	C:/Program Files/Go/src/os/exec/exec.go:930 +0x45
+os/exec.(*Cmd).Run(0x2be1626b8340)
+	C:/Program Files/Go/src/os/exec/exec.go:632 +0x2d
+github.com/PHPCraftdream/HotamSpec/internal/gate.doCompileTestBinary({0x7ff7c20c92a0?, 0x2be15f98cde0?}, {0x2be16115dd10, 0x2b}, {0x2be1623a17b8, 0x16}, {0x0, 0x0})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:510 +0x4fd
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileSingleflight({{0x2be16115dd10, 0x2b}, {0x2be1623a17b8, 0x16}, {0x0, 0x0}}, {0x7ff7c2234fb0, 0x2be163689110}, {0x2be16115dd10, 0x2b}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:410 +0x37b
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileTestBinary({0x7ff7c2234fb0, 0x2be163689110}, {0x2be16115dd10, 0x2b}, {0x2be1623a17b8, 0x16}, {0x0, 0x0})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:378 +0x1a5
+github.com/PHPCraftdream/HotamSpec/internal/gate.runGoTest({0x7ff7c2234fb0, 0x2be163689110}, {0x2be16115dd10, 0x2b}, {0x2be1623a17b8, 0x16}, {0x2be160db38b4, 0x3a})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:338 +0x85
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest.func1()
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1274 +0x137
+github.com/PHPCraftdream/HotamSpec/internal/gate.singleflightRun({{0x2be1623a3000, 0x3f}, {0x2be160db38b4, 0x3a}}, {0x2be162116700, 0x40}, 0x2be1617dbcf8)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1335 +0x2a3
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest({0x2be15fb3a000, 0x2b}, {0x2be160db3880, 0x33}, {0x2be160db38b4, 0x3a})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1259 +0x614
+github.com/PHPCraftdream/HotamSpec/internal/invariants.verifiedByTestPassesViolation({0x2be15fb3a000?, 0x7ff7c2232900?}, {0x2be161c6dc20, 0x29}, {{0x2be160db3880, 0x6e}, {0x2be160db3880, 0x33}, {0x2be160db38b4, 0x3a}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:630 +0x57
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs.func1(0xf, {{0x2be161c6dc20, 0x29}, {{0x2be160db3880, 0x6e}, {0x2be160db3880, 0x33}, {0x2be160db38b4, 0x3a}, 0x1}})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:539 +0xe7
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs in goroutine 3716
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:536 +0xd30
+
+goroutine 6468 [select]:
+os/exec.(*Cmd).watchCtx(0x2be160a681a0, 0x2be162a49e30)
+	C:/Program Files/Go/src/os/exec/exec.go:797 +0xb1
+created by os/exec.(*Cmd).Start in goroutine 2525
+	C:/Program Files/Go/src/os/exec/exec.go:783 +0x989
+
+goroutine 5137 [chan send]:
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl(0x2be164c96b40)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:321 +0x1bd9
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations.func1(0x5d, {{0x7ff7c21279eb, 0x1c}, 0x2be15f9fc000, {0x7ff7c2189560, 0x135}, {0x7ff7c21cb98c, 0x467}, {0x7ff7c21ee3b7, 0x697}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:206 +0x6d
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations in goroutine 31
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:204 +0x4a5
+
+goroutine 3805 [chan send]:
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl(0x2be160cf8960)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:321 +0x1bd9
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations.func1(0x5d, {{0x7ff7c21279eb, 0x1c}, 0x2be15f9fc000, {0x7ff7c2189560, 0x135}, {0x7ff7c21cb98c, 0x467}, {0x7ff7c21ee3b7, 0x697}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:206 +0x6d
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations in goroutine 32
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:204 +0x4a5
+
+goroutine 6441 [chan receive]:
+github.com/PHPCraftdream/HotamSpec/internal/gate.singleflightRun({{0x2be1607e3d40, 0x3b}, {0x2be160e335ea, 0x32}}, {0x2be161ea8100, 0x40}, 0x2be15fd43cf8)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1321 +0x108
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest({0x2be160a4e330, 0x2b}, {0x2be160e335c0, 0x29}, {0x2be160e335ea, 0x32})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1259 +0x614
+github.com/PHPCraftdream/HotamSpec/internal/invariants.verifiedByTestPassesViolation({0x2be160a4e330?, 0x7ff7c1f9615f?}, {0x2be16191cf60, 0x14}, {{0x2be160e335c0, 0x5c}, {0x2be160e335c0, 0x29}, {0x2be160e335ea, 0x32}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:630 +0x57
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs.func1(0xd, {{0x2be16191cf60, 0x14}, {{0x2be160e335c0, 0x5c}, {0x2be160e335c0, 0x29}, {0x2be160e335ea, 0x32}, 0x1}})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:539 +0xe7
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs in goroutine 3512
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:536 +0xd30
+
+goroutine 3512 [chan send]:
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs(0x2be164c96b40)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:535 +0xdbe
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkVerifiedByTestPasses(0x7ff7c2152e40?)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:400 +0x1f
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations.func1(0x4, {{0x7ff7c2128c54, 0x1d}, 0x2be15f9fc000, {0x7ff7c215d508, 0x75}, {0x7ff7c21aaf19, 0x28b}, {0x7ff7c21c8e15, 0x440}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:206 +0x6d
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations in goroutine 31
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:204 +0x4a5
+
+goroutine 6368 [sync.Mutex.Lock]:
+internal/sync.runtime_SemacquireMutex(0x34?, 0x0?, 0x2be1626da198?)
+	C:/Program Files/Go/src/runtime/sema.go:95 +0x25
+internal/sync.(*Mutex).lockSlow(0x2be15fa94634)
+	C:/Program Files/Go/src/internal/sync/mutex.go:149 +0x15d
+internal/sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/sync/mutex.go:46
+sync.(*Once).doSlow(0x7ff7c2502700?, 0x2be1604d9a20)
+	C:/Program Files/Go/src/sync/once.go:74 +0x49
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage({{0x2be160d86880, 0x32}, {0x2be160d868b3, 0x47}, {0x2be161bb53e0, 0x2d}}, {0x2be162116700, 0x40}, 0x2be1604d9d20)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:458 +0x171
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation({0x2be15faa3200, 0x2b}, {0x2be1607b1260, 0x22}, {0x2be160a9c4b0, 0x43}, {{0x2be1608ce240, 0x59}, 0x28, 0x9d}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:557 +0xa29
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl.func1({{0x2be1607b1260, 0x22}, {0x2be160a9c4b0, 0x43}, {{0x2be1608ce240, 0x59}, 0x28, 0x9d}, {0x2be160ed6000, 0x50}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:325 +0x15a
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl in goroutine 5137
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:322 +0x1b2a
+
+goroutine 6429 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be1604d4b50?, 0x9?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x1ffffffffffff?, {0x2be1604d4b50?, 0x3?, 0x3?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.WaitForSingleObject(0x7b0, 0xffffffff)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1159 +0x6a
+os.(*Process).wait(0x2be16158a480)
+	C:/Program Files/Go/src/os/exec_windows.go:28 +0x89
+os.(*Process).Wait(...)
+	C:/Program Files/Go/src/os/exec.go:346
+os/exec.(*Cmd).Wait(0x2be15fe50680)
+	C:/Program Files/Go/src/os/exec/exec.go:930 +0x45
+os/exec.(*Cmd).Run(0x2be15fe50680)
+	C:/Program Files/Go/src/os/exec/exec.go:632 +0x2d
+github.com/PHPCraftdream/HotamSpec/internal/gate.doCompileTestBinary({0x7ff7c20c92a0?, 0x2be15f98cde0?}, {0x2be161312b70, 0x2b}, {0x2be162d297a0, 0x12}, {0x2be162d297d0, 0x14})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:510 +0x4fd
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileSingleflight({{0x2be161312b70, 0x2b}, {0x2be162d297a0, 0x12}, {0x2be162d297d0, 0x14}}, {0x7ff7c2234fb0, 0x2be162d55570}, {0x2be161312b70, 0x2b}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:410 +0x37b
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileTestBinary({0x7ff7c2234fb0, 0x2be162d55570}, {0x2be161312b70, 0x2b}, {0x2be162d297a0, 0x12}, {0x2be162d297d0, 0x14})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:378 +0x1a5
+github.com/PHPCraftdream/HotamSpec/internal/gate.runGoTestRecording({0x7ff7c2234fb0, 0x2be162d55570}, {0x2be161312b70, 0x2b}, {0x2be162d297a0, 0x12}, {0x2be160ab67aa, 0x32}, {0x2be162d445d0, 0x2f}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:787 +0xa5
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTestRecording({0x2be15faa24e0, 0x2b}, {0x2be160ab6780, 0x29}, {0x2be160ab67aa, 0x32}, {0x2be161bc4440, 0x1a})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:604 +0x7d2
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation.func1()
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:558 +0x76
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage.func1()
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:459 +0x35
+sync.(*Once).doSlow(0x7ff7c2502700?, 0x7ff7c2277420?)
+	C:/Program Files/Go/src/sync/once.go:78 +0xac
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage({{0x2be160ab6780, 0x29}, {0x2be160ab67aa, 0x32}, {0x2be161bc4440, 0x1a}}, {0x2be1631d1200, 0x40}, 0x2be1604d5d20)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:458 +0x171
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation({0x2be15faa24e0, 0x2b}, {0x2be1623a0828, 0x14}, {0x2be161805780, 0x20}, {{0x2be160758eb0, 0x46}, 0x124, 0x136}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:557 +0xa29
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl.func1({{0x2be1623a0828, 0x14}, {0x2be161805780, 0x20}, {{0x2be160758eb0, 0x46}, 0x124, 0x136}, {0x2be162b172c0, 0x3d}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:325 +0x15a
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl in goroutine 6180
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:322 +0x1b2a
+
+goroutine 6521 [chan receive]:
+github.com/PHPCraftdream/HotamSpec/internal/gate.singleflightRun({{0x2be15fa78cc0, 0x3e}, {0x2be1608f372e, 0x46}}, {0x2be163cca3c0, 0x40}, 0x2be1603dfcf8)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1321 +0x108
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest({0x2be160a4e330, 0x2b}, {0x2be1608f3700, 0x2d}, {0x2be1608f372e, 0x46})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1259 +0x614
+github.com/PHPCraftdream/HotamSpec/internal/invariants.verifiedByTestPassesViolation({0x2be160a4e330?, 0x7ff7c1f9615f?}, {0x2be160aaa180, 0x29}, {{0x2be1608f3700, 0x74}, {0x2be1608f3700, 0x2d}, {0x2be1608f372e, 0x46}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:630 +0x57
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs.func1(0xe, {{0x2be160aaa180, 0x29}, {{0x2be1608f3700, 0x74}, {0x2be1608f3700, 0x2d}, {0x2be1608f372e, 0x46}, 0x1}})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:539 +0xe7
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs in goroutine 3512
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:536 +0xd30
+
+goroutine 6563 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be164b61a70?, 0x138fdc11200?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x2be164b61a80?, {0x2be164b61a70?, 0x7ff7c1db67ab?, 0x19d3?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.readFile(0x758, {0x2be15fb23200?, 0x200, 0x7?}, 0x0?, 0x7?)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1030 +0xba
+syscall.ReadFile(...)
+	C:/Program Files/Go/src/syscall/syscall_windows.go:510
+internal/poll.(*FD).Read.func1(0x7ff7c24f5940?)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:572 +0x4a
+internal/poll.(*FD).execIO(0x2be16368c780, 0x72, 0x2be164b61c90)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:290 +0x2c9
+internal/poll.(*FD).Read(0x2be16368c780, {0x2be15fb23200, 0x200, 0x200})
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:571 +0x290
+os.(*File).read(...)
+	C:/Program Files/Go/src/os/file_posix.go:29
+os.(*File).Read(0x2be160a8ab60, {0x2be15fb23200?, 0x7ff7c1da2134?, 0x0?})
+	C:/Program Files/Go/src/os/file.go:144 +0x4f
+bytes.(*Buffer).ReadFrom(0x2be160794420, {0x7ff7c22327e8, 0x2be160a8ab60})
+	C:/Program Files/Go/src/bytes/buffer.go:229 +0x98
+io.copyBuffer({0x7ff7c22329c0, 0x2be160794420}, {0x7ff7c22327e8, 0x2be160a8ab60}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:415 +0x151
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os.genericWriteTo(0x0?, {0x7ff7c22329c0?, 0x2be160794420?})
+	C:/Program Files/Go/src/os/file.go:295 +0x35
+os.(*File).WriteTo(0x7ff7c24f0130?, {0x7ff7c22329c0?, 0x2be160794420?})
+	C:/Program Files/Go/src/os/file.go:273 +0x49
+io.copyBuffer({0x7ff7c22329c0, 0x2be160794420}, {0x7ff7c2232900, 0x2be160a8ab60}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:411 +0x9d
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	C:/Program Files/Go/src/os/exec/exec.go:602 +0x34
+os/exec.(*Cmd).Start.func2(0x2be15f90f340?)
+	C:/Program Files/Go/src/os/exec/exec.go:757 +0x2c
+created by os/exec.(*Cmd).Start in goroutine 6562
+	C:/Program Files/Go/src/os/exec/exec.go:756 +0x9c5
+
+goroutine 6446 [sync.Mutex.Lock]:
+internal/sync.runtime_SemacquireMutex(0x3c?, 0x0?, 0x2be15fa10020?)
+	C:/Program Files/Go/src/runtime/sema.go:95 +0x25
+internal/sync.(*Mutex).lockSlow(0x2be1626fa164)
+	C:/Program Files/Go/src/internal/sync/mutex.go:149 +0x15d
+internal/sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/sync/mutex.go:46
+sync.(*Once).doSlow(0x7ff7c2502700?, 0x2be1612f9a20)
+	C:/Program Files/Go/src/sync/once.go:74 +0x49
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage({{0x2be1608cede0, 0x29}, {0x2be1608cee0a, 0x32}, {0x2be1609c46a0, 0x1a}}, {0x2be1631d1200, 0x40}, 0x2be1612f9d20)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:458 +0x171
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation({0x2be160a4e810, 0x2b}, {0x2be1608204f8, 0x14}, {0x2be160d83780, 0x20}, {{0x2be1625c6910, 0x46}, 0x124, 0x136}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:557 +0xa29
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl.func1({{0x2be1608204f8, 0x14}, {0x2be160d83780, 0x20}, {{0x2be1625c6910, 0x46}, 0x124, 0x136}, {0x2be162798dc0, 0x3d}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:325 +0x15a
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl in goroutine 3805
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:322 +0x1b2a
+
+goroutine 6546 [sync.Mutex.Lock]:
+internal/sync.runtime_SemacquireMutex(0x3c?, 0x0?, 0x2be15fa10020?)
+	C:/Program Files/Go/src/runtime/sema.go:95 +0x25
+internal/sync.(*Mutex).lockSlow(0x2be1626fa164)
+	C:/Program Files/Go/src/internal/sync/mutex.go:149 +0x15d
+internal/sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/sync/mutex.go:46
+sync.(*Once).doSlow(0x7ff7c2502700?, 0x2be15f8a9a20)
+	C:/Program Files/Go/src/sync/once.go:74 +0x49
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage({{0x2be1602fa720, 0x29}, {0x2be1602fa74a, 0x32}, {0x2be163150040, 0x1a}}, {0x2be1631d1200, 0x40}, 0x2be15f8a9d20)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:458 +0x171
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation({0x2be1619ca510, 0x2b}, {0x2be161af1350, 0x14}, {0x2be160a4c640, 0x20}, {{0x2be160c72190, 0x46}, 0x124, 0x136}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:557 +0xa29
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl.func1({{0x2be161af1350, 0x14}, {0x2be160a4c640, 0x20}, {{0x2be160c72190, 0x46}, 0x124, 0x136}, {0x2be1626ac5c0, 0x3d}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:325 +0x15a
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl in goroutine 2464
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:322 +0x1b2a
+
+goroutine 6369 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be160306b50?, 0x9?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x1ffffffffffff?, {0x2be160306b50?, 0x3?, 0x3?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.WaitForSingleObject(0x588, 0xffffffff)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1159 +0x6a
+os.(*Process).wait(0x2be164cab080)
+	C:/Program Files/Go/src/os/exec_windows.go:28 +0x89
+os.(*Process).Wait(...)
+	C:/Program Files/Go/src/os/exec.go:346
+os/exec.(*Cmd).Wait(0x2be161db21a0)
+	C:/Program Files/Go/src/os/exec/exec.go:930 +0x45
+os/exec.(*Cmd).Run(0x2be161db21a0)
+	C:/Program Files/Go/src/os/exec/exec.go:632 +0x2d
+github.com/PHPCraftdream/HotamSpec/internal/gate.doCompileTestBinary({0x7ff7c20c92a0?, 0x2be15f98cde0?}, {0x2be16105d0b0, 0x2b}, {0x2be160afcc78, 0x16}, {0x2be160afcca8, 0x16})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:510 +0x4fd
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileSingleflight({{0x2be16105d0b0, 0x2b}, {0x2be160afcc78, 0x16}, {0x2be160afcca8, 0x16}}, {0x7ff7c2234fb0, 0x2be162f1fe30}, {0x2be16105d0b0, 0x2b}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:410 +0x37b
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileTestBinary({0x7ff7c2234fb0, 0x2be162f1fe30}, {0x2be16105d0b0, 0x2b}, {0x2be160afcc78, 0x16}, {0x2be160afcca8, 0x16})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:378 +0x1a5
+github.com/PHPCraftdream/HotamSpec/internal/gate.runGoTestRecording({0x7ff7c2234fb0, 0x2be162f1fe30}, {0x2be16105d0b0, 0x2b}, {0x2be160afcc78, 0x16}, {0x2be1609da9b3, 0x47}, {0x2be162cf9f20, 0x2f}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:787 +0xa5
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTestRecording({0x2be1619ca510, 0x2b}, {0x2be1609da980, 0x32}, {0x2be1609da9b3, 0x47}, {0x2be161bb54a0, 0x2d})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:604 +0x7d2
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation.func1()
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:558 +0x76
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage.func1()
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:459 +0x35
+sync.(*Once).doSlow(0x7ff7c2502700?, 0x7ff7c2277420?)
+	C:/Program Files/Go/src/sync/once.go:78 +0xac
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage({{0x2be1609da980, 0x32}, {0x2be1609da9b3, 0x47}, {0x2be161bb54a0, 0x2d}}, {0x2be162116700, 0x40}, 0x2be160307d20)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:458 +0x171
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation({0x2be1619ca510, 0x2b}, {0x2be161fc13e0, 0x22}, {0x2be161a94230, 0x43}, {{0x2be160d69aa0, 0x59}, 0x28, 0x9d}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:557 +0xa29
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl.func1({{0x2be161fc13e0, 0x22}, {0x2be161a94230, 0x43}, {{0x2be160d69aa0, 0x59}, 0x28, 0x9d}, {0x2be15f9b9cc0, 0x50}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:325 +0x15a
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl in goroutine 2464
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:322 +0x1b2a
+
+goroutine 2525 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be161441198?, 0x8?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x1ffffffffffff?, {0x2be161441198?, 0x3?, 0x3?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.WaitForSingleObject(0x788, 0xffffffff)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1159 +0x6a
+os.(*Process).wait(0x2be160c43700)
+	C:/Program Files/Go/src/os/exec_windows.go:28 +0x89
+os.(*Process).Wait(...)
+	C:/Program Files/Go/src/os/exec.go:346
+os/exec.(*Cmd).Wait(0x2be160a681a0)
+	C:/Program Files/Go/src/os/exec/exec.go:930 +0x45
+os/exec.(*Cmd).Run(0x2be160a681a0)
+	C:/Program Files/Go/src/os/exec/exec.go:632 +0x2d
+github.com/PHPCraftdream/HotamSpec/internal/gate.doCompileTestBinary({0x7ff7c2234fb0?, 0x2be162db22a0?}, {0x2be161c787b0, 0x2b}, {0x2be160ab18a8, 0x12}, {0x0, 0x0})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:510 +0x4fd
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileSingleflight({{0x2be161c787b0, 0x2b}, {0x2be160ab18a8, 0x12}, {0x0, 0x0}}, {0x7ff7c2234fb0, 0x2be162db22a0}, {0x2be161c787b0, 0x2b}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:410 +0x37b
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileTestBinary({0x7ff7c2234fb0, 0x2be162db22a0}, {0x2be161c787b0, 0x2b}, {0x2be160ab18a8, 0x12}, {0x0, 0x0})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:378 +0x1a5
+github.com/PHPCraftdream/HotamSpec/internal/gate.runGoTest({0x7ff7c2234fb0, 0x2be162db22a0}, {0x2be161c787b0, 0x2b}, {0x2be160ab18a8, 0x12}, {0x2be1602fa74a, 0x32})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:338 +0x85
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest.func1()
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1274 +0x137
+github.com/PHPCraftdream/HotamSpec/internal/gate.singleflightRun({{0x2be160d81e00, 0x3b}, {0x2be1602fa74a, 0x32}}, {0x2be161ea9e80, 0x40}, 0x2be15ff49cf8)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1335 +0x2a3
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest({0x2be160716060, 0x2b}, {0x2be1602fa720, 0x29}, {0x2be1602fa74a, 0x32})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1259 +0x614
+github.com/PHPCraftdream/HotamSpec/internal/invariants.verifiedByTestPassesViolation({0x2be160716060?, 0x7ff7c1f9615f?}, {0x2be161af1350, 0x14}, {{0x2be1602fa720, 0x5c}, {0x2be1602fa720, 0x29}, {0x2be1602fa74a, 0x32}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:630 +0x57
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs.func1(0xd, {{0x2be161af1350, 0x14}, {{0x2be1602fa720, 0x5c}, {0x2be1602fa720, 0x29}, {0x2be1602fa74a, 0x32}, 0x1}})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:539 +0xe7
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs in goroutine 2007
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:536 +0xd30
+
+goroutine 6496 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be162271198?, 0x8?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x1ffffffffffff?, {0x2be162271198?, 0x3?, 0x3?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.WaitForSingleObject(0x7c0, 0xffffffff)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1159 +0x6a
+os.(*Process).wait(0x2be16079e500)
+	C:/Program Files/Go/src/os/exec_windows.go:28 +0x89
+os.(*Process).Wait(...)
+	C:/Program Files/Go/src/os/exec.go:346
+os/exec.(*Cmd).Wait(0x2be161db2340)
+	C:/Program Files/Go/src/os/exec/exec.go:930 +0x45
+os/exec.(*Cmd).Run(0x2be161db2340)
+	C:/Program Files/Go/src/os/exec/exec.go:632 +0x2d
+github.com/PHPCraftdream/HotamSpec/internal/gate.doCompileTestBinary({0x7ff7c20c92a0?, 0x2be15f98cde0?}, {0x2be16105d7d0, 0x2b}, {0x2be16003ce88, 0x15}, {0x0, 0x0})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:510 +0x4fd
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileSingleflight({{0x2be16105d7d0, 0x2b}, {0x2be16003ce88, 0x15}, {0x0, 0x0}}, {0x7ff7c2234fb0, 0x2be1620773b0}, {0x2be16105d7d0, 0x2b}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:410 +0x37b
+github.com/PHPCraftdream/HotamSpec/internal/gate.compileTestBinary({0x7ff7c2234fb0, 0x2be1620773b0}, {0x2be16105d7d0, 0x2b}, {0x2be16003ce88, 0x15}, {0x0, 0x0})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/compile_cache.go:378 +0x1a5
+github.com/PHPCraftdream/HotamSpec/internal/gate.runGoTest({0x7ff7c2234fb0, 0x2be1620773b0}, {0x2be16105d7d0, 0x2b}, {0x2be16003ce88, 0x15}, {0x2be1609da0ae, 0x46})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:338 +0x85
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest.func1()
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1274 +0x137
+github.com/PHPCraftdream/HotamSpec/internal/gate.singleflightRun({{0x2be161b1ee00, 0x3e}, {0x2be1609da0ae, 0x46}}, {0x2be162116700, 0x40}, 0x2be162271cf8)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1335 +0x2a3
+github.com/PHPCraftdream/HotamSpec/internal/gate.RunVerifiedByTest({0x2be15fdae210, 0x2b}, {0x2be1609da080, 0x2d}, {0x2be1609da0ae, 0x46})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/gate/test_exec.go:1259 +0x614
+github.com/PHPCraftdream/HotamSpec/internal/invariants.verifiedByTestPassesViolation({0x2be15fdae210?, 0x0?}, {0x2be160a79740, 0x29}, {{0x2be1609da080, 0x74}, {0x2be1609da080, 0x2d}, {0x2be1609da0ae, 0x46}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:630 +0x57
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs.func1(0xe, {{0x2be160a79740, 0x29}, {{0x2be1609da080, 0x74}, {0x2be1609da080, 0x2d}, {0x2be1609da0ae, 0x46}, 0x1}})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:539 +0xe7
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runVerifiedByTestJobs in goroutine 4395
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/authored_links.go:536 +0xd30
+
+goroutine 2464 [chan send]:
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl(0x2be1604c21e0)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:321 +0x1bd9
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations.func1(0x5d, {{0x7ff7c21279eb, 0x1c}, 0x2be15f9fc000, {0x7ff7c2189560, 0x135}, {0x7ff7c21cb98c, 0x467}, {0x7ff7c21ee3b7, 0x697}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:206 +0x6d
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.runViolations in goroutine 11
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/all_violations.go:204 +0x4a5
+
+goroutine 6523 [select]:
+os/exec.(*Cmd).watchCtx(0x2be161db2340, 0x2be162a48b60)
+	C:/Program Files/Go/src/os/exec/exec.go:797 +0xb1
+created by os/exec.(*Cmd).Start in goroutine 6496
+	C:/Program Files/Go/src/os/exec/exec.go:783 +0x989
+
+goroutine 6497 [sync.Mutex.Lock]:
+internal/sync.runtime_SemacquireMutex(0x34?, 0x0?, 0x2be1626da198?)
+	C:/Program Files/Go/src/runtime/sema.go:95 +0x25
+internal/sync.(*Mutex).lockSlow(0x2be15fa94634)
+	C:/Program Files/Go/src/internal/sync/mutex.go:149 +0x15d
+internal/sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	C:/Program Files/Go/src/sync/mutex.go:46
+sync.(*Once).doSlow(0x7ff7c2502700?, 0x2be1603e3a20)
+	C:/Program Files/Go/src/sync/once.go:74 +0x49
+sync.(*Once).Do(...)
+	C:/Program Files/Go/src/sync/once.go:69
+github.com/PHPCraftdream/HotamSpec/internal/invariants.runOrReuseCoverage({{0x2be16037ca80, 0x32}, {0x2be16037cab3, 0x47}, {0x2be161a39350, 0x2d}}, {0x2be162116700, 0x40}, 0x2be1603e3d20)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:458 +0x171
+github.com/PHPCraftdream/HotamSpec/internal/invariants.scenarioExecutesImplViolation({0x2be160a4e810, 0x2b}, {0x2be161c9e000, 0x22}, {0x2be1613e4500, 0x43}, {{0x2be1602fb6e0, 0x59}, 0x28, 0x9d}, ...)
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:557 +0xa29
+github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl.func1({{0x2be161c9e000, 0x22}, {0x2be1613e4500, 0x43}, {{0x2be1602fb6e0, 0x59}, 0x28, 0x9d}, {0x2be1619a6320, 0x50}, ...})
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:325 +0x15a
+created by github.com/PHPCraftdream/HotamSpec/internal/invariants.checkScenarioExecutesImpl in goroutine 3805
+	D:/dev/HotamSpec/HotamSpec/worktrees/p1-1b2/internal/invariants/scenario_coverage.go:322 +0x1b2a
+
+goroutine 6522 [syscall]:
+syscall.syscalln(0x0?, 0x0?, {0x2be1612e9a70?, 0x7ff7c250bea0?, 0x0?})
+	C:/Program Files/Go/src/runtime/syscall_windows.go:431 +0x4e
+syscall.SyscallN(0x7ff7c1da9eb7?, {0x2be1612e9a70?, 0x2be1612e9ac0?, 0x7ff7c1d6123f?})
+	C:/Program Files/Go/src/syscall/dll_windows.go:99 +0x1e
+syscall.readFile(0x7c4, {0x2be16030a600?, 0x200, 0x7ff7c1de7c5f?}, 0x7ff7c20a78e0?, 0x7ff7c1de7cd7?)
+	C:/Program Files/Go/src/syscall/zsyscall_windows.go:1030 +0xba
+syscall.ReadFile(...)
+	C:/Program Files/Go/src/syscall/syscall_windows.go:510
+internal/poll.(*FD).Read.func1(0x7ff7c24f5940?)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:572 +0x4a
+internal/poll.(*FD).execIO(0x2be161fdccc0, 0x72, 0x2be1612e9c90)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:290 +0x2c9
+internal/poll.(*FD).Read(0x2be161fdccc0, {0x2be16030a600, 0x200, 0x200})
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:571 +0x290
+os.(*File).read(...)
+	C:/Program Files/Go/src/os/file_posix.go:29
+os.(*File).Read(0x2be15fcc0800, {0x2be16030a600?, 0x7ff7c1da2134?, 0x0?})
+	C:/Program Files/Go/src/os/file.go:144 +0x4f
+bytes.(*Buffer).ReadFrom(0x2be1604ee8d0, {0x7ff7c22327e8, 0x2be15fcc0800})
+	C:/Program Files/Go/src/bytes/buffer.go:229 +0x98
+io.copyBuffer({0x7ff7c22329c0, 0x2be1604ee8d0}, {0x7ff7c22327e8, 0x2be15fcc0800}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:415 +0x151
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os.genericWriteTo(0x0?, {0x7ff7c22329c0?, 0x2be1604ee8d0?})
+	C:/Program Files/Go/src/os/file.go:295 +0x35
+os.(*File).WriteTo(0x7ff7c24f0130?, {0x7ff7c22329c0?, 0x2be1604ee8d0?})
+	C:/Program Files/Go/src/os/file.go:273 +0x49
+io.copyBuffer({0x7ff7c22329c0, 0x2be1604ee8d0}, {0x7ff7c2232900, 0x2be15fcc0800}, {0x0, 0x0, 0x0})
+	C:/Program Files/Go/src/io/io.go:411 +0x9d
+io.Copy(...)
+	C:/Program Files/Go/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	C:/Program Files/Go/src/os/exec/exec.go:602 +0x34
+os/exec.(*Cmd).Start.func2(0x2be15fbe8d90?)
+	C:/Program Files/Go/src/os/exec/exec.go:757 +0x2c
+created by os/exec.(*Cmd).Start in goroutine 6496
+	C:/Program Files/Go/src/os/exec/exec.go:756 +0x9c5
+FAIL	github.com/PHPCraftdream/HotamSpec/internal/generator	601.458s
+FAIL

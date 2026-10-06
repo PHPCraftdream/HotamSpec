@@ -137,6 +137,13 @@ type Graph struct {
 	Discipline string `json:"-"`
 	// SelfExecutingAtoms opts into requirements derived from executed methods.
 	SelfExecutingAtoms bool `json:"-"`
+	// SelfExecutingAtomPackages and AtomRecorderImportPath carry the
+	// manifest.json "self_executing_atom_packages" /
+	// "atom_recorder_import_path" fields (docs §14), populated by the loader
+	// at LoadGraph time like SelfExecutingAtoms above -- json:"-": they live
+	// in manifest.json, not graph.json.
+	SelfExecutingAtomPackages []string
+	AtomRecorderImportPath    string
 	// ManifestExists, ParentDeclared, and Parent carry the domain's
 	// manifest.json "parent" field (loader.ResolveParent), populated by the
 	// loader at LoadGraph time exactly like Discipline above -- deliberately

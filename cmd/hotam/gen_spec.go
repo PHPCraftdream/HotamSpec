@@ -19,6 +19,7 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"github.com/PHPCraftdream/HotamSpec/internal/paths"
+	"github.com/PHPCraftdream/HotamSpec/internal/registry"
 	"github.com/PHPCraftdream/HotamSpec/internal/selfspec"
 )
 
@@ -97,6 +98,41 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	return written, removed, renderErr
 }
 
+// atomOverrides picks the atom-requirement overrides source for gen-spec.
+// Self-hosting domains mirror the in-process selfspec.Requirements registry
+// (same reference sync-self uses); consumer domains shell out to the domain's
+// spec/ dump as before.
+func atomOverrides(g *ontology.Graph, domainDir string) (*registry.Registry[ontology.Requirement], error) {
+	if g.SelfHosting {
+		return selfspec.Requirements, nil
+	}
+	return domainRegistryFromSubprocess(domainDir)
+}
+
+// requiresAtomDiscovered reports whether a non-REJECTED requirement must be
+// present in the discovered-atom registry. Empty packages (consumer domains)
+// keep the legacy all-requirements-must-be-atoms behavior; otherwise only
+// requirements implemented inside a listed self-executing atom package count.
+func requiresAtomDiscovered(req ontology.Requirement, packages []string) bool {
+	if len(packages) == 0 {
+		return true
+	}
+	for _, entry := range req.ImplementedBy {
+		file, _, ok := gate.ParseFileColonSymbol(entry)
+		if !ok {
+			continue
+		}
+		file = filepath.ToSlash(file)
+		for _, pkg := range packages {
+			pkg = strings.TrimSuffix(filepath.ToSlash(pkg), "/")
+			if file == pkg || strings.HasPrefix(file, pkg+"/") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec bool) ([]string, []string, error) {
 	// Profile resolution (R-gen-spec-profile): an explicit non-empty profile
 	// (only cmdGenSpec's --profile flag passes one) overrides the domain's
@@ -155,22 +191,30 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 		}
 	}
 	if g.SelfExecutingAtoms && len(g.Requirements) > 0 {
-		overrides, err := domainRegistryFromSubprocess(domainDir)
+		overrides, err := atomOverrides(g, domainDir)
 		if err != nil {
 			return nil, nil, fmt.Errorf("gen-spec: atom registry: %w", err)
 		}
-		discovered, err := selfspec.DiscoverAtomsFromSnapshot(gate.SpecRootForGraph(g), overrides, atomSnapshot)
+		discovered, err := selfspec.DiscoverAtomsFromSnapshot(gate.SpecRootForGraph(g), g.DomainDir, overrides, atomSnapshot)
 		if err != nil {
 			return nil, nil, fmt.Errorf("gen-spec: discover atoms: %w", err)
 		}
 		for _, req := range g.Requirements {
-			if req.Status != ontology.StatusREJECTED {
-				if _, ok := discovered.Get(req.ID); !ok {
-					return nil, nil, fmt.Errorf("gen-spec: atom %s vanished; run sync-domain to resolve lifecycle changes", req.ID)
-				}
+			if req.Status == ontology.StatusREJECTED || !requiresAtomDiscovered(req, g.SelfExecutingAtomPackages) {
+				continue
+			}
+			if _, ok := discovered.Get(req.ID); !ok {
+				return nil, nil, fmt.Errorf("gen-spec: atom %s vanished; run sync-domain to resolve lifecycle changes", req.ID)
 			}
 		}
-		if err := selfspec.MergeIntoGraph(g, discovered); err != nil {
+		// Self-hosting mirrors sync-self's projection (SyncGraph: appends
+		// atom-derived requirements the on-disk graph does not have yet);
+		// consumer domains keep the mirror-only merge.
+		if g.SelfHosting {
+			if _, err := selfspec.SyncGraph(g, discovered, today); err != nil {
+				return nil, nil, fmt.Errorf("gen-spec: merge atoms: %w", err)
+			}
+		} else if err := selfspec.MergeIntoGraph(g, discovered); err != nil {
 			return nil, nil, fmt.Errorf("gen-spec: merge atoms: %w", err)
 		}
 	}

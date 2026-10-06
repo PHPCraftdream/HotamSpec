@@ -256,6 +256,11 @@ type AtomExecutionSnapshot struct {
 // executing atom domains additionally scan their model test packages to retain
 // report-only atoms; rule-case configuration alone never enables that scan.
 func CollectAtomExecutionSnapshot(g *ontology.Graph) (*AtomExecutionSnapshot, error) {
+	return CollectAtomExecutionSnapshotForPackages(g, nil)
+}
+
+// CollectAtomExecutionSnapshotForPackages records references only from the declared packages when packages is non-empty.
+func CollectAtomExecutionSnapshotForPackages(g *ontology.Graph, packages []string) (*AtomExecutionSnapshot, error) {
 	if g == nil {
 		return nil, fmt.Errorf("atom execution snapshot graph is nil")
 	}
@@ -269,10 +274,14 @@ func CollectAtomExecutionSnapshot(g *ontology.Graph) (*AtomExecutionSnapshot, er
 			continue
 		}
 		for _, reference := range requirement.VerifiedBy {
-			addSnapshotTestReference(snapshot, reference)
+			if file, _, ok := ParseFileColonSymbol(strings.TrimSpace(reference)); ok && snapshotFileInPackages(file, packages) {
+				addSnapshotTestReference(snapshot, reference)
+			}
 		}
 		for _, caseDef := range requirement.Cases {
-			addSnapshotTestReference(snapshot, caseDef.Test)
+			if file, _, ok := ParseFileColonSymbol(strings.TrimSpace(caseDef.Test)); ok && snapshotFileInPackages(file, packages) {
+				addSnapshotTestReference(snapshot, caseDef.Test)
+			}
 		}
 	}
 	specRoot := SpecRootForGraph(g)
@@ -290,7 +299,7 @@ func CollectAtomExecutionSnapshot(g *ontology.Graph) (*AtomExecutionSnapshot, er
 				}
 			}
 		}
-		snapshot.DiscoveryErr = discoverSnapshotModelTests(specRoot, snapshot)
+		snapshot.DiscoveryErr = discoverSnapshotAtomTests(specRoot, g.SelfExecutingAtomPackages, snapshot)
 	}
 	if snapshot.SourceErr == nil && snapshot.DiscoveryErr == nil {
 		for _, dir := range sortedSnapshotDirs(snapshot.PackageFiles) {
@@ -301,12 +310,13 @@ func CollectAtomExecutionSnapshot(g *ontology.Graph) (*AtomExecutionSnapshot, er
 }
 
 // CollectSpecRows preserves the legacy per-verified_by scenario runner for
-// ordinary graphs. Atom/case graphs opt into the package snapshot path.
+// ordinary graphs. Atom/case graphs use a package snapshot for declared atom
+// packages; references outside those packages are recorded per-entry via the legacy path.
 func CollectSpecRows(g *ontology.Graph) map[string]SpecRow {
 	if !needsAtomSnapshot(g) {
 		return collectLegacySpecRows(g)
 	}
-	snapshot, err := CollectAtomExecutionSnapshot(g)
+	snapshot, err := CollectAtomExecutionSnapshotForPackages(g, g.SelfExecutingAtomPackages)
 	if err != nil {
 		panic(err)
 	}
@@ -380,6 +390,11 @@ func CollectSpecRowsFromSnapshot(g *ontology.Graph, snapshot *AtomExecutionSnaps
 			packageDir := snapshotPackageDir(file)
 			result, found := snapshot.PackageRuns[packageDir]
 			if !found {
+				if g.SelfExecutingAtoms && len(g.SelfExecutingAtomPackages) > 0 && !snapshotFileInPackages(file, g.SelfExecutingAtomPackages) {
+					outcome := recordVerifiedByEntry(SpecRootForGraph(g), requirement.ID, entry, firstImplementedByFile(requirement))
+					row.outcomes = append(row.outcomes, outcome)
+					continue
+				}
 				problem := "verified_by package was not present in the shared execution snapshot"
 				row.outcomes = append(row.outcomes, specTestOutcome{entry: entry, problem: problem})
 				continue
@@ -393,6 +408,20 @@ func CollectSpecRowsFromSnapshot(g *ontology.Graph, snapshot *AtomExecutionSnaps
 		rows[requirement.ID] = row
 	}
 	return rows
+}
+
+func snapshotFileInPackages(file string, packages []string) bool {
+	if len(packages) == 0 {
+		return true
+	}
+	file = filepath.ToSlash(filepath.Clean(filepath.FromSlash(file)))
+	for _, pkg := range packages {
+		pkg = strings.TrimSuffix(filepath.ToSlash(filepath.Clean(filepath.FromSlash(pkg))), "/")
+		if file == pkg || strings.HasPrefix(file, pkg+"/") {
+			return true
+		}
+	}
+	return false
 }
 
 func addSnapshotTestReference(snapshot *AtomExecutionSnapshot, reference string) {
@@ -430,71 +459,84 @@ func sortedSnapshotDirs(files map[string]string) []string {
 	return dirs
 }
 
-func discoverSnapshotModelTests(specRoot string, snapshot *AtomExecutionSnapshot) error {
-	modelRoot := filepath.Join(specRoot, "spec", "model")
+// discoverSnapshotAtomTests finds executable test files for the snapshot.
+// With an empty packages list it walks the consumer spec/model tree; with the
+// root-module list (§14) it walks each listed package directory instead.
+func discoverSnapshotAtomTests(specRoot string, packages []string, snapshot *AtomExecutionSnapshot) error {
+	walkRoots := []string{filepath.Join(specRoot, "spec", "model")}
+	if len(packages) > 0 {
+		walkRoots = walkRoots[:0]
+		for _, pkg := range packages {
+			walkRoots = append(walkRoots, filepath.Join(specRoot, filepath.FromSlash(pkg)))
+		}
+	}
 	fileSet := token.NewFileSet()
 	hasRuleCaseOption := false
-	err := filepath.WalkDir(modelRoot, func(path string, entry os.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if entry.IsDir() || !strings.HasSuffix(path, "_test.go") {
+	visit := func(walkRoot string) error {
+		return filepath.WalkDir(walkRoot, func(path string, entry os.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				return walkErr
+			}
+			if entry.IsDir() || !strings.HasSuffix(path, "_test.go") {
+				return nil
+			}
+			relative, err := filepath.Rel(specRoot, path)
+			if err != nil {
+				return err
+			}
+			relative = filepath.ToSlash(relative)
+			dir := snapshotPackageDir(relative)
+			if old, exists := snapshot.PackageFiles[dir]; !exists || relative < old {
+				snapshot.PackageFiles[dir] = relative
+			}
+			file, err := parser.ParseFile(fileSet, path, nil, 0)
+			if err != nil {
+				return err
+			}
+			testingAliases := testingPackageAliases(file)
+			recorderAliases := make(map[string]bool)
+			if snapshot.SourceIndex != nil {
+				recorderAliases = recorderPackageAliases(file, snapshot.SourceIndex.RecorderImportPath)
+			}
+			if snapshot.TestFiles[dir] == nil {
+				snapshot.TestFiles[dir] = make(map[string]string)
+			}
+			for _, declaration := range file.Decls {
+				fn, ok := declaration.(*ast.FuncDecl)
+				if !ok || !isSnapshotTest(fn, testingAliases) {
+					continue
+				}
+				if previous, exists := snapshot.TestFiles[dir][fn.Name.Name]; exists && previous != relative {
+					return fmt.Errorf("duplicate test %s in %s and %s", fn.Name.Name, previous, relative)
+				}
+				snapshot.TestFiles[dir][fn.Name.Name] = relative
+				ast.Inspect(fn.Body, func(node ast.Node) bool {
+					call, ok := node.(*ast.CallExpr)
+					if !ok {
+						return true
+					}
+					function := call.Fun
+					if indexed, ok := function.(*ast.IndexExpr); ok {
+						function = indexed.X
+					}
+					selector, ok := function.(*ast.SelectorExpr)
+					if !ok || selector.Sel.Name != "WithCase" {
+						return true
+					}
+					qualifier, ok := selector.X.(*ast.Ident)
+					if ok && recorderAliases[qualifier.Name] {
+						hasRuleCaseOption = true
+					}
+					return true
+				})
+			}
 			return nil
-		}
-		relative, err := filepath.Rel(specRoot, path)
-		if err != nil {
+		})
+	}
+	for _, walkRoot := range walkRoots {
+		if err := visit(walkRoot); err != nil {
 			return err
 		}
-		relative = filepath.ToSlash(relative)
-		dir := snapshotPackageDir(relative)
-		if old, exists := snapshot.PackageFiles[dir]; !exists || relative < old {
-			snapshot.PackageFiles[dir] = relative
-		}
-		file, err := parser.ParseFile(fileSet, path, nil, 0)
-		if err != nil {
-			return err
-		}
-		testingAliases := testingPackageAliases(file)
-		recorderAliases := make(map[string]bool)
-		if snapshot.SourceIndex != nil {
-			recorderAliases = recorderPackageAliases(file, snapshot.SourceIndex.RecorderImportPath)
-		}
-		if snapshot.TestFiles[dir] == nil {
-			snapshot.TestFiles[dir] = make(map[string]string)
-		}
-		for _, declaration := range file.Decls {
-			fn, ok := declaration.(*ast.FuncDecl)
-			if !ok || !isSnapshotTest(fn, testingAliases) {
-				continue
-			}
-			if previous, exists := snapshot.TestFiles[dir][fn.Name.Name]; exists && previous != relative {
-				return fmt.Errorf("duplicate test %s in %s and %s", fn.Name.Name, previous, relative)
-			}
-			snapshot.TestFiles[dir][fn.Name.Name] = relative
-			ast.Inspect(fn.Body, func(node ast.Node) bool {
-				call, ok := node.(*ast.CallExpr)
-				if !ok {
-					return true
-				}
-				function := call.Fun
-				if indexed, ok := function.(*ast.IndexExpr); ok {
-					function = indexed.X
-				}
-				selector, ok := function.(*ast.SelectorExpr)
-				if !ok || selector.Sel.Name != "WithCase" {
-					return true
-				}
-				qualifier, ok := selector.X.(*ast.Ident)
-				if ok && recorderAliases[qualifier.Name] {
-					hasRuleCaseOption = true
-				}
-				return true
-			})
-		}
-		return nil
-	})
-	if err != nil {
-		return err
 	}
 	if hasRuleCaseOption && snapshot.SourceIndex != nil && !snapshot.SourceIndex.ruleCases {
 		return fmt.Errorf("hotamspec.WithCase requires conformance.rule_cases")

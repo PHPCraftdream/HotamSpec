@@ -75,7 +75,7 @@ func TestRuleCases(t *testing.T) {
 }
 `)
 
-	discovered, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	discovered, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +123,7 @@ func TestRuleCases(t *testing.T) {
 		ID: base.ID, Owner: "reviewer", AtomKind: "rule",
 		ClaimTexts: base.ClaimTexts, Strength: "MUST",
 	})
-	withOverrides, err := DiscoverAtoms(root, overrides)
+	withOverrides, err := DiscoverAtoms(root, root, overrides)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +144,7 @@ func TestRuleCases(t *testing.T) {
 			Expected: &ontology.ObservedValue{Kind: "conflicting-oracle"},
 		}},
 	})
-	if _, err := DiscoverAtoms(root, conflicting); err == nil || !strings.Contains(err.Error(), "conflicting expected") {
+	if _, err := DiscoverAtoms(root, root, conflicting); err == nil || !strings.Contains(err.Error(), "conflicting expected") {
 		t.Fatalf("recorded want must not overwrite an inconsistent authored case oracle, got %v", err)
 	}
 }
@@ -195,7 +195,7 @@ func TestValidityCases(t *testing.T) {
 	}
 }
 `)
-	discovered, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	discovered, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +235,7 @@ func TestTwoValues(t *testing.T) {
 	hotamspec.Fact(t, second.Value, 2)
 }
 `)
-	_, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	_, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err == nil || !strings.Contains(err.Error(), "legacy executed values") {
 		t.Fatalf("different legacy Fact values should conflict; got %v", err)
 	}
@@ -265,7 +265,7 @@ func TestRule(t *testing.T) {
 	hotamspec.Fact(t, box.Value, 1, hotamspec.WithInput(1), hotamspec.WithCase(ctx))
 }
 `)
-	_, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	_, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err == nil || !strings.Contains(err.Error(), "conformance.rule_cases") {
 		t.Fatalf("rule artifact without its own trigger should be rejected, got %v", err)
 	}
@@ -292,7 +292,7 @@ func TestCollision(t *testing.T) {
 	}
 }
 `)
-	_, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	_, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err == nil || !strings.Contains(err.Error(), "same-case") || !strings.Contains(err.Error(), "conflicting") {
 		t.Fatalf("same case ID with different executed descriptors should reject, got %v", err)
 	}
@@ -317,7 +317,7 @@ func TestConditionalAtom(t *testing.T) {
 	}
 }
 `)
-	_, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	_, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err == nil || !strings.Contains(err.Error(), "produced no recording") {
 		t.Fatalf("orphaned atom call should remain visible, got %v", err)
 	}
@@ -451,5 +451,55 @@ func TestAtomSourceRuleRequiresRuleCasesTrigger(t *testing.T) {
 	}
 	if _, err := index.DeriveClaim(artifact); err == nil || !strings.Contains(err.Error(), "conformance.rule_cases") {
 		t.Fatalf("rule mode without its own trigger should reject, got %v", err)
+	}
+}
+
+// Hand-authored (non-atom) overrides coexist with executed atoms: only
+// atom-shaped overrides (implemented_by set) must keep their executed
+// method; a legacy requirement without implemented_by passes through
+// unchanged instead of failing discovery (self-hosting pilot merge).
+func TestDiscoverAtomsCarriesHandOverridesWithoutImplementedBy(t *testing.T) {
+	root := atomDiscoveryFixture(t, plainAtomManifest, `package model
+
+type Box struct { value int }
+// the value is exact
+func (b Box) Value() int { return b.value }
+`, `package model
+
+import (
+	"testing"
+	"example.test/domain/hotamspec"
+)
+
+func TestOneValue(t *testing.T) {
+	hotamspec.Fact(t, Box{value: 1}.Value, 1)
+}
+`)
+	hand := registry.New[ontology.Requirement]()
+	hand.MustRegister("R-hand-legacy", ontology.Requirement{
+		ID: "R-hand-legacy", Claim: "hand-authored norm", Status: "SETTLED",
+	})
+	hand.MustRegister("R-box-value", ontology.Requirement{
+		ID: "R-box-value", Claim: "", Status: "SETTLED",
+		ImplementedBy: []string{"spec/model/value.go:Box.Gone"},
+	})
+	_, err := DiscoverAtoms(root, root, hand)
+	if err == nil || !strings.Contains(err.Error(), "R-box-value has no executed atom") {
+		t.Fatalf("atom-shaped override without its method should fail; got %v", err)
+	}
+
+	handOnly := registry.New[ontology.Requirement]()
+	handOnly.MustRegister("R-hand-legacy", ontology.Requirement{
+		ID: "R-hand-legacy", Claim: "hand-authored norm", Status: "SETTLED",
+	})
+	out, err := DiscoverAtoms(root, root, handOnly)
+	if err != nil {
+		t.Fatalf("hand override without implemented_by should pass through; got %v", err)
+	}
+	if r, ok := out.Get("R-hand-legacy"); !ok || r.Claim != "hand-authored norm" {
+		t.Fatalf("hand override not carried through: %+v ok=%v", r, ok)
+	}
+	if _, ok := out.Get("R-box-value"); !ok {
+		t.Fatalf("discovered atom missing from merged registry")
 	}
 }

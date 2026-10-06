@@ -50,8 +50,13 @@ func TestMergeIntoGraph_ByteIdenticalRoundTrip(t *testing.T) {
 	diffReport(t, domainGraphPath, string(got), string(want))
 }
 
-// TestMergeIntoGraph_AllRequirementsRegistered proves that the graph and
-// registry contain exactly the same requirement IDs, without pinning live counts.
+// TestMergeIntoGraph_AllRequirementsRegistered proves the manual-requirement
+// bijection: every registry ID must exist in the graph, and every graph ID
+// must be registered — EXCEPT §14 atom-derived requirements, which carry the
+// atom_discovered provenance marker stamped ONLY by discovery (never
+// authored by hand) and therefore legitimately have no hand registry entry.
+// A MANUAL requirement present in the graph but missing from the registry
+// still fails the test.
 func TestMergeIntoGraph_AllRequirementsRegistered(t *testing.T) {
 	g, err := loader.LoadGraph(domainGraphPath)
 	if err != nil {
@@ -72,11 +77,23 @@ func TestMergeIntoGraph_AllRequirementsRegistered(t *testing.T) {
 			t.Errorf("selfspec.Requirements has %q, absent from domains/hotam-spec-self/graph.json", r.ID)
 		}
 	}
+	byID := make(map[string]ontology.Requirement, len(g.Requirements))
+	for _, r := range g.Requirements {
+		byID[r.ID] = r
+	}
 	for id := range inGraph {
-		if !inRegistry[id] {
+		if !inRegistry[id] && !atomDerived(g, byID[id]) {
 			t.Errorf("domains/hotam-spec-self/graph.json has %q, missing from selfspec.Requirements", id)
 		}
 	}
+}
+
+// atomDerived reports whether r is a §14 self-executing atom via the
+// atom_discovered provenance marker stamped ONLY by discovery. Mirrors the
+// same-named predicate in internal/invariants/selfspec_shadow.go (locally, to
+// avoid importing internal/invariants from a test).
+func atomDerived(g *ontology.Graph, r ontology.Requirement) bool {
+	return g.SelfExecutingAtoms && r.AtomDiscovered
 }
 
 // TestMergeIntoGraph_Idempotent proves running the merge twice produces

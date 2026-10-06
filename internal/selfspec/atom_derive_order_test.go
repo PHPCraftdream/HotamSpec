@@ -54,7 +54,7 @@ func TestAge(t *testing.T) {
 
 func TestDiscoverAtomsFollowsTestNarrativeOrder(t *testing.T) {
 	root := atomOrderFixture(t)
-	discovered, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	discovered, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,11 +74,11 @@ func TestDiscoverAtomsFollowsTestNarrativeOrder(t *testing.T) {
 
 func TestDiscoverAtomsNarrativeOrderStableAcrossRuns(t *testing.T) {
 	root := atomOrderFixture(t)
-	first, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	first, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err != nil {
 		t.Fatal(err)
 	}
-	second, err := DiscoverAtoms(root, registry.New[ontology.Requirement]())
+	second, err := DiscoverAtoms(root, root, registry.New[ontology.Requirement]())
 	if err != nil {
 		t.Fatal(err)
 	}
