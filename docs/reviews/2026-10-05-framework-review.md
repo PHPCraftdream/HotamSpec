@@ -181,3 +181,68 @@ FAIL .../internal/gate
 `go run ./cmd/hotam req show <id> --domain domains/hotam-spec-self` для `R-catalog-supported`, `R-catalog-translated` и `R-missing-translation-message` показал `proof state: PROVEN`; `domains/hotam-spec-self/docs/gen/spec/internal/localization.md:22,32,42` содержит человеческие Then-строки. Оба запуска `all-violations` дали `0 violations — graph clean`. `what-now` self-домена: `C-d20cf537` без движения, 33 feature-blocked, 27 никогда не ревьюились, 40 просрочены; старую P3-2 не дублируем.
 
 Итог цикла: две новые находки — P1-9 и P3-9; новых P0/P2 нет. Ревью не завершено до исправления находок.
+
+## Цикл 4 (2026-10-06)
+
+База: `c0873a1`; просмотрен diff `70d4c69..HEAD` и `git show --stat c0873a1`. Метод: проверка путей полной SPEC и шардов, legacy `Subject`/`Value`, ошибок атомов, смены default language и границы кэширования; сверка с проекциями доменов. `go build ./...` — exit 0; `go vet ./internal/gate ./internal/localization ./internal/repohygiene` — exit 0, без вывода. `go test -count=1 -short ./internal/gate ./internal/localization ./internal/repohygiene` — exit 0: gate 2,656 с, localization 0,848 с, repohygiene 2,987 с. Полный `go test ./...` и агрегированный `go test -short ./...` не запускались.
+
+Дополнительное воспроизведение — временный `TestReviewCycle4FailureContextAndCacheRefutation`, подключённый через Go overlay из `.tmp-agent/`: `go test -count=1 -overlay=.tmp-agent/overlay.json -run '^TestReviewCycle4FailureContextAndCacheRefutation$' -v ./internal/gate` — PASS, 0,015 с. Это проверка AST-деривации и рендера синтетического RawJSON/RecordingResult, а не запуск авторского bool-метода. Контроли: false с `not:` и не-bool failure; повторная сборка строк из одних raw-байтов при default ru/en и рендер каждого языка. Временные материалы удалены после проверки. Три `req show` для `R-catalog-supported`, `R-catalog-translated`, `R-missing-translation-message` показали `proof state: PROVEN`.
+
+### Статус находок цикла 3
+
+| Находка | Статус | Доказательство |
+|---|---|---|
+| P1-9 язык Then/Given атомов | частично | Локализация исправлена: `humanizeAtomSteps` формирует карты всех языков (`internal/gate/spec_build.go:845-882`), рендер выбирает язык (`internal/gate/spec_render.go:478-520`), шарды используют тот же путь (`internal/gate/spec_shards.go:133-169`). Зелёный пакет gate включает `TestSpecLocalizedAtomSteps`: ru/en, оба default language, fact/holds/rule, переводимые константы, failure и шарды; legacy Subject/Value проверен отдельным тестом. Однако новый отказ на failed bool ухудшает диагностический SPEC — P1-10. |
+| P3-9 будущий check в вводном тексте | закрыта | `internal/gate/spec_render.go:75`, каталоги ru/zh и поддерживаемые SPEC-шарды больше не называют `check_spec_md_current` будущим. Проверка localization и её каталога проходит; поиск старой английской фразы в domains не дал совпадений. |
+
+Подозрение о потере `Texts` из-за `json:"-"` не подтверждено на действующем пути: кэш хранит исходные RawJSON, а не гуманизированные SpecRow (`internal/gate/test_exec_recording.go:193-195,274-284`); после декодирования тексты выводятся заново (`internal/gate/spec_build.go:770-828`). Временный тест повторно собрал строки из одинаковых raw-байтов с default ru/en, проверил наличие обоих языков в `Texts` и непустой правильный текст во всех четырёх рендерах. Сериализации SpecRow в рабочих потребителях не найдено; прямой JSON-roundtrip внутреннего шага действительно теряет карту, но это не используемый здесь путь кэша. `json:"-"` сам по себе не новая находка.
+
+### Новые находки
+
+### P1-10. Провал bool-атома без `not:` блокирует весь диагностический SPEC
+
+**Наблюдалось:** для мультиязычного `holds` с verdict fail и наблюдаемым false без `not:` результат теряет failed-artifact и рендер возвращает только ошибку деривации. Фактический вывод временного теста:
+
+```text
+missing-not outcome passed=false failedArtifacts=0 problem="" sourceError="../../.tmp-agent/cycle4-fixture/spec/model/value.go:4: Box.Value language \"ru\": bool atom evaluated to false without a `not:` negation phrase"
+missing-not bundle documents=nil; single document length=0
+positive control sourceError=<nil> failedArtifacts=1
+cache default=ru render=ru document length=2387
+cache default=ru render=en document length=1541
+cache default=en render=ru document length=2387
+cache default=en render=en document length=1541
+PASS
+```
+
+Механизм подтверждён кодом и воспроизведением: `humanizeAtomSteps` принудительно меняет verdict на pass для деривации (`internal/gate/spec_build.go:846-852`), но проверка bool false требует отрицательной фразы (`internal/gate/atom_source_claims.go:84-85`). `atomRecordingOutcome` возвращается с sourceError до добавления failed-artifact (`internal/gate/spec_build.go:823-830`); ошибка переносится в строку (`:310-313`), весь документ останавливается (`internal/gate/spec_render.go:169-173`), CLI возвращает `gen-spec: render SPEC bundle: …` (`cmd/hotam/gen_spec.go:432-434`). Ошибка честно называет false/отсутствие `not:`, но SPEC не сохраняет TestValue/наблюдение как failed-artifact и не показывает остальные успешные требования. Это регрессия диагностической проекции, не утверждение о потере verdict во всех иных API. Контроль с `not:` сохраняет failed-artifact и локализованные ОШИБКА/FAILED; обычный числовой провал также не блокирует деривацию.
+
+**Сделать:** разделить валидацию нормативного текста и представление наблюдаемого провала; сохранять идентичность теста/атома, наблюдаемое false и диагностику вместе с успешными соседними атомами. Не ослаблять обязательность переводов и не подменять отсутствующий язык первичным. Добавить негативные bool-сценарии без `not:` для ru/en, обоих default language, полного рендера и шардов. Это поддерживает `R-authored-spec-projections-are-derived`, а не заменяет реальный провал ложным подтверждением.
+
+### P3-10. На HEAD проекции обоих доменов не проходят проверку свежести
+
+**Наблюдалось:** каждый отдельный запуск `go run ./cmd/hotam all-violations --domain domains/hotam-spec-self` и `go run ./cmd/hotam all-violations --domain domains/hotam-dev` завершился exit 1. Ниже существенные поля вывода без локальных путей машины:
+
+```text
+check_engine_docs_fingerprint_current: stamped 9a1c83988b8b6da9; current e65dda38e474797b
+check_domain_claude_md_current: generated portion does not match a fresh run
+2 violation(s) found
+exit status 1
+```
+
+Штамп `9a1c83988b8b6da9` находится в `domains/hotam-spec-self/docs/gen/ENGINE-VERSION.md:9` и `domains/hotam-dev/docs/gen/ENGINE-VERSION.md:9`. Fingerprint хэширует относительные имена и байты всех обычных файлов трёх пакетов, включая testdata (`internal/gate/engine_fingerprint.go:30-76,109-139`); в diff изменился `internal/generator/testdata/fixture/SPEC.md`, поэтому изменение нельзя считать внешним для этого алгоритма. Проверка сравнения — `internal/invariants/engine_version_current.go:108-134`.
+
+Причина не списана на временную фикстуру: независимый расчёт тем же алгоритмом по tracked blob'ам HEAD и по файлам на диске дал одинаковый результат:
+
+```text
+HEAD tracked hash: e65dda38e474797b
+disk tracked hash: e65dda38e474797b
+different contents: []
+extra files: []
+CRLF files: 0
+```
+
+`.tmp-agent/` вне трёх хэшируемых пакетов. Несовпадение кристаллов наблюдалось отдельно; что обе диагностики имеют одну причину, не доказано. `what-now` показывает эти два STRUCTURE-сигнала; прежний конфликт `C-d20cf537` и ревью-долг не переоформляются как новые находки.
+
+**Сделать:** регенерировать поддерживаемые проекции и кристаллы обоих доменов, затем повторить `all-violations` на каждом и убедиться, что именно эти сигналы исчезли (`R-verify-closure-per-action`). Не редактировать сгенерированные документы вручную.
+
+Итог: две новые находки — P1-10 и P3-10; новых подтверждённых P0/P2 нет. Локализация P1-9 на штатных путях исправлена, P3-9 закрыта; цикл ревью не завершён до устранения диагностической регрессии и проверки свежести проекций.
