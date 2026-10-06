@@ -1,0 +1,13 @@
+{
+  "_comment": "Frozen-aspects snapshot baseline (R-speculative-aspects-frozen): sha256 of the frozen substrate files. Update ONLY together with a conscious resolver unfreeze decision, in the same change.",
+  "files": {
+    "internal/ontology/entity.go": "8611b99e6861302fe6acc80a396f34b93757db122b9c63271be82d0eebc5427a",
+    "internal/invariants/scope_process.go": "9f54b6738a94e4fe9cee365f3f517ffa5e34e92895746680f670de99da931787"
+  },
+  "frozen_tools_planned": [
+    "create_agent",
+    "spawn_agent",
+    "invoke_agent",
+    "create_domain"
+  ]
+}

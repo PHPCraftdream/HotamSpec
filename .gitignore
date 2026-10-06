@@ -33,3 +33,6 @@ Thumbs.db
 /.rush/
 # Agent-tool worktrees
 /.claude/worktrees/
+
+# stray agent/test logs at repo root
+/*.log

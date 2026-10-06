@@ -6,6 +6,7 @@ Pre-2026-07-08 entries with no live cross-references live under `archive/`; file
 
 | Date | File | Summary |
 |---|---|---|
+| 2026-10-06 | [2026-10-06-self-debt-decisions.md](2026-10-06-self-debt-decisions.md) | Справка: решения по долгам самохостинга (P3-2) — конфликт и ревью |
 | 2026-07-13 | [2026-07-13-review5-response-plan.md](2026-07-13-review5-response-plan.md) | Review 5 response plan — sources of truth, domain UX, agent UX (HEAD 9a46847) |
 | 2026-07-13 | [2026-07-13-review4-response-plan.md](2026-07-13-review4-response-plan.md) | Review 4 response plan — push to 9/10 (HEAD 66e4af2) |
 | 2026-07-13 | [2026-07-13-review3-response-plan.md](2026-07-13-review3-response-plan.md) | Review 3 response plan (8.6/10, HEAD 93e0be8) |
