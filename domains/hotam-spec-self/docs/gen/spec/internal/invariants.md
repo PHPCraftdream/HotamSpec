@@ -3,7 +3,7 @@ reader: domain-user
 
 # SPEC.md — generated normative text (Hotam-Spec)
 
-Generated from this domain's `graph.json` claims plus REAL, currently-passing `go test` runs of every `verified_by` entry, recorded via the `hotamspec` scenario API (PLAN-scenario-generated-spec.md §1/§2 D1/D2, task W1.3): the normative body under each requirement is not hand-written prose — it is the Given/When/Then/Value narrative a real test run just produced. `graph.json` remains the bookkeeping layer (id, short authored claim, status); this document is the derived projection, never the other way around. Not an enforcement gate itself — a future `check_spec_md_current` (W2.3) is the mechanical staleness floor; this generator only renders what the CURRENT run reports.
+Generated from this domain's `graph.json` claims plus REAL, currently-passing `go test` runs of every `verified_by` entry, recorded via the `hotamspec` scenario API (PLAN-scenario-generated-spec.md §1/§2 D1/D2, task W1.3): the normative body under each requirement is not hand-written prose — it is the Given/When/Then/Value narrative a real test run just produced. `graph.json` remains the bookkeeping layer (id, short authored claim, status); this document is the derived projection, never the other way around. Not an enforcement gate itself — `check_spec_md_current` (W2.3) is the mechanical staleness floor; this generator only renders what the CURRENT run reports.
 
 **4 requirement(s) carry `verified_by`; 1 have at least one recorded scenario narrative; 2 carry no `verified_by` yet (no code carrier, honest gap).**
 

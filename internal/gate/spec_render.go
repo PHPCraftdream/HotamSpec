@@ -72,7 +72,7 @@ func IsGeneratedSpecDocument(content string) bool {
 
 const specEmptyNotice = "_No domain content loaded — no `domains/<name>/graph.json` found. Run `hotam init <dir>` to scaffold a new domain, then `hotam gen-spec --domain <dir>` to populate docs/gen/. The methodology narrative below is the framework itself and is always present._"
 
-const specIntro = "Generated from this domain's `graph.json` claims plus REAL, currently-passing `go test` runs of every `verified_by` entry, recorded via the `hotamspec` scenario API (PLAN-scenario-generated-spec.md §1/§2 D1/D2, task W1.3): the normative body under each requirement is not hand-written prose — it is the Given/When/Then/Value narrative a real test run just produced. `graph.json` remains the bookkeeping layer (id, short authored claim, status); this document is the derived projection, never the other way around. Not an enforcement gate itself — a future `check_spec_md_current` (W2.3) is the mechanical staleness floor; this generator only renders what the CURRENT run reports."
+const specIntro = "Generated from this domain's `graph.json` claims plus REAL, currently-passing `go test` runs of every `verified_by` entry, recorded via the `hotamspec` scenario API (PLAN-scenario-generated-spec.md §1/§2 D1/D2, task W1.3): the normative body under each requirement is not hand-written prose — it is the Given/When/Then/Value narrative a real test run just produced. `graph.json` remains the bookkeeping layer (id, short authored claim, status); this document is the derived projection, never the other way around. Not an enforcement gate itself — `check_spec_md_current` (W2.3) is the mechanical staleness floor; this generator only renders what the CURRENT run reports."
 
 func specText(language, template string, args ...any) (string, error) {
 	if language == "" {
@@ -353,6 +353,9 @@ func specStatusText(language, status string) (string, error) {
 }
 
 func renderSpecRequirement(g *ontology.Graph, row SpecRow, language string) ([]string, error) {
+	if row.sourceError != nil {
+		return nil, row.sourceError
+	}
 	claim, err := specClaim(g, row.req, language)
 	if err != nil {
 		return nil, err
@@ -475,31 +478,49 @@ func renderSpecCase(caseDef *ontology.CaseDefinition, language string) ([]string
 func renderSpecSteps(steps []specArtifactStep, language string) ([]string, error) {
 	var lines []string
 	for _, step := range steps {
-		if step.Subject != "" {
-			lines = append(lines, "- `"+specCell(step.Subject)+"` — "+specCell(step.Value))
-			continue
-		}
 		var line string
 		var err error
-		switch step.Kind {
-		case "given":
-			line, err = specText(language, "- Given %s%s", specCell(step.Desc), renderSpecFacts(step.Values))
-		case "when":
-			line, err = specText(language, "- When %s", specCell(step.Desc))
-		case "then":
-			outcome := "held"
-			if !step.Passed {
-				outcome = "FAILED"
+		if step.Subject != "" {
+			if claim, ok := step.Texts[language]; ok && strings.TrimSpace(claim) != "" {
+				line, err = specText(language, "- Given %s%s", specCell(claim), "")
+			} else if language == "" && strings.TrimSpace(step.Desc) != "" {
+				line, err = specText(language, "- Given %s%s", specCell(step.Desc), "")
+			} else if len(step.Texts) > 0 {
+				return nil, fmt.Errorf("atom evidence has no text for language %q", language)
+			} else {
+				lines = append(lines, "- `"+specCell(step.Subject)+"` — "+specCell(step.Value))
+				continue
 			}
-			localizedOutcome, err := localization.Lookup(language, outcome)
-			if err != nil {
-				return nil, err
+		} else {
+			switch step.Kind {
+			case "given":
+				line, err = specText(language, "- Given %s%s", specCell(step.Desc), renderSpecFacts(step.Values))
+			case "when":
+				line, err = specText(language, "- When %s", specCell(step.Desc))
+			case "then":
+				if language == "" {
+					if strings.TrimSpace(step.Desc) == "" {
+						return nil, fmt.Errorf("atom claim has no primary text")
+					}
+				} else if localized, ok := step.Texts[language]; ok && strings.TrimSpace(localized) != "" {
+					step.Desc = localized
+				} else if len(step.Texts) > 0 {
+					return nil, fmt.Errorf("atom claim has no text for language %q", language)
+				}
+				outcome := "held"
+				if !step.Passed {
+					outcome = "FAILED"
+				}
+				localizedOutcome, err := localization.Lookup(language, outcome)
+				if err != nil {
+					return nil, err
+				}
+				line, err = specText(language, "- Then %s — **%s**", specCell(step.Desc), localizedOutcome)
+			case "value":
+				line, err = specText(language, "- Value%s", renderSpecFacts(step.Values))
+			default:
+				line, err = specText(language, "- %s: %s%s", specCell(step.Kind), specCell(step.Desc), renderSpecFacts(step.Values))
 			}
-			line, err = specText(language, "- Then %s — **%s**", specCell(step.Desc), localizedOutcome)
-		case "value":
-			line, err = specText(language, "- Value%s", renderSpecFacts(step.Values))
-		default:
-			line, err = specText(language, "- %s: %s%s", specCell(step.Kind), specCell(step.Desc), renderSpecFacts(step.Values))
 		}
 		if err != nil {
 			return nil, err

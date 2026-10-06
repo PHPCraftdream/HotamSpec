@@ -23,6 +23,10 @@ History predating this file is not backfilled — see `git log` and
   narratives render that human sentence instead of the qualified method
   symbol; Holds/rule evidence and a failed atom's observed value appear as
   separate `Given` lines.
+- Atom SPEC narratives preserve localized claim and evidence text per language,
+  render the requested language, and reject missing translations; single-language
+  output remains unchanged. The SPEC introduction and Russian/Chinese catalog
+  now describe `check_spec_md_current` as the existing freshness check.
 - Repo-hygiene scanning now exempts only exact frozen historical files; new
   proposal files are scanned for private machine paths. Gen-spec fixpoint shares
   the crystal-reader check-name set with invariants and reports checks that

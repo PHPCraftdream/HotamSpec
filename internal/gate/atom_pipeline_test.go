@@ -27,6 +27,32 @@ func writeAtomPipelineFixture(t *testing.T, files map[string]string) string {
 	return root
 }
 
+func TestLocalizedAtomStepsUseRequestedLanguage(t *testing.T) {
+	root := writeAtomPipelineFixture(t, map[string]string{
+		"manifest.json": `{"self_hosting":false}`,
+		"spec/model/box.go": `package model
+type Box struct{}
+// >>>>> lang=ru
+// Русская фраза
+// >>>>> lang=en
+// English phrase
+func (Box) Value() int { return 7 }
+`,
+	})
+	graph := &ontology.Graph{DomainDir: root, Languages: []string{"ru", "en"}, DefaultLanguage: "ru"}
+	index, err := NewAtomSourceIndexForGraph(graph)
+	if err != nil {
+		t.Fatal(err)
+	}
+	atom := AtomArtifact{ReqID: "R-x", Mode: "holds", Verdict: "pass", Steps: []AtomStep{{Subject: "example.test/pipeline/model.Box.Value", Value: "true"}}}
+	steps, err := humanizeAtomSteps(index, atom)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(steps) != 1 || steps[0].Texts["en"] != "English phrase — true." {
+		t.Fatalf("steps should retain localized-source serialization: %+v", steps)
+	}
+}
 func TestAtomRecordingOutcomeKeepsPassingSubtestBesideFailure(t *testing.T) {
 	if testing.Short() {
 		t.Skip("atom-recording integration: compiles and executes a real fixture Go module and test subprocess to record nested pass/fail cases; skipped in -short")

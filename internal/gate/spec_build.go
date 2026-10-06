@@ -64,12 +64,13 @@ type specArtifact struct {
 }
 
 type specArtifactStep struct {
-	Kind    string           `json:"kind"`
-	Desc    string           `json:"desc"`
-	Values  []specArtifactKV `json:"values,omitempty"`
-	Passed  bool             `json:"passed,omitempty"`
-	Subject string           `json:"subject,omitempty"`
-	Value   string           `json:"value,omitempty"`
+	Kind    string                 `json:"kind"`
+	Desc    string                 `json:"desc"`
+	Values  []specArtifactKV       `json:"values,omitempty"`
+	Passed  bool                   `json:"passed,omitempty"`
+	Subject string                 `json:"subject,omitempty"`
+	Value   string                 `json:"value,omitempty"`
+	Texts   ontology.LocalizedText `json:"-"`
 }
 
 type specArtifactKV struct {
@@ -84,6 +85,7 @@ type specTestOutcome struct {
 	artifacts       []specArtifact
 	failedArtifacts []specArtifact
 	problem         string
+	sourceError     error
 	passed          bool
 }
 
@@ -304,7 +306,11 @@ func CollectSpecRowsFromSnapshot(g *ontology.Graph, snapshot *AtomExecutionSnaps
 				continue
 			}
 			if g.SelfExecutingAtoms {
-				row.outcomes = append(row.outcomes, atomRecordingOutcome(snapshot.SourceIndex, requirement, entry, test, result))
+				outcome := atomRecordingOutcome(snapshot.SourceIndex, requirement, entry, test, result)
+				if outcome.sourceError != nil && row.sourceError == nil {
+					row.sourceError = outcome.sourceError
+				}
+				row.outcomes = append(row.outcomes, outcome)
 			} else {
 				row.outcomes = append(row.outcomes, scenarioRecordingOutcomeFromPackage(g, requirement, entry, test, result))
 			}
@@ -803,22 +809,23 @@ func atomRecordingOutcome(sourceIndex *AtomSourceIndex, req ontology.Requirement
 		}
 		if art.Verdict == "pass" {
 			if art.Mode != "" {
-				claim, err := sourceIndex.DeriveClaim(atom)
+				steps, err := humanizeAtomSteps(sourceIndex, atom)
 				if err != nil {
-					artifactProblem = err.Error()
-					continue
+					out.sourceError = err
+					return out
 				}
-				art.Title = claim
-				art.Steps = humanizeAtomSteps(sourceIndex, atom, claim)
+				art.Title = steps[0].Desc
+				art.Steps = steps
 			}
 			out.artifacts = append(out.artifacts, art)
 		} else {
 			if art.Mode != "" {
-				passing := atom
-				passing.Verdict = "pass"
-				if claim, err := sourceIndex.DeriveClaim(passing); err == nil {
-					art.Steps = humanizeAtomSteps(sourceIndex, atom, claim)
+				steps, err := humanizeAtomSteps(sourceIndex, atom)
+				if err != nil {
+					out.sourceError = err
+					return out
 				}
+				art.Steps = steps
 			}
 			out.failedArtifacts = append(out.failedArtifacts, art)
 		}
@@ -835,33 +842,46 @@ func atomRecordingOutcome(sourceIndex *AtomSourceIndex, req ontology.Requirement
 	return out
 }
 
-// humanizeAtomSteps renders an atom as its derived claim plus its evidence as
-// phrase-plus-value text: for holds and rule atoms each distinct evidence
-// method; for a failed atom also the predicate's observed value.
-func humanizeAtomSteps(index *AtomSourceIndex, atom AtomArtifact, claim string) []specArtifactStep {
-	passed := atom.Verdict == "pass"
-	steps := []specArtifactStep{{Kind: "then", Desc: claim, Passed: passed}}
-	if len(atom.Steps) == 0 || (passed && atom.Mode == "fact") {
-		return steps
+func humanizeAtomSteps(index *AtomSourceIndex, atom AtomArtifact) ([]specArtifactStep, error) {
+	passing := atom
+	if passing.Verdict != "pass" {
+		passing.Verdict = "pass"
+	}
+	claims, err := index.DeriveClaims(passing)
+	if err != nil {
+		return nil, err
+	}
+	primary := index.primaryLanguage()
+	claim, ok := claims[primary]
+	if !ok || strings.TrimSpace(claim) == "" {
+		return nil, fmt.Errorf("atom %s has no primary claim text for language %q", atom.ReqID, primary)
+	}
+	steps := []specArtifactStep{{Kind: "then", Desc: claim, Passed: atom.Verdict == "pass", Texts: claims}}
+	if len(atom.Steps) == 0 || (atom.Verdict == "pass" && atom.Mode == "fact") {
+		return steps, nil
 	}
 	evidence := atom.Steps[1:]
 	seen := map[string]bool{atom.Steps[0].Subject: true}
-	if !passed {
+	if atom.Verdict != "pass" {
 		evidence = atom.Steps
 		seen = map[string]bool{}
 	}
-	for _, step := range evidence {
-		if seen[step.Subject] {
+	for _, observed := range evidence {
+		if seen[observed.Subject] {
 			continue
 		}
-		seen[step.Subject] = true
-		text, err := index.DeriveClaim(AtomArtifact{ReqID: atom.ReqID, Mode: "fact", Verdict: "pass", Steps: []AtomStep{step}})
+		seen[observed.Subject] = true
+		localized, err := index.DeriveClaims(AtomArtifact{ReqID: atom.ReqID, Mode: "fact", Verdict: "pass", Steps: []AtomStep{observed}})
 		if err != nil {
-			text = step.Subject + " — " + step.Value
+			return nil, err
 		}
-		steps = append(steps, specArtifactStep{Kind: "given", Desc: text})
+		primaryText := localized[primary]
+		if strings.TrimSpace(primaryText) == "" {
+			return nil, fmt.Errorf("atom evidence has no primary text for language %q", primary)
+		}
+		steps = append(steps, specArtifactStep{Kind: "given", Desc: primaryText, Subject: observed.Subject, Value: observed.Value, Texts: localized})
 	}
-	return steps
+	return steps, nil
 }
 
 func atomCaseDefinition(atom AtomArtifact, entry string) (*ontology.CaseDefinition, error) {
