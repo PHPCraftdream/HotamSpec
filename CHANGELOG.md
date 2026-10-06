@@ -17,6 +17,12 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Fixed
+- Atom proof state no longer reports a false STALE: `req show` derives an
+  atom's fresh text from its method phrase and executed value (as sync does),
+  so only a real drift between code and committed Claim is STALE. Atom SPEC
+  narratives render that human sentence instead of the qualified method
+  symbol; Holds/rule evidence and a failed atom's observed value appear as
+  separate `Given` lines.
 - Repo-hygiene scanning now exempts only exact frozen historical files; new
   proposal files are scanned for private machine paths. Gen-spec fixpoint shares
   the crystal-reader check-name set with invariants and reports checks that
