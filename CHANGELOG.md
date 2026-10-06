@@ -24,6 +24,10 @@ History predating this file is not backfilled — see `git log` and
   i-th call of a method name takes the i-th same-name call site instead of
   every same-named atom pinning to the first one.
 
+- Gen-spec/land/sync crystal now converges in ONE run: the crystal-feeding
+  violation snapshot is re-rendered to a bounded fixpoint against the run's
+  own writes (crystal-reader checks only).
+
 - The binary compile cache is now invalidated on the record-mode path too:
   both RunVerifiedByTest and RunVerifiedByTestRecording hash the module
   (hashPackageInputs) and drop the module's stale compiled test binaries

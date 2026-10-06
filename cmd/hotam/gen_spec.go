@@ -1000,6 +1000,11 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 		return nil, nil, err
 	}
 	written = append(written, stagedPaths...)
+	extraPaths, err := convergeCrystalReaders(g, domainName, domainDir, repoRoot, genDir, today, consumer, claudeMDPath, localizedConfigured, liveStateWritten, agentContextWritten, resolvedProfile, activeViolations)
+	if err != nil {
+		return nil, nil, err
+	}
+	written = append(written, extraPaths...)
 
 	var removedCrystals []string
 	var crystalDirs []string
