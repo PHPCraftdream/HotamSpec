@@ -237,7 +237,7 @@ func collectCitedSymbols(g *ontology.Graph, files []gate.ModelFile) map[string]*
 			// "incomplete" before it has even settled).
 			continue
 		}
-		reqHasScenario := anyVerifiedByEntryHasScenario(specRoot, g.SelfHosting, r.VerifiedBy)
+		reqHasScenario := anyVerifiedByEntryHasScenario(g, specRoot, g.SelfHosting, r.VerifiedBy)
 		for _, ie := range parseSpecEntries(r.ImplementedBy) {
 			if !ie.ok {
 				// Malformed implemented_by shape -- checkImplementedBySymbolResolvable's

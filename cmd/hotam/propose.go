@@ -145,7 +145,9 @@ func cmdProposeRequirement(args []string) error {
 	decisionRef := fs.String("decision-ref", "", "record a human decision reference to override a matching unresolved Conflict carrier; persisted in requirement History (only meaningful with --land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	for _, c := range []struct{ flag, label string }{
 		{*id, "id"}, {*claim, "claim"}, {*owner, "owner"}, {*status, "status"},
@@ -192,7 +194,9 @@ func cmdProposeRejection(args []string) error {
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	for _, c := range []struct{ flag, label string }{
 		{*reqID, "requirement-id"}, {*reason, "reason"},
@@ -225,7 +229,9 @@ func cmdProposeStakeholder(args []string) error {
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	for _, c := range []struct{ flag, label string }{
 		{*id, "id"}, {*name, "name"}, {*domn, "stakeholder-domain"},
@@ -258,7 +264,9 @@ func cmdProposeAxis(args []string) error {
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	for _, c := range []struct{ flag, label string }{
 		{*slug, "slug"}, {*description, "description"},
@@ -293,7 +301,9 @@ func cmdProposeAssumption(args []string) error {
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	for _, c := range []struct{ flag, label string }{
 		{*id, "id"}, {*statement, "statement"}, {*status, "status"}, {*owner, "owner"},
@@ -333,7 +343,9 @@ func cmdProposeConflict(args []string) error {
 	land := fs.Bool("land", false, "after writing, immediately apply+regen+reverify (same pipeline as hotam land)")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count (only meaningful with --land, passed through to gen-spec)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON instead of the human-readable report")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	for _, c := range []struct{ flag, label string }{
 		{*axis, "axis"}, {*context, "context"}, {*members, "members"}, {*resolver, "resolver"},

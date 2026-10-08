@@ -55,6 +55,12 @@ const (
 // IsGeneratedEvidence recognizes only this generator's exact localized title
 // and provenance banner, so publication never claims an unrelated document.
 func IsGeneratedEvidence(contents string) bool {
+	if strings.HasPrefix(contents, evidenceCaseMarker) {
+		if _, err := readEvidenceCaseIntegrity(contents); err != nil {
+			return false
+		}
+		_, contents, _ = strings.Cut(contents, "\n")
+	}
 	return generatedReportBannerMatches(contents, evidenceBannerTitle, evidenceBannerProvenance)
 }
 
@@ -102,7 +108,7 @@ func reportStatus(text reportText, value string) string {
 		"decomposed", "missing_decomposition", "incomplete_sides", "report_only", "report_only_discrepancy",
 		"not_applicable", "unsupported", "optional", "verified_case", "applicable", "declared_unselected",
 		"witnessed", "unwitnessed", "declared", "unselected", "unmeasured", "changed", "measured_match",
-		"unreviewed", "test_failure", "execution_unavailable", "source_drift", "conformance_audit":
+		"unreviewed", "test_failure", "execution_unavailable", "source_drift", "conformance_audit", "unproved":
 		return text(value)
 	case "not_declared":
 		return text("not declared")

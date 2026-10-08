@@ -316,6 +316,18 @@ func isInside(child, parent string) bool {
 	return !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && rel != ".."
 }
 
+// ProjectRootAt resolves a project's markers from an explicit directory.
+// It ignores process environment and never falls back to the framework checkout.
+func ProjectRootAt(start string) (string, bool) {
+	if root, ok := searchMarkersUpward(start, MaxMarkerSearchDepth); ok {
+		return root, true
+	}
+	if root, ok := searchMarkerFileUpward(start, MaxMarkerSearchDepth); ok {
+		return root, true
+	}
+	return resolvePyproject(start, MaxMarkerSearchDepth)
+}
+
 func ProjectRoot() (string, bool) {
 	if r1, ok := envDir(EnvProjectRoot); ok {
 		return r1, true
@@ -330,14 +342,8 @@ func ProjectRoot() (string, bool) {
 
 	cwd, err := os.Getwd()
 	if err == nil {
-		if r3, ok := searchMarkersUpward(cwd, MaxMarkerSearchDepth); ok {
-			return r3, true
-		}
-		if r4, ok := searchMarkerFileUpward(cwd, MaxMarkerSearchDepth); ok {
-			return r4, true
-		}
-		if r5, ok := resolvePyproject(cwd, MaxMarkerSearchDepth); ok {
-			return r5, true
+		if root, ok := ProjectRootAt(cwd); ok {
+			return root, true
 		}
 	}
 

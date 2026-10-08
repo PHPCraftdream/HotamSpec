@@ -60,16 +60,22 @@ func TestIsNegative_RejectsZero(t *testing.T) {
 // counter (a direct miss-counter, not wall-clock) keeps the test
 // deterministic and CI-stable regardless of host load.
 func TestCompileCache_TwoTestsSamePackage_OneCompile(t *testing.T) {
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	if testing.Short() {
 		t.Skip("builds real test binaries through the compile cache; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
+	ResetCompileInvocationCountForTest()
 	root := writeModuleFixture(t, "example.com/samepkg", "model", twoTestImplSrc, twoTestTestSrc)
 
 	before := CompileInvocationCount()
 
-	first := RunVerifiedByTest(root, "model/impl_test.go", "TestIsPositive_RejectsZero")
+	first := session.RunVerifiedByTest(root, "model/impl_test.go", "TestIsPositive_RejectsZero")
 	if first.Err != nil {
 		t.Fatalf("first test unexpected infra error: %v", first.Err)
 	}
@@ -83,10 +89,10 @@ func TestCompileCache_TwoTestsSamePackage_OneCompile(t *testing.T) {
 	}
 
 	// Second DIFFERENT test in the SAME package: a verdict-cache miss
-	// (different testName -> different cache key), so runGoTest IS
+	// (different testName -> different cache key), so real execution is
 	// reached -- but compileTestBinary must HIT (same package), so no
 	// new compile.
-	second := RunVerifiedByTest(root, "model/impl_test.go", "TestIsNegative_RejectsZero")
+	second := session.RunVerifiedByTest(root, "model/impl_test.go", "TestIsNegative_RejectsZero")
 	if second.Err != nil {
 		t.Fatalf("second test unexpected infra error: %v", second.Err)
 	}
@@ -106,11 +112,17 @@ func TestCompileCache_TwoTestsSamePackage_OneCompile(t *testing.T) {
 // without the compile cache, two recording calls would each spawn their
 // own full `go test -run` subprocess. With it, the compile happens once.
 func TestCompileCache_TwoTestsSamePackage_Recording_AlsoDeduplicates(t *testing.T) {
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	if testing.Short() {
 		t.Skip("builds real test binaries through the compile cache; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
+	ResetCompileInvocationCountForTest()
 	const modulePath = "example.com/samepkgrec"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", `
 package model
@@ -142,7 +154,7 @@ func TestRequireComplete_ScenarioRecorded_Second(t *testing.T) {
 
 	before := CompileInvocationCount()
 
-	first := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	first := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
 	if first.Err != nil || !first.Passed {
 		t.Fatalf("first recording unexpected result %+v, err=%v, output:\n%s", first.TestRunResult, first.Err, first.Output)
 	}
@@ -152,7 +164,7 @@ func TestRequireComplete_ScenarioRecorded_Second(t *testing.T) {
 		t.Fatalf("expected exactly 1 compile after the first recording call, got %d", compiles)
 	}
 
-	second := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded_Second", "model/impl.go")
+	second := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded_Second", "model/impl.go")
 	if second.Err != nil || !second.Passed {
 		t.Fatalf("second recording unexpected result %+v, err=%v, output:\n%s", second.TestRunResult, second.Err, second.Output)
 	}
@@ -168,11 +180,17 @@ func TestRequireComplete_ScenarioRecorded_Second(t *testing.T) {
 // independently. Two separate package directories under one module, two
 // RunVerifiedByTest calls, two compiles.
 func TestCompileCache_TwoTestsDifferentPackages_TwoCompiles(t *testing.T) {
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	if testing.Short() {
 		t.Skip("builds real test binaries through the compile cache; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
+	ResetCompileInvocationCountForTest()
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/diffpkg\n\ngo 1.21\n"), 0o644); err != nil {
 		t.Fatalf("WriteFile go.mod: %v", err)
@@ -209,7 +227,7 @@ func TestIsPositive_RejectsZero(t *testing.T) {
 
 	before := CompileInvocationCount()
 
-	first := RunVerifiedByTest(root, "alpha/impl_test.go", "TestIsPositive_RejectsZero")
+	first := session.RunVerifiedByTest(root, "alpha/impl_test.go", "TestIsPositive_RejectsZero")
 	if first.Err != nil || !first.Passed {
 		t.Fatalf("alpha test unexpected: %+v err=%v", first, first.Err)
 	}
@@ -219,7 +237,7 @@ func TestIsPositive_RejectsZero(t *testing.T) {
 		t.Fatalf("expected exactly 1 compile after the alpha test, got %d", compiles)
 	}
 
-	second := RunVerifiedByTest(root, "beta/impl_test.go", "TestIsPositive_RejectsZero")
+	second := session.RunVerifiedByTest(root, "beta/impl_test.go", "TestIsPositive_RejectsZero")
 	if second.Err != nil || !second.Passed {
 		t.Fatalf("beta test unexpected: %+v err=%v", second, second.Err)
 	}
@@ -246,11 +264,17 @@ func TestIsPositive_RejectsZero(t *testing.T) {
 // unobservable. Importing both and calling both ensures the profile has
 // real entries to compare).
 func TestCompileCache_DifferentCoverPkg_DifferentBinaries(t *testing.T) {
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	if testing.Short() {
 		t.Skip("builds real test binaries through the compile cache; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
+	ResetCompileInvocationCountForTest()
 	const modulePath = "example.com/coverpkg"
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module "+modulePath+"\n\ngo 1.21\n"), 0o644); err != nil {
@@ -306,7 +330,7 @@ func TestCallsBothCoverPkgs(t *testing.T) {
 
 	// Call 1: coverpkg = covera. The compiled binary has covera's
 	// instrumentation baked in at compile time.
-	first := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestCallsBothCoverPkgs", "covera/impl.go")
+	first := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestCallsBothCoverPkgs", "covera/impl.go")
 	if first.Err != nil || !first.Passed {
 		t.Fatalf("first recording (covera) unexpected: %+v err=%v output:\n%s", first.TestRunResult, first.Err, first.Output)
 	}
@@ -319,7 +343,7 @@ func TestCallsBothCoverPkgs(t *testing.T) {
 	// -coverpkg). Must compile a SEPARATE binary -- coverpkg is baked in
 	// at compile time, so a binary compiled with -coverpkg=covera cannot
 	// produce a correct coverage profile over coverb.
-	second := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestCallsBothCoverPkgs", "coverb/impl.go")
+	second := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestCallsBothCoverPkgs", "coverb/impl.go")
 	if second.Err != nil || !second.Passed {
 		t.Fatalf("second recording (coverb) unexpected: %+v err=%v output:\n%s", second.TestRunResult, second.Err, second.Output)
 	}
@@ -356,15 +380,21 @@ func TestCallsBothCoverPkgs(t *testing.T) {
 // shape exactly -- same fixture, same assertions, same diagnostic quality
 // the caller sees, just driven through the new compile-step classification.
 func TestCompileCache_CompileFailure_StillClassifiedCorrectly(t *testing.T) {
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	if testing.Short() {
 		t.Skip("builds real test binaries through the compile cache; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
+	ResetCompileInvocationCountForTest()
 	root := writeModuleFixture(t, "example.com/compilefail", "model", uncompilableImplSrc, passingTestSrc)
 
 	before := CompileInvocationCount()
-	result := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
+	result := session.RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
 	compiles := CompileInvocationCount() - before
 	if compiles != 1 {
 		t.Fatalf("expected exactly 1 compile attempt for a broken package, got %d", compiles)
@@ -385,15 +415,13 @@ func TestCompileCache_CompileFailure_StillClassifiedCorrectly(t *testing.T) {
 	// successful compiles, so a broken package is not retried on every
 	// subsequent call within the process.
 	beforeSecond := CompileInvocationCount()
-	second := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
-	// (Same testName -> verdict cache hit; force a different testName to
-	// reach runGoTest. Easiest: call runGoTest directly would reach
-	// compileTestBinary, but keeping the public-API surface, use a
-	// recording call which has no verdict cache.)
+	second := session.RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
+	// Recording bypasses the session's boolean-result memoization and proves
+	// the same compile failure is retained without recompiling.
 	_ = second
 	// Use the recording path (no verdict cache) to prove the compile
 	// cache serves the cached CompileFailed without recompiling.
-	recResult := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields", "")
+	recResult := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields", "")
 	if recResult.Err != nil {
 		t.Fatalf("recording: unexpected infra error: %v", recResult.Err)
 	}
@@ -413,11 +441,17 @@ func TestCompileCache_CompileFailure_StillClassifiedCorrectly(t *testing.T) {
 // the same key recompiles). Asserting on CompileInvocationCount keeps this
 // deterministic (a miss counter, not wall-clock).
 func TestSyncCompileCacheToHash_InvalidatesOnChangeOnly(t *testing.T) {
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	if testing.Short() {
 		t.Skip("builds a real test binary through the compile cache; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
+	ResetCompileInvocationCountForTest()
 	root := writeModuleFixture(t, "example.com/syncmod", "model", passingImplSrc, passingTestSrc)
 	pkgPattern, err := relativePackagePattern(root, filepath.Join(root, "model", "impl_test.go"))
 	if err != nil {
@@ -426,7 +460,7 @@ func TestSyncCompileCacheToHash_InvalidatesOnChangeOnly(t *testing.T) {
 	ctx := context.Background()
 
 	before := CompileInvocationCount()
-	if bin := compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
+	if bin := session.compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
 		t.Fatalf("initial compile: unexpected infra error: %v", bin.err)
 	}
 	if got := CompileInvocationCount() - before; got != 1 {
@@ -437,10 +471,10 @@ func TestSyncCompileCacheToHash_InvalidatesOnChangeOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("hashPackageInputs: %v", err)
 	}
-	syncCompileCacheToHash(root, h1)
-	syncCompileCacheToHash(root, h1)
+	session.syncCompileCacheToHash(root, h1)
+	session.syncCompileCacheToHash(root, h1)
 
-	if bin := compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
+	if bin := session.compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
 		t.Fatalf("post-sync compile: unexpected infra error: %v", bin.err)
 	}
 	if got := CompileInvocationCount() - before; got != 1 {
@@ -457,9 +491,9 @@ func TestSyncCompileCacheToHash_InvalidatesOnChangeOnly(t *testing.T) {
 	if h1 == h2 {
 		t.Fatalf("expected the mutation to change the module hash")
 	}
-	syncCompileCacheToHash(root, h2)
+	session.syncCompileCacheToHash(root, h2)
 
-	if bin := compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
+	if bin := session.compileTestBinary(ctx, root, pkgPattern, ""); bin.err != nil {
 		t.Fatalf("post-mutation compile: unexpected infra error: %v", bin.err)
 	}
 	if got := CompileInvocationCount() - before; got != 2 {
@@ -467,17 +501,20 @@ func TestSyncCompileCacheToHash_InvalidatesOnChangeOnly(t *testing.T) {
 	}
 }
 
-// TestCompileCache_Cleanup_RemovesAllBinaries proves the end-of-run
-// CleanupCompileCache hook (deferred by cmd/hotam's top-level command
-// handlers) removes every compiled .test binary this process produced: no
-// hotam-compile-* tmp directory survives the cleanup, and the in-memory
-// cache is empty so a subsequent call would recompile from scratch.
+// Closing an owner removes its binaries; an independent invocation must compile
+// afresh instead of reusing the closed owner's artifacts or verdicts.
 func TestCompileCache_Cleanup_RemovesAllBinaries(t *testing.T) {
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	if testing.Short() {
 		t.Skip("builds real test binaries through the compile cache; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
+	ResetCompileInvocationCountForTest()
 	root := writeModuleFixture(t, "example.com/cleanupmod", "model", passingImplSrc, passingTestSrc)
 
 	// Redirect the temp dir to a private root BEFORE populating the cache:
@@ -489,7 +526,7 @@ func TestCompileCache_Cleanup_RemovesAllBinaries(t *testing.T) {
 	t.Setenv("TEMP", privateTmp)
 
 	// Populate the cache with at least one real compile.
-	result := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
+	result := session.RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
 	if result.Err != nil || !result.Passed {
 		t.Fatalf("expected a passing first run, got %+v err=%v", result, result.Err)
 	}
@@ -504,36 +541,32 @@ func TestCompileCache_Cleanup_RemovesAllBinaries(t *testing.T) {
 		t.Fatalf("Glob before cleanup: %v", err)
 	}
 
-	CleanupCompileCache()
-
-	// After cleanup: the cache is empty, the counter is preserved (it is
-	// a process-lifetime counter, not reset by CleanupCompileCache --
-	// ResetRunCacheForTest resets it, CleanupCompileCache does not), and
-	// no hotam-compile-* tmp dirs survive.
-	afterGlob, err := filepath.Glob(filepath.Join(os.TempDir(), "hotam-compile-*"))
-	if err != nil {
-		t.Fatalf("Glob after cleanup: %v", err)
-	}
-	if len(afterGlob) > len(beforeGlob) {
-		t.Fatalf("expected no surviving hotam-compile-* tmp dirs after CleanupCompileCache: before=%v after=%v", beforeGlob, afterGlob)
+	if err := session.Close(); err != nil {
+		t.Fatal(err)
 	}
 
-	// And the cache is genuinely empty: a fresh call after cleanup must
-	// recompile (counter goes up by 1), not hit a stale cache entry.
-	// ResetRunCacheForTest clears BOTH the verdict cache AND the compile
-	// cache, so the next call is a true cold miss.
-	ResetRunCacheForTest()
+	// Close preserves process-wide diagnostic counters but clears owned state.
+	for _, path := range beforeGlob {
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Fatalf("owned compile directory survived cleanup: %s: %v", path, err)
+		}
+	}
+
+	// An independent owner recompiles rather than replays a closed owner's PASS.
+	session = NewExecutionSession()
 	countBeforeSecond := CompileInvocationCount()
-	second := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
+	second := session.RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
 	if second.Err != nil || !second.Passed {
 		t.Fatalf("post-cleanup run: expected passing, got %+v err=%v", second, second.Err)
 	}
 	if got := CompileInvocationCount() - countBeforeSecond; got != 1 {
-		t.Fatalf("post-cleanup run: expected exactly 1 fresh compile (cache must be empty after ResetRunCacheForTest), got %d", got)
+		t.Fatalf("independent post-close owner must compile exactly once, got %d", got)
 	}
 
 	// Final cleanup so this test does not leak its second-run tmp dir.
-	CleanupCompileCache()
+	if err := CloseExecutionSessions(); err != nil {
+		t.Fatal(err)
+	}
 }
 
 // TestCompileCache_RecordingResult_ByteIdentical_AfterCacheReset is the
@@ -549,6 +582,12 @@ func TestCompileCache_Cleanup_RemovesAllBinaries(t *testing.T) {
 // pins the cross-cache-state byte-identity the compile cache specifically
 // must not disturb).
 func TestCompileCache_RecordingResult_ByteIdentical_AfterCacheReset(t *testing.T) {
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	if testing.Short() {
 		t.Skip("builds real test binaries through the compile cache; skipped in -short")
 	}
@@ -556,11 +595,9 @@ func TestCompileCache_RecordingResult_ByteIdentical_AfterCacheReset(t *testing.T
 	const modulePath = "example.com/byteid"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
 
-	// Run A: cold cache (ResetRunCacheForTest was called by the test
-	// framework's ResetRunCacheForTest at the top -- no, this test does
-	// its own reset to be explicit).
-	ResetRunCacheForTest()
-	runA := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	// Run A uses this owner's cold artifact cache.
+	ResetCompileInvocationCountForTest()
+	runA := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
 	if runA.Err != nil || !runA.Passed {
 		t.Fatalf("run A: unexpected %+v err=%v output:\n%s", runA.TestRunResult, runA.Err, runA.Output)
 	}
@@ -573,7 +610,7 @@ func TestCompileCache_RecordingResult_ByteIdentical_AfterCacheReset(t *testing.T
 	// Run B: same call, SAME process, but cache is now WARM from run A
 	// (same moduleRoot/pkgPattern/coverPkgPattern -> compile cache HIT,
 	// the binary is reused). Must produce byte-identical output.
-	runB := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	runB := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
 	if runB.Err != nil || !runB.Passed {
 		t.Fatalf("run B (warm cache): unexpected %+v err=%v output:\n%s", runB.TestRunResult, runB.Err, runB.Output)
 	}
@@ -590,12 +627,12 @@ func TestCompileCache_RecordingResult_ByteIdentical_AfterCacheReset(t *testing.T
 		t.Fatalf("BYTE-IDENTITY VIOLATION (coverprofile): cold-cache and warm-cache runs produced different coverprofiles\nA:\n%s\nB:\n%s", coverA, coverB)
 	}
 
-	// Run C: cache RESET (forces a fresh recompile), then run again.
-	// Proves a second COMPILE produces the same bytes as the first
-	// compile -- the compile cache's reuse does not introduce any
-	// nondeterminism that a from-scratch recompile would not also have.
-	ResetRunCacheForTest()
-	runC := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	// Run C closes the original owner, forcing an independent compilation.
+	if err := session.Close(); err != nil {
+		t.Fatal(err)
+	}
+	session = NewExecutionSession()
+	runC := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
 	if runC.Err != nil || !runC.Passed {
 		t.Fatalf("run C (post-reset): unexpected %+v err=%v output:\n%s", runC.TestRunResult, runC.Err, runC.Output)
 	}

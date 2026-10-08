@@ -37,7 +37,7 @@
 // self-hosting path.
 //
 // The mirror provides strict codecs for its typed data. ObservedValue's
-// lossless codec preserves empty bytes/objects and explicit false values;
+// lossless codec preserves empty bytes/objects/arrays and explicit false values;
 // all codecs remain independent of engine internals.
 package hotamontology
 
@@ -46,6 +46,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 )
 
 func decodeStrictObject(data []byte, label string, target any, required, nonNull []string) (map[string]json.RawMessage, error) {
@@ -104,6 +105,78 @@ func (text *LocalizedText) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*text = LocalizedText(values)
+	return nil
+}
+
+// DocumentSection and NormativeBlock mirror the declarative reader contract.
+type DocumentSection struct {
+	ID         string           `json:"id"`
+	ParentID   string           `json:"parent_id,omitempty"`
+	Order      int              `json:"order"`
+	TitleTexts LocalizedText    `json:"title_texts"`
+	Blocks     []NormativeBlock `json:"blocks,omitempty"`
+}
+
+type NormativeBlock struct {
+	ID                 string            `json:"id"`
+	TextRef            string            `json:"text_ref"`
+	ClauseIDs          []string          `json:"clause_ids,omitempty"`
+	Role               string            `json:"role"`
+	Examples           []DocumentExample `json:"examples,omitempty"`
+	QualificationTexts LocalizedText     `json:"qualification_texts,omitempty"`
+}
+
+// DocumentExample selects uniquely named comparisons from one case.
+type DocumentExample struct {
+	CaseID          string   `json:"case_id"`
+	ComparisonNames []string `json:"comparison_names"`
+}
+
+func (s *DocumentSection) UnmarshalJSON(data []byte) error {
+	type wire DocumentSection
+	var value wire
+	if _, err := decodeStrictObject(data, "document_section", &value,
+		[]string{"id", "order", "title_texts"},
+		[]string{"id", "parent_id", "order", "title_texts", "blocks"}); err != nil {
+		return err
+	}
+	*s = DocumentSection(value)
+	return nil
+}
+
+func (b *NormativeBlock) UnmarshalJSON(data []byte) error {
+	type wire NormativeBlock
+	var value wire
+	if _, err := decodeStrictObject(data, "normative_block", &value,
+		[]string{"id", "text_ref", "role"},
+		[]string{"id", "text_ref", "clause_ids", "role", "examples", "qualification_texts"}); err != nil {
+		return err
+	}
+	*b = NormativeBlock(value)
+	return nil
+}
+
+func (e *DocumentExample) UnmarshalJSON(data []byte) error {
+	type wire DocumentExample
+	var value wire
+	if _, err := decodeStrictObject(data, "document_example", &value,
+		[]string{"case_id", "comparison_names"}, []string{"case_id", "comparison_names"}); err != nil {
+		return err
+	}
+	if value.CaseID == "" || strings.TrimSpace(value.CaseID) != value.CaseID {
+		return fmt.Errorf("document example case_id %q is empty or has surrounding whitespace", value.CaseID)
+	}
+	if len(value.ComparisonNames) == 0 {
+		return fmt.Errorf("document example %q requires explicit comparison_names", value.CaseID)
+	}
+	seen := make(map[string]bool, len(value.ComparisonNames))
+	for _, name := range value.ComparisonNames {
+		if name == "" || strings.TrimSpace(name) != name || seen[name] {
+			return fmt.Errorf("document example %q has empty, malformed or duplicate comparison name %q", value.CaseID, name)
+		}
+		seen[name] = true
+	}
+	*e = DocumentExample(value)
 	return nil
 }
 
@@ -186,6 +259,7 @@ type CaseDefinition struct {
 	ID         string              `json:"id"`
 	Test       string              `json:"test"`
 	AtomIDs    []string            `json:"atom_ids,omitempty"`
+	ClauseIDs  []string            `json:"clause_ids,omitempty"`
 	Profile    string              `json:"profile,omitempty"`
 	Target     string              `json:"target,omitempty"`
 	Operation  string              `json:"operation,omitempty"`
@@ -217,10 +291,12 @@ type ObservedValue struct {
 	Integer       string                   `json:"integer,omitempty"`
 	FloatBits     string                   `json:"float_bits,omitempty"`
 	Fields        map[string]ObservedValue `json:"fields,omitempty"`
+	Items         []ObservedValue          `json:"items,omitempty"`
 	Diagnostic    *DiagnosticValue         `json:"diagnostic,omitempty"`
 	decoded       bool
 	hasBytes      bool
 	hasFields     bool
+	hasItems      bool
 	hasScalarKind bool
 }
 
@@ -229,7 +305,7 @@ func (v *ObservedValue) UnmarshalJSON(data []byte) error {
 	var value wire
 	fields, err := decodeStrictObject(data, "observed_value", &value,
 		[]string{"kind"},
-		[]string{"kind", "text", "bool", "encoding", "bytes", "scalar_kind", "integer", "float_bits", "fields", "diagnostic"})
+		[]string{"kind", "text", "bool", "encoding", "bytes", "scalar_kind", "integer", "float_bits", "fields", "items", "diagnostic"})
 	if err != nil {
 		return err
 	}
@@ -238,6 +314,7 @@ func (v *ObservedValue) UnmarshalJSON(data []byte) error {
 	_, v.hasBytes = fields["bytes"]
 	_, v.hasScalarKind = fields["scalar_kind"]
 	_, v.hasFields = fields["fields"]
+	_, v.hasItems = fields["items"]
 	return nil
 }
 
@@ -252,6 +329,7 @@ func (v ObservedValue) MarshalJSON() ([]byte, error) {
 		Integer    string                    `json:"integer,omitempty"`
 		FloatBits  string                    `json:"float_bits,omitempty"`
 		Fields     *map[string]ObservedValue `json:"fields,omitempty"`
+		Items      *[]ObservedValue          `json:"items,omitempty"`
 		Diagnostic *DiagnosticValue          `json:"diagnostic,omitempty"`
 	}
 	out := wire{Kind: v.Kind, Text: v.Text, Bool: v.Bool, Encoding: v.Encoding,
@@ -267,6 +345,10 @@ func (v ObservedValue) MarshalJSON() ([]byte, error) {
 	if v.Kind == "object" || v.Fields != nil || v.hasFields {
 		fields := v.Fields
 		out.Fields = &fields
+	}
+	if v.Kind == "array" || v.Items != nil || v.hasItems {
+		items := v.Items
+		out.Items = &items
 	}
 	return json.Marshal(out)
 }
@@ -311,11 +393,23 @@ func (c *CaseDefinition) UnmarshalJSON(data []byte) error {
 	var value wire
 	if _, err := decodeStrictObject(data, "case_definition", &value,
 		[]string{"id"},
-		[]string{"id", "test", "atom_ids", "profile", "target", "operation", "producer", "input", "expected", "fixtures", "conditions", "sides", "selection"}); err != nil {
+		[]string{"id", "test", "atom_ids", "clause_ids", "profile", "target", "operation", "producer", "input", "expected", "fixtures", "conditions", "sides", "selection"}); err != nil {
 		return err
 	}
 	*c = CaseDefinition(value)
 	return nil
+}
+
+func (c CaseDefinition) MarshalJSON() ([]byte, error) {
+	type plain CaseDefinition
+	wire := struct {
+		plain
+		ClauseIDs *[]string `json:"clause_ids,omitempty"`
+	}{plain: plain(c)}
+	if c.ClauseIDs != nil {
+		wire.ClauseIDs = &c.ClauseIDs
+	}
+	return json.Marshal(wire)
 }
 
 func (f *FixtureRef) UnmarshalJSON(data []byte) error {

@@ -37,16 +37,28 @@ func TestLocalizedEvidenceViewsShareTypedDataAndCaseIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	en, err := BuildEvidenceLocalized(g, report, "en")
+	enDocuments, err := BuildEvidenceBundleLocalized(g, report, "en")
 	if err != nil {
 		t.Fatal(err)
 	}
-	ru, err := BuildEvidenceLocalized(g, report, "ru")
+	ruDocuments, err := BuildEvidenceBundleLocalized(g, report, "ru")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(en, "The result is retained exactly.") || !strings.Contains(ru, "Результат сохраняется точно.") {
-		t.Fatalf("views did not select exact authored claims: en=%q ru=%q", en, ru)
+	layout, err := reportLayout(g)
+	if err != nil {
+		t.Fatal(err)
+	}
+	enPath, err := layout.EvidenceRequirementPath("en", "R-result")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ruPath, err := layout.EvidenceRequirementPath("ru", "R-result")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(enDocuments[enPath], "The result is retained exactly.") || !strings.Contains(ruDocuments[ruPath], "Результат сохраняется точно.") {
+		t.Fatal("requirement detail views did not select their authored claim language")
 	}
 	findings, err := BuildFindingsLocalized(g, report, "ru")
 	if err != nil {

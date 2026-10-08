@@ -66,7 +66,9 @@ func cmdInitProject(args []string) error {
 	requireProvenance := fs.Bool("require-provenance", false, "require source_refs/last_reviewed_at/review_after on every SETTLED requirement landed into the base domain (writes require_provenance: true into its manifest.json; see internal/loader.ResolveRequireProvenance)")
 	discipline := fs.String("discipline", "full", "discipline mode for the scaffolded base domain: \"full\" (default — BORN FULLY OBLIGATED: vendors the hotamspec scenario recorder + spec/go.mod, requires every SETTLED requirement to carry a scenario-narrated verified_by test) or \"\" (off — no discipline field, no spec/ scaffolding; implemented_by/verified_by with a plain go test is enough, matching a bare `hotam init` domain — turn discipline:full on later via `hotam vendor-recorder` if the auto-generated SPEC.md narrative is ever wanted)")
 	owner := fs.String("owner", "owner", "id of the seed requirement owner scaffolded into spec/stakeholders.go and named in the manifest's atom_defaults (requirements_authority \"code\" projects requirements under this owner; pick the real person/team id here so the first sync-domain passes check_no_dangling_requirement_owner with no manual follow-up)")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam init-project <dir> [--domain <name>] [--today YYYY-MM-DD] [--owner <id>] [--require-provenance] [--discipline full|\"\"]")

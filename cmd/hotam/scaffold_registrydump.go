@@ -40,7 +40,9 @@ import (
 func cmdScaffoldRegistrydump(args []string) error {
 	fs := newFlagSet("scaffold-registrydump")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {

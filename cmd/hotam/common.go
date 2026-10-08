@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -14,9 +15,34 @@ import (
 )
 
 func newFlagSet(name string) *flag.FlagSet {
-	fs := flag.NewFlagSet(name, flag.ExitOnError)
+	fs := flag.NewFlagSet(name, flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	return fs
+}
+
+type commandExit struct {
+	code  int
+	cause error
+}
+
+func (exit *commandExit) Error() string {
+	if exit.cause != nil {
+		return exit.cause.Error()
+	}
+	return fmt.Sprintf("command exited with status %d", exit.code)
+}
+
+func (exit *commandExit) Unwrap() error { return exit.cause }
+
+func parseCommandFlags(fs *flag.FlagSet, args []string) error {
+	if err := fs.Parse(args); err != nil {
+		code := 2
+		if errors.Is(err, flag.ErrHelp) {
+			code = 0
+		}
+		return &commandExit{code: code, cause: err}
+	}
+	return nil
 }
 
 // defaultDomainRel is the legacy relative path "domains/<name>" used in

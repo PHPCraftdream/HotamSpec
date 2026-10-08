@@ -111,7 +111,9 @@ func cmdReqShow(args []string) error {
 	fs := newFlagSet("req show")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam req show <anchor-id> [--domain <path>] [--json]")
@@ -144,7 +146,9 @@ func cmdReqList(args []string) error {
 	owner := fs.String("owner", "", "filter by exact Owner")
 	enforcement := fs.String("enforcement", "", "filter by exact Enforcement level")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	g, err := loadReqDomain(*domain)
 	if err != nil {
@@ -166,7 +170,9 @@ func cmdReqSearch(args []string) error {
 	fs := newFlagSet("req search")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam req search \"<text>\" [--domain <path>] [--json]")
@@ -189,7 +195,9 @@ func cmdReqContext(args []string) error {
 	fs := newFlagSet("req context")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam req context <requirement-id> [--domain <path>] [--json]")
@@ -215,7 +223,9 @@ func cmdReqRelated(args []string) error {
 	fs := newFlagSet("req related")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam req related <anchor-id> [--domain <path>] [--json]")

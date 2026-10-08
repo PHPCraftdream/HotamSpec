@@ -90,7 +90,7 @@ func checkImplementedBySymbolResolvable(g *ontology.Graph) []Violation {
 				})
 				continue
 			}
-			result, err := gate.ResolveSpecSymbol(specRoot, e.file, e.symbol)
+			result, err := resolveSpecSymbolForGraph(g, specRoot, e.file, e.symbol)
 			if err != nil {
 				out = append(out, Violation{
 					Check: "check_implemented_by_symbol_resolvable",
@@ -176,7 +176,7 @@ func checkVerifiedByTestResolvable(g *ontology.Graph) []Violation {
 				})
 				continue
 			}
-			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
+			result, err := resolveSpecTestForGraph(g, specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil {
 				out = append(out, Violation{
 					Check: "check_verified_by_test_resolvable",
@@ -241,7 +241,7 @@ func checkVerifiedByTestHasTeeth(g *ontology.Graph) []Violation {
 				// authored scope.
 				continue
 			}
-			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
+			result, err := resolveSpecTestForGraph(g, specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil || !result.Found {
 				continue
 			}
@@ -304,7 +304,7 @@ func checkVerifiedByTestNoSkip(g *ontology.Graph) []Violation {
 				// outside the domain's own authored scope.
 				continue
 			}
-			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
+			result, err := resolveSpecTestForGraph(g, specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil || !result.Found {
 				continue
 			}
@@ -450,7 +450,7 @@ func collectVerifiedByTestJobs(g *ontology.Graph, specRoot string) []verifiedByT
 			if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
 				continue
 			}
-			resolved, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
+			resolved, err := resolveSpecTestForGraph(g, specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil || !resolved.Found {
 				continue
 			}
@@ -468,8 +468,16 @@ func collectVerifiedByTestJobs(g *ontology.Graph, specRoot string) []verifiedByT
 // exactly as checkVerifiedByTestPasses always has, and returns one result
 // per job -- both the blocking violation (if any) and the non-blocking
 // honored-skip warning (if any).
-func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
+func runVerifiedByTestJobs(g *ontology.Graph) (results []verifiedByTestJobResult) {
 	specRoot := gate.SpecRootForGraph(g)
+	g, session, owned := invocationSession(g)
+	if owned {
+		defer func() {
+			if err := session.Close(); err != nil {
+				results = append(results, verifiedByTestJobResult{violation: &Violation{Check: "execution_session_close", ID: g.DomainDir, Message: err.Error()}})
+			}
+		}()
+	}
 	jobs := collectVerifiedByTestJobs(g, specRoot)
 	if len(jobs) == 0 {
 		return nil
@@ -497,7 +505,7 @@ func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
 		}
 	}
 
-	results := make([]verifiedByTestJobResult, len(jobs))
+	results = make([]verifiedByTestJobResult, len(jobs))
 	if len(atomJobs) > 0 {
 		_, snapshot, snapshotErr := InvocationExecutionSnapshot(g)
 		if snapshotErr == nil && snapshot != nil {
@@ -513,7 +521,7 @@ func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
 				key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(j.entry.file)))
 				if snapshot != nil {
 					if recorded, exists := snapshot.PackageRuns[key]; exists {
-						run = recorded.TestRunResult
+						run = recorded.ForTest(j.entry.symbol)
 					} else {
 						run.Err = fmt.Errorf("verified_by package %q missing from shared execution snapshot", key)
 					}
@@ -536,7 +544,7 @@ func runVerifiedByTestJobs(g *ontology.Graph) []verifiedByTestJobResult {
 		go func(idx int, j verifiedByTestJob) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			violation, skipWarning := verifiedByTestPassesViolation(specRoot, j.reqID, j.entry)
+			violation, skipWarning := verifiedByTestPassesViolation(session, specRoot, j.reqID, j.entry)
 			results[idx] = verifiedByTestJobResult{reqID: j.reqID, violation: violation, skipWarning: skipWarning}
 		}(ij.idx, ij.job)
 	}
@@ -626,8 +634,8 @@ const runExecWorkers = 2
 // return values is ever non-nil. Split out from checkVerifiedByTestPasses so
 // the worker goroutine body is a plain function call, not an inline closure
 // duplicating this logic per call site.
-func verifiedByTestPassesViolation(specRoot, reqID string, e specFileEntry) (violation, skipWarning *Violation) {
-	run := gate.RunVerifiedByTest(specRoot, e.file, e.symbol)
+func verifiedByTestPassesViolation(session *gate.ExecutionSession, specRoot, reqID string, e specFileEntry) (violation, skipWarning *Violation) {
+	run := session.RunVerifiedByTest(specRoot, e.file, e.symbol)
 	return verifiedByTestRunViolation(reqID, e, run)
 }
 

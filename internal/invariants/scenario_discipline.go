@@ -128,7 +128,7 @@ func checkSettledRequiresScenario(g *ontology.Graph) []Violation {
 			})
 			continue
 		}
-		if !anyVerifiedByEntryHasScenario(specRoot, g.SelfHosting, r.VerifiedBy) {
+		if !anyVerifiedByEntryHasScenario(g, specRoot, g.SelfHosting, r.VerifiedBy) {
 			out = append(out, Violation{
 				Check: "check_settled_requires_scenario",
 				ID:    r.ID,
@@ -153,7 +153,7 @@ func checkSettledRequiresScenario(g *ontology.Graph) []Violation {
 // is silently skipped here (that is checkVerifiedByTestResolvable's
 // violation to report, not this check's -- this check only asks "of the
 // entries that DO resolve, does at least one narrate a scenario").
-func anyVerifiedByEntryHasScenario(specRoot string, selfHosting bool, verifiedBy []string) bool {
+func anyVerifiedByEntryHasScenario(g *ontology.Graph, specRoot string, selfHosting bool, verifiedBy []string) bool {
 	for _, e := range parseSpecEntries(verifiedBy) {
 		if !e.ok || !strings.HasPrefix(e.symbol, "Test") {
 			continue
@@ -161,7 +161,7 @@ func anyVerifiedByEntryHasScenario(specRoot string, selfHosting bool, verifiedBy
 		if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, selfHosting); !ok {
 			continue
 		}
-		result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
+		result, err := resolveSpecTestForGraph(g, specRoot, e.file, e.symbol)
 		if err != nil || !result.Found {
 			continue
 		}

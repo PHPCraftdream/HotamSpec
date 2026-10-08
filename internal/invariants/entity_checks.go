@@ -84,7 +84,7 @@ func checkEntityTypeModelSymbolResolves(g *ontology.Graph) []Violation {
 			})
 			continue
 		}
-		result, err := gate.ResolveSpecSymbol(specRoot, file, symbol)
+		result, err := resolveSpecSymbolForGraph(g, specRoot, file, symbol)
 		if err != nil {
 			out = append(out, Violation{
 				Check: "check_entity_type_model_symbol_resolves",

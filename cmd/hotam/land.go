@@ -62,7 +62,9 @@ func cmdLand(args []string) error {
 	ackConflict := fs.String("ack-conflict", "", "cite an unresolved Conflict whose members include the candidate requirement and a blocked member — overrides that formal blocker")
 	decisionRef := fs.String("decision-ref", "", "record a human decision reference to override a matching unresolved Conflict carrier; persisted in requirement History")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if *today == "" {
 		return fmt.Errorf("--today is required (YYYY-MM-DD)")

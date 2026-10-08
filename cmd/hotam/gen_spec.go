@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/PHPCraftdream/HotamSpec/internal/docbundle"
 	"github.com/PHPCraftdream/HotamSpec/internal/evidence"
@@ -19,17 +20,17 @@ import (
 )
 
 func cmdGenSpec(args []string) error {
-	// Compile-cache cleanup (gate.CleanupCompileCache) is centralized in
-	// main() -- reachable from every subcommand, not just this one (land,
-	// init-project, and others also drive genSpec/allViolations
-	// transitively). See main()'s own doc comment for why.
+	// Process-owner teardown is centralized in runCLI; genSpec also closes its
+	// explicit invocation after all staged publication consumers finish.
 	fs := newFlagSet("gen-spec")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	claudeMD := fs.String("claude-md", "", "path to CLAUDE.md for rune count")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — embedded in freshness/status lines of the generated docs and root crystal; pin this for reproducible/byte-identical regeneration")
 	profile := fs.String("profile", "", "output profile: consumer|full (default: resolve from the domain's manifest.json, falling back to full)")
 	spec := fs.Bool("spec", false, "render the SPEC bundle (one shared test snapshot); optional for legacy/single-language domains, automatic for multilingual bundles")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	// Validate --profile: only "consumer", "full", or empty (resolve from
 	// manifest) are accepted. A garbage value is a usage error, not silently
@@ -93,7 +94,7 @@ func genSpec(domainDir, claudeMDPath, today, profile string, includeSpec bool) (
 	return written, removed, renderErr
 }
 
-func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec bool) ([]string, []string, error) {
+func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec bool) (written []string, removed []string, finalErr error) {
 	// Profile resolution (R-gen-spec-profile): an explicit non-empty profile
 	// (only cmdGenSpec's --profile flag passes one) overrides the domain's
 	// manifest for THIS invocation without rewriting it. An empty profile
@@ -120,6 +121,9 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 	if err != nil {
 		return nil, nil, err
 	}
+	defer func() {
+		finalErr = errors.Join(finalErr, invariants.CloseInvocation(g))
+	}()
 	layout, err := docbundle.NewLayout(g.Languages, g.DefaultLanguage)
 	if err != nil {
 		return nil, nil, fmt.Errorf("gen-spec: output languages: %w", err)
@@ -133,16 +137,13 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 	genDir := filepath.Join(domainDir, "docs", "gen")
 	domainName := domainNameFromDir(domainDir)
 
-	reportPresent := false
-	if localizedConfigured {
-		reportPresent, _, err = evidenceReportBundleState(genDir)
-		if err != nil {
-			return nil, nil, fmt.Errorf("gen-spec: inspect evidence report bundle: %w", err)
-		}
+	reportPresent, _, err := evidenceReportBundleState(genDir)
+	if err != nil {
+		return nil, nil, fmt.Errorf("gen-spec: inspect evidence report bundle: %w", err)
 	}
-	refreshReportViews := localizedConfigured && reportPresent
+	refreshReportViews := reportPresent
 	shareEvidenceSnapshot := refreshReportViews || invariants.ConformanceAuditRequired(g)
-	needExecutionSnapshot := g.SelfExecutingAtoms || shareEvidenceSnapshot
+	needExecutionSnapshot := g.SelfExecutingAtoms || shareEvidenceSnapshot || includeSpec
 	var atomSnapshot *gate.AtomExecutionSnapshot
 	if needExecutionSnapshot {
 		g, atomSnapshot, err = invariants.InvocationExecutionSnapshot(g)
@@ -243,8 +244,6 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 	// (observed directly via TestExternal_InitProjectBornObligated, whose
 	// `hotam init-project` + `hotam all-violations` two-subprocess sequence
 	// caught exactly this gap).
-
-	var written []string
 
 	type docEntry struct {
 		filename string
@@ -366,10 +365,8 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 	if includeSpec {
 		if shareEvidenceSnapshot {
 			specRows = evidenceSnapshot.SpecRows
-		} else if atomSnapshot != nil {
-			specRows = gate.CollectSpecRowsFromSnapshot(g, atomSnapshot)
 		} else {
-			specRows = gate.CollectSpecRows(g)
+			specRows = gate.CollectSpecRowsFromSnapshot(g, atomSnapshot)
 		}
 	}
 
@@ -769,36 +766,28 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 		if err := addStagedFiles(specPaths, specContents); err != nil {
 			return nil, nil, err
 		}
-		if reportPresent {
-			reportDocuments, _, err := buildEvidenceDocuments(g, evidenceSnapshot)
-			if err != nil {
-				return nil, nil, fmt.Errorf("gen-spec: render localized evidence reports: %w", err)
-			}
-			if err := validateEvidenceDocumentTargets(domainDir, reportDocuments); err != nil {
-				return nil, nil, fmt.Errorf("gen-spec: refusing evidence report collision: %w", err)
-			}
-			reportKeys := make([]string, 0, len(reportDocuments))
-			for key := range reportDocuments {
-				reportKeys = append(reportKeys, key)
-			}
-			sort.Strings(reportKeys)
-			reportPaths := make([]string, 0, len(reportKeys))
-			reportContents := make([][]byte, 0, len(reportKeys))
-			for _, key := range reportKeys {
-				reportPaths = append(reportPaths, filepath.Join(domainDir, filepath.FromSlash(key)))
-				reportContents = append(reportContents, []byte(reportDocuments[key]))
-			}
-			if err := addStagedFiles(reportPaths, reportContents); err != nil {
-				return nil, nil, err
-			}
-			machine, err := encodeEvidenceReport(evidenceSnapshot)
-			if err != nil {
-				return nil, nil, fmt.Errorf("gen-spec: encode evidence report: %w", err)
-			}
-			evidencePath := filepath.Join(genDir, "evidence.json")
-			if err := addStagedFiles([]string{evidencePath}, [][]byte{machine}); err != nil {
-				return nil, nil, err
-			}
+	}
+	if reportPresent || invariants.ConformanceAuditRequired(g) {
+		reportDocuments, _, err := buildEvidenceDocuments(g, evidenceSnapshot)
+		if err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: render localized evidence reports: %w", err)
+		}
+		if err := validateEvidenceDocumentTargets(domainDir, reportDocuments); err != nil {
+			return nil, nil, fmt.Errorf("gen-spec: refusing evidence report collision: %w", err)
+		}
+		reportKeys := make([]string, 0, len(reportDocuments))
+		for key := range reportDocuments {
+			reportKeys = append(reportKeys, key)
+		}
+		sort.Strings(reportKeys)
+		reportPaths := make([]string, 0, len(reportKeys))
+		reportContents := make([][]byte, 0, len(reportKeys))
+		for _, key := range reportKeys {
+			reportPaths = append(reportPaths, filepath.Join(domainDir, filepath.FromSlash(key)))
+			reportContents = append(reportContents, []byte(reportDocuments[key]))
+		}
+		if err := addStagedFiles(reportPaths, reportContents); err != nil {
+			return nil, nil, err
 		}
 	}
 
@@ -1040,9 +1029,17 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 			exemptFromCleanup = append(exemptFromCleanup, filepath.ToSlash(relative))
 		}
 	}
-	// Evidence/finding views and their one raw JSON store are owned by
-	// `hotam evidence --write`, not this graph-document generation run.
-	for _, path := range docbundle.ReportCandidates(genDir) {
+	// Default publication owns compact report views; the full JSON packet is opt-in.
+	if reportPresent || invariants.ConformanceAuditRequired(g) {
+		if err := removeGeneratedEvidenceJSON(genDir); err != nil {
+			return written, nil, err
+		}
+	}
+	reportCandidates, err := docbundle.ReportCandidates(genDir)
+	if err != nil {
+		return written, nil, err
+	}
+	for _, path := range reportCandidates {
 		relative, err := filepath.Rel(genDir, path)
 		if err != nil {
 			return written, nil, err
@@ -1113,7 +1110,7 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 			return written, nil, err
 		}
 	}
-	removedEvidence, err := cleanupStaleEvidenceLocaleViews(genDir, layout)
+	removedEvidence, err := cleanupStaleEvidenceLocaleViews(genDir, layout, written)
 	if err != nil {
 		return written, nil, err
 	}
@@ -1124,7 +1121,7 @@ func genSpecStaged(domainDir, claudeMDPath, today, profile string, includeSpec b
 			return written, nil, err
 		}
 	}
-	removed := append(append(append(append(append(append([]string{}, removedCrystals...), removedEvidence...), removedSpec...), removedGen...), removedProjectFW...), removedDomainFW...)
+	removed = append(append(append(append(append(append([]string{}, removedCrystals...), removedEvidence...), removedSpec...), removedGen...), removedProjectFW...), removedDomainFW...)
 	sort.Strings(removed)
 	return written, removed, nil
 }

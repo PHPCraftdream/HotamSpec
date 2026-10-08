@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
@@ -79,7 +78,7 @@ func checkEnforcedByResolvable(g *ontology.Graph) []Violation {
 	// test functions it can verify live under its own tree. The check_* half
 	// is answered graph-locally by the All registry below, without the
 	// filesystem.
-	testFuncs, scanErr := gate.TestFuncNames(g.DomainDir)
+	testFuncs, scanErr := testFuncNamesForGraph(g, g.DomainDir)
 	for _, r := range g.Requirements {
 		if r.Status != ontology.StatusSETTLED || r.Enforcement != ontology.EnforcementENFORCED {
 			continue

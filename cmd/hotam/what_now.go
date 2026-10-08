@@ -14,7 +14,9 @@ func cmdWhatNow(args []string) error {
 	limit := fs.Int("limit", 20, "maximum number of signals to print")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {

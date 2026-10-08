@@ -3,16 +3,23 @@ package invariants
 import (
 	"fmt"
 
-	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/methodology"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 )
 
-func checkLanguageBundleComplete(g *ontology.Graph) []Violation {
+func checkLanguageBundleComplete(g *ontology.Graph) (violations []Violation) {
 	if g == nil || len(g.Languages) <= 1 {
 		return nil
 	}
-	if _, err := gate.NewAtomSourceIndexForGraph(g); err != nil {
+	view, _, err := InvocationSourceIndex(g)
+	if view != nil && view.InvocationState != g.InvocationState {
+		defer func() {
+			if closeErr := CloseInvocation(view); closeErr != nil {
+				violations = append(violations, Violation{Check: "execution_session_close", ID: g.DomainDir, Message: closeErr.Error()})
+			}
+		}()
+	}
+	if err != nil {
 		return []Violation{{
 			Check:   "check_language_bundle_complete",
 			ID:      g.DomainDir,

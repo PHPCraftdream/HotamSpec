@@ -256,17 +256,9 @@ type scenarioArtifact struct {
 	Verdict string `json:"verdict"`
 }
 
-// scenarioArtifactTitleIfPass decodes raw (one gate.RecordedArtifact.RawJSON)
-// and returns its Title, but only when the artifact's own recorded verdict is
-// "pass" — mirroring internal/gate/spec_build.go's recordVerifiedByEntry,
-// which filters out any non-"pass" artifact before it ever reaches
-// SPEC.md's rendered narrative (a Scenario can be constructed inside a test
-// whose OTHER assertions fail, producing a "fail"-verdict artifact that must
-// never be trusted as proof of anything). A malformed/undecodable artifact
-// (structurally impossible for a genuine recorder-produced file — see
-// gate.RunVerifiedByTestRecording's own readArtifacts/looksLikeRecorderArtifact
-// shape validation — but handled defensively here exactly as
-// recordVerifiedByEntry itself does) is treated as "no title", not an error.
+// scenarioArtifactTitleIfPass selects a claim title only from independently
+// passing recorded evidence. Failed scenarios may be published as diagnostics,
+// but cannot supply a passing claim. Malformed recorder data has no usable title.
 func scenarioArtifactTitleIfPass(raw []byte) (title string, ok bool) {
 	var parsed scenarioArtifact
 	if err := json.Unmarshal(raw, &parsed); err != nil {

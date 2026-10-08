@@ -538,13 +538,7 @@ func TestCmdPropose_UnknownKindReturnsError(t *testing.T) {
 // the generic "usage: hotam propose <kind>" error instead of ever reaching
 // cmdProposeRequirement's own FlagSet.Parse(["-h"]).
 //
-// This test calls extractProposeKind DIRECTLY (the kind-scanner extracted
-// from cmdPropose for testability) and stops there — it deliberately never
-// reaches fs.Parse, because flag.ExitOnError's Parse calls os.Exit(0) from
-// inside the stdlib on -h/-help, which would silently truncate the rest of
-// this test binary's run if invoked in-process. See
-// TestProposeHelp_RealBinary_PerKindPerFlagHelp (testbinary-based, in this
-// file) for the end-to-end proof that the real per-flag help is printed.
+// The kind-scanner keeps built-in help flags separate from the positional kind.
 func TestExtractProposeKind_HelpFlagIsFoundAsBareFlagNotSwallowed(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
@@ -674,20 +668,7 @@ func TestExtractProposeKind_NoKindReturnsUsageError(t *testing.T) {
 	}
 }
 
-// TestProposeHelp_RealBinary_PerKindPerFlagHelp is the end-to-end proof that
-// `hotam propose <kind> -h` prints REAL per-flag help (flag.ExitOnError's
-// stdlib output, e.g. "-claim", "-owner") and exits 0 — not the generic
-// "usage: hotam propose <kind> [flags]" line, and not a non-zero exit.
-//
-// This spawns the REAL compiled hotam binary as a subprocess (the existing
-// buildSharedHotamBinary pattern from testbinary_test.go) specifically
-// because flag.ExitOnError's Parse calls os.Exit(0) directly from inside the
-// Go standard library when it sees -h/-help; if this were invoked in-process
-// (calling cmdProposeRequirement([]string{"-h"}) etc. directly from a test
-// function) the entire `go test` BINARY would exit at that point, silently
-// truncating every test that would have run after it — with a MISLEADING
-// green/PASS-looking exit code. Subprocess isolation is the only safe way to
-// exercise the real -h code path.
+// Per-kind help prints the command's flag descriptions and exits successfully.
 func TestProposeHelp_RealBinary_PerKindPerFlagHelp(t *testing.T) {
 	if testing.Short() {
 		t.Skip("propose -h e2e: builds/spawns a real binary; skipped in -short")

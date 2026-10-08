@@ -2,6 +2,7 @@ package generator
 
 import (
 	"html"
+	"path"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -9,6 +10,7 @@ import (
 	"github.com/PHPCraftdream/HotamSpec/internal/evidence"
 	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/source"
 )
 
 // BuildEvidence renders the current, freshly collected evidence packet. It is
@@ -29,7 +31,7 @@ func BuildEvidenceLocalized(g *ontology.Graph, report evidence.Report, language 
 	language = selectedReportLanguage(g, language)
 	var claimErr error
 	contents, err := renderLocalizedReport(language, func(text reportText) string {
-		rendered, err := renderEvidence(g, report, language, text)
+		rendered, err := renderEvidence(g, compactEvidenceReport(report), language, text, false, "", false)
 		claimErr = err
 		return rendered
 	})
@@ -42,7 +44,20 @@ func BuildEvidenceLocalized(g *ontology.Graph, report evidence.Report, language 
 	return contents, nil
 }
 
-func renderEvidence(g *ontology.Graph, report evidence.Report, language string, text reportText) (string, error) {
+func renderEvidence(g *ontology.Graph, report evidence.Report, language string, text reportText, details bool, linkPrefix string, indexedCases bool) (string, error) {
+	sourceHref := func(file, anchor string) string {
+		href := sourceLink(g, file, anchor)
+		if href == "" || linkPrefix == "" {
+			return href
+		}
+		return path.Join(linkPrefix, href)
+	}
+	testHref := func(reference string) string { return reportLinkFrom(testLink(g, reference), linkPrefix) }
+	methodHref := func(reference string) string { return reportLinkFrom(methodLink(g, reference), linkPrefix) }
+	layout, err := reportLayout(g)
+	if err != nil {
+		return "", err
+	}
 	lines := []string{
 		text("# EVIDENCE.md — Current verification evidence"),
 		"",
@@ -58,8 +73,16 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 			text("| Requirement | Report coverage status | Authored declaration | Tests | Cases |"),
 			"|---|---|---|---:|---:|")
 		for _, req := range report.Requirements {
+			if _, err := reportClaim(g, language, req.ID, req.Claim, req.ClaimTexts); err != nil {
+				return "", err
+			}
 			qualification := authoredCoverageLocalized(g, req.ID, req.Rationale, req.Profile, text)
-			lines = append(lines, "| ["+Cell(req.ID)+"](#requirement-"+html.EscapeString(req.ID)+") | "+
+			target, err := layout.EvidenceRequirementPath(language, req.ID)
+			if err != nil {
+				return "", err
+			}
+			href := strings.TrimPrefix(target, "docs/gen/")
+			lines = append(lines, "| <a id=\"requirement-"+html.EscapeString(req.ID)+"\"></a>["+Cell(req.ID)+"]("+path.Join(linkPrefix, href)+") | "+
 				Cell(reportStatus(text, req.CoverageStatus))+" | "+Cell(qualification)+" | "+
 				itoa(len(req.Tests))+" | "+itoa(len(req.Cases))+" |")
 		}
@@ -76,7 +99,11 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 		for _, check := range report.Sources {
 			pathCell := "—"
 			if check.Path != "" {
-				pathCell = "[" + Cell(check.Path) + "](" + sourceLink(g, check.Path, check.Anchor) + ")"
+				if href := sourceHref(check.Path, check.Anchor); href != "" {
+					pathCell = "[" + Cell(check.Path) + "](" + href + ")"
+				} else {
+					pathCell = "`" + Cell(check.Path) + "`"
+				}
 			}
 			lines = append(lines, "| `"+Cell(check.SourceID)+"` | `"+Cell(check.Anchor)+"` | "+pathCell+
 				" | "+Cell(check.Version)+" | "+Cell(reportStatus(text, check.Status))+" | `"+
@@ -91,31 +118,37 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 	if hasConformanceData(report.Conformance) {
 		lines = append(lines, text("## Conformance audit"), "")
 		lines = append(lines, text("> This audit is structural relative to the declared inventory. It does not establish semantic completeness or exhaustive input coverage."), "")
-		lines = append(lines,
-			text("| Metric | Count |"),
-			"|---|---:|",
-			"| "+text("Source clauses declared")+" | "+itoa(report.Conformance.InventoryDeclared)+" |",
-			"| "+text("Source clauses linked")+" | "+itoa(report.Conformance.InventoryLinked)+" |",
-			"| "+text("Atoms linked")+" | "+itoa(report.Conformance.AtomsLinked)+" |",
-			"| "+text("Atoms with methods")+" | "+itoa(report.Conformance.AtomsWithMethods)+" |",
-			"| "+text("Cases declared")+" | "+itoa(report.Conformance.CasesDeclared)+" |",
-			"| "+text("Cases observed")+" | "+itoa(report.Conformance.CasesObserved)+" |",
-			"| "+text("Cases executed")+" | "+itoa(report.Conformance.CasesExecuted)+" |",
-			"| "+text("Comparisons executed")+" | "+itoa(report.Conformance.ComparisonsExecuted)+" |",
-			"| "+text("Observed discrepancies")+" | "+itoa(report.Conformance.Discrepancies)+" |",
-			"| "+text("Profile qualifications")+" | "+itoa(report.Conformance.ProfileQualifications)+" |",
-			"")
+		if !details {
+			lines = append(lines,
+				text("| Metric | Count |"),
+				"|---|---:|",
+				"| "+text("Source clauses declared")+" | "+itoa(report.Conformance.InventoryDeclared)+" |",
+				"| "+text("Source clauses linked")+" | "+itoa(report.Conformance.InventoryLinked)+" |",
+				"| "+text("Atoms linked")+" | "+itoa(report.Conformance.AtomsLinked)+" |",
+				"| "+text("Atoms with methods")+" | "+itoa(report.Conformance.AtomsWithMethods)+" |",
+				"| "+text("Cases declared")+" | "+itoa(report.Conformance.CasesDeclared)+" |",
+				"| "+text("Cases observed")+" | "+itoa(report.Conformance.CasesObserved)+" |",
+				"| "+text("Cases executed")+" | "+itoa(report.Conformance.CasesExecuted)+" |",
+				"| "+text("Comparisons executed")+" | "+itoa(report.Conformance.ComparisonsExecuted)+" |",
+				"| "+text("Observed discrepancies")+" | "+itoa(report.Conformance.Discrepancies)+" |",
+				"| "+text("Profile qualifications")+" | "+itoa(report.Conformance.ProfileQualifications)+" |",
+				"")
+		}
 
-		if len(report.Conformance.Clauses) > 0 {
+		if details && len(report.Conformance.Clauses) > 0 {
 			lines = append(lines, text("## Source clause inventory"), "",
-				text("| Clause | Strength | Source links | Atoms | Missing sides | Status |"),
-				"|---|---|---|---|---|---|")
+				text("| Clause | Strength | Source links | Atoms | Missing sides | Structural status | Verified case witnesses | Qualification |"),
+				"|---|---|---|---|---|---|---|---|")
 			for _, clause := range report.Conformance.Clauses {
 				var links []string
 				for _, link := range clause.SourceLinks {
 					check, ok := sourceCheckForAnchor(report.Sources, link.SourceID, link.Anchor)
+					href := ""
 					if ok && check.Path != "" {
-						links = append(links, "["+Cell(link.SourceID+"#"+link.Anchor)+"]("+sourceLink(g, check.Path, link.Anchor)+")")
+						href = sourceHref(check.Path, link.Anchor)
+					}
+					if href != "" {
+						links = append(links, "["+Cell(link.SourceID+"#"+link.Anchor)+"]("+href+")")
 					} else {
 						links = append(links, "`"+Cell(link.SourceID+"#"+link.Anchor)+"`")
 					}
@@ -123,18 +156,18 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 				lines = append(lines, "| `"+Cell(clause.ID)+"` | "+Cell(clause.Strength)+" | "+
 					strings.Join(links, ", ")+" | `"+Cell(strings.Join(clause.AtomIDs, ", "))+"` | `"+
 					Cell(strings.Join(clause.MissingSides, ", "))+"` | "+
-					Cell(reportStatus(text, clause.Status))+" |")
+					Cell(reportStatus(text, clause.Status))+" | `"+Cell(strings.Join(clause.WitnessCaseIDs, ", "))+"` | "+Cell(reportStatus(text, clause.Qualification))+" |")
 			}
 			lines = append(lines, "")
 		}
 
-		if len(report.Conformance.Cases) > 0 {
+		if details && len(report.Conformance.Cases) > 0 {
 			lines = append(lines, text("## Declared cases and observations"), "",
-				text("| Case | Atom | Test | Profile | Operation | Target | Producer | Sides | Fixtures | Status | Qualification | Input (typed) | Expected (typed) |"),
-				"|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+				text("| Case | Atom | Clause scope | Test | Profile | Operation | Target | Producer | Sides | Fixtures | Status | Qualification | Input (typed) | Expected (typed) |"),
+				"|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 			for _, item := range report.Conformance.Cases {
-				lines = append(lines, "| `"+Cell(item.ID)+"` | `"+Cell(item.AtomID)+"` | "+
-					testLink(g, item.Test)+" | `"+Cell(item.Profile)+"` | `"+Cell(item.Operation)+"` | `"+
+				lines = append(lines, "| `"+Cell(item.ID)+"` | `"+Cell(item.AtomID)+"` | `"+Cell(strings.Join(item.ClauseIDs, ", "))+"` | "+
+					testHref(item.Test)+" | `"+Cell(item.Profile)+"` | `"+Cell(item.Operation)+"` | `"+
 					Cell(item.Target)+"` | `"+Cell(item.Producer)+"` | `"+Cell(strings.Join(item.Sides, ", "))+
 					"` | `"+Cell(reportJSON(item.Fixtures, text))+"` | "+Cell(reportStatus(text, item.Status))+
 					" | "+Cell(reportStatus(text, item.Qualification))+" | `"+Cell(reportRawValue(item.Input, text))+
@@ -159,7 +192,7 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 						if execution.ObservedProfile != "" && execution.ObservedProfile != profile {
 							profile += " / " + execution.ObservedProfile
 						}
-						lines = append(lines, "| `"+Cell(comparison.Name)+"` | "+testLink(g, execution.Test)+
+						lines = append(lines, "| `"+Cell(comparison.Name)+"` | "+testHref(execution.Test)+
 							" | `"+Cell(profile)+"` | `"+Cell(execution.Operation)+"` | `"+
 							Cell(execution.Target)+"` | `"+Cell(execution.Producer)+"` | `"+
 							Cell(reportJSON(execution.Conditions, text)+" / "+reportJSON(execution.Selection, text))+
@@ -177,6 +210,7 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 			lines = append(lines, text("## Implementation profiles"), "",
 				text("| Profile | Operations | Features | Capabilities | Status |"),
 				"|---|---|---|---|---|")
+			seenProfiles := make(map[string]bool)
 			for _, profile := range report.Conformance.Profiles {
 				operations, features, capabilities := "—", "—", "—"
 				if profile.Definition != nil {
@@ -184,9 +218,14 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 					features = strings.Join(profile.Definition.Features, ", ")
 					capabilities = reportJSON(profile.Definition, text)
 				}
-				lines = append(lines, "| `"+Cell(profile.ID)+"` | `"+Cell(operations)+"` | `"+
-					Cell(features)+"` | `"+Cell(capabilities)+"` | "+
-					Cell(reportStatus(text, profile.Status))+" |")
+				row := "| `" + Cell(profile.ID) + "` | `" + Cell(operations) + "` | `" +
+					Cell(features) + "` | `" + Cell(capabilities) + "` | " +
+					Cell(reportStatus(text, profile.Status)) + " |"
+				if !details && seenProfiles[row] {
+					continue
+				}
+				seenProfiles[row] = true
+				lines = append(lines, row)
 			}
 			lines = append(lines, "")
 		}
@@ -232,6 +271,9 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 	}
 
 	for _, req := range report.Requirements {
+		if !details {
+			continue
+		}
 		claim, err := reportClaim(g, language, req.ID, req.Claim, req.ClaimTexts)
 		if err != nil {
 			return "", err
@@ -252,7 +294,7 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 			for _, finding := range requirementFindings {
 				findingsDoc := localizedReportName(g, "FINDINGS", language)
 				lines = append(lines, "  - [`"+Cell(finding.ID)+"` — `"+
-					Cell(reportStatus(text, finding.Kind))+"`]("+findingsDoc+"#finding-"+html.EscapeString(finding.ID)+")")
+					Cell(reportStatus(text, finding.Kind))+"`]("+path.Join(linkPrefix, findingsDoc)+"#finding-"+html.EscapeString(finding.ID)+")")
 			}
 		}
 		if len(req.Cases) > 0 {
@@ -270,7 +312,7 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 				href := ""
 				if ok {
 					label = link.SourceID + " — " + check.Path + "#" + link.Anchor
-					href = sourceLink(g, check.Path, link.Anchor)
+					href = sourceHref(check.Path, link.Anchor)
 				}
 				if href == "" {
 					lines = append(lines, "  - `"+Cell(label)+"` ("+text("source reference unresolved")+")")
@@ -282,17 +324,19 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 		if len(req.Methods) > 0 {
 			lines = append(lines, "- **"+text("Implementation methods")+":**")
 			for _, method := range req.Methods {
-				lines = append(lines, "  - "+methodLink(g, method))
+				lines = append(lines, "  - "+methodHref(method))
 			}
 		}
 		if req.CoverageStatus == evidence.CoverageRetired {
 			lines = append(lines, "", text("_Retired requirement; no live test obligation is collected._"))
 		} else if len(req.Tests) == 0 {
-			lines = append(lines, "", text("_No test execution evidence was collected for this requirement._"))
+			if !indexedCases {
+				lines = append(lines, "", text("_No test execution evidence was collected for this requirement._"))
+			}
 		} else {
 			lines = append(lines, "", text("### Test executions"), "")
 			for _, test := range req.Tests {
-				lines = append(lines, "#### "+testLink(g, test.Reference)+" — `"+
+				lines = append(lines, "#### "+testHref(test.Reference)+" — `"+
 					Cell(reportStatus(text, test.Verdict))+"`", "")
 				if test.Problem != "" {
 					lines = append(lines, "- **"+text("Execution detail")+":** "+Cell(test.Problem), "")
@@ -302,7 +346,7 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 					continue
 				}
 				for _, artifact := range test.Artifacts {
-					lines = append(lines, "**"+text("Artifact")+":** "+testLink(g, artifact.Test)+
+					lines = append(lines, "**"+text("Artifact")+":** "+testHref(artifact.Test)+
 						" — "+text("Case ID")+": `"+Cell(artifact.CaseID)+"`, "+text("Subject")+
 						" `"+Cell(artifact.Subject)+"`, "+text("Verdict")+" `"+
 						Cell(reportStatus(text, artifact.Verdict))+"`", "")
@@ -358,6 +402,9 @@ func renderEvidence(g *ontology.Graph, report evidence.Report, language string, 
 
 func sourceLink(g *ontology.Graph, file, anchor string) string {
 	href := relativeSourcePath(g, file)
+	if href == "" {
+		return ""
+	}
 	if fragment := sourceAnchorFragment(anchor); fragment != "" {
 		href += "#" + fragment
 	}
@@ -399,7 +446,13 @@ func relativeSourcePath(g *ontology.Graph, file string) string {
 		return strings.ReplaceAll(filepath.ToSlash(file), " ", "%20")
 	}
 	path := filepath.FromSlash(file)
-	if !filepath.IsAbs(path) {
+	if strings.HasPrefix(file, "project://") {
+		var err error
+		path, err = source.ResolvePath(g, file)
+		if err != nil {
+			return ""
+		}
+	} else if !filepath.IsAbs(path) {
 		path = filepath.Join(gate.SpecRootForGraph(g), path)
 	}
 	base := filepath.Join(g.DomainDir, "docs", "gen")

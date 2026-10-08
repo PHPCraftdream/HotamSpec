@@ -172,21 +172,3 @@ func TestNewAtomSourceIndexForGraphRootModulePackagesRequiresRecorderPath(t *tes
 		t.Fatal("index without an explicit recorder import path must fail")
 	}
 }
-
-func TestDiscoverSnapshotAtomTestsFindsRootPackageTests(t *testing.T) {
-	root := writeRootModuleAtomFixture(t)
-	snapshot := &AtomExecutionSnapshot{
-		PackageFiles: make(map[string]string),
-		PackageRuns:  make(map[string]RecordingResult),
-		TestFiles:    make(map[string]map[string]string),
-	}
-	if err := discoverSnapshotAtomTests(root, []string{"internal/dogfood"}, snapshot); err != nil {
-		t.Fatal(err)
-	}
-	if got := snapshot.TestFiles["internal/dogfood"]["TestSpeaks"]; got != "internal/dogfood/dogfood_test.go" {
-		t.Fatalf("TestFiles entry = %q, want the listed package's test", got)
-	}
-	if got := snapshot.PackageFiles["internal/dogfood"]; got != "internal/dogfood/dogfood_test.go" {
-		t.Fatalf("PackageFiles entry = %q, want the listed package's test", got)
-	}
-}

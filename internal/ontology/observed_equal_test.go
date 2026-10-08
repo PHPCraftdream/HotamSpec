@@ -8,7 +8,7 @@ import (
 func TestEqualObservedValuesReconcilesAuthoredAndDecodedOracle(t *testing.T) {
 	no := false
 	authored := ObservedValue{Kind: "object", Fields: map[string]ObservedValue{
-		"accepted": {Kind: "scalar", ScalarKind: "bool", Bool: &no},
+		"accepted": {Kind: "bool", ScalarKind: "bool", Bool: &no},
 		"bytes":    {Kind: "bytes", Encoding: "base64", Bytes: ""},
 	}}
 	wire, err := json.Marshal(authored)
@@ -23,7 +23,7 @@ func TestEqualObservedValuesReconcilesAuthoredAndDecodedOracle(t *testing.T) {
 		t.Fatal("valid recorded oracle differs only by decoder bookkeeping")
 	}
 	yes := true
-	recorded.Fields["accepted"] = ObservedValue{Kind: "scalar", ScalarKind: "bool", Bool: &yes}
+	recorded.Fields["accepted"] = ObservedValue{Kind: "bool", ScalarKind: "bool", Bool: &yes}
 	if EqualObservedValues(&authored, &recorded) {
 		t.Fatal("changed boolean oracle was accepted")
 	}

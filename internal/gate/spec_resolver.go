@@ -3,7 +3,6 @@ package gate
 import (
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"os"
 	"path/filepath"
@@ -189,11 +188,14 @@ func hasVolumePrefix(slashPath string) bool {
 //     constructor or method.
 func ResolveSpecSymbol(specRoot, file, symbol string) (SpecSymbolResult, error) {
 	path := filepath.Join(specRoot, filepath.FromSlash(file))
-	fset := token.NewFileSet()
-	astFile, err := parser.ParseFile(fset, path, nil, 0)
+	_, astFile, err := parseSourceFileFresh(path)
 	if err != nil {
 		return SpecSymbolResult{}, fmt.Errorf("parse %s: %w", path, err)
 	}
+	return resolveSpecSymbol(astFile, symbol), nil
+}
+
+func resolveSpecSymbol(astFile *ast.File, symbol string) SpecSymbolResult {
 
 	wantType, wantName, qualified := splitQualifiedSymbol(symbol)
 
@@ -203,7 +205,7 @@ func ResolveSpecSymbol(specRoot, file, symbol string) (SpecSymbolResult, error) 
 			if d.Recv == nil {
 				// Top-level function. Only matches an unqualified name.
 				if !qualified && d.Name.Name == wantName {
-					return SpecSymbolResult{Kind: SpecSymbolFunc}, nil
+					return SpecSymbolResult{Kind: SpecSymbolFunc}
 				}
 				continue
 			}
@@ -213,10 +215,10 @@ func ResolveSpecSymbol(specRoot, file, symbol string) (SpecSymbolResult, error) 
 				continue
 			}
 			if !qualified {
-				return SpecSymbolResult{Kind: SpecSymbolMethod}, nil
+				return SpecSymbolResult{Kind: SpecSymbolMethod}
 			}
 			if receiverBaseTypeName(d.Recv) == wantType {
-				return SpecSymbolResult{Kind: SpecSymbolMethod}, nil
+				return SpecSymbolResult{Kind: SpecSymbolMethod}
 			}
 		case *ast.GenDecl:
 			if d.Tok != token.TYPE {
@@ -231,12 +233,12 @@ func ResolveSpecSymbol(specRoot, file, symbol string) (SpecSymbolResult, error) 
 					continue
 				}
 				if ts.Name.Name == wantName {
-					return SpecSymbolResult{Kind: SpecSymbolType}, nil
+					return SpecSymbolResult{Kind: SpecSymbolType}
 				}
 			}
 		}
 	}
-	return SpecSymbolResult{Kind: SpecSymbolNone}, nil
+	return SpecSymbolResult{Kind: SpecSymbolNone}
 }
 
 // SymbolRange is the resolved location W2.2's coverage-proof gate needs for
@@ -290,11 +292,15 @@ func ResolveSpecSymbolRange(specRoot, file, symbol string) (rng SymbolRange, ok 
 	if absErr != nil {
 		return SymbolRange{}, false, fmt.Errorf("could not resolve absolute path for %s: %w", path, absErr)
 	}
-	fset := token.NewFileSet()
-	astFile, parseErr := parser.ParseFile(fset, path, nil, 0)
+	fset, astFile, parseErr := parseSourceFileFresh(path)
 	if parseErr != nil {
 		return SymbolRange{}, false, fmt.Errorf("parse %s: %w", path, parseErr)
 	}
+	rng, ok = resolveSpecSymbolRange(fset, astFile, absPath, symbol)
+	return rng, ok, nil
+}
+
+func resolveSpecSymbolRange(fset *token.FileSet, astFile *ast.File, absPath, symbol string) (SymbolRange, bool) {
 
 	wantType, wantName, qualified := splitQualifiedSymbol(symbol)
 
@@ -317,9 +323,9 @@ func ResolveSpecSymbolRange(specRoot, file, symbol string) (rng SymbolRange, ok 
 		}
 		start := fset.Position(fn.Pos())
 		end := fset.Position(fn.End())
-		return SymbolRange{File: absPath, StartLine: start.Line, EndLine: end.Line}, true, nil
+		return SymbolRange{File: absPath, StartLine: start.Line, EndLine: end.Line}, true
 	}
-	return SymbolRange{}, false, nil
+	return SymbolRange{}, false
 }
 
 // splitQualifiedSymbol splits a symbol name of the form "Type.Method" into
@@ -360,11 +366,14 @@ func receiverBaseTypeName(recv *ast.FieldList) string {
 // import path so canon.Fact/Holds calls count as atom calls and teeth.
 func ResolveSpecTest(specRoot, file, testName string, declaredRecorderImportPaths ...string) (SpecTestResult, error) {
 	path := filepath.Join(specRoot, filepath.FromSlash(file))
-	fset := token.NewFileSet()
-	astFile, err := parser.ParseFile(fset, path, nil, 0)
+	_, astFile, err := parseSourceFileFresh(path)
 	if err != nil {
 		return SpecTestResult{}, fmt.Errorf("parse %s: %w", path, err)
 	}
+	return resolveSpecTest(astFile, testName, declaredRecorderImportPaths...), nil
+}
+
+func resolveSpecTest(astFile *ast.File, testName string, declaredRecorderImportPaths ...string) SpecTestResult {
 
 	for _, decl := range astFile.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
@@ -386,9 +395,9 @@ func ResolveSpecTest(specRoot, file, testName string, declaredRecorderImportPath
 		teeth := testBodyHasTeeth(fn.Body, importsHotamspec(astFile, declaredRecorderImportPaths...)) || atoms
 		skip := testBodyHasTopLevelSkip(fn.Body)
 		scenario := testBodyHasScenarioConstructor(fn.Body) || atoms
-		return SpecTestResult{Found: true, HasTeeth: teeth, HasSkip: skip, HasScenario: scenario}, nil
+		return SpecTestResult{Found: true, HasTeeth: teeth, HasSkip: skip, HasScenario: scenario}
 	}
-	return SpecTestResult{Found: false}, nil
+	return SpecTestResult{Found: false}
 }
 
 // isRealTestSignature reports whether fn has the shape go test requires:

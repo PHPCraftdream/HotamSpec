@@ -49,6 +49,10 @@ Beyond that happy path, the same quickstart covers each of these (or see
 - Rule/case atoms via `hotamspec.WithCase` (requires `conformance.rule_cases`
   in the manifest) — see
   [Rule/case atoms (WithCase)](docs/QUICKSTART-CONSUMER.md#rulecase-atoms-withcase).
+- Authored reader documents via `conformance.document_sections`: stable section/
+  block identities, shared Go text references and explicitly selected examples.
+  Concrete `ClauseIDs` scope witnesses without treating method traceability as
+  complete proof; technical diagnostics stay in linked evidence.
 - Inspecting failures with `hotam evidence` / `hotam findings` without
   publishing a false passing SPEC — see
   [Evidence and findings](docs/QUICKSTART-CONSUMER.md#evidence-and-findings).
@@ -179,16 +183,18 @@ hotam all-violations [--domain <path>]
 hotam evidence [--domain <path>] [--json] [--write]
         Execute fresh authored evidence, retaining input/actual/expected,
         source pins, implementation context, and per-test pass/fail/skip.
-        --write saves one docs/gen/evidence.json plus EVIDENCE.md and FINDINGS.md
-        views (language-suffixed when configured), even when checks fail;
-        discrepancies/source/execution failures then return nonzero. It never
-        mutates the graph or publishes a false passing SPEC.
+        --write saves compact EVIDENCE.md and FINDINGS.md views plus linked
+        evidence/<lang>/requirements/ and evidence/<lang>/cases/ detail pages.
+        --json emits the full machine report; --json --write also saves the
+        optional docs/gen/evidence.json packet. Failures remain visible and
+        return nonzero. This never mutates the graph or publishes a false pass.
 
 hotam findings <list|show|review> [finding-id] [--domain <path>] [--json]
         Inspect the current generated findings. Review records explicit human
         kind/status/rationale/decision-reference separately under
         docs/reviews/finding-reviews.json; the original observations/verdict
         stay immutable and a changed finding ID does not inherit old notes.
+        The findings CLI reads the optional packet produced by --json --write.
 
 hotam req <show|list|search|context|related> [args] [--domain <path>] [--json]
         Compact agentic read interface over the domain graph

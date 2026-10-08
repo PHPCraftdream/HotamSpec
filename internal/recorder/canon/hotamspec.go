@@ -56,9 +56,11 @@
 package hotamspec
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -213,34 +215,118 @@ type DiagnosticValue struct {
 	Span   *ByteSpan `json:"span,omitempty"`
 }
 
+func decodeTypedObject(data []byte, label string, target any, required ...string) (map[string]json.RawMessage, error) {
+	if trimmed := bytes.TrimSpace(data); len(trimmed) == 0 || trimmed[0] != '{' {
+		return nil, fmt.Errorf("%s must be a JSON object", label)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(target); err != nil {
+		return nil, err
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return nil, fmt.Errorf("%s has trailing JSON data", label)
+		}
+		return nil, err
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return nil, err
+	}
+	for _, name := range required {
+		if _, ok := fields[name]; !ok {
+			return nil, fmt.Errorf("%s.%s is required", label, name)
+		}
+	}
+	for name, raw := range fields {
+		if bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
+			return nil, fmt.Errorf("%s.%s must not be null", label, name)
+		}
+	}
+	return fields, nil
+}
+
+func (span *ByteSpan) UnmarshalJSON(data []byte) error {
+	type plain ByteSpan
+	var decoded plain
+	if _, err := decodeTypedObject(data, "byte_span", &decoded, "start", "end"); err != nil {
+		return err
+	}
+	*span = ByteSpan(decoded)
+	return nil
+}
+
+func (value *DiagnosticValue) UnmarshalJSON(data []byte) error {
+	type plain DiagnosticValue
+	var decoded plain
+	if _, err := decodeTypedObject(data, "diagnostic", &decoded, "code"); err != nil {
+		return err
+	}
+	*value = DiagnosticValue(decoded)
+	return nil
+}
+
 // TypedValue mirrors the portable observed-value schema. Bytes contains
 // base64 when Kind is "bytes".
 type TypedValue struct {
-	Kind       string                `json:"kind"`
-	Bool       *bool                 `json:"bool,omitempty"`
-	Text       *string               `json:"text,omitempty"`
-	Encoding   string                `json:"encoding,omitempty"`
-	Bytes      string                `json:"bytes,omitempty"`
-	ScalarKind string                `json:"scalar_kind,omitempty"`
-	Integer    string                `json:"integer,omitempty"`
-	FloatBits  string                `json:"float_bits,omitempty"`
-	Fields     map[string]TypedValue `json:"fields,omitempty"`
-	Diagnostic *DiagnosticValue      `json:"diagnostic,omitempty"`
+	Kind          string                `json:"kind"`
+	Bool          *bool                 `json:"bool,omitempty"`
+	Text          *string               `json:"text,omitempty"`
+	Encoding      string                `json:"encoding,omitempty"`
+	Bytes         string                `json:"bytes,omitempty"`
+	ScalarKind    string                `json:"scalar_kind,omitempty"`
+	Integer       string                `json:"integer,omitempty"`
+	FloatBits     string                `json:"float_bits,omitempty"`
+	Fields        map[string]TypedValue `json:"fields,omitempty"`
+	Items         []TypedValue          `json:"items,omitempty"`
+	Diagnostic    *DiagnosticValue      `json:"diagnostic,omitempty"`
+	decoded       bool
+	hasBytes      bool
+	hasFields     bool
+	hasItems      bool
+	hasScalarKind bool
 }
 
-// MarshalJSON preserves explicit empty byte and object payloads.
+// UnmarshalJSON accepts only the explicit typed envelope, never user-key wrappers.
+func (value *TypedValue) UnmarshalJSON(data []byte) error {
+	type plain TypedValue
+	var decoded plain
+	fields, err := decodeTypedObject(data, "typed_value", &decoded, "kind")
+	if err != nil {
+		return err
+	}
+	*value = TypedValue(decoded)
+	value.decoded = true
+	_, value.hasBytes = fields["bytes"]
+	_, value.hasFields = fields["fields"]
+	_, value.hasItems = fields["items"]
+	_, value.hasScalarKind = fields["scalar_kind"]
+	return nil
+}
+
+// MarshalJSON preserves explicit empty byte, object, and ordered array payloads.
 func (value TypedValue) MarshalJSON() ([]byte, error) {
 	type plain TypedValue
 	wire := struct {
 		plain
-		Bytes  *string                `json:"bytes,omitempty"`
-		Fields *map[string]TypedValue `json:"fields,omitempty"`
+		Bytes      *string                `json:"bytes,omitempty"`
+		ScalarKind *string                `json:"scalar_kind,omitempty"`
+		Fields     *map[string]TypedValue `json:"fields,omitempty"`
+		Items      *[]TypedValue          `json:"items,omitempty"`
 	}{plain: plain(value)}
-	if value.Kind == "bytes" || value.Bytes != "" {
+	if value.Kind == "bytes" || value.Bytes != "" || value.hasBytes {
 		wire.Bytes = &value.Bytes
 	}
-	if value.Fields != nil {
+	if value.ScalarKind != "" || value.hasScalarKind {
+		wire.ScalarKind = &value.ScalarKind
+	}
+	if value.Kind == "object" || value.Fields != nil || value.hasFields {
 		wire.Fields = &value.Fields
+	}
+	if value.Kind == "array" || value.Items != nil || value.hasItems {
+		wire.Items = &value.Items
 	}
 	return json.Marshal(wire)
 }
@@ -250,6 +336,7 @@ func (value TypedValue) MarshalJSON() ([]byte, error) {
 type CaseContext struct {
 	ID         string              `json:"id"`
 	AtomIDs    []string            `json:"atom_ids,omitempty"`
+	ClauseIDs  []string            `json:"clause_ids,omitempty"`
 	Profile    string              `json:"profile,omitempty"`
 	Target     string              `json:"target,omitempty"`
 	Fixtures   []FixtureRef        `json:"fixtures,omitempty"`
@@ -259,6 +346,18 @@ type CaseContext struct {
 	Expected   *TypedValue         `json:"-"`
 	Operation  string              `json:"operation,omitempty"`
 	Producer   string              `json:"producer,omitempty"`
+}
+
+func (ctx CaseContext) MarshalJSON() ([]byte, error) {
+	type plain CaseContext
+	wire := struct {
+		plain
+		ClauseIDs *[]string `json:"clause_ids,omitempty"`
+	}{plain: plain(ctx)}
+	if ctx.ClauseIDs != nil {
+		wire.ClauseIDs = &ctx.ClauseIDs
+	}
+	return json.Marshal(wire)
 }
 
 // Bytes records exact bytes as base64 without decoding them as text.
@@ -365,6 +464,15 @@ func Object(fields map[string]TypedValue) TypedValue {
 	return TypedValue{Kind: "object", Fields: copy}
 }
 
+// Array records a defensive copy of ordered items, including an explicit empty array.
+func Array(items []TypedValue) TypedValue {
+	copy := make([]TypedValue, len(items))
+	for i := range items {
+		copy[i] = cloneTypedValue(items[i])
+	}
+	return TypedValue{Kind: "array", Items: copy}
+}
+
 func stringPointer(value string) *string { return &value }
 
 func copyDiagnostic(value *DiagnosticValue) *DiagnosticValue {
@@ -407,6 +515,12 @@ func cloneTypedValue(value TypedValue) TypedValue {
 			copy.Fields[key] = cloneTypedValue(field)
 		}
 	}
+	if value.Items != nil {
+		copy.Items = make([]TypedValue, len(value.Items))
+		for i := range value.Items {
+			copy.Items[i] = cloneTypedValue(value.Items[i])
+		}
+	}
 	copy.Diagnostic = copyDiagnostic(value.Diagnostic)
 	return copy
 }
@@ -434,6 +548,9 @@ func cloneCaseContext(value *CaseContext) *CaseContext {
 	}
 	copy := *value
 	copy.AtomIDs = append([]string(nil), value.AtomIDs...)
+	if value.ClauseIDs != nil {
+		copy.ClauseIDs = append([]string{}, value.ClauseIDs...)
+	}
 	copy.Fixtures = append([]FixtureRef(nil), value.Fixtures...)
 	copy.Conditions = append([]ConditionEvidence(nil), value.Conditions...)
 	copy.Sides = append([]string(nil), value.Sides...)
@@ -541,7 +658,7 @@ func Observe(name string, input, actual, expected any) Observation {
 	return Observation{
 		Name: name, Input: renderTypedValue(rawInput), Actual: renderTypedValue(rawActual),
 		Expected: renderTypedValue(rawExpected),
-		Passed:   reflect.DeepEqual(rawActual, rawExpected),
+		Passed:   equalTypedValues(&rawActual, &rawExpected),
 		RawInput: &rawInput, RawActual: &rawActual, RawExpected: &rawExpected,
 	}
 }
@@ -914,7 +1031,7 @@ func (s *Scenario) eq(label string, got, want any) (bool, string, string) {
 	if typedComparison {
 		rawGot, rawWant = typedValue(got), typedValue(want)
 		gotS, wantS = renderTypedValue(rawGot), renderTypedValue(rawWant)
-		equal = reflect.DeepEqual(rawGot, rawWant)
+		equal = equalTypedValues(&rawGot, &rawWant)
 	} else {
 		gotS, wantS = renderValue(got), renderValue(w)
 		equal = reflect.TypeOf(g) == reflect.TypeOf(w) && renderValue(g) == renderValue(w)
@@ -951,11 +1068,57 @@ func derefValue(value any) any {
 
 func equalValues(got, want any) bool {
 	if hasTypedValue(got) || hasTypedValue(want) {
-		return reflect.DeepEqual(typedValue(got), typedValue(want))
+		actual, expected := typedValue(got), typedValue(want)
+		return equalTypedValues(&actual, &expected)
 	}
 	g, w := derefValue(got), derefValue(want)
 	w = coerceConst(g, w)
 	return reflect.TypeOf(g) == reflect.TypeOf(w) && renderValue(g) == renderValue(w)
+}
+
+// equalTypedValues compares exact payloads, not private decoder bookkeeping.
+func equalTypedValues(a, b *TypedValue) bool {
+	if !validTypedCollection(a) || !validTypedCollection(b) {
+		return false
+	}
+	bytesA := a.Bytes != "" || a.hasBytes || (!a.decoded && a.Kind == "bytes")
+	bytesB := b.Bytes != "" || b.hasBytes || (!b.decoded && b.Kind == "bytes")
+	if a.Kind != b.Kind || a.Encoding != b.Encoding || a.Bytes != b.Bytes ||
+		bytesA != bytesB || a.ScalarKind != b.ScalarKind ||
+		a.Integer != b.Integer || a.FloatBits != b.FloatBits ||
+		!reflect.DeepEqual(a.Text, b.Text) || !reflect.DeepEqual(a.Bool, b.Bool) ||
+		!reflect.DeepEqual(a.Diagnostic, b.Diagnostic) ||
+		(a.Fields == nil) != (b.Fields == nil) || len(a.Fields) != len(b.Fields) ||
+		(a.Items == nil) != (b.Items == nil) || len(a.Items) != len(b.Items) {
+		return false
+	}
+	for key, field := range a.Fields {
+		other, ok := b.Fields[key]
+		if !ok || !equalTypedValues(&field, &other) {
+			return false
+		}
+	}
+	for i := range a.Items {
+		if !equalTypedValues(&a.Items[i], &b.Items[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func validTypedCollection(value *TypedValue) bool {
+	if value.Kind != "object" && value.Kind != "array" {
+		return true
+	}
+	if value.Text != nil || value.Bool != nil || value.Encoding != "" ||
+		value.Bytes != "" || value.hasBytes || value.ScalarKind != "" || value.hasScalarKind ||
+		value.Integer != "" || value.FloatBits != "" || value.Diagnostic != nil {
+		return false
+	}
+	if value.Kind == "object" {
+		return value.Fields != nil && value.Items == nil && !value.hasItems
+	}
+	return value.Items != nil && value.Fields == nil && !value.hasFields
 }
 
 func hasTypedValue(value any) bool {
@@ -1007,6 +1170,17 @@ func typedValue(value any) TypedValue {
 		if rv.Type().Elem().Kind() == reflect.Uint8 {
 			return Bytes(rv.Bytes())
 		}
+		items := make([]TypedValue, rv.Len())
+		for i := range items {
+			items[i] = typedValue(rv.Index(i).Interface())
+		}
+		return TypedValue{Kind: "array", Items: items}
+	case reflect.Array:
+		items := make([]TypedValue, rv.Len())
+		for i := range items {
+			items[i] = typedValue(rv.Index(i).Interface())
+		}
+		return TypedValue{Kind: "array", Items: items}
 	case reflect.Map:
 		if rv.Type().Key().Kind() == reflect.String {
 			fields := make(map[string]TypedValue, rv.Len())
@@ -1014,7 +1188,7 @@ func typedValue(value any) TypedValue {
 			for iter.Next() {
 				fields[iter.Key().String()] = typedValue(iter.Value().Interface())
 			}
-			return Object(fields)
+			return TypedValue{Kind: "object", Fields: fields}
 		}
 	}
 	text := renderValue(value)
@@ -1197,6 +1371,17 @@ func renderTypedValue(value TypedValue) string {
 			b.WriteString(renderTypedValue(value.Fields[key]))
 		}
 		b.WriteByte('}')
+		return b.String()
+	case "array":
+		var b strings.Builder
+		b.WriteByte('[')
+		for i := range value.Items {
+			if i != 0 {
+				b.WriteString(", ")
+			}
+			b.WriteString(renderTypedValue(value.Items[i]))
+		}
+		b.WriteByte(']')
 		return b.String()
 	case "null":
 		return "<nil>"

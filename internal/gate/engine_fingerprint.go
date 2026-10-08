@@ -17,7 +17,7 @@ import (
 // established — but scoped to ONE directory, not the whole module. This is a
 // deliberately separate, scope-limited reimplementation: hashPackageInputs
 // ignores its pkgDir parameter and hashes the entire module tree (it is
-// load-bearing for runCache/coverageRunCache invalidation and MUST NOT be
+// load-bearing for invocation content invalidation and MUST NOT be
 // changed), so a per-package hash needs its own small function.
 //
 // Build-output extensions (.exe/.dll/.so/.dylib/.test) are excluded via the
@@ -98,7 +98,7 @@ func hashDirContent(dir string) (string, error) {
 // can flip what gen-spec produces.
 //
 // This function does NOT share code with hashPackageInputs (which ignores
-// pkgDir and hashes the whole module for runCache/coverageRunCache cache
+// pkgDir and hashes the whole module for invocation content
 // invalidation): it is a scope-limited reimplementation of the same algorithm
 // philosophy, not a fork of business logic.
 //

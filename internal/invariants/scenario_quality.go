@@ -20,32 +20,9 @@
 // package's own scenario_authority_ratchet.go for the mechanical embodiment
 // of that law for this check's own trigger.
 //
-// PERFORMANCE: built off the REAL recorded Artifact via
-// gate.RunVerifiedByTestRecording(specRoot, file, testName, "") -- the EXACT
-// same call shape internal/invariants/claim_scenario_current.go and
-// internal/selfspec/claim_derive.go already use -- rather than a second,
-// bespoke Go-source AST parser reading Given/When/Then call literals (which
-// would be fragile against dynamic titles, helper-function indirection, and
-// loops, and would duplicate work the engine's own recorder+record-mode
-// machinery already does better). gate.RunVerifiedByTestRecording carries NO
-// verdict memoization of its own (see that function's own doc comment: "no
-// in-memory memoization or singleflight collapsing here at all... every call
-// to this function spawns its OWN real `go test` subprocess") -- the
-// memoization that DOES help a repeated call with the SAME (specRoot,
-// pkgPattern, coverPkgPattern) is the LOWER, compile-artifact layer
-// (internal/gate/compile_cache.go's compileCache): a second call against an
-// unchanged package skips `go test -c` (the dominant cost per this session's
-// own profile, docs/reviews/2026-07-30-test-suite-speed-analysis.md §1.7,
-// ~42% of a cold engine pass) and only pays a cheap re-exec of the
-// already-compiled binary -- still a REAL, FRESH test execution (not a
-// verdict-cache hit), but a materially cheaper one than a first cold call.
-// The recorder's own byte-for-byte determinism guarantee
-// (internal/recorder/canon/hotamspec.go's package doc comment; proved by
-// internal/gate's own TestRunVerifiedByTestRecording_Deterministic_
-// TwoRunsByteIdentical) is what makes a second, independently-executed run
-// produce the identical artifact content this check and any sibling caller
-// (check_settled_requires_scenario's own scenario-presence prefilter aside)
-// would each see.
+// PERFORMANCE: the invocation owns both the immutable atom snapshot and shared
+// compiled artifacts. Manual scenario recording still executes afresh; no
+// recording verdict survives this invocation's Close.
 //
 // AST PREFILTER (zero execution cost for the common case): for each
 // verified_by entry, anyVerifiedByEntryHasScenario-style AST prefiltering
@@ -164,7 +141,7 @@ const (
 // scenario per the AST prefilter -- e.g. the test currently fails) is a
 // violation, naming the requirement and listing every checked artifact with
 // which specific rule(s) it failed.
-func checkScenarioQuality(g *ontology.Graph) []Violation {
+func checkScenarioQuality(g *ontology.Graph) (out []Violation) {
 	if !g.ScenarioAuthorityQuality {
 		// Honest no-op -- see this check's own doc comment / loader.
 		// ScenarioAuthorityQuality's doc comment for why this trigger is
@@ -172,7 +149,14 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 		return nil
 	}
 	specRoot := gate.SpecRootForGraph(g)
-	var out []Violation
+	g, session, owned := invocationSession(g)
+	if owned {
+		defer func() {
+			if err := session.Close(); err != nil {
+				out = append(out, Violation{Check: "execution_session_close", ID: g.DomainDir, Message: err.Error()})
+			}
+		}()
+	}
 	var atomIndex *gate.AtomSourceIndex
 	var atomRuns map[string]gate.RecordingResult
 	needAtomSnapshot := false
@@ -212,7 +196,7 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 			if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, g.SelfHosting); !ok {
 				continue
 			}
-			result, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
+			result, err := resolveSpecTestForGraph(g, specRoot, e.file, e.symbol, g.AtomRecorderImportPath)
 			if err != nil || !result.Found || !result.HasScenario {
 				continue
 			}
@@ -235,9 +219,11 @@ func checkScenarioQuality(g *ontology.Graph) []Violation {
 				result, exists = atomRuns[key]
 				if !exists {
 					result.Err = fmt.Errorf("scenario package %q missing from shared execution snapshot", key)
+				} else {
+					result.TestRunResult = result.ForTest(e.symbol)
 				}
 			} else {
-				result = gate.RunVerifiedByTestRecording(specRoot, e.file, e.symbol, "")
+				result = session.RunVerifiedByTestRecording(specRoot, e.file, e.symbol, "")
 			}
 			if result.Skipped || result.Err != nil || result.CompileFailed || !result.Passed {
 				diagnostics = append(diagnostics, fmt.Sprintf(

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,7 +42,7 @@ func atomArtifacts(g *ontology.Graph, visit func(string, gate.AtomArtifact)) {
 func recordedAtoms(file, test string, runs map[string]gate.RecordingResult) []gate.AtomArtifact {
 	key := filepath.ToSlash(filepath.Dir(filepath.FromSlash(file)))
 	run, exists := runs[key]
-	if !exists || run.Skipped || run.Err != nil || run.CompileFailed || !run.Passed {
+	if !exists || run.Skipped || run.Err != nil || run.CompileFailed {
 		return nil
 	}
 	var artifacts []gate.AtomArtifact
@@ -53,6 +51,9 @@ func recordedAtoms(file, test string, runs map[string]gate.RecordingResult) []ga
 			Test string `json:"test"`
 		}
 		if json.Unmarshal(raw.RawJSON, &metadata) != nil || (metadata.Test != test && !strings.HasPrefix(metadata.Test, test+"/")) {
+			continue
+		}
+		if verdict := run.ForTest(metadata.Test); verdict.Err != nil || !verdict.Passed {
 			continue
 		}
 		artifact, err := gate.DecodeAtomArtifact(raw.RawJSON)
@@ -87,13 +88,20 @@ func atomMethodAtomic(fn *ast.FuncDecl, relation, rule bool) bool {
 	return ok && len(ret.Results) == 1
 }
 
-func checkFactMethodHasPhrase(g *ontology.Graph) []Violation {
+func checkFactMethodHasPhrase(g *ontology.Graph) (out []Violation) {
 	if !g.SelfExecutingAtoms {
 		return nil
 	}
-	var out []Violation
 	root := gate.SpecRootForGraph(g)
-	index, err := gate.NewAtomSourceIndexForGraph(g)
+	view, index, err := InvocationSourceIndex(g)
+	if view != nil && view.InvocationState != g.InvocationState {
+		defer func() {
+			if closeErr := CloseInvocation(view); closeErr != nil {
+				out = append(out, Violation{Check: "execution_session_close", ID: root, Message: closeErr.Error()})
+			}
+		}()
+	}
+	g = view
 	if err != nil {
 		return []Violation{{Check: "check_fact_method_has_phrase", ID: root, Message: err.Error()}}
 	}
@@ -113,13 +121,20 @@ func checkFactMethodHasPhrase(g *ontology.Graph) []Violation {
 	return out
 }
 
-func checkFactMethodAtomic(g *ontology.Graph) []Violation {
+func checkFactMethodAtomic(g *ontology.Graph) (out []Violation) {
 	if !g.SelfExecutingAtoms {
 		return nil
 	}
-	var out []Violation
 	root := gate.SpecRootForGraph(g)
-	index, err := gate.NewAtomSourceIndexForGraph(g)
+	view, index, err := InvocationSourceIndex(g)
+	if view != nil && view.InvocationState != g.InvocationState {
+		defer func() {
+			if closeErr := CloseInvocation(view); closeErr != nil {
+				out = append(out, Violation{Check: "execution_session_close", ID: root, Message: closeErr.Error()})
+			}
+		}()
+	}
+	g = view
 	if err != nil {
 		return []Violation{{Check: "check_fact_method_atomic", ID: root, Message: err.Error()}}
 	}
@@ -144,11 +159,18 @@ func factSubjectFailure(a gate.AtomArtifact) string {
 	return ""
 }
 
-func checkOneSubjectPerFact(g *ontology.Graph) []Violation {
+func checkOneSubjectPerFact(g *ontology.Graph) (out []Violation) {
 	if !g.SelfExecutingAtoms {
 		return nil
 	}
-	var out []Violation
+	g, session, owned := invocationSession(g)
+	if owned {
+		defer func() {
+			if err := session.Close(); err != nil {
+				out = append(out, Violation{Check: "execution_session_close", ID: g.DomainDir, Message: err.Error()})
+			}
+		}()
+	}
 	atomArtifacts(g, func(id string, a gate.AtomArtifact) {
 		if message := factSubjectFailure(a); message != "" {
 			out = append(out, Violation{Check: "check_one_subject_per_fact", ID: id, Message: message})
@@ -164,7 +186,7 @@ func checkOneSubjectPerFact(g *ontology.Graph) []Violation {
 		if d.IsDir() || !strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
-		f, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+		_, f, err := session.SourceFile(path)
 		if err != nil {
 			return err
 		}

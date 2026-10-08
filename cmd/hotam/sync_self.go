@@ -59,7 +59,9 @@ func cmdSyncSelf(args []string) error {
 	ackConflict := fs.String("ack-conflict", "", "cite an existing Conflict node (C-...) whose members cover a confront-gate hit — overrides the confront-gate refusal")
 	decisionRef := fs.String("decision-ref", "", "free-text reference to where a human decision was recorded — overrides the confront-gate refusal and is persisted as a HistoryEntry on each affected requirement")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {

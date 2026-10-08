@@ -9,13 +9,14 @@ import (
 )
 
 func cmdAllViolations(args []string) error {
-	// Compile-cache cleanup (gate.CleanupCompileCache) is centralized in
-	// main() -- reachable from every subcommand, not just this one. See
-	// main()'s own doc comment for why.
+	// Complete execution-session cleanup is centralized in runCLI after every
+	// command/error/help return, before outer main calls os.Exit.
 	fs := newFlagSet("all-violations")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {
@@ -59,7 +60,7 @@ func cmdAllViolations(args []string) error {
 				return err
 			}
 		}
-		os.Exit(1)
+		return &commandExit{code: 1}
 	}
 	if !*asJSON {
 		fmt.Println("0 violations — graph clean")

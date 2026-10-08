@@ -116,6 +116,38 @@ func TestConsumerCrystal_OverBudgetIndexesAtomPackages(t *testing.T) {
 	}
 }
 
+func TestConsumerCrystalCompressedLinksSelectLanguageShardDirectory(t *testing.T) {
+	t.Parallel()
+	g := consumerTestGraph(60, strings.Repeat(" long claim padding words", 8))
+	g.SelfExecutingAtoms = true
+	g.Languages = []string{"en", "ru", "zh"}
+	g.DefaultLanguage = "ru"
+	paddingRU := strings.Repeat(" подробное нормативное условие", 8)
+	paddingZH := strings.Repeat(" 明确的规范状态约束", 20)
+	for index := range g.Requirements {
+		g.Requirements[index].ImplementedBy = []string{"spec/model/people/person.go:Person.Name"}
+		g.Requirements[index].ClaimTexts = ontology.LocalizedText{
+			"en": g.Requirements[index].Claim,
+			"ru": fmt.Sprintf("Элемент %d должен сохранять состояние%s", index, paddingRU),
+			"zh": fmt.Sprintf("条目%d必须保持状态%s", index, paddingZH),
+		}
+	}
+	for _, language := range g.Languages {
+		t.Run(language, func(t *testing.T) {
+			g.RenderLanguage = language
+			output := renderConsumerRequirements(g, "acme")
+			target := "domains/acme/docs/gen/spec/" + language + "/model/people.md"
+			if !strings.Contains(output, "[spec/model/people]("+target+")") {
+				t.Fatalf("compressed crystal does not link to its language-local SPEC shard %q:\n%s", target, output)
+			}
+			legacy := "domains/acme/docs/gen/spec/model/people." + language + ".md"
+			if strings.Contains(output, legacy) {
+				t.Fatalf("compressed crystal links to nonexistent filename-localized shard %q", legacy)
+			}
+		})
+	}
+}
+
 // A code-authority domain's crystal routes requirement changes through
 // sync-domain, never through ProposedRequirement JSON (apply.go refuses it).
 func TestConsumerCrystal_CodeAuthoritySaysSyncDomain(t *testing.T) {

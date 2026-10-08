@@ -130,12 +130,11 @@ func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSou
 		var phrasePosition token.Position
 		var notPhrase string
 		var notPosition token.Position
-		endedParagraph := false
 		for _, line := range block {
 			text := strings.TrimSpace(line.text)
 			if text == "" {
-				if len(content) > 0 {
-					endedParagraph = true
+				if len(content) > 0 && content[len(content)-1] != "" {
+					content = append(content, "")
 				}
 				continue
 			}
@@ -153,15 +152,27 @@ func parseAtomPhrases(group *ast.CommentGroup, fs *token.FileSet, source AtomSou
 				notPhrase, notPosition = not, line.pos
 				continue
 			}
-			if endedParagraph || notPosition.Filename != "" {
-				return atomDocError(source, line.pos.Line, currentLanguage, "language block must contain one short phrase")
+			if notPosition.Filename != "" {
+				return atomDocError(source, line.pos.Line, currentLanguage, "main text must precede the `not:` negation phrase")
 			}
 			if phrasePosition.Filename == "" {
 				phrasePosition = line.pos
 			}
-			content = append(content, text)
+			content = append(content, line.text)
 		}
-		phrase := strings.Join(content, " ")
+		phrase := strings.TrimSpace(strings.Join(content, "\n"))
+		multiline := strings.Contains(phrase, "\n\n")
+		var fence markdownFence
+		for _, line := range content {
+			trimmed := strings.TrimSpace(line)
+			numbered := len(trimmed) > 2 && trimmed[0] >= '0' && trimmed[0] <= '9' && strings.Contains(trimmed, ". ")
+			if fence.consume(line) || strings.HasPrefix(trimmed, "|") || strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(line, "    ") || numbered {
+				multiline = true
+			}
+		}
+		if !multiline {
+			phrase = strings.Join(strings.Fields(phrase), " ")
+		}
 		if phrase == "" {
 			return atomDocError(source, markerLine, currentLanguage, "language block is empty")
 		}
@@ -392,6 +403,9 @@ func atomText(language, template string, args ...any) (string, error) {
 }
 
 func atomPhraseText(language, phrase, notPhrase, value string, hasValue, boolMethod bool) (string, error) {
+	if !hasValue && strings.Contains(phrase, "\n") {
+		return strings.TrimSpace(phrase), nil
+	}
 	normalized, err := normalizedAtomPhrase(phrase, language)
 	if err != nil {
 		return "", err

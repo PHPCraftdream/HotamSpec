@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+
+	"github.com/PHPCraftdream/HotamSpec/internal/gate"
 )
 
 var (
@@ -57,8 +59,19 @@ func buildSharedHotamBinary(t *testing.T) string {
 // register a t.Cleanup for it, since more than one test shares the build).
 func TestMain(m *testing.M) {
 	code := m.Run()
+	if err := gate.CloseExecutionSessions(); err != nil {
+		fmt.Fprintf(os.Stderr, "compile-cache cleanup: %v\n", err)
+		if code == 0 {
+			code = 1
+		}
+	}
 	if sharedBinaryPath != "" {
-		os.RemoveAll(filepath.Dir(sharedBinaryPath))
+		if err := os.RemoveAll(filepath.Dir(sharedBinaryPath)); err != nil {
+			fmt.Fprintf(os.Stderr, "shared binary cleanup: %v\n", err)
+			if code == 0 {
+				code = 1
+			}
+		}
 	}
 	os.Exit(code)
 }

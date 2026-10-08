@@ -31,8 +31,8 @@
 package gate
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/PHPCraftdream/HotamSpec/internal/docbundle"
 	"github.com/PHPCraftdream/HotamSpec/internal/localization"
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	"sort"
@@ -167,6 +167,21 @@ func BuildSpecFromRowsForLanguage(g *ontology.Graph, rows map[string]SpecRow, la
 }
 
 func renderSpecFromRows(g *ontology.Graph, rows map[string]SpecRow, language string) (string, error) {
+	if hasSpecDocument(g) {
+		projection, err := prepareSpecDocument(g, rows)
+		if err != nil {
+			return "", err
+		}
+		layout, err := docbundle.NewLayout(g.Languages, g.DefaultLanguage)
+		if err != nil {
+			return "", err
+		}
+		canonicalPath, err := layout.SpecIndexPath(language)
+		if err != nil {
+			return "", err
+		}
+		return renderSpecDocument(g, projection, language, canonicalPath, canonicalPath, nil)
+	}
 	for _, requirement := range g.Requirements {
 		if row, ok := rows[requirement.ID]; ok && row.sourceError != nil {
 			return "", row.sourceError
@@ -184,7 +199,16 @@ func renderSpecFromRows(g *ontology.Graph, rows map[string]SpecRow, language str
 	if err != nil {
 		return "", err
 	}
+	if g.Conformance != nil && g.Conformance.RuleCases {
+		title, err = specText(language, "# Domain specification")
+		if err != nil {
+			return "", err
+		}
+	}
 	intro, err := specText(language, specIntro)
+	if g.Conformance != nil && g.Conformance.RuleCases {
+		intro, err = specText(language, "Domain rules are authored by executable model methods. Each rule states its required behavior in this language; examples show the input and required result. Failed checks retain the observed discrepancy. Technical evidence contains case identities, execution context and full observations. Passing examples do not prove exhaustive coverage.")
+	}
 	if err != nil {
 		return "", err
 	}
@@ -212,6 +236,9 @@ func renderSpecFromRows(g *ontology.Graph, rows map[string]SpecRow, language str
 			}
 			return reqs[i].ID < reqs[j].ID
 		})
+	}
+	if g.Conformance != nil && g.Conformance.RuleCases {
+		sortNormativeRequirements(reqs)
 	}
 
 	var withScenario, withoutVerifiedBy []ontology.Requirement
@@ -252,6 +279,9 @@ func renderSpecFromRows(g *ontology.Graph, rows map[string]SpecRow, language str
 			"**%d requirement(s) carry `verified_by`; %d carry declared case tests only; %d have at least one recorded scenario narrative; %d have neither test nor case reference (honest gap).**",
 			verifiedByCount, caseOnlyCount, narratedCount, len(withoutVerifiedBy))
 	}
+	if g.Conformance != nil && g.Conformance.RuleCases {
+		summary, err = specText(language, "**Domain rules:** %d; **with recorded checks:** %d; **without a declared check:** %d.", len(withScenario), narratedCount, len(withoutVerifiedBy))
+	}
 	if err != nil {
 		return "", err
 	}
@@ -259,6 +289,9 @@ func renderSpecFromRows(g *ontology.Graph, rows map[string]SpecRow, language str
 	withHeadingTemplate := "## Requirements with a verified_by scenario"
 	if caseOnlyCount > 0 {
 		withHeadingTemplate = "## Requirements with a verified_by scenario or declared case test"
+	}
+	if g.Conformance != nil && g.Conformance.RuleCases {
+		withHeadingTemplate = "## Normative rules"
 	}
 	withHeading, err := localization.Lookup(language, withHeadingTemplate)
 	if err != nil {
@@ -272,8 +305,17 @@ func renderSpecFromRows(g *ontology.Graph, rows map[string]SpecRow, language str
 		}
 		lines = append(lines, none, "")
 	} else {
+		seenNormativeText := make(map[string]string)
 		for _, r := range withScenario {
-			rendered, err := renderSpecRequirement(g, rows[r.ID], language)
+			var rendered []string
+			if r.AtomKind == "rule" {
+				if rows[r.ID].sourceError != nil {
+					return "", rows[r.ID].sourceError
+				}
+				rendered, err = renderNormativeRequirementShared(g, rows[r.ID], language, seenNormativeText)
+			} else {
+				rendered, err = renderSpecRequirement(g, rows[r.ID], language)
+			}
 			if err != nil {
 				return "", err
 			}
@@ -324,19 +366,6 @@ func renderSpecFromRows(g *ontology.Graph, rows map[string]SpecRow, language str
 	return strings.TrimRight(strings.Join(lines, "\n"), " \t\r\n") + "\n", nil
 }
 
-// firstImplementedByFile returns the file half of r's first implemented_by
-// entry (best-effort coverPkgFile input for RunVerifiedByTestRecording —
-// implemented_by and verified_by are independent lists, not index-paired,
-// per PLAN-authored-spec-discipline.md §4/§12; a requirement with more than
-// one implemented_by symbol still only needs ONE file in that symbol's own
-// package to point -coverpkg at the right import path). Returns "" when r
-// carries no implemented_by at all or the entry does not parse as
-// "file:symbol" — RunVerifiedByTestRecording treats an empty coverPkgFile as
-// "skip coverage collection", never an error, so a requirement missing
-// implemented_by still gets its scenario narrated, just without a coverage
-// profile (coverage-proof enforcement is check_scenario_executes_impl's job,
-// W2.2, not this file's).
-
 func specStatusText(language, status string) (string, error) {
 	if status == "" {
 		return "", nil
@@ -355,6 +384,9 @@ func specStatusText(language, status string) (string, error) {
 func renderSpecRequirement(g *ontology.Graph, row SpecRow, language string) ([]string, error) {
 	if row.sourceError != nil {
 		return nil, row.sourceError
+	}
+	if row.req.AtomKind == "rule" {
+		return renderNormativeRequirement(g, row, language)
 	}
 	claim, err := specClaim(g, row.req, language)
 	if err != nil {
@@ -464,15 +496,11 @@ func renderSpecCase(caseDef *ontology.CaseDefinition, language string) ([]string
 	if caseDef == nil {
 		return nil, nil
 	}
-	serialized, err := json.Marshal(caseDef)
-	if err != nil {
-		return nil, fmt.Errorf("render case %s: %w", caseDef.ID, err)
-	}
 	label, err := specText(language, "**Case descriptor**")
 	if err != nil {
 		return nil, err
 	}
-	return []string{label, "", "```json", string(serialized), "```", ""}, nil
+	return []string{label + ": `" + specCell(caseDef.ID) + "`", ""}, nil
 }
 
 func renderSpecSteps(steps []specArtifactStep, language string) ([]string, error) {

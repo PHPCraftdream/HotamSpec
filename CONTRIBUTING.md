@@ -34,6 +34,16 @@ All changes to a domain graph (`domains/*/graph.json`) go through `hotam apply-p
   `go test -race -timeout 30m ./...`). Full mode runs every test; `-short`
   changes nothing there.
 
+Compile artifacts belong to the process that created `hotam-compile-*`, not to
+a persistent cross-process cache. CLI command handlers must return errors/status
+and use `parseCommandFlags`; only the outer `main` calls `os.Exit`, after cleanup.
+Test packages that can execute gate compilation must call
+`gate.CleanupCompileCache()` after `m.Run` in `TestMain`, check its error, then
+exit. Cleanup requires all cache users to have stopped. A failed deletion keeps
+the owned path for another cleanup call and must not be ignored. Abrupt process
+termination cannot run cleanup; never delete another process's directories by
+wildcard while repairing an orphan.
+
 ### Code style
 
 - **Go**: formatted with `gofmt` (or `go fmt ./...`); keep `go vet ./...` clean.

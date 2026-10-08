@@ -21,7 +21,9 @@ import (
 // one that also carries an active-domain preference going forward.
 func cmdUse(args []string) error {
 	fs := newFlagSet("use")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam use <domain-name>")

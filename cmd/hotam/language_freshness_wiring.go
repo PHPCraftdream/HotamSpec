@@ -46,7 +46,7 @@ func checkLanguageOutputsCurrentReal(g *ontology.Graph, prior []invariants.Viola
 	return violations
 }
 
-func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Violation, today string) []invariants.Violation {
+func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Violation, today string) (violations []invariants.Violation) {
 	if g == nil || len(g.Languages) == 0 || g.DomainDir == "" {
 		return nil
 	}
@@ -65,6 +65,11 @@ func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Vio
 	if today == "" {
 		today = time.Now().Format("2006-01-02")
 	}
+	// Logical source/profile freshness is judged against the publication's
+	// render date; the live review/overdue advisories keep using today's date.
+	if date, ok := domainGenerationDate(g.DomainDir); ok {
+		today = date
+	}
 	repoRoot := repoRootForDomain(g.DomainDir)
 	genDir := filepath.Join(g.DomainDir, "docs", "gen")
 	includeSpec, err := languageSpecBundleRequired(g, layout, genDir)
@@ -72,16 +77,23 @@ func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Vio
 		return []invariants.Violation{{Check: "check_language_outputs_current", ID: g.DomainDir, Message: fmt.Sprintf("inspect SPEC bundle inventory: %v", err)}}
 	}
 
-	reportPresent, rawReportPresent, err := evidenceReportBundleState(genDir)
+	reportPresent, _, err := evidenceReportBundleState(genDir)
 	if err != nil {
 		return []invariants.Violation{{Check: "check_language_outputs_current", ID: filepath.Join(genDir, "evidence.json"), Message: fmt.Sprintf("inspect shared evidence report store: %v", err)}}
 	}
 	shareEvidenceSnapshot := reportPresent || invariants.ConformanceAuditRequired(g)
-	needExecutionSnapshot := g.SelfExecutingAtoms || shareEvidenceSnapshot
+	needExecutionSnapshot := g.SelfExecutingAtoms || shareEvidenceSnapshot || includeSpec
 	graphView := g
 	var atomSnapshot *gate.AtomExecutionSnapshot
 	if needExecutionSnapshot {
 		graphView, atomSnapshot, err = invariants.InvocationExecutionSnapshot(g)
+		if graphView != nil && graphView.InvocationState != g.InvocationState {
+			defer func() {
+				if closeErr := invariants.CloseInvocation(graphView); closeErr != nil {
+					violations = append(violations, invariants.Violation{Check: "execution_session_close", ID: g.DomainDir, Message: closeErr.Error()})
+				}
+			}()
+		}
 		if err != nil {
 			return []invariants.Violation{{Check: "check_language_outputs_current", ID: g.DomainDir, Message: fmt.Sprintf("collect one atom execution snapshot: %v", err)}}
 		}
@@ -101,10 +113,8 @@ func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Vio
 		var rows map[string]gate.SpecRow
 		if shareEvidenceSnapshot {
 			rows = reportSnapshot.SpecRows
-		} else if atomSnapshot != nil {
-			rows = gate.CollectSpecRowsFromSnapshot(graphView, atomSnapshot)
 		} else {
-			rows = gate.CollectSpecRows(g)
+			rows = gate.CollectSpecRowsFromSnapshot(graphView, atomSnapshot)
 		}
 		specDocs, err = gate.BuildSpecDocumentsFromRows(graphView, rows)
 		if err != nil {
@@ -152,35 +162,14 @@ func checkLanguageOutputsCurrentStaged(g *ontology.Graph, prior []invariants.Vio
 		}
 	}
 
-	var violations []invariants.Violation
-	if reportPresent {
-		if !rawReportPresent {
-			violations = append(violations, invariants.Violation{Check: "check_language_outputs_current", ID: filepath.Join(genDir, "evidence.json"), Message: "localized evidence views exist without the one shared evidence.json store; run `hotam evidence --write`"})
+	if reportPresent || invariants.ConformanceAuditRequired(g) {
+		documents, _, err := buildEvidenceDocuments(graphView, reportSnapshot)
+		if err != nil {
+			return []invariants.Violation{{Check: "check_language_outputs_current", ID: genDir, Message: fmt.Sprintf("render shared evidence bundle: %v", err)}}
 		}
-		for _, language := range layout.LanguagesForViews() {
-			view := *graphView
-			view.RenderLanguage = language
-			evidenceMD, err := generator.BuildEvidenceLocalized(&view, reportSnapshot, language)
-			if err != nil {
-				return []invariants.Violation{{Check: "check_language_outputs_current", ID: genDir, Message: fmt.Sprintf("render localized EVIDENCE view for %q: %v", language, err)}}
-			}
-			findingsMD, err := generator.BuildFindingsLocalized(&view, reportSnapshot, language)
-			if err != nil {
-				return []invariants.Violation{{Check: "check_language_outputs_current", ID: genDir, Message: fmt.Sprintf("render localized FINDINGS view for %q: %v", language, err)}}
-			}
-			evidencePath, err := layout.DocumentPath("docs/gen/EVIDENCE.md", language)
-			if err != nil {
-				return []invariants.Violation{{Check: "check_language_outputs_current", ID: g.DomainDir, Message: err.Error()}}
-			}
-			findingsPath, err := layout.DocumentPath("docs/gen/FINDINGS.md", language)
-			if err != nil {
-				return []invariants.Violation{{Check: "check_language_outputs_current", ID: g.DomainDir, Message: err.Error()}}
-			}
-			if err := add(filepath.Join(g.DomainDir, filepath.FromSlash(evidencePath)), evidenceMD); err != nil {
-				return []invariants.Violation{{Check: "check_language_outputs_current", ID: evidencePath, Message: err.Error()}}
-			}
-			if err := add(filepath.Join(g.DomainDir, filepath.FromSlash(findingsPath)), findingsMD); err != nil {
-				return []invariants.Violation{{Check: "check_language_outputs_current", ID: findingsPath, Message: err.Error()}}
+		for relative, contents := range documents {
+			if err := add(filepath.Join(g.DomainDir, filepath.FromSlash(relative)), contents); err != nil {
+				return []invariants.Violation{{Check: "check_language_outputs_current", ID: relative, Message: err.Error()}}
 			}
 		}
 	}
@@ -261,7 +250,11 @@ func evidenceReportBundleState(genDir string) (present, rawPresent bool, err err
 	} else if !os.IsNotExist(err) {
 		return false, false, err
 	}
-	for _, path := range docbundle.ReportCandidates(genDir) {
+	candidates, err := docbundle.ReportCandidates(genDir)
+	if err != nil {
+		return present, rawPresent, err
+	}
+	for _, path := range candidates {
 		if filepath.Clean(path) == filepath.Clean(rawPath) {
 			continue
 		}
@@ -283,7 +276,14 @@ func compareLanguageOutputs(expected map[string]string) []invariants.Violation {
 	var violations []invariants.Violation
 	for _, path := range paths {
 		actual, err := os.ReadFile(path)
-		if err != nil || string(actual) != expected[path] {
+		stale := err != nil
+		if !stale && strings.Contains(filepath.ToSlash(path), "/evidence/") && filepath.Base(filepath.Dir(path)) == "cases" {
+			err = generator.EvidenceCasePageCurrent(string(actual), expected[path])
+			stale = err != nil
+		} else if !stale {
+			stale = string(actual) != expected[path]
+		}
+		if stale {
 			violations = append(violations, invariants.Violation{
 				Check:   "check_language_outputs_current",
 				ID:      path,

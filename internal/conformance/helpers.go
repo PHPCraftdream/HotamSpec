@@ -210,6 +210,7 @@ func reportOnlyCaseAssessment(execution Execution, profiles map[string]ontology.
 		assessment.Expected = cloneObserved(metadata.Expected)
 		assessment.Fixtures = append([]ontology.FixtureRef(nil), metadata.Fixtures...)
 		assessment.Sides = sortedStrings(metadata.Sides)
+		assessment.ClauseIDs = slices.Clone(metadata.ClauseIDs)
 		profile, hasProfile := profiles[metadata.Profile]
 		if hasProfile {
 			assessment.ProfileDetails = cloneProfile(profile)

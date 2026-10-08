@@ -36,7 +36,9 @@ func cmdStatus(args []string) error {
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {

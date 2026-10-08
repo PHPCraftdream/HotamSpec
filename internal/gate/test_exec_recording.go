@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -87,35 +88,13 @@ type RecordingResult struct {
 // exactly that package's import path; pass "" to skip coverage collection
 // entirely (a plain record-mode run with no coverprofile).
 //
-// Deliberately DOES NOT read or write the runCache/singleflightRun in-memory
-// verdict cache RunVerifiedByTest maintains: a recording run's whole point is
-// to produce FRESH artifacts and a fresh coverage profile for THIS call, so
-// memoizing it under the same cache used by the boolean-verdict fast path
-// would either (a) let a plain RunVerifiedByTest call silently reuse a
-// recording run's cached TestRunResult without ever having asked for
-// artifacts (harmless but confusing), or (b) let a recording call reuse a
-// PLAIN cached result and return stale/absent artifacts for a test that
-// really did just run with recording requested -- neither is worth the
-// complexity of teaching one cache to carry two different result shapes.
-// Every call to this function spawns its OWN real `go test` subprocess --
-// unlike RunVerifiedByTest there is no in-memory memoization or singleflight
-// collapsing here at all (a caller invoking this twice for the same test
-// gets two real subprocess runs), which is deliberately simple rather than
-// teaching one cache/singleflight pair to carry two different result shapes;
-// callers that need to avoid redundant recording runs are expected to call
-// this at most once per (file, test) per invocation, the same way a
-// generator (W1.3) would only ever record a given verified_by entry once per
-// `hotam gen-spec` run. There is no PERSISTENT disk cache of any kind here
-// either way (holding b014a63's fix): the tmp directory this function
-// creates is deleted before it returns, on every return path, success or
-// failure.
-//
-// Although this function has no verdict cache, it DOES hash the module
-// (hashPackageInputs) and sync the shared compile cache against that hash
-// via syncCompileCacheToHash -- so a source change between two recording
-// calls in one process invalidates the module's stale compiled binaries
-// instead of serving a pre-mutation binary. See compile_cache.go.
-func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) RecordingResult {
+// Recording always executes a real test process. Only compilation is shared;
+// artifacts and verdicts are not replayed from Go's native result cache.
+func (s *ExecutionSession) RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) (result RecordingResult) {
+	if err := s.begin(); err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+	}
+	defer s.users.Done()
 	if inRecursionGuard() {
 		return RecordingResult{TestRunResult: TestRunResult{
 			Skipped: true,
@@ -145,7 +124,7 @@ func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) R
 	if err != nil {
 		return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("could not hash package inputs for %s: %w", absPkgDir, err)}}
 	}
-	syncCompileCacheToHash(moduleRoot, hash)
+	s.syncCompileCacheToHash(moduleRoot, hash)
 
 	pattern, err := relativePackagePattern(moduleRoot, path)
 	if err != nil {
@@ -164,11 +143,15 @@ func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) R
 		}
 	}
 
-	recordDir, err := os.MkdirTemp("", "hotam-record-")
+	recordDir, err := s.makeTempDir("hotam-record-")
 	if err != nil {
 		return RecordingResult{TestRunResult: TestRunResult{Err: fmt.Errorf("could not create per-run record tmp dir: %w", err)}}
 	}
-	defer os.RemoveAll(recordDir)
+	defer func() {
+		if err := s.removeOwnedPath(recordDir); err != nil {
+			result.Err = errors.Join(result.Err, err)
+		}
+	}()
 
 	// This ctx bounds only the PRE-execution waits (compile singleflight +
 	// globalExecSlots slot-wait); the record-mode cmd.Run execution gets its
@@ -176,7 +159,7 @@ func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) R
 	// execCtx comment), independently sized by testExecTimeout.
 	ctx, cancel := context.WithTimeout(context.Background(), testExecTimeout())
 	defer cancel()
-	runResult, coverProfile := runGoTestRecording(ctx, moduleRoot, pattern, testName, recordDir, coverPkgPattern)
+	runResult, coverProfile := s.runGoTestRecording(ctx, moduleRoot, pattern, testName, recordDir, coverPkgPattern)
 
 	artifacts, artErr := readArtifacts(recordDir)
 	if artErr != nil && runResult.Err == nil {
@@ -190,23 +173,26 @@ func RunVerifiedByTestRecording(specRoot, file, testName, coverPkgFile string) R
 	}
 }
 
-// RunAtomPackageRecording records all tests in one package. Artifacts travel
-// through cached go-test stdout, not filesystem side effects: a native cache
-// hit therefore reproduces exactly the evidence of the original passing run.
-func RunAtomPackageRecording(specRoot, file string) RecordingResult {
-	return runAtomRecording(specRoot, file, "", "")
+// RunAtomPackageRecording records a fresh execution of every test in a package.
+func (s *ExecutionSession) RunAtomPackageRecording(specRoot, file string) RecordingResult {
+	if err := s.begin(); err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+	}
+	defer s.users.Done()
+	return s.runAtomRecording(specRoot, file, "", nil, true)
 }
 
-// RunAtomTestRecording retains test-specific coverage attribution while using
-// Go's native result/coverage cache. The Go command, not the test binary,
-// restores -coverprofile output on cache hits.
-func RunAtomTestRecording(specRoot, file, testName, coverPkgFile string) RecordingResult {
-	return runAtomRecording(specRoot, file, testName, coverPkgFile)
+func (s *ExecutionSession) RunAtomTestRecording(specRoot, file, testName, coverPkgFile string) RecordingResult {
+	if err := s.begin(); err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: err}}
+	}
+	defer s.users.Done()
+	return s.runAtomRecording(specRoot, file, exactTestPattern(testName), []string{coverPkgFile}, true)
 }
 
-func runAtomRecording(specRoot, file, testName, coverPkgFile string) RecordingResult {
+func (s *ExecutionSession) runAtomRecording(specRoot, file, testPattern string, coverPkgFiles []string, recording bool) (result RecordingResult) {
 	if inRecursionGuard() {
-		return RecordingResult{TestRunResult: TestRunResult{Skipped: true, InfraWarning: "recursion guard honored"}}
+		return RecordingResult{TestRunResult: TestRunResult{Skipped: true, InfraWarning: "recursion guard honored; execution is unproven at this nesting level"}}
 	}
 	path, err := filepath.Abs(filepath.Join(specRoot, filepath.FromSlash(file)))
 	if err != nil {
@@ -220,20 +206,11 @@ func runAtomRecording(specRoot, file, testName, coverPkgFile string) RecordingRe
 	if err != nil {
 		return RecordingResult{TestRunResult: TestRunResult{Err: err}}
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), testExecTimeout())
-	defer cancel()
-	select {
-	case globalExecSlots <- struct{}{}:
-	case <-ctx.Done():
-		return RecordingResult{TestRunResult: TestRunResult{Err: ctx.Err()}}
-	}
-	defer func() { <-globalExecSlots }()
-	args := []string{"test", "-json", "-v"}
-	if testName != "" {
-		args = append(args, "-run", "^"+regexp.QuoteMeta(testName)+"$")
-	}
-	var coverProfile string
-	if coverPkgFile != "" {
+	coveragePatterns := make(map[string]bool)
+	for _, coverPkgFile := range coverPkgFiles {
+		if coverPkgFile == "" {
+			continue
+		}
 		coverPath, err := filepath.Abs(filepath.Join(specRoot, filepath.FromSlash(coverPkgFile)))
 		if err != nil {
 			return RecordingResult{TestRunResult: TestRunResult{Err: err}}
@@ -242,34 +219,81 @@ func runAtomRecording(specRoot, file, testName, coverPkgFile string) RecordingRe
 		if err != nil {
 			return RecordingResult{TestRunResult: TestRunResult{Err: err}}
 		}
-		dir, err := os.MkdirTemp("", "hotam-atom-cover-")
+		coveragePatterns[coverPattern] = true
+	}
+	patterns := make([]string, 0, len(coveragePatterns))
+	for pattern := range coveragePatterns {
+		patterns = append(patterns, pattern)
+	}
+	sort.Strings(patterns)
+	coverPattern := strings.Join(patterns, ",")
+	waitCtx, waitCancel := context.WithTimeout(context.Background(), testExecTimeout())
+	defer waitCancel()
+	bin := s.compileTestBinary(waitCtx, root, pattern, coverPattern)
+	if bin.err != nil {
+		return RecordingResult{TestRunResult: TestRunResult{Err: bin.err, Output: bin.output}}
+	}
+	if bin.compileFailed {
+		return RecordingResult{TestRunResult: TestRunResult{CompileFailed: true, Output: bin.output}}
+	}
+	select {
+	case globalExecSlots <- struct{}{}:
+	case <-waitCtx.Done():
+		return RecordingResult{TestRunResult: TestRunResult{Err: waitCtx.Err()}}
+	}
+	defer func() { <-globalExecSlots }()
+	args := []string{"tool", "test2json", "-t", "-p", pattern, bin.path, "-test.v=test2json", "-test.count=1", "-test.timeout=" + testExecTimeout().String()}
+	if testPattern != "" {
+		args = append(args, "-test.run="+testPattern)
+	}
+	var coverProfile string
+	if coverPattern != "" {
+		dir, err := s.makeTempDir("hotam-atom-cover-")
 		if err != nil {
 			return RecordingResult{TestRunResult: TestRunResult{Err: err}}
 		}
-		defer os.RemoveAll(dir)
+		defer func() {
+			if err := s.removeOwnedPath(dir); err != nil {
+				result.Err = errors.Join(result.Err, err)
+			}
+		}()
 		coverProfile = filepath.Join(dir, "cover.out")
-		args = append(args, "-coverpkg", coverPattern, "-coverprofile", coverProfile)
+		args = append(args, "-test.coverprofile="+coverProfile)
 	}
-	args = append(args, pattern)
-	cmd := exec.CommandContext(ctx, "go", args...)
-	cmd.Dir = root
-	// Stable values are intentional: Go records getenv dependencies in its
-	// test cache. A fresh nonce or temporary recording path defeats that cache.
-	cmd.Env = append(os.Environ(), recursionGuardEnv+"=atom-package", "HOTAM_RECORD_STDOUT=1", recordDirEnvName+"=")
-	data, runErr := cmd.CombinedOutput()
-	result := RecordingResult{TestRunResult: TestRunResult{Output: boundOutput(string(data))}}
+	execCtx, cancel := context.WithTimeout(context.Background(), testExecTimeout())
+	defer cancel()
+	cmd := exec.CommandContext(execCtx, "go", args...)
+	cmd.Dir = packageDirFromPattern(root, pattern)
+	recordStdout := "0"
+	if recording {
+		recordStdout = "1"
+	}
+	cmd.Env = append(os.Environ(), recursionGuardEnv+"="+guardNonce(), "HOTAM_RECORD_STDOUT="+recordStdout, recordDirEnvName+"=")
+	var data limitedExecutionBuffer
+	cmd.Stdout, cmd.Stderr = &data, &data
+	runErr := cmd.Run()
+	result.Output = boundOutput(string(data.Bytes()))
+	if data.overflow {
+		result.Err = fmt.Errorf("atom execution output exceeds %d bytes", maxExecutionOutput)
+	}
 	if coverProfile != "" {
-		profile, err := os.ReadFile(coverProfile)
+		profile, err := readExecutionFile(coverProfile, maxExecutionOutput)
 		if err == nil {
 			result.CoverProfile = profile
-		} else if runErr == nil {
-			result.Err = fmt.Errorf("reading native atom coverage profile: %w", err)
+		} else if !os.IsNotExist(err) || runErr == nil {
+			result.Err = errors.Join(result.Err, fmt.Errorf("reading atom coverage profile: %w", err))
 		}
 	}
-	stdoutText, testVerdicts, decodeErr := parseAtomEvents(data)
-	result.TestVerdicts = testVerdicts
+	stdoutText, verdicts, decodeErr := parseAtomEvents(data.Bytes())
+	if !recording {
+		result.Output = boundOutput(stdoutText)
+	}
+	if strings.Contains(stdoutText, "panic: test timed out after") {
+		result.Err = errors.Join(result.Err, fmt.Errorf("atom test execution deadline: %w", context.DeadlineExceeded))
+	}
+	result.TestVerdicts = verdicts
 	if decodeErr != nil {
-		result.Err = fmt.Errorf("decoding go test JSON output: %w", decodeErr)
+		result.Err = errors.Join(result.Err, fmt.Errorf("decoding test JSON output: %w", decodeErr))
 	}
 	for _, line := range strings.Split(stdoutText, "\n") {
 		const marker = "HOTAMSPEC_ARTIFACT:"
@@ -278,20 +302,19 @@ func runAtomRecording(specRoot, file, testName, coverPkgFile string) RecordingRe
 		}
 		raw := []byte(strings.TrimSpace(strings.TrimPrefix(line, marker)))
 		if !looksLikeRecorderArtifact(raw) {
-			result.Err = fmt.Errorf("invalid atom recording artifact")
+			result.Err = errors.Join(result.Err, fmt.Errorf("invalid atom recording artifact"))
 			continue
 		}
 		result.Artifacts = append(result.Artifacts, RecordedArtifact{RawJSON: raw})
 	}
-	if ctx.Err() != nil {
-		result.Err = ctx.Err()
+	if execCtx.Err() != nil {
+		result.Err = errors.Join(result.Err, execCtx.Err())
 	} else if runErr != nil {
 		var exit *exec.ExitError
 		if !isExitError(runErr, &exit) {
-			result.Err = runErr
+			result.Err = errors.Join(result.Err, runErr)
 		}
-		result.CompileFailed = looksLikeCompileFailure(string(data))
-	} else {
+	} else if result.Err == nil {
 		result.Passed = true
 	}
 	return result
@@ -335,7 +358,7 @@ func sortTestVerdicts(verdicts []TestVerdict) {
 	})
 }
 
-// runGoTestRecording is runGoTest's record-mode sibling: same recursion-guard
+// runGoTestRecording is the session's filesystem-recording path: same recursion-guard
 // nonce, same globalExecSlots bound, same PASS/FAIL/CompileFailed
 // classification -- but additionally sets hotamspec.RecordDirEnv
 // ("HOTAM_RECORD_DIR") to recordDir on the child process's environment, and,
@@ -354,12 +377,12 @@ func sortTestVerdicts(verdicts []TestVerdict) {
 // same pkgPattern. The -test.coverprofile flag, by contrast, is a RUNTIME
 // input (the binary writes the profile to whatever path the caller names),
 // so it stays per-invocation and points into this call's own recordDir.
-func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, recordDir, coverPkgPattern string) (TestRunResult, []byte) {
+func (s *ExecutionSession) runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, recordDir, coverPkgPattern string) (TestRunResult, []byte) {
 	// Step 1: get-or-compile the binary for this package AND coverpkg
 	// pattern. The coverpkg is baked in at compile time, so it is part of
 	// the cache KEY -- two record-mode calls for the same package but
 	// different coverpkg patterns get different binaries (correctly).
-	bin := compileTestBinary(ctx, moduleRoot, pkgPattern, coverPkgPattern)
+	bin := s.compileTestBinary(ctx, moduleRoot, pkgPattern, coverPkgPattern)
 	if bin.err != nil {
 		return TestRunResult{Output: bin.output, Err: bin.err}, nil
 	}
@@ -375,20 +398,20 @@ func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, r
 	defer func() { <-globalExecSlots }()
 
 	runPattern := "^" + testName + "$"
-	args := []string{"-test.run", runPattern, "-test.count", "1"}
+	args := []string{"-test.run", runPattern, "-test.count", "1", "-test.timeout", testExecTimeout().String()}
 	var coverProfilePath string
 	if coverPkgPattern != "" {
 		coverProfilePath = filepath.Join(recordDir, "cover.out")
 		args = append(args, "-test.coverprofile="+coverProfilePath)
 	}
 
-	// execCtx decouples EXECUTION from the caller's slot-wait ctx, for the
-	// same load-contention reason as runGoTest (see its Step 2 comment);
+	// execCtx decouples EXECUTION from compile/slot waits so contention never
+	// consumes the test's execution deadline;
 	// testExecTimeout makes it operator-tunable.
 	execCtx, execCancel := context.WithTimeout(context.Background(), testExecTimeout())
 	defer execCancel()
 	cmd := exec.CommandContext(execCtx, bin.path, args...)
-	// See runGoTest: a directly-invoked .test binary does not chdir into
+	// A directly-invoked .test binary does not chdir into
 	// the package directory on its own the way `go test` does, so set
 	// cmd.Dir explicitly to preserve testdata/ + cwd-relative behavior.
 	cmd.Dir = packageDirFromPattern(moduleRoot, pkgPattern)
@@ -397,16 +420,25 @@ func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, r
 		recursionGuardEnv+"="+nonce,
 		recordDirEnvName+"="+recordDir,
 	)
-	var buf bytes.Buffer
+	var buf limitedExecutionBuffer
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 	err := cmd.Run()
 	output := boundOutput(buf.String())
+	if buf.overflow {
+		return TestRunResult{Output: output, Err: fmt.Errorf("recording output exceeds %d bytes", maxExecutionOutput)}, nil
+	}
+	if strings.Contains(output, "panic: test timed out after") {
+		return TestRunResult{Output: output, Err: fmt.Errorf("recording test execution deadline: %w", context.DeadlineExceeded)}, nil
+	}
 
 	var coverProfile []byte
 	if coverProfilePath != "" {
-		if data, readErr := os.ReadFile(coverProfilePath); readErr == nil {
+		data, readErr := readExecutionFile(coverProfilePath, maxExecutionOutput)
+		if readErr == nil {
 			coverProfile = data
+		} else if !os.IsNotExist(readErr) {
+			return TestRunResult{Output: output, Err: readErr}, nil
 		}
 		// A missing coverprofile (e.g. the run failed before any test ran at
 		// all, or a package with zero coverable statements) is not itself an
@@ -428,7 +460,7 @@ func runGoTestRecording(ctx context.Context, moduleRoot, pkgPattern, testName, r
 		}
 		// A directly-invoked .test binary has already been compiled, so
 		// looksLikeCompileFailure(output) should not fire in practice;
-		// kept defensive for the same reason runGoTest keeps it.
+		// retained only as a defensive diagnostic classification.
 		compileFailed := looksLikeCompileFailure(output)
 		return TestRunResult{Passed: false, CompileFailed: compileFailed, Output: output}, coverProfile
 	}
@@ -484,11 +516,13 @@ func readArtifacts(dir string) ([]RecordedArtifact, error) {
 	sort.Strings(names)
 
 	artifacts := make([]RecordedArtifact, 0, len(names))
+	remaining := maxExecutionOutput
 	for _, name := range names {
-		data, err := os.ReadFile(filepath.Join(dir, name))
+		data, err := readExecutionFile(filepath.Join(dir, name), remaining)
 		if err != nil {
 			return artifacts, fmt.Errorf("could not read artifact %s: %w", name, err)
 		}
+		remaining -= len(data)
 		if !looksLikeRecorderArtifact(data) {
 			// F6: this file does not match the recorder's canonical artifact
 			// shape -- skip it rather than trusting arbitrary JSON as a
@@ -507,9 +541,8 @@ func readArtifacts(dir string) ([]RecordedArtifact, error) {
 // ALWAYS writes all five fields in this shape, so a file missing any of them
 // or carrying unexpected types was not produced by the recorder. This is a
 // STRUCTURAL shape check only -- it does not validate the steps' internal
-// structure (that is specArtifact's own json.Unmarshal's job in
-// recordVerifiedByEntry) or the req_id's correctness for the requirement
-// being rendered (that is recordVerifiedByEntry's F6 req_id cross-check).
+// structure or the req_id's correctness for the rendered requirement; package
+// snapshot scenario reconciliation performs those fail-closed consumer checks.
 func looksLikeRecorderArtifact(data []byte) bool {
 	var shape struct {
 		ReqID   string `json:"req_id"`
@@ -535,4 +568,30 @@ func looksLikeRecorderArtifact(data []byte) bool {
 		return false
 	}
 	return true
+}
+
+func exactTestPattern(test string) string {
+	if test == "" {
+		return ""
+	}
+	return "^" + regexp.QuoteMeta(test) + "$"
+}
+
+// Only admitted top-level names enter the combined package run. Subtest
+// references have already admitted their parent; exact verdict reconciliation
+// remains separate from Go's slash-separated run filter.
+func snapshotTestPattern(testFiles map[string]string) (string, []string) {
+	names := make([]string, 0, len(testFiles))
+	for name := range testFiles {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	if len(names) == 0 {
+		return "", nil
+	}
+	escaped := make([]string, len(names))
+	for index, name := range names {
+		escaped[index] = regexp.QuoteMeta(name)
+	}
+	return "^(" + strings.Join(escaped, "|") + ")$", names
 }

@@ -486,6 +486,7 @@ func validateObservedValue(path string, value *ObservedValue, add func(string, s
 	count(value.Integer != "")
 	count(value.FloatBits != "")
 	count(value.Fields != nil || value.hasFields)
+	count(value.Items != nil || value.hasItems)
 	count(value.Diagnostic != nil)
 	scalarKindPresent := value.ScalarKind != "" || value.hasScalarKind
 	if scalarKindPresent && strings.TrimSpace(value.ScalarKind) == "" {
@@ -555,6 +556,19 @@ func validateObservedValue(path string, value *ObservedValue, add func(string, s
 		for _, key := range keys {
 			child := value.Fields[key]
 			validateObservedValue(path+"."+key, &child, add)
+		}
+	case "array":
+		if scalarKindPresent {
+			add(path, "value", "scalar_kind is not valid for array values")
+		}
+		if value.Items == nil || (value.decoded && !value.hasItems) {
+			add(path, "value", "array value requires a present items list (an empty list is allowed)")
+		}
+		if present != 1 {
+			add(path, "value", "array value has payload fields for other kinds")
+		}
+		for i := range value.Items {
+			validateObservedValue(fmt.Sprintf("%s[%d]", path, i), &value.Items[i], add)
 		}
 	case "null":
 		if scalarKindPresent {

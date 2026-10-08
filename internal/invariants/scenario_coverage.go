@@ -102,13 +102,21 @@ import (
 // coverage-proof at all); instead it pays its OWN, separate recording-mode
 // subprocess cost, bounded by the SAME worker pool shape
 // (runVerifiedByTestJobs/runExecWorkers) and de-duplicated within one
-// AllViolations call via coverageRunCache below so a verified_by test cited
+// AllViolations call via the local coverage map so a verified_by test cited
 // by several implemented_by symbols (or several requirements, per
 // checkVerifiedByNoUnrelatedReuse's own reuse-detector) is only actually
 // RUN once, not once per symbol it happens to be checked against.
-func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
+func checkScenarioExecutesImpl(g *ontology.Graph) (out []Violation) {
 	specRoot := gate.SpecRootForGraph(g)
-	var out []Violation
+	g, session, owned := invocationSession(g)
+	if owned {
+		defer func() {
+			if err := session.Close(); err != nil {
+				out = append(out, Violation{Check: "execution_session_close", ID: g.DomainDir, Message: err.Error()})
+			}
+		}()
+	}
+	var coverageCache sync.Map
 
 	type job struct {
 		reqID   string
@@ -124,7 +132,7 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 			continue
 		}
 		implEntries := parseSpecEntries(r.ImplementedBy)
-		testEntries := eligibleVerifiedByEntries(specRoot, g.SelfHosting, r.VerifiedBy)
+		testEntries := eligibleVerifiedByEntries(g, specRoot, g.SelfHosting, r.VerifiedBy)
 		if len(testEntries) == 0 {
 			// No verified_by entry resolves to a real, non-vacuous, non-skipped
 			// test at all -- that is checkVerifiedByTestResolvable/
@@ -160,7 +168,7 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 			if ok, _ := gate.EntryWithinSpecScope(specRoot, ie.file, g.SelfHosting); !ok {
 				continue
 			}
-			rng, found, err := gate.ResolveSpecSymbolRange(specRoot, ie.file, ie.symbol)
+			rng, found, err := resolveSpecSymbolRangeForGraph(g, specRoot, ie.file, ie.symbol)
 			if err != nil {
 				// Parse error -- checkImplementedBySymbolResolvable's violation
 				// to report, not this check's.
@@ -171,7 +179,7 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 				// Distinguish the two: a type-only entry (SpecSymbolType) is
 				// this check's F1 concern; an unresolvable entry
 				// (SpecSymbolNone) is checkImplementedBySymbolResolvable's.
-				if symRes, symErr := gate.ResolveSpecSymbol(specRoot, ie.file, ie.symbol); symErr == nil && symRes.Kind == gate.SpecSymbolType {
+				if symRes, symErr := resolveSpecSymbolForGraph(g, specRoot, ie.file, ie.symbol); symErr == nil && symRes.Kind == gate.SpecSymbolType {
 					typeOnlyEntries = append(typeOnlyEntries, ie.raw)
 				}
 				continue
@@ -322,7 +330,7 @@ func checkScenarioExecutesImpl(g *ontology.Graph) []Violation {
 		go func(j job) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			v := scenarioExecutesImplViolation(specRoot, j.reqID, j.implRaw, j.symRng, j.imports, j.tests)
+			v := scenarioExecutesImplViolation(session, &coverageCache, specRoot, j.reqID, j.implRaw, j.symRng, j.imports, j.tests)
 			if v != nil {
 				mu.Lock()
 				out = append(out, *v)
@@ -358,7 +366,7 @@ func implFileInAtomPackages(implRaw string, pkgs []string) bool {
 // no-teeth, or skipped entries are excluded -- those are OTHER checks'
 // violations to report, not this one's, and a test that never even runs for
 // real reasons has no coverage profile worth asking about.
-func eligibleVerifiedByEntries(specRoot string, selfHosting bool, verifiedBy []string) []specFileEntry {
+func eligibleVerifiedByEntries(g *ontology.Graph, specRoot string, selfHosting bool, verifiedBy []string) []specFileEntry {
 	var out []specFileEntry
 	for _, e := range parseSpecEntries(verifiedBy) {
 		if !e.ok || !strings.HasPrefix(e.symbol, "Test") {
@@ -367,7 +375,7 @@ func eligibleVerifiedByEntries(specRoot string, selfHosting bool, verifiedBy []s
 		if ok, _ := gate.EntryWithinSpecScope(specRoot, e.file, selfHosting); !ok {
 			continue
 		}
-		resolved, err := gate.ResolveSpecTest(specRoot, e.file, e.symbol)
+		resolved, err := resolveSpecTestForGraph(g, specRoot, e.file, e.symbol)
 		if err != nil || !resolved.Found {
 			continue
 		}
@@ -378,46 +386,6 @@ func eligibleVerifiedByEntries(specRoot string, selfHosting bool, verifiedBy []s
 	}
 	return out
 }
-
-// coverageRunCache is a PROCESS-LIFETIME, in-memory memoization of
-// RunVerifiedByTestRecording results, keyed by (test file, test name,
-// coverPkgFile) with content-hash invalidation -- the exact same shape
-// gate.runCache (internal/gate/test_exec.go) already establishes for plain
-// RunVerifiedByTest, applied here to RunVerifiedByTestRecording's richer
-// result (RecordingResult: pass/fail + artifacts + coverage profile).
-//
-// HISTORY (task #387): before this fix, the cache lived on the call stack
-// (`cache := &coverageRunCache{}` freshly allocated inside
-// checkScenarioExecutesImpl, one per AllViolations call) and its own doc
-// comment argued this was deliberate -- "content could have changed between
-// calls in the same process (e.g. cmd/hotam's own long-lived test-harness
-// callers)". Round-2 profiling after the #378/#38x hashPackageInputs
-// caching wave found this check newly dominant: 78% of all subprocess-record
-// cost (272.9 of 349.9s) across a single cmd/hotam test binary's run, because
-// EVERY one of that binary's 8-12 tests that call AllViolations()/whatNow()/
-// buildStatusReport() against the SAME real hotam-spec-self graph (336 nodes,
-// unchanged across those calls) re-ran every verified_by test's coverage
-// recording from a cold, per-call cache -- work gate.runCache had already
-// proven safe to skip for the plain pass/fail sibling check
-// (check_verified_by_test_passes) via exactly the mechanism this cache now
-// adopts: do not throw the result away just because "content could have
-// changed" is POSSIBLE -- compare a real content hash and only re-run when it
-// actually HAS. hashPackageInputs (task #383, wrapped for cross-package use
-// as gate.HashPackageInputs, task #387) hashes every .go/go.mod/go.sum file
-// under the test's own module root; a stale entry is detected the instant
-// that hash changes, exactly as gate.runCache already detects Probe C-shaped
-// mutations for RunVerifiedByTest. A false HIT is therefore no more possible
-// here than it already is for gate.runCache -- this cache reuses the
-// identical hash gate.runCache trusts, over the identical module root gate's
-// own RunVerifiedByTest/RunVerifiedByTestRecording resolve the test's package
-// to. Deliberately still NOT reusing gate's own runCache/cacheEntry storage
-// directly (RunVerifiedByTestRecording's own doc comment: that cache carries
-// a plain TestRunResult, not a RecordingResult with artifacts+coverage
-// profile, and teaching one cache to carry two result shapes was rejected
-// there for the same reason it is rejected here) -- this is a SEPARATE
-// process-lifetime sync.Map with its own key/entry types, mirroring
-// gate.runCache's shape rather than sharing its storage.
-var coverageRunCache sync.Map // coverageRunKey -> *coverageRunEntry
 
 type coverageRunKey struct {
 	testFile     string
@@ -440,19 +408,10 @@ type coverageRunEntry struct {
 	result gate.RecordingResult
 }
 
-// runOrReuseCoverage returns the RunVerifiedByTestRecording result for key,
-// running it via runFn exactly once per (key, hash) even if multiple
-// goroutines -- within this call OR across separate AllViolations calls
-// later in the same process -- request the same key concurrently. hash is
-// the caller's current gate.HashPackageInputs digest for the test's own
-// module root; a cached entry whose stored hash does not match is treated as
-// a MISS (the module's content changed since that entry was recorded) and
-// replaced with a fresh entry computed by runFn, exactly as gate.runCache's
-// own Load-then-compare-hash sequence (test_exec.go's RunVerifiedByTest)
-// already does for the plain pass/fail cache.
-func runOrReuseCoverage(key coverageRunKey, hash string, runFn func() gate.RecordingResult) gate.RecordingResult {
+// runOrReuseCoverage shares recording only among jobs in this invocation.
+func runOrReuseCoverage(cache *sync.Map, key coverageRunKey, hash string, runFn func() gate.RecordingResult) gate.RecordingResult {
 	for {
-		actual, _ := coverageRunCache.LoadOrStore(key, &coverageRunEntry{hash: hash})
+		actual, _ := cache.LoadOrStore(key, &coverageRunEntry{hash: hash})
 		entry := actual.(*coverageRunEntry)
 
 		entry.once.Do(func() {
@@ -473,7 +432,7 @@ func runOrReuseCoverage(key coverageRunKey, hash string, runFn func() gate.Recor
 		// keeping this race-free under -race without holding a lock across
 		// the (potentially slow, subprocess-spawning) runFn call.
 		fresh := &coverageRunEntry{hash: hash}
-		if coverageRunCache.CompareAndSwap(key, actual, fresh) {
+		if cache.CompareAndSwap(key, actual, fresh) {
 			fresh.once.Do(func() {
 				fresh.result = runFn()
 			})
@@ -484,25 +443,8 @@ func runOrReuseCoverage(key coverageRunKey, hash string, runFn func() gate.Recor
 	}
 }
 
-// ResetCoverageRunCacheForTest clears the process-lifetime coverage-recording
-// cache. Test-only helper, mirroring gate.ResetRunCacheForTest's shape and
-// naming convention exactly (see that function's doc comment for why a
-// process-lifetime cache needs an explicit test-only reset: tests that
-// exercise cache population/invalidation need to start from a known-empty
-// state rather than depend on t.TempDir() path uniqueness alone to make
-// leftover entries harmless).
-func ResetCoverageRunCacheForTest() {
-	coverageRunCache = sync.Map{}
-}
-
-// scenarioExecutesImplViolation runs (or reuses, via the process-lifetime
-// coverageRunCache) every test in tests against coverPkgFile (the
-// implemented_by symbol's own file) until one run's coverage profile covers
-// symRng, or all are exhausted -- returning nil the moment ANY covering run
-// is found (existential semantics, see checkScenarioExecutesImpl's own doc
-// comment), or a violation naming every test tried and why none proved
-// coverage if none did.
-func scenarioExecutesImplViolation(specRoot, reqID, implRaw string, symRng gate.SymbolRange, importPath string, tests []specFileEntry) *Violation {
+// scenarioExecutesImplViolation proves coverage from this invocation's real runs.
+func scenarioExecutesImplViolation(session *gate.ExecutionSession, cache *sync.Map, specRoot, reqID, implRaw string, symRng gate.SymbolRange, importPath string, tests []specFileEntry) *Violation {
 	relImplFile, err := filepathRelSlash(specRoot, symRng.File)
 	if err != nil {
 		return &Violation{
@@ -554,8 +496,8 @@ func scenarioExecutesImplViolation(specRoot, reqID, implRaw string, symRng gate.
 			continue
 		}
 
-		result = runOrReuseCoverage(key, hash, func() gate.RecordingResult {
-			return gate.RunVerifiedByTestRecording(specRoot, te.file, te.symbol, relImplFile)
+		result = runOrReuseCoverage(cache, key, hash, func() gate.RecordingResult {
+			return session.RunVerifiedByTestRecording(specRoot, te.file, te.symbol, relImplFile)
 		})
 		tried = append(tried, te.raw)
 

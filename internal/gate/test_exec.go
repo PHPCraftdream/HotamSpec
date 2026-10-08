@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"bytes"
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -134,7 +132,7 @@ func ClearInheritedRecursionGuard() {
 //     identical.
 //   - direct os.Getppid() PID matching FAILS: `go test` always interposes
 //     the `go` tool as an intermediary process between whatever spawned it
-//     (runGoTest's exec.Command) and the compiled test binary that actually
+//     (the session runner's exec.Command) and the compiled test binary that actually
 //     runs the tests, so the running test binary's immediate parent PID is
 //     never the original spawning hotam process's PID -- there is no cheap,
 //     portable way to walk the full ancestor chain (especially on Windows)
@@ -152,13 +150,13 @@ func ClearInheritedRecursionGuard() {
 // DEFINITION the root of any hotam-managed recursion -- it can never be a
 // legitimate nested child (legitimate children are `go test`-spawned test
 // binaries, which never go through cmd/hotam's main() at all -- see
-// runGoTest). An external `HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> hotam
+// the session runner). An external `HOTAM_VERIFIED_BY_EXEC_GUARD=<anything> hotam
 // all-violations` therefore has its forged value wiped before
 // RunVerifiedByTest is ever reached: the CLI process runs its own
 // verified_by tests for real, with no defense the attacker can construct
 // (no nonce to guess, no marker to race -- there is no corroborating check
 // left to fool, because the untrusted input is discarded outright, not
-// verified). Legitimate recursion is unaffected: runGoTest still mints a
+// verified). Legitimate recursion is unaffected: the session runner still mints a
 // fresh crypto/rand nonce (guardNonce) and passes it ONLY to the `go test`
 // child it itself spawns (cmd.Env) -- that child is a go-test binary, not a
 // cmd/hotam CLI process, so main()'s Unsetenv never runs for it, and
@@ -217,7 +215,7 @@ func guardNonce() string {
 // clears recursionGuardEnv at CLI entry, before any subcommand executes. By
 // the time inRecursionGuard runs inside a `hotam` process, any externally
 // forged value has already been wiped; the only way this process can observe
-// a non-empty value is if IT is a `go test` child that runGoTest itself
+// a non-empty value is if IT is a `go test` child that the session runner itself
 // spawned with a freshly minted nonce (see recursionGuardEnv's doc comment
 // for the full NEW-1 history and why a marker-file corroboration scheme was
 // tried, found forgeable via a predictable world-writable path, and removed
@@ -230,11 +228,10 @@ func inRecursionGuard() bool {
 // time.ParseDuration string (e.g. "120s", "3m"), overrides the default
 // per-test execution timeout (defaultTestExecTimeout) that bounds BOTH
 // (a) the wall-clock budget a verified_by test's compiled binary gets to RUN
-// once it has a globalExecSlots slot (the execCtx runGoTest/
-// runGoTestRecording mint for cmd.Run), and (b) the budget the RunVerifiedBy
-// Test caller's own ctx gives to the steps that PRECEDE execution -- waiting
-// on an in-flight compile (compileSingleflight) and waiting on a
-// globalExecSlots slot. Unset or unparseable → defaultTestExecTimeout.
+// once it has a globalExecSlots slot (the execCtx runAtomRecording/
+// runGoTestRecording mint for cmd.Run), and (b) the caller's pre-execution
+// waits for compilation and an execution slot.
+// Unset or unparseable → defaultTestExecTimeout.
 //
 // Exists because the ORIGINAL fixed 60s budget was sized for an unloaded box
 // and was observed (tasks #350/#340/#341-342 verifications) to spuriously
@@ -279,123 +276,6 @@ func testExecTimeout() time.Duration {
 		}
 	}
 	return defaultTestExecTimeout
-}
-
-// runGoTest invokes the named test against a pre-compiled test binary
-// (compileTestBinary, the cache layer that compiles `go test -c` ONCE per
-// (moduleRoot, pkgPattern, coverPkgPattern) triple and reuses it across
-// every test in the same package), and classifies the result. pkgPattern
-// is the "./..."-relative import pattern for the package directory (e.g.
-// "./internal/ontology/" for a self-hosting entry, or "./model/" for an
-// authored spec/ package) -- callers compute it via
-// relativePackagePattern. The spawned process carries recursionGuardEnv
-// so IT (or anything it in turn runs) knows not to spawn a further nested
-// invocation -- see recursionGuardEnv's doc comment. Acquires a
-// globalExecSlots slot before spawning and releases it after the subprocess
-// exits, so this process never has more than a small bounded number of
-// test-execution children running concurrently no matter how many
-// independent callers invoke it at once. The compile step
-// (compileTestBinary, on a cache miss) is ALSO bounded by globalExecSlots
-// for the same host-load reason -- see doCompileTestBinary's doc comment.
-func runGoTest(ctx context.Context, moduleRoot, pkgPattern, testName string) TestRunResult {
-	// Step 1: get-or-compile the binary for this package (no coverpkg for
-	// the plain verdict path -- the caller did not ask for coverage). This
-	// is the optimization: across N tests in the same package, the compile
-	// happens ONCE; subsequent calls get a cache hit and skip straight to
-	// the execution step. A CompileFailed result here is surfaced with the
-	// SAME classification runGoTest originally produced inline (via the
-	// captured `go test -c` output, byte-identical to what `go test -run`
-	// would have printed on the same broken package).
-	bin := compileTestBinary(ctx, moduleRoot, pkgPattern, "")
-	if bin.err != nil {
-		return TestRunResult{Output: bin.output, Err: bin.err}
-	}
-	if bin.compileFailed {
-		return TestRunResult{Passed: false, CompileFailed: true, Output: bin.output}
-	}
-
-	// Step 2: invoke the cached binary directly. Same per-test isolation
-	// as before -- ONE subprocess per test, in its own process, with its
-	// own env. The binary was compiled with the package's whole test
-	// entry; -test.run "^TestName$" selects exactly one test out of it.
-	//
-	// The slot-wait below is bounded by the CALLER's ctx (which also bounds
-	// the in-flight compile singleflight wait in compileTestBinary above).
-	// The EXECUTION itself (cmd.Run) runs under its OWN freshly-minted
-	// execCtx, NOT the caller's ctx, so time spent QUEUING for a slot under
-	// heavy parallel load cannot eat the test's execution budget -- the
-	// exact structural problem doCompileTestBinary already solved for the
-	// COMPILE step (see compile_cache.go's CONCURRENCY DECISION): there too,
-	// acquiring globalExecSlots under the caller's ctx ate into the budget
-	// for the step that actually does the work, and caused spurious timeouts
-	// under load. The same decoupling now applies here for execution's own
-	// slot-wait-vs-run split (task #352, FLAKY). execCtx's timeout comes from
-	// testExecTimeout (configurable via testExecTimeoutEnv) so a loaded host
-	// can extend it without recompiling.
-	select {
-	case globalExecSlots <- struct{}{}:
-	case <-ctx.Done():
-		return TestRunResult{Err: fmt.Errorf("go test for %s in %s: %w (timed out waiting for an execution slot)", testName, pkgPattern, ctx.Err())}
-	}
-	defer func() { <-globalExecSlots }()
-
-	runPattern := "^" + testName + "$"
-	execCtx, execCancel := context.WithTimeout(context.Background(), testExecTimeout())
-	defer execCancel()
-	cmd := exec.CommandContext(execCtx, bin.path,
-		"-test.run", runPattern,
-		"-test.count", "1",
-	)
-	// `go test` chdirs into the test's own package directory before
-	// running it; a directly-invoked .test binary does not, so set
-	// cmd.Dir to the package directory explicitly to preserve testdata/
-	// and cwd-relative-path behavior. See packageDirFromPattern's doc.
-	cmd.Dir = packageDirFromPattern(moduleRoot, pkgPattern)
-	// Carry THIS process's own freshly-minted guard nonce (never a fixed
-	// literal -- see guardNonce's / recursionGuardEnv's doc comments) so the
-	// spawned test binary, and anything it in turn runs, can recognize it
-	// is nested. No marker file is written: the child this env var reaches
-	// is always a `go test`-compiled binary, never a cmd/hotam CLI process
-	// (that only ever clears this var, see main()'s doc comment), so there
-	// is no forgery surface left for a marker to defend against.
-	nonce := guardNonce()
-	cmd.Env = append(os.Environ(), recursionGuardEnv+"="+nonce)
-	var buf bytes.Buffer
-	cmd.Stdout = &buf
-	cmd.Stderr = &buf
-	err := cmd.Run()
-	output := boundOutput(buf.String())
-
-	if execCtx.Err() == context.DeadlineExceeded {
-		return TestRunResult{
-			Output: output,
-			Err:    fmt.Errorf("go test timed out running %s in %s: %w", runPattern, pkgPattern, execCtx.Err()),
-		}
-	}
-	if err != nil {
-		var exitErr *exec.ExitError
-		if !isExitError(err, &exitErr) {
-			// go binary missing, cwd invalid, etc. -- infrastructure failure,
-			// not a test verdict.
-			return TestRunResult{Output: output, Err: fmt.Errorf("could not run go test: %w", err)}
-		}
-		// A directly-invoked .test binary has ALREADY been compiled, so
-		// looksLikeCompileFailure(output) should never fire here in
-		// practice -- kept as a defensive classifier against a wrapped
-		// `go`/binary path that could in theory produce compile-error-
-		// shaped output at run time (e.g. a binary that re-checks build
-		// constraints on launch). The common case is a plain test
-		// failure (CompileFailed=false).
-		compileFailed := looksLikeCompileFailure(output)
-		return TestRunResult{Passed: false, CompileFailed: compileFailed, Output: output}
-	}
-	// Exit 0. Still scan for a "FAIL" line as belt-and-braces (a wrapped
-	// `go` or a test harness oddity could theoretically exit 0 with FAIL
-	// text); the exit code is authoritative for the common case.
-	if strings.Contains(output, "\nFAIL") || strings.HasPrefix(output, "FAIL") {
-		return TestRunResult{Passed: false, Output: output}
-	}
-	return TestRunResult{Passed: true, Output: output}
 }
 
 // RecordedArtifact is one hotamspec.Artifact read back, in memory, from a
@@ -499,19 +379,13 @@ func ModuleRoot(dir string) (string, bool) {
 // @fh finding F1 (Probe C: gutting the implementation the test exercises
 // left every AST-only check green because none of them executed the test).
 //
-// Results are memoized in runCache, keyed by (package directory, test name)
-// with content-hash invalidation over: go.mod + go.sum (if present) at the
-// resolved module root, and every *.go file's content in the test's own
-// package directory (not just the two named files) -- `go test` compiles
-// the WHOLE package, so a mutation to any sibling file in that package
-// (exactly Probe C's shape: the implementation function lives in a
-// different file than the test, both in the same package) must invalidate
-// the cache, and hashing the whole directory's file set is the only way to
-// guarantee that without having to correctly guess which implemented_by
-// entry pairs with which verified_by entry (they are not necessarily on the
-// same Requirement, and a package can have more source files than the ones
-// any single Requirement names).
-func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
+// RunVerifiedByTest proves one test within this invocation. Verdicts may be
+// shared by this session only; independent sessions always execute afresh.
+func (s *ExecutionSession) RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
+	if err := s.begin(); err != nil {
+		return TestRunResult{Err: err}
+	}
+	defer s.users.Done()
 	if inRecursionGuard() {
 		// See recursionGuardEnv's doc comment: this process is ALREADY
 		// running inside a `go test` subprocess that RunVerifiedByTest
@@ -562,26 +436,14 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 	if err != nil {
 		return TestRunResult{Err: fmt.Errorf("could not hash package inputs for %s: %w", absPkgDir, err)}
 	}
-	// Sync the compile cache against this hash: if the module changed since
-	// the last sync (from either execution path), its stale compiled
-	// binaries are dropped there. See syncCompileCacheToHash.
-	syncCompileCacheToHash(moduleRoot, hash)
-
+	s.syncCompileCacheToHash(moduleRoot, hash)
+	hash += executionProfile()
 	key := cacheKey{pkgDir: absPkgDir, testName: testName}
-	if cached, ok := runCache.Load(key); ok {
+	if cached, ok := s.runCache.Load(key); ok {
 		entry := cached.(cacheEntry)
 		if entry.hash == hash {
 			return entry.result
 		}
-		// Hash mismatch: the module's content changed since this verdict
-		// was cached (hashPackageInputs hashes the whole module -- any
-		// *.go / non-.go file edit, anywhere under moduleRoot, moves the
-		// hash). This branch now only skips the stale VERDICT; compile-cache
-		// invalidation happens unconditionally at the syncCompileCacheToHash
-		// call above, which fires whenever the module hash changed since the
-		// last sync (for any cacheKey) -- a superset of this branch's old
-		// trigger, which additionally required THIS key to hold a stale
-		// entry. See syncCompileCacheToHash.
 	}
 
 	// SINGLEFLIGHT (anti-stampede): several goroutines in THIS process can
@@ -596,33 +458,12 @@ func RunVerifiedByTest(specRoot, file, testName string) (out TestRunResult) {
 	// exactly the thundering-herd fan-out observed to push cmd/hotam's own
 	// test suite past its `-timeout` budget under machine contention.
 	// singleflightForKey ensures only the FIRST caller for a given key
-	// actually runs runGoTest; every other concurrent caller for the SAME
+	// actually executes the compiled runner; every other caller for the SAME
 	// key blocks on the same result and reuses it, never spawning its own
 	// subprocess.
-	result := singleflightRun(key, hash, func() TestRunResult {
-		pattern, err := relativePackagePattern(moduleRoot, path)
-		if err != nil {
-			return TestRunResult{Err: err}
-		}
-		// This ctx bounds only the PRE-execution waits an in-flight caller
-		// can block on: the compile singleflight wait (compileTestBinary)
-		// and the globalExecSlots slot-wait. The actual cmd.Run execution
-		// gets its OWN freshly-minted execCtx inside runGoTest (decoupled
-		// so slot-wait time cannot eat the run budget -- see runGoTest's
-		// Step 2 comment), so this timeout and the run timeout are
-		// INDEPENDENT budgets, each sized by testExecTimeout (configurable
-		// via testExecTimeoutEnv, task #352).
-		ctx, cancel := context.WithTimeout(context.Background(), testExecTimeout())
-		defer cancel()
-		return runGoTest(ctx, moduleRoot, pattern, testName)
+	result := s.singleflightRun(key, hash, func() TestRunResult {
+		return s.runAtomRecording(specRoot, file, exactTestPattern(testName), nil, false).ForTest(testName)
 	})
 
-	// Only memoize a result that actually reflects the current content (not
-	// an infrastructure failure, which should be retried rather than cached
-	// -- a transient "go binary not found" or timeout should not poison
-	// every subsequent call for the rest of the process's life).
-	if result.Err == nil {
-		runCache.Store(key, cacheEntry{hash: hash, result: result})
-	}
 	return result
 }

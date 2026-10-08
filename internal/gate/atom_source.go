@@ -10,6 +10,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -37,6 +38,7 @@ type AtomArtifact struct {
 type AtomCaseContext struct {
 	ID         string                       `json:"id"`
 	AtomIDs    []string                     `json:"atom_ids,omitempty"`
+	ClauseIDs  []string                     `json:"clause_ids,omitempty"`
 	Profile    string                       `json:"profile,omitempty"`
 	Target     string                       `json:"target,omitempty"`
 	Operation  string                       `json:"operation,omitempty"`
@@ -61,6 +63,7 @@ func (a AtomArtifact) CaseDefinition(test string) (*ontology.CaseDefinition, err
 	caseDef.ID = a.Case.ID
 	caseDef.Test = test
 	caseDef.AtomIDs = append([]string(nil), a.Case.AtomIDs...)
+	caseDef.ClauseIDs = slices.Clone(a.Case.ClauseIDs)
 	caseDef.Profile = a.Case.Profile
 	caseDef.Target = a.Case.Target
 	caseDef.Operation = a.Case.Operation
@@ -108,6 +111,8 @@ type AtomSourceIndex struct {
 	defaultLanguage    string
 	ruleCases          bool
 	constants          map[string]map[string]map[string]atomValueConstant
+	fragments          map[string]ontology.LocalizedText
+	normativeTexts     map[string][]normativeTextSource
 }
 
 func NewAtomSourceIndex(specRoot string) (*AtomSourceIndex, error) {
@@ -124,6 +129,8 @@ type atomSourceOptions struct {
 	ruleCases          bool
 	packages           []string
 	recorderImportPath string
+	// parseSource borrows invocation-owned ASTs when supplied by a session.
+	parseSource func(path string) (*token.FileSet, *ast.File, error)
 }
 
 // NewAtomSourceIndexForGraph resolves sources using the graph's invocation-local
@@ -207,9 +214,18 @@ func newAtomSourceIndex(specRoot string, opts atomSourceOptions) (*AtomSourceInd
 		byLink:             map[string][]AtomSource{},
 		RecorderImportPath: recorderImportPath,
 		languages:          langs, defaultLanguage: defaultLanguage, ruleCases: ruleCases,
-		constants: map[string]map[string]map[string]atomValueConstant{},
+		constants:      map[string]map[string]map[string]atomValueConstant{},
+		fragments:      map[string]ontology.LocalizedText{},
+		normativeTexts: map[string][]normativeTextSource{},
 	}
-	fs := token.NewFileSet()
+	parseSource := opts.parseSource
+	if parseSource == nil {
+		parseSource = func(path string) (*token.FileSet, *ast.File, error) {
+			fs := token.NewFileSet()
+			file, err := parser.ParseFile(fs, path, nil, parser.ParseComments)
+			return fs, file, err
+		}
+	}
 	visit := func(walkRoot string) error {
 		return filepath.WalkDir(walkRoot, func(path string, d os.DirEntry, walkErr error) error {
 			if walkErr != nil {
@@ -218,7 +234,7 @@ func newAtomSourceIndex(specRoot string, opts atomSourceOptions) (*AtomSourceInd
 			if d.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
 				return nil
 			}
-			f, err := parser.ParseFile(fs, path, nil, parser.ParseComments)
+			fs, f, err := parseSource(path)
 			if err != nil {
 				return err
 			}
@@ -269,6 +285,19 @@ func newAtomSourceIndex(specRoot string, opts atomSourceOptions) (*AtomSourceInd
 						translations, verbatim, err := parseAtomValueDoc(name, rel, fs.Position(vs.Pos()).Line, atomCommentLines(doc, fs), langs)
 						if err != nil {
 							return err
+						}
+						if !verbatim && len(translations) > 0 {
+							fragmentSource := AtomSource{File: rel, Symbol: name, Position: fs.Position(vs.Pos())}
+							if doc != nil {
+								fragmentSource.DocPosition = fs.Position(doc.Pos())
+							}
+							texts, _, positions, _, _, err := parseAtomPhrases(doc, fs, fragmentSource, langs)
+							if err != nil {
+								return err
+							}
+							fragmentSource.PhrasePositions = positions
+							index.fragments[filepath.ToSlash(rel)+":"+name] = texts
+							index.indexNormativeText(filepath.ToSlash(rel)+":"+name, texts, fragmentSource)
 						}
 						if index.constants[packagePath] == nil {
 							index.constants[packagePath] = map[string]map[string]atomValueConstant{}
@@ -345,6 +374,9 @@ func newAtomSourceIndex(specRoot string, opts atomSourceOptions) (*AtomSourceInd
 		if err := visit(walkRoot); err != nil {
 			return nil, fmt.Errorf("atom sources: %w", err)
 		}
+	}
+	if err := index.expandNormativeText(); err != nil {
+		return nil, err
 	}
 	return index, nil
 }

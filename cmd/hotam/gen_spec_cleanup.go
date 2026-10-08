@@ -143,7 +143,11 @@ func cleanupStaleGenFiles(genDir string, written []string, exemptRelativePaths [
 		exempt = append(exempt, filepath.Join(genDir, filepath.FromSlash(relative)))
 	}
 	reportOwned := make(map[string]bool)
-	for _, path := range docbundle.ReportCandidates(genDir) {
+	reportCandidates, err := docbundle.ReportCandidates(genDir)
+	if err != nil {
+		return nil, err
+	}
+	for _, path := range reportCandidates {
 		reportOwned[filepath.Clean(path)] = true
 	}
 	ownedCandidates := make([]string, 0, len(candidates))
@@ -245,8 +249,8 @@ func validateSpecOutputTargets(genDir string, documents map[string]string) error
 	return nil
 }
 
-func cleanupStaleEvidenceLocaleViews(genDir string, layout docbundle.Layout) ([]string, error) {
-	var current []string
+func cleanupStaleEvidenceLocaleViews(genDir string, layout docbundle.Layout, written []string) ([]string, error) {
+	current := append([]string(nil), written...)
 	for _, language := range layout.LanguagesForViews() {
 		for _, base := range []string{"docs/gen/EVIDENCE.md", "docs/gen/FINDINGS.md"} {
 			relative, err := layout.DocumentPath(base, language)
@@ -257,7 +261,11 @@ func cleanupStaleEvidenceLocaleViews(genDir string, layout docbundle.Layout) ([]
 		}
 	}
 	var candidates []string
-	for _, path := range docbundle.ReportCandidates(genDir) {
+	reportCandidates, err := docbundle.ReportCandidates(genDir)
+	if err != nil {
+		return nil, err
+	}
+	for _, path := range reportCandidates {
 		if filepath.Base(path) == "evidence.json" {
 			continue
 		}

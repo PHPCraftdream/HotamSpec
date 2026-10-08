@@ -98,7 +98,7 @@ import (
 // drift and false-block an unrelated proposal. AllViolationsForProposalGate
 // already excludes every ComparesOnDiskProjection check for exactly this
 // reason; this check inherits that exclusion by carrying the same flag.
-func checkClaimMatchesScenario(g *ontology.Graph) []Violation {
+func checkClaimMatchesScenario(g *ontology.Graph) (out []Violation) {
 	if !g.SelfExecutingAtoms && g.Discipline != loader.DisciplineFull {
 		// Soft discipline -- honest no-op, mirroring
 		// checkSettledRequiresScenario's identical guard.
@@ -114,7 +114,14 @@ func checkClaimMatchesScenario(g *ontology.Graph) []Violation {
 		return nil
 	}
 	specRoot := gate.SpecRootForGraph(g)
-	var out []Violation
+	g, session, owned := invocationSession(g)
+	if owned {
+		defer func() {
+			if err := session.Close(); err != nil {
+				out = append(out, Violation{Check: "execution_session_close", ID: g.DomainDir, Message: err.Error()})
+			}
+		}()
+	}
 	var atomIndex *gate.AtomSourceIndex
 	var atomRuns map[string]gate.RecordingResult
 	if g.SelfExecutingAtoms {
@@ -141,7 +148,7 @@ func checkClaimMatchesScenario(g *ontology.Graph) []Violation {
 				continue
 			}
 		} else {
-			fresh, ok = freshDerivedClaim(specRoot, g.SelfHosting, r.VerifiedBy)
+			fresh, ok = freshDerivedClaim(session, specRoot, g.SelfHosting, r.VerifiedBy)
 		}
 		if !ok {
 			// Nothing currently derivable (every verified_by entry fails to
@@ -189,14 +196,14 @@ func checkClaimMatchesScenario(g *ontology.Graph) []Violation {
 // sync-domain` (which writes via selfspec.DeriveClaimsFromScenarios) and
 // `check_claim_matches_scenario` (which reads via this function) permanently
 // disagree on the very same requirement's derived Claim.
-func freshDerivedClaim(specRoot string, selfHosting bool, verifiedBy []string) (claim string, ok bool) {
+func freshDerivedClaim(session *gate.ExecutionSession, specRoot string, selfHosting bool, verifiedBy []string) (claim string, ok bool) {
 	var titles []string
 	for _, entry := range verifiedBy {
 		file, testName, parsedOK := gate.ParseFileColonSymbol(strings.TrimSpace(entry))
 		if !parsedOK {
 			continue
 		}
-		result := gate.RunVerifiedByTestRecording(specRoot, file, testName, "")
+		result := session.RunVerifiedByTestRecording(specRoot, file, testName, "")
 		if result.Skipped || result.Err != nil || result.CompileFailed || !result.Passed {
 			continue
 		}

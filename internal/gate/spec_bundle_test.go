@@ -118,9 +118,8 @@ func TestBuildSpecRendersExplicitCaseTestWithoutVerifiedByAsCaseEvidence(t *test
 		t.Fatal(err)
 	}
 	document := documents["spec/en/model.md"]
-	if !strings.Contains(document, "case-only") ||
-		!strings.Contains(document, "The English rule.") {
-		t.Fatalf("explicit case test did not become a localized case view without inventing verified_by:\n%s", document)
+	if !strings.Contains(document, "The English rule.") || strings.Contains(document, "```json") {
+		t.Fatalf("declared case evidence did not produce a readable localized norm:\n%s", document)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/conformance"
 	"github.com/PHPCraftdream/HotamSpec/internal/docbundle"
 	"github.com/PHPCraftdream/HotamSpec/internal/evidence"
 	"github.com/PHPCraftdream/HotamSpec/internal/generator"
@@ -114,7 +115,7 @@ func TestCleanupStaleEvidenceLocaleViewsUsesGeneratedOwnership(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	removed, err := cleanupStaleEvidenceLocaleViews(genDir, layout)
+	removed, err := cleanupStaleEvidenceLocaleViews(genDir, layout, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,5 +148,52 @@ func TestWriteEvidenceBundleRefusesAuthoredLocalizedReport(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(domainDir, "docs", "gen", "evidence.json")); !os.IsNotExist(err) {
 		t.Fatalf("report bundle was partially written despite collision: %v", err)
+	}
+}
+
+func TestWriteEvidenceBundleUpdatesValidCaseJournalAndProtectsDamagedOrAuthoredOutput(t *testing.T) {
+	domainDir := t.TempDir()
+	graph := &ontology.Graph{Languages: []string{"en"}, DefaultLanguage: "en"}
+	report := evidence.Report{SchemaVersion: 1}
+	report.Conformance.Cases = []conformance.CaseAssessment{{ID: "case", AtomID: "atom", Status: "unverified"}}
+	documents, err := generator.BuildEvidenceBundleLocalized(graph, report, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	layout, err := docbundle.NewLayout(graph.Languages, graph.DefaultLanguage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	relative, err := layout.EvidenceCasePath("en", "atom", "case")
+	if err != nil {
+		t.Fatal(err)
+	}
+	machine := []byte("{\"schema_version\":1}\n")
+	if err := writeEvidenceBundle(domainDir, documents, machine); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(domainDir, filepath.FromSlash(relative))
+	original := documents[relative]
+	report.Conformance.Cases[0].Qualification = "unproved"
+	updated, err := generator.BuildEvidenceBundleLocalized(graph, report, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writeEvidenceBundle(domainDir, updated, machine); err != nil {
+		t.Fatalf("valid generated case journal could not be updated: %v", err)
+	}
+	if got, err := os.ReadFile(path); err != nil || string(got) != updated[relative] || string(got) == original {
+		t.Fatalf("new captured qualification was not published exactly: %v", err)
+	}
+	for _, protected := range []string{updated[relative] + "damaged\n", "operator-authored case review\n"} {
+		if err := os.WriteFile(path, []byte(protected), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := writeEvidenceBundle(domainDir, documents, machine); err == nil {
+			t.Fatal("damaged or authored case output lost overwrite protection")
+		}
+		if got, err := os.ReadFile(path); err != nil || string(got) != protected {
+			t.Fatalf("refused journal collision changed protected bytes: %v", err)
+		}
 	}
 }

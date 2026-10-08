@@ -88,7 +88,9 @@ func cmdInit(args []string) error {
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — reserved for reproducible/byte-identical scaffolding (currently unused: task #364 removed the seed Requirement this flag used to date-stamp)")
 	requireProvenance := fs.Bool("require-provenance", false, "require source_refs/last_reviewed_at/review_after on every SETTLED requirement landed into this domain (writes require_provenance: true into manifest.json; see internal/loader.ResolveRequireProvenance)")
 	parentFlag := fs.String("parent", "", "name of this domain's parent domain (default: none — this is a root domain, written as \"parent\": null; PLAN-scenario-generated-spec.md §2 D6). Not validated against a live filesystem lookup.")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam init <dir> [--name <domain-name>] [--profile consumer|full] [--today YYYY-MM-DD] [--require-provenance] [--parent <parent-domain-name>]")

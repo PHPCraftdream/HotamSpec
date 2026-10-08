@@ -480,9 +480,13 @@ Self-hosting-домен `hotam-spec-self` использует ту же мех�
 
 ## 12. Наблюдения, находки и источники
 
-`hotam evidence --domain <path> --json --write` executes checks and saves one
-shared `docs/gen/evidence.json` plus `EVIDENCE.md` and `FINDINGS.md` views;
-localized bundles use the corresponding language-suffixed views. This reports
+`hotam evidence --domain <path> --write` executes checks and saves compact
+`EVIDENCE.md` / `FINDINGS.md` views and linked requirement/case pages beneath
+`docs/gen/evidence/`; configured languages have separate locale directories.
+The full machine packet is optional: `--json` emits it, and `--json --write`
+also saves shared `docs/gen/evidence.json`. Default publication removes only
+recognized legacy automatic packets, not authored or unknown-schema JSON.
+The findings CLI requires the explicit `--json --write` packet. This reports
 observations, not graph mutation or publication of a successful normative
 SPEC. On discrepancy, files are still saved before nonzero exit. A passing
 test remains visible when a sibling in the package fails. Atom-domain reports
@@ -500,14 +504,28 @@ order.
 
 `Observed(value, Observe(name, input, actual, expected)...)` remains the
 generic nested-summary API. `Bytes`, `Text`, `Integer`, `Float64Bits`,
-`Scalar`, `Diagnostic` and `Object` create exact typed payloads for raw
+`Scalar`, `Diagnostic`, `Object` and `Array` create exact typed payloads for raw
 observations. The method runs once; `Fact` compares the underlying value and
 preserves the nested comparisons. A failed nested comparison makes the real
 `testing.T` fail even when its summary matches `want`.
 
+Collections use explicit wire kinds: `{kind:"object", fields:{...}}` and
+`{kind:"array", items:[...]}`. Object fields are domain data, including literal
+`kind`, `entries`, `items` and `length` keys; none selects or unwraps a transport
+representation. Ordered `items` preserve positions, and explicit `[]` and `{}`
+remain distinct from absent payloads. Integers retain exact decimal strings;
+binary64 values retain their bits, including signed zero and NaN payloads.
+Reader JSON5 omits technical bit/offset diagnostics without changing evidence.
+Malformed selected values reject publication. Valid non-UTF-8 byte values use
+an explicit opaque-byte explanation and a link to exact evidence, never a
+counterfeit `null` or string semantic value.
+
 В `manifest.json` список `specification_sources` задаёт объекты
 `{id, path, version, sha256}`. Относительный path считается от домена,
 для self-hosting — от его Go module root. Абсолютный path задаётся явно.
+`project://upstream/spec/...` разрешается от проекта указанного домена через
+его существующие project markers, независимо от CWD и process environment.
+Пустой, абсолютный, drive/backslash-путь и выход за корень запрещены.
 Версия — авторская декларация; SHA-256 проверяется по фактическим байтам.
 `Requirement.SourceLinks` содержит `{source_id, anchor}`; anchor — существующий
 Markdown heading или диапазон `Lx-Ly`/`Lx`. Проверка существования и хэша
@@ -574,12 +592,89 @@ second graph.
 
 For multilingual atoms the sole comment syntax is `>>>>> lang=<code>` in the
 method's Go doc comment. Each declared language has exactly one non-empty
-phrase block; malformed markers, text outside blocks, unknown/duplicate codes,
+block; malformed markers, text outside blocks, unknown/duplicate codes,
 empty blocks or a missing declared language are errors with file/method/line/
-language context. A plain unmarked phrase is not a multilingual fallback. Do
-not add alternate tags, IDs,
-headings, tables, templates or translation dictionaries to ordinary method
-comments.
+language context. A plain unmarked phrase is not a multilingual fallback.
+
+Rule methods may follow their first, short claim paragraph with a detailed
+normative body. SPEC preserves its paragraphs, Markdown tables and fenced
+grammar; graph claims retain only the short phrase. A body line
+`include: spec/model/text.go:ConstantName` includes that documented typed
+constant's text for the same language from the invocation's parsed AST snapshot.
+Shared constants use the same strict language blocks. Missing references or
+translations fail closed; active nested includes are not supported. Backtick
+and tilde fences retain their marker and opening length: only a matching,
+sufficiently long delimiter closes a fence. `include:` inside fenced code is
+literal Ktav, including in referenced constants. An unclosed fence keeps the
+remainder literal through EOF. Includes resolve from the parsed AST, never
+from a publication-time Markdown read or another test execution. Legacy views
+link repeated paragraphs to their first definition; document-enabled domains
+use the explicitly authored block identity. Non-executable context and
+recommendations must be identified as such, not represented as passing checks.
+
+`conformance.document_sections` opts into the authored reader document.
+Each section declares stable `id`, optional `parent_id`, sibling `order`,
+`title_texts` for every configured language and ordered `blocks`. A block has
+its own stable `id`, a `text_ref` naming a documented typed Go constant,
+`role` (`normative`, `informative`, `recommendation` or
+`profile_qualification`), explicit `clause_ids`, optional `examples` and
+localized `qualification_texts`. Each `DocumentExample` supplies `case_id` and
+a nonempty ordered `comparison_names` list; selecting an entire runtime journal
+is not supported. IDs and constant names describe meaning;
+source line links remain provenance and never become identity.
+
+The canonical SPEC follows that section tree and emits every shared block
+once. Only explicitly selected, uniquely named comparisons supply additional
+explaining examples. Their cases require relevant declared clause scope,
+unqualified applicability and passing exact comparisons in the same snapshot.
+Unselected diagnostics remain evidence-only. There is no first-N selection,
+whole-journal promotion or silent omission.
+Unknown/duplicate IDs, cycles, ambiguous order,
+missing translations/text, conflicting case metadata and failed selected
+comparisons reject the entire rendered bundle. Focused package shards link
+back to the complete canonical document.
+
+Source inputs containing CR/CRLF, tabs or other Unicode control characters
+are presented as explained escaped JSON5 string notation, without normalizing
+their original bytes. Ordinary source remains literal Ktav; every selected
+example links to its exact case evidence.
+
+`CaseDefinition.ClauseIDs` / `CaseContext.ClauseIDs` delimit the concrete
+assertions witnessed by a case, separately from a method's broad `ClauseLinks`.
+In document domains an absent scope supplies no clause proof; explicit `[]`
+is evidence-only and survives transport/merging. A contradictory recorded
+scope is rejected rather than broadened. Legacy non-document declarations
+retain their existing structural inference. Evidence reports structural
+decomposition separately from `WitnessCaseIDs`; only passing applicable,
+unqualified executions contribute witnesses. An empty witness set is
+`unproved`, not PASS. Corpus fixtures cannot individually witness a whole
+corpus contract; a complete validated aggregate must declare that scope.
+
+An `ExecutionSession` owns the invocation's content-keyed ASTs, compilation
+and observed results. Package captures run declared test/case parents and
+discovered atom tests once, with their union of implementation coverage;
+unrelated tests are not part of that snapshot. Explicit full-package execution
+still runs the complete package. Admitted tests require real terminal verdicts.
+Independent sessions execute afresh, without a persistent/native Go PASS replay.
+`Close` rejects new work, joins existing users and deletes only its own paths;
+failed deletion retains ownership and reports retryable errors. An acquired
+immutable snapshot renders without executing tests, even after its owner
+closes. New execution/evidence requests require live ownership and invalidate
+on content or profile changes, including edits preserving mtime and size.
+
+Logical freshness ignores publication-output rewrites and calendar rollover.
+The locale-independent publication-date marker supplies the date for comparing
+the published projection; live review/overdue classifiers still use today.
+
+Case detail pages retain an exact captured journal. Their versioned first-line
+marker binds source, engine, declarations, locale/path, case/profile/producer
+and terminal comparison proof; a separate SHA-256 checks the published body.
+Independent passing executions may produce different temporary paths or raw
+diagnostic wording without making that captured journal logically stale.
+Source/profile/verdict/qualification changes, malformed metadata and damaged
+body bytes remain stale. Only the first line is metadata; marker-looking user
+data in the body stays literal. This is checksum integrity, not a signed attestation.
+Normative SPEC and deterministic non-case views still require exact bytes.
 
 Bool atom methods (`func (...) T bool` in fact/holds mode) may author a
 negation phrase: a doc line after the main phrase starting with `not: ` (in
@@ -633,9 +728,10 @@ a missing-translation failure. For all other requirements, `sync-domain` /
 before validation; if both are set and differ, that remains an error.
 
 For multiple languages HotamSpec renders `docs/gen/SPEC.<lang>.md` and
-`docs/gen/spec/<lang>/<pkg>.md`. Other generated human-readable views use the
-same language suffix; each index links to shards in its own locale. Machine
-data (`graph.json`, `evidence.json`, review storage) is shared. The standard
+`docs/gen/spec/<lang>/<pkg>.md`. Rule/case roots contain all normative rules,
+not just package indexes; shards remain focused locale-specific reading views.
+Other generated human-readable views use the same language suffix. Machine
+data (`graph.json`, optional `evidence.json`, review storage) is shared. The standard
 `CLAUDE.md` uses the default language; additional localized boot views are
 `CLAUDE.<lang>.md`, without a duplicate default-language copy.
 
@@ -656,9 +752,9 @@ language list is explicitly declared, including one code (where legacy
 filenames remain unchanged). It compares generated localized docs and
 language-aware boot crystals. It requires the full SPEC index/shard bundle in
 multilingual mode; an explicit single locale follows the existing/legacy SPEC
-promise. EVIDENCE/FINDINGS views are freshness-checked only when the shared
-`docs/gen/evidence.json` or a known evidence view is already materialized; the
-check does not make running `hotam evidence --write` a new obligation. The
+promise. EVIDENCE/FINDINGS views and linked evidence pages are freshness-checked
+when a report view is materialized or conformance auditing requires the bundle;
+the optional full JSON packet is not a freshness prerequisite. The
 legacy `check_spec_md_current` and `check_domain_claude_md_current` are no-ops
 for explicit languages. This post-processing checker reuses the phase-one
 violation/evidence snapshot, not a second source or test execution. Legacy

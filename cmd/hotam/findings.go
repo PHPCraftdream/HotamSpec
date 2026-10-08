@@ -81,7 +81,7 @@ func cmdFindingsList(args []string) error {
 	fs := newFlagSet("findings list")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	if err := fs.Parse(args); err != nil {
+	if err := parseCommandFlags(fs, args); err != nil {
 		return err
 	}
 	if fs.NArg() != 0 {
@@ -116,7 +116,7 @@ func cmdFindingsShow(args []string) error {
 	fs := newFlagSet("findings show")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	if err := fs.Parse(args); err != nil {
+	if err := parseCommandFlags(fs, args); err != nil {
 		return err
 	}
 	if fs.NArg() != 1 {
@@ -146,7 +146,7 @@ func cmdFindingsReview(args []string) error {
 	rationale := fs.String("rationale", "", "human rationale for the classification")
 	decisionRef := fs.String("decision-ref", "", "reference to the human decision record (not a verified signoff)")
 	asJSON := fs.Bool("json", false, "emit the saved review note as JSON")
-	if err := fs.Parse(args); err != nil {
+	if err := parseCommandFlags(fs, args); err != nil {
 		return err
 	}
 	if fs.NArg() != 1 {
@@ -206,7 +206,7 @@ func loadFindingState(domainFlag string) (string, evidence.Report, []findingRevi
 	data, err := os.ReadFile(reportPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", evidence.Report{}, nil, fmt.Errorf("current evidence report not found at %s; run `hotam evidence --domain %s --write` first", reportPath, domainDir)
+			return "", evidence.Report{}, nil, fmt.Errorf("current evidence report not found at %s; run `hotam evidence --domain %s --json --write` first", reportPath, domainDir)
 		}
 		return "", evidence.Report{}, nil, fmt.Errorf("read current evidence report: %w", err)
 	}
@@ -330,7 +330,7 @@ func validFindingReviewKind(kind string) bool {
 }
 
 func staleFindingError(id string) error {
-	return fmt.Errorf("finding %q is not present in the current generated report (unknown or stale ID); regenerate with `hotam evidence --write` and use an ID from that report", id)
+	return fmt.Errorf("finding %q is not present in the current generated report (unknown or stale ID); regenerate with `hotam evidence --json --write` and use an ID from that report", id)
 }
 
 func findingShortDescription(f evidence.Finding) string {

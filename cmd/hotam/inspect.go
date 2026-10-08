@@ -36,7 +36,9 @@ func cmdInspect(args []string) error {
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
 	limit := fs.Int("limit", 20, "max candidates to print (0 = unlimited)")
 	minScore := fs.Int("min-score", defaultInspectMinScore, "minimum candidate score to show (0 = show all); default 5 suppresses low-signal noise")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {

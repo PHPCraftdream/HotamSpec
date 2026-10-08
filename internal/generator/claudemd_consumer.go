@@ -192,6 +192,14 @@ func renderConsumerRequirements(g *ontology.Graph, domainName string) string {
 	}
 	sort.Strings(packages)
 	out = append(out, "", serviceText(g, "| Package | Requirements | E | S | P |"), "|---|---:|---:|---:|---:|")
+	var layout docbundle.Layout
+	if g.SelfExecutingAtoms {
+		var err error
+		layout, err = docbundle.NewLayout(g.Languages, g.DefaultLanguage)
+		if err != nil {
+			panic(err)
+		}
+	}
 	for _, pkg := range packages {
 		var enforced, structural, prose int
 		for _, r := range groups[pkg] {
@@ -206,11 +214,11 @@ func renderConsumerRequirements(g *ontology.Graph, domainName string) string {
 		}
 		link := localizedDomainDocPath(g, domainName, "SPEC.md")
 		if g.SelfExecutingAtoms {
-			shardName, nameErr := docbundle.SpecShardName(pkg + ".md")
-			if nameErr != nil {
-				panic(nameErr)
+			shardPath, pathErr := layout.SpecShardPath(renderLanguage(g), pkg+".md")
+			if pathErr != nil {
+				panic(pathErr)
 			}
-			link = localizedDomainDocPath(g, domainName, "spec/"+shardName)
+			link = "domains/" + domainName + "/" + filepath.ToSlash(shardPath)
 		}
 		out = append(out, fmt.Sprintf("| [%s](%s) | %d | %d | %d | %d |", pkg, link, len(groups[pkg]), enforced, structural, prose))
 	}

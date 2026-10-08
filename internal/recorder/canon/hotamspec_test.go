@@ -1138,7 +1138,7 @@ func TestWithCaseSharesOracleAcrossDifferentPropertyAtoms(t *testing.T) {
 		}
 		if artifact.Mode != "rule" || artifact.Test != ft.name || artifact.Case == nil ||
 			artifact.Case.ID != context.ID || artifact.CaseExpected == nil ||
-			!reflect.DeepEqual(*artifact.CaseExpected, oracle) {
+			!equalTypedValues(artifact.CaseExpected, &oracle) {
 			t.Fatalf("shared case metadata/oracle differed between property artifacts: %+v", artifact)
 		}
 		var wire struct {

@@ -15,6 +15,7 @@ import (
 	"unicode"
 
 	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
+	"github.com/PHPCraftdream/HotamSpec/internal/paths"
 )
 
 const (
@@ -96,7 +97,7 @@ func VerifySources(g *ontology.Graph) []Check {
 		var haveBytes bool
 		if strings.TrimSpace(spec.Path) != "" {
 			var path string
-			path, readErr = resolvePath(g, spec.Path)
+			path, readErr = ResolvePath(g, spec.Path)
 			if readErr == nil {
 				data, readErr = os.ReadFile(path)
 				haveBytes = readErr == nil
@@ -184,7 +185,7 @@ func VerifyLinks(g *ontology.Graph) []Check {
 	}
 	for id, entry := range sources {
 		if strings.TrimSpace(entry.spec.Path) != "" {
-			if path, err := resolvePath(g, entry.spec.Path); err == nil {
+			if path, err := ResolvePath(g, entry.spec.Path); err == nil {
 				if data, err := os.ReadFile(path); err == nil {
 					entry.data = data
 					entry.read = true
@@ -278,7 +279,17 @@ func ValidateCoverage(r ontology.Requirement) error {
 	return nil
 }
 
-func resolvePath(g *ontology.Graph, sourcePath string) (string, error) {
+// ResolvePath resolves declared source paths against their explicit owner.
+func ResolvePath(g *ontology.Graph, sourcePath string) (string, error) {
+	const projectPrefix = "project://"
+	projectPath := strings.HasPrefix(sourcePath, projectPrefix)
+	if projectPath {
+		sourcePath = strings.TrimPrefix(sourcePath, projectPrefix)
+		if sourcePath == "" || filepath.IsAbs(sourcePath) ||
+			strings.ContainsAny(sourcePath, ":\\") || strings.HasPrefix(sourcePath, "/") {
+			return "", fmt.Errorf("project source path must be a nonempty relative slash-separated path")
+		}
+	}
 	if filepath.IsAbs(sourcePath) {
 		return filepath.Clean(sourcePath), nil
 	}
@@ -286,7 +297,13 @@ func resolvePath(g *ontology.Graph, sourcePath string) (string, error) {
 		return "", fmt.Errorf("relative source path %q has no domain source root", sourcePath)
 	}
 	root := g.DomainDir
-	if g.SelfHosting {
+	if projectPath {
+		var ok bool
+		root, ok = paths.ProjectRootAt(g.DomainDir)
+		if !ok {
+			return "", fmt.Errorf("project source path %q has no project root above domain %q", sourcePath, g.DomainDir)
+		}
+	} else if g.SelfHosting {
 		var err error
 		root, err = selfHostingSourceRoot(g.DomainDir)
 		if err != nil {

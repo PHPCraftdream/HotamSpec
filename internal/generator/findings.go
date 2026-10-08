@@ -101,12 +101,16 @@ func renderFindings(g *ontology.Graph, report evidence.Report, language string, 
 				lines = append(lines, "- **"+text("Source links")+":**")
 				for _, link := range finding.SourceLinks {
 					check, ok := sourceCheckForAnchor(report.Sources, link.SourceID, link.Anchor)
-					if !ok || check.Path == "" {
+					href := ""
+					if ok && check.Path != "" {
+						href = sourceLink(g, check.Path, link.Anchor)
+					}
+					if href == "" {
 						lines = append(lines, "  - `"+Cell(link.SourceID+"#"+link.Anchor)+"` ("+text("source reference unresolved")+")")
 						continue
 					}
 					lines = append(lines, "  - ["+Cell(link.SourceID+" — "+check.Path+"#"+link.Anchor)+"]("+
-						sourceLink(g, check.Path, link.Anchor)+")"+anchorSuffix(link.Anchor))
+						href+")"+anchorSuffix(link.Anchor))
 				}
 			}
 			if len(finding.Observations) == 0 {

@@ -92,7 +92,7 @@ const specMDRelPath = "docs/gen/SPEC.md"
 // BuildSpecFromRows unchanged, and the OUTER, non-nested `go test
 // ./internal/invariants/...` process is the one that actually proves
 // currency.
-func checkSpecMDCurrent(g *ontology.Graph) []Violation {
+func checkSpecMDCurrent(g *ontology.Graph) (violations []Violation) {
 	if g.DomainDir == "" {
 		// No on-disk domain to check against (an in-memory fixture graph
 		// built without ever going through loader.LoadGraph) -- honest
@@ -155,7 +155,18 @@ func checkSpecMDCurrent(g *ontology.Graph) []Violation {
 		}
 		rows = report.SpecRows
 	} else {
-		rows = gate.CollectSpecRows(g)
+		view, snapshot, collectErr := InvocationExecutionSnapshot(g)
+		if view != nil && view.InvocationState != g.InvocationState {
+			defer func() {
+				if closeErr := CloseInvocation(view); closeErr != nil {
+					violations = append(violations, Violation{Check: "execution_session_close", ID: g.DomainDir, Message: closeErr.Error()})
+				}
+			}()
+		}
+		if collectErr != nil {
+			return []Violation{{Check: "check_spec_md_current", ID: g.DomainDir, Message: collectErr.Error()}}
+		}
+		rows = gate.CollectSpecRowsFromSnapshot(view, snapshot)
 	}
 	documents, err := gate.BuildSpecDocumentsFromRows(g, rows)
 	if err != nil {

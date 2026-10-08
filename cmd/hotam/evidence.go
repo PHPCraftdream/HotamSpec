@@ -21,7 +21,7 @@ func cmdEvidence(args []string) error {
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	asJSON := fs.Bool("json", false, "emit one machine-readable report document")
 	write := fs.Bool("write", false, "write the generated report bundle under docs/gen")
-	if err := fs.Parse(args); err != nil {
+	if err := parseCommandFlags(fs, args); err != nil {
 		return err
 	}
 	if fs.NArg() != 0 {
@@ -42,9 +42,12 @@ func cmdEvidence(args []string) error {
 	}
 
 	report, collectErr := evidence.Collect(graph)
-	machine, encodeErr := encodeEvidenceReport(report)
-	if encodeErr != nil {
-		return fmt.Errorf("encode evidence report: %w", encodeErr)
+	var machine []byte
+	if *asJSON {
+		machine, err = encodeEvidenceReport(report)
+		if err != nil {
+			return fmt.Errorf("encode evidence report: %w", err)
+		}
 	}
 
 	var documents map[string]string
@@ -72,7 +75,7 @@ func cmdEvidence(args []string) error {
 			return fmt.Errorf("write evidence report to stdout: %w", err)
 		}
 		if *write && writeErr == nil {
-			fmt.Fprintf(os.Stderr, "wrote localized EVIDENCE/FINDINGS views and one docs/gen/evidence.json under %s\n", domainDir)
+			fmt.Fprintf(os.Stderr, "wrote compact localized EVIDENCE/FINDINGS views and evidence detail pages under %s\n", domainDir)
 		}
 	}
 
@@ -115,22 +118,26 @@ func buildEvidenceDocuments(graph *ontology.Graph, report evidence.Report) (map[
 	}
 	documents := make(map[string]string, len(layout.LanguagesForViews())*2)
 	var defaultDocument string
+	var caseIdentity *generator.EvidenceCaseIdentity
+	if len(report.Conformance.Cases) != 0 {
+		caseIdentity, err = generator.NewEvidenceCaseIdentity(graph, report)
+		if err != nil {
+			return nil, "", err
+		}
+	}
 	for _, language := range layout.LanguagesForViews() {
 		view := *graph
 		view.RenderLanguage = language
-		var evidenceMD, findingsMD string
-		if len(graph.Languages) == 0 {
-			evidenceMD = generator.BuildEvidence(&view, report)
-			findingsMD = generator.BuildFindings(&view, report)
-		} else {
-			evidenceMD, err = generator.BuildEvidenceLocalized(&view, report, language)
-			if err != nil {
-				return nil, "", fmt.Errorf("render EVIDENCE for %q: %w", language, err)
-			}
-			findingsMD, err = generator.BuildFindingsLocalized(&view, report, language)
-			if err != nil {
-				return nil, "", fmt.Errorf("render FINDINGS for %q: %w", language, err)
-			}
+		evidenceDocuments, err := generator.BuildEvidenceBundleLocalizedWithIdentity(&view, report, language, caseIdentity)
+		if err != nil {
+			return nil, "", fmt.Errorf("render EVIDENCE for %q: %w", language, err)
+		}
+		findingsMD, err := generator.BuildFindingsLocalized(&view, report, language)
+		if err != nil {
+			return nil, "", fmt.Errorf("render FINDINGS for %q: %w", language, err)
+		}
+		for target, content := range evidenceDocuments {
+			documents[target] = content
 		}
 		evidencePath, err := layout.DocumentPath("docs/gen/EVIDENCE.md", language)
 		if err != nil {
@@ -140,7 +147,7 @@ func buildEvidenceDocuments(graph *ontology.Graph, report evidence.Report) (map[
 		if err != nil {
 			return nil, "", err
 		}
-		documents[evidencePath] = evidenceMD
+		evidenceMD := documents[evidencePath]
 		documents[findingsPath] = findingsMD
 		if language == defaultLanguage {
 			defaultDocument = evidenceMD
@@ -171,12 +178,23 @@ func writeEvidenceBundle(domainDir string, documents map[string]string, machine 
 		contents = append(contents, []byte(documents[filepath.ToSlash(relative)]))
 	}
 	rawPath := filepath.Join(genDir, "evidence.json")
-	paths = append(paths, rawPath)
-	contents = append(contents, machine)
+	if machine != nil {
+		paths = append(paths, rawPath)
+		contents = append(contents, machine)
+	}
 	if err := writeFilesParallel(paths, contents); err != nil {
 		return err
 	}
-	stale := docbundle.StalePaths(docbundle.ReportCandidates(genDir), paths, nil)
+	if machine == nil {
+		if err := removeGeneratedEvidenceJSON(genDir); err != nil {
+			return err
+		}
+	}
+	candidates, err := docbundle.ReportCandidates(genDir)
+	if err != nil {
+		return err
+	}
+	stale := docbundle.StalePaths(candidates, paths, nil)
 	for _, path := range stale {
 		relative, err := filepath.Rel(domainDir, path)
 		if err != nil {
@@ -235,6 +253,9 @@ func generatedReportDocumentPredicate(relative string) func(string) bool {
 		return nil
 	}
 	name := filepath.Base(clean)
+	if docbundle.IsEvidenceShardPath(clean) {
+		return generator.IsGeneratedEvidence
+	}
 	switch {
 	case name == "EVIDENCE.md" || strings.HasPrefix(name, "EVIDENCE.") && strings.HasSuffix(name, ".md"):
 		return generator.IsGeneratedEvidence

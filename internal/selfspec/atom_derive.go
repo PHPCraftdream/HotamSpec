@@ -672,6 +672,13 @@ func mergeCaseDescriptor(existing, incoming ontology.CaseDefinition) (ontology.C
 	if len(out.AtomIDs) == 0 {
 		out.AtomIDs = append([]string(nil), incoming.AtomIDs...)
 	}
+	if out.ClauseIDs != nil && incoming.ClauseIDs != nil && !reflect.DeepEqual(out.ClauseIDs, incoming.ClauseIDs) {
+		return ontology.CaseDefinition{}, fmt.Errorf("case %s has conflicting clause_ids", existing.ID)
+	}
+	if out.ClauseIDs == nil && incoming.ClauseIDs != nil {
+		out.ClauseIDs = make([]string, len(incoming.ClauseIDs))
+		copy(out.ClauseIDs, incoming.ClauseIDs)
+	}
 	if err := mergeSlice("fixtures", out.Fixtures, incoming.Fixtures, len(out.Fixtures) == 0, len(incoming.Fixtures) == 0); err != nil {
 		return ontology.CaseDefinition{}, err
 	}
@@ -694,15 +701,13 @@ func mergeCaseDescriptor(existing, incoming ontology.CaseDefinition) (ontology.C
 		return ontology.CaseDefinition{}, fmt.Errorf("case %s has conflicting input", existing.ID)
 	}
 	if out.Input == nil && incoming.Input != nil {
-		copy := *incoming.Input
-		out.Input = &copy
+		out.Input = ontology.CloneObservedValue(incoming.Input)
 	}
 	if out.Expected != nil && incoming.Expected != nil && !ontology.EqualObservedValues(out.Expected, incoming.Expected) {
 		return ontology.CaseDefinition{}, fmt.Errorf("case %s has conflicting expected value", existing.ID)
 	}
 	if out.Expected == nil && incoming.Expected != nil {
-		copy := *incoming.Expected
-		out.Expected = &copy
+		out.Expected = ontology.CloneObservedValue(incoming.Expected)
 	}
 	if out.Selection != nil && incoming.Selection != nil && !reflect.DeepEqual(*out.Selection, *incoming.Selection) {
 		return ontology.CaseDefinition{}, fmt.Errorf("case %s has conflicting selection", existing.ID)

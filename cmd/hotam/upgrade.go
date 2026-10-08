@@ -44,7 +44,9 @@ func cmdUpgrade(args []string) error {
 	fs := newFlagSet("upgrade")
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date) — threaded into the regenerated docs and crystal, same as gen-spec --today")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	domainDir, err := resolveDomain(*domain)
 	if err != nil {

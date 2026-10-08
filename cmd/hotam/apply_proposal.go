@@ -29,7 +29,9 @@ func cmdApplyProposal(args []string) error {
 	batchDir := fs.String("batch", "", "apply every *.json proposal file in <dir> atomically in filename order (alternative to a single positional proposal file)")
 	ackConflict := fs.String("ack-conflict", "", "cite an unresolved Conflict whose members include the candidate requirement and a blocked member — overrides that formal blocker")
 	decisionRef := fs.String("decision-ref", "", "record a human decision reference to override a matching unresolved Conflict carrier; persisted in requirement History")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if *today == "" {
 		return fmt.Errorf("--today is required (YYYY-MM-DD)")

@@ -54,28 +54,38 @@ import (
 // reason, see RecordedArtifact's doc comment: canon is vendored into
 // consumer domains, never imported cross-module by the engine).
 type specArtifact struct {
-	ReqID   string                   `json:"req_id"`
-	Test    string                   `json:"test"`
-	Title   string                   `json:"title"`
-	Steps   []specArtifactStep       `json:"steps"`
-	Verdict string                   `json:"verdict"`
-	Mode    string                   `json:"mode,omitempty"`
-	Case    *ontology.CaseDefinition `json:"-"`
+	ReqID        string                   `json:"req_id"`
+	Test         string                   `json:"test"`
+	Title        string                   `json:"title"`
+	Steps        []specArtifactStep       `json:"steps"`
+	Verdict      string                   `json:"verdict"`
+	Mode         string                   `json:"mode,omitempty"`
+	Observations []specObservation        `json:"observations,omitempty"`
+	Case         *ontology.CaseDefinition `json:"-"`
 }
 
 type specArtifactStep struct {
-	Kind    string                 `json:"kind"`
-	Desc    string                 `json:"desc"`
-	Values  []specArtifactKV       `json:"values,omitempty"`
-	Passed  bool                   `json:"passed,omitempty"`
-	Subject string                 `json:"subject,omitempty"`
-	Value   string                 `json:"value,omitempty"`
-	Texts   ontology.LocalizedText `json:"-"`
+	Kind         string                 `json:"kind"`
+	Desc         string                 `json:"desc"`
+	Values       []specArtifactKV       `json:"values,omitempty"`
+	Passed       bool                   `json:"passed,omitempty"`
+	Subject      string                 `json:"subject,omitempty"`
+	Value        string                 `json:"value,omitempty"`
+	Texts        ontology.LocalizedText `json:"-"`
+	Observations []specObservation      `json:"observations,omitempty"`
 }
 
 type specArtifactKV struct {
 	Key   string `json:"k"`
 	Value string `json:"v"`
+}
+
+type specObservation struct {
+	Name        string                  `json:"name"`
+	Passed      bool                    `json:"passed"`
+	RawInput    *ontology.ObservedValue `json:"raw_input,omitempty"`
+	RawActual   *ontology.ObservedValue `json:"raw_actual,omitempty"`
+	RawExpected *ontology.ObservedValue `json:"raw_expected,omitempty"`
 }
 
 // specTestOutcome separates passing, narratable artifacts from failed siblings.
@@ -93,9 +103,11 @@ type specTestOutcome struct {
 // short authored intent, taken verbatim from the graph, never invented
 // here) plus every verified_by entry's recording outcome.
 type SpecRow struct {
-	req         ontology.Requirement
-	outcomes    []specTestOutcome
-	sourceError error
+	req            ontology.Requirement
+	outcomes       []specTestOutcome
+	sourceError    error
+	normativeTexts ontology.LocalizedText
+	document       *specDocumentSnapshot
 }
 
 // ScenarioVerdict is one requirement's REAL (executed, `--spec`-gated)
@@ -147,128 +159,33 @@ type ScenarioVerdict struct {
 	AllEntriesPass bool
 }
 
-// AtomExecutionSnapshot owns the package results and source/test maps shared
-// by discovery, evidence/conformance, and SPEC projection for one invocation.
-type AtomExecutionSnapshot struct {
-	PackageFiles map[string]string
-	PackageRuns  map[string]RecordingResult
-	SourceIndex  *AtomSourceIndex
-	TestFiles    map[string]map[string]string
-	SourceErr    error
-	DiscoveryErr error
-}
-
-// CollectAtomExecutionSnapshot records every required package once. Self-
-// executing atom domains additionally scan their model test packages to retain
-// report-only atoms; rule-case configuration alone never enables that scan.
-func CollectAtomExecutionSnapshot(g *ontology.Graph) (*AtomExecutionSnapshot, error) {
-	return CollectAtomExecutionSnapshotForPackages(g, nil)
-}
-
-// CollectAtomExecutionSnapshotForPackages records references only from the declared packages when packages is non-empty.
-func CollectAtomExecutionSnapshotForPackages(g *ontology.Graph, packages []string) (*AtomExecutionSnapshot, error) {
-	if g == nil {
-		return nil, fmt.Errorf("atom execution snapshot graph is nil")
-	}
-	snapshot := &AtomExecutionSnapshot{
-		PackageFiles: make(map[string]string),
-		PackageRuns:  make(map[string]RecordingResult),
-		TestFiles:    make(map[string]map[string]string),
-	}
-	for _, requirement := range g.Requirements {
-		if requirement.Status == ontology.StatusREJECTED {
-			continue
-		}
-		for _, reference := range requirement.VerifiedBy {
-			if file, _, ok := ParseFileColonSymbol(strings.TrimSpace(reference)); ok && snapshotFileInPackages(file, packages) {
-				addSnapshotTestReference(snapshot, reference)
-			}
-		}
-		for _, caseDef := range requirement.Cases {
-			if file, _, ok := ParseFileColonSymbol(strings.TrimSpace(caseDef.Test)); ok && snapshotFileInPackages(file, packages) {
-				addSnapshotTestReference(snapshot, caseDef.Test)
-			}
-		}
-	}
-	specRoot := SpecRootForGraph(g)
-	if g.SelfExecutingAtoms {
-		snapshot.SourceIndex, snapshot.SourceErr = NewAtomSourceIndexForGraph(g)
-		if snapshot.SourceErr == nil {
-			for _, requirement := range g.Requirements {
-				if requirement.Status == ontology.StatusREJECTED ||
-					(len(requirement.VerifiedBy) == 0 && len(requirement.Cases) == 0) ||
-					len(requirement.ImplementedBy) == 0 {
-					continue
-				}
-				if snapshot.SourceErr = snapshot.SourceIndex.ValidatePhraseLanguages(requirement.ImplementedBy); snapshot.SourceErr != nil {
-					break
-				}
-			}
-		}
-		snapshot.DiscoveryErr = discoverSnapshotAtomTests(specRoot, g.SelfExecutingAtomPackages, snapshot)
-	}
-	if snapshot.SourceErr == nil && snapshot.DiscoveryErr == nil {
-		for _, dir := range sortedSnapshotDirs(snapshot.PackageFiles) {
-			snapshot.PackageRuns[dir] = RunAtomPackageRecording(specRoot, snapshot.PackageFiles[dir])
-		}
-	}
-	return snapshot, nil
-}
-
-// CollectSpecRows preserves the legacy per-verified_by scenario runner for
-// ordinary graphs. Atom/case graphs use a package snapshot for declared atom
-// packages; references outside those packages are recorded per-entry via the legacy path.
+// CollectSpecRows shares one explicitly closed invocation snapshot for scenario,
+// atom, case and document graphs, covering every declared test reference.
 func CollectSpecRows(g *ontology.Graph) map[string]SpecRow {
-	if !needsAtomSnapshot(g) {
-		return collectLegacySpecRows(g)
+	if g == nil || (g.IsEmpty() && !hasSpecDocument(g)) {
+		return map[string]SpecRow{}
 	}
-	snapshot, err := CollectAtomExecutionSnapshotForPackages(g, g.SelfExecutingAtomPackages)
+	session := NewExecutionSession()
+	defer func() {
+		if err := session.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	snapshot, err := session.CollectAtomExecutionSnapshotForPackages(g, nil)
 	if err != nil {
 		panic(err)
 	}
 	return CollectSpecRowsFromSnapshot(g, snapshot)
 }
 
-func needsAtomSnapshot(g *ontology.Graph) bool {
-	if g.SelfExecutingAtoms {
-		return true
-	}
-	for _, requirement := range g.Requirements {
-		if requirement.AtomKind == "rule" || len(requirement.Cases) != 0 {
-			return true
-		}
-	}
-	return false
-}
-
-func collectLegacySpecRows(g *ontology.Graph) map[string]SpecRow {
-	rows := make(map[string]SpecRow, len(g.Requirements))
-	if g.IsEmpty() {
-		return rows
-	}
-	specRoot := SpecRootForGraph(g)
-	for _, requirement := range g.Requirements {
-		if len(requirement.VerifiedBy) == 0 {
-			continue
-		}
-		coverFile := firstImplementedByFile(requirement)
-		row := SpecRow{req: requirement}
-		for _, entry := range requirement.VerifiedBy {
-			row.outcomes = append(row.outcomes, recordVerifiedByEntry(specRoot, requirement.ID, entry, coverFile))
-		}
-		rows[requirement.ID] = row
-	}
-	return rows
-}
-
 // CollectSpecRowsFromSnapshot projects SPEC outcomes without executing tests.
 func CollectSpecRowsFromSnapshot(g *ontology.Graph, snapshot *AtomExecutionSnapshot) map[string]SpecRow {
 	rows := make(map[string]SpecRow, len(g.Requirements))
-	if g.IsEmpty() || snapshot == nil {
+	if g.IsEmpty() && !hasSpecDocument(g) || snapshot == nil {
 		return rows
 	}
 	var snapshotError error
-	if g.SelfExecutingAtoms {
+	if g.SelfExecutingAtoms || hasSpecDocument(g) {
 		snapshotError = snapshot.SourceErr
 		if snapshotError == nil {
 			snapshotError = snapshot.DiscoveryErr
@@ -279,10 +196,18 @@ func CollectSpecRowsFromSnapshot(g *ontology.Graph, snapshot *AtomExecutionSnaps
 			continue
 		}
 		references := specTestReferences(requirement)
-		if len(references) == 0 {
+		if len(references) == 0 && !hasSpecDocument(g) {
 			continue
 		}
 		row := SpecRow{req: requirement, sourceError: snapshotError}
+		if requirement.AtomKind == "rule" && snapshot.SourceIndex != nil {
+			for _, reference := range requirement.ImplementedBy {
+				if sources := snapshot.SourceIndex.byLink[reference]; len(sources) == 1 {
+					row.normativeTexts = sources[0].Phrases
+					break
+				}
+			}
+		}
 		for _, entry := range references {
 			file, test, ok := ParseFileColonSymbol(strings.TrimSpace(entry))
 			if !ok {
@@ -296,11 +221,6 @@ func CollectSpecRowsFromSnapshot(g *ontology.Graph, snapshot *AtomExecutionSnaps
 			packageDir := snapshotPackageDir(file)
 			result, found := snapshot.PackageRuns[packageDir]
 			if !found {
-				if g.SelfExecutingAtoms && len(g.SelfExecutingAtomPackages) > 0 && !snapshotFileInPackages(file, g.SelfExecutingAtomPackages) {
-					outcome := recordVerifiedByEntry(SpecRootForGraph(g), requirement.ID, entry, firstImplementedByFile(requirement))
-					row.outcomes = append(row.outcomes, outcome)
-					continue
-				}
 				problem := "verified_by package was not present in the shared execution snapshot"
 				row.outcomes = append(row.outcomes, specTestOutcome{entry: entry, problem: problem})
 				continue
@@ -316,6 +236,9 @@ func CollectSpecRowsFromSnapshot(g *ontology.Graph, snapshot *AtomExecutionSnaps
 			}
 		}
 		rows[requirement.ID] = row
+	}
+	if hasSpecDocument(g) {
+		rows[specDocumentRowKey] = SpecRow{document: collectSpecDocumentSnapshot(g, snapshot, rows)}
 	}
 	return rows
 }
@@ -396,30 +319,22 @@ func discoverSnapshotAtomTests(specRoot string, packages []string, snapshot *Ato
 			}
 			relative = filepath.ToSlash(relative)
 			dir := snapshotPackageDir(relative)
-			if old, exists := snapshot.PackageFiles[dir]; !exists || relative < old {
-				snapshot.PackageFiles[dir] = relative
-			}
 			file, err := parser.ParseFile(fileSet, path, nil, 0)
 			if err != nil {
 				return err
 			}
 			testingAliases := testingPackageAliases(file)
 			recorderAliases := make(map[string]bool)
+			recorderImportPath := ""
 			if snapshot.SourceIndex != nil {
+				recorderImportPath = snapshot.SourceIndex.RecorderImportPath
 				recorderAliases = recorderPackageAliases(file, snapshot.SourceIndex.RecorderImportPath)
-			}
-			if snapshot.TestFiles[dir] == nil {
-				snapshot.TestFiles[dir] = make(map[string]string)
 			}
 			for _, declaration := range file.Decls {
 				fn, ok := declaration.(*ast.FuncDecl)
 				if !ok || !isSnapshotTest(fn, testingAliases) {
 					continue
 				}
-				if previous, exists := snapshot.TestFiles[dir][fn.Name.Name]; exists && previous != relative {
-					return fmt.Errorf("duplicate test %s in %s and %s", fn.Name.Name, previous, relative)
-				}
-				snapshot.TestFiles[dir][fn.Name.Name] = relative
 				ast.Inspect(fn.Body, func(node ast.Node) bool {
 					call, ok := node.(*ast.CallExpr)
 					if !ok {
@@ -439,6 +354,13 @@ func discoverSnapshotAtomTests(specRoot string, packages []string, snapshot *Ato
 					}
 					return true
 				})
+				if !testBodyHasAtomCalls(fn.Body, file, recorderImportPath) {
+					continue
+				}
+				if previous, exists := snapshot.TestFiles[dir][fn.Name.Name]; exists && previous != relative {
+					return fmt.Errorf("duplicate test %s in %s and %s", fn.Name.Name, previous, relative)
+				}
+				addSnapshotTestReference(snapshot, relative+":"+fn.Name.Name)
 			}
 			return nil
 		})
@@ -523,6 +445,9 @@ func isSnapshotTest(fn *ast.FuncDecl, testingAliases map[string]bool) bool {
 func ScenarioVerdictsFromRows(rows map[string]SpecRow) map[string]ScenarioVerdict {
 	verdicts := make(map[string]ScenarioVerdict, len(rows))
 	for id, row := range rows {
+		if id == specDocumentRowKey {
+			continue
+		}
 		narrated := false
 		allPass := true
 		for _, o := range row.outcomes {
@@ -552,18 +477,8 @@ func ScenarioVerdictsFromRows(rows map[string]SpecRow) map[string]ScenarioVerdic
 // those rows to each renderer. No renderer persists verdicts or executes
 // methods while changing language.
 
-// firstImplementedByFile returns the file half of r's first implemented_by
-// entry (best-effort coverPkgFile input for RunVerifiedByTestRecording —
-// implemented_by and verified_by are independent lists, not index-paired,
-// per PLAN-authored-spec-discipline.md §4/§12; a requirement with more than
-// one implemented_by symbol still only needs ONE file in that symbol's own
-// package to point -coverpkg at the right import path). Returns "" when r
-// carries no implemented_by at all or the entry does not parse as
-// "file:symbol" — RunVerifiedByTestRecording treats an empty coverPkgFile as
-// "skip coverage collection", never an error, so a requirement missing
-// implemented_by still gets its scenario narrated, just without a coverage
-// profile (coverage-proof enforcement is check_scenario_executes_impl's job,
-// W2.2, not this file's).
+// firstImplementedByFile identifies the primary source package for a focused
+// reading view. Test ownership is considered separately when no source exists.
 func firstImplementedByFile(r ontology.Requirement) string {
 	if len(r.ImplementedBy) == 0 {
 		return ""
@@ -573,73 +488,6 @@ func firstImplementedByFile(r ontology.Requirement) string {
 		return ""
 	}
 	return file
-}
-
-// recordVerifiedByEntry runs ONE verified_by entry via
-// RunVerifiedByTestRecording (a single real `go test` invocation) and
-// classifies the outcome honestly: a non-empty problem string names EXACTLY
-// why no scenario narrative could be rendered for this entry, so
-// renderSpecRequirement never has to guess or paper over a gap.
-func recordVerifiedByEntry(specRoot, reqID, entry, coverFile string) specTestOutcome {
-	out := specTestOutcome{entry: entry}
-	file, testName, ok := ParseFileColonSymbol(strings.TrimSpace(entry))
-	if !ok {
-		out.problem = "malformed verified_by entry (expected file:symbol)"
-		return out
-	}
-
-	result := RunVerifiedByTestRecording(specRoot, file, testName, coverFile)
-	switch {
-	case result.Skipped:
-		out.problem = "not executed at this nesting level (recursion guard honored) — " + result.InfraWarning
-		return out
-	case result.Err != nil:
-		out.problem = "could not be executed: " + result.Err.Error()
-		return out
-	case result.CompileFailed:
-		out.problem = "package does not compile"
-		return out
-	case !result.Passed:
-		out.problem = "test does not currently pass"
-		return out
-	}
-
-	// Reached only when result.Passed is true (every earlier branch above
-	// returns first) -- this entry's test genuinely passes, whether or not
-	// it goes on to narrate a scenario below.
-	out.passed = true
-
-	var artifacts []specArtifact
-	for _, a := range result.Artifacts {
-		var parsed specArtifact
-		if err := json.Unmarshal(a.RawJSON, &parsed); err != nil {
-			// A malformed artifact from a passing run should be structurally
-			// impossible (internal/recorder/canon's writeArtifact only ever
-			// emits its own Artifact shape) — treat it as "no narrative"
-			// rather than fail the whole document, since the test itself did
-			// pass and that verdict must not be hidden by a rendering bug.
-			continue
-		}
-		if parsed.Verdict != "pass" {
-			continue
-		}
-		// F6 (task W7.2, @fx finding F6): cross-check the artifact's req_id
-		// against the requirement ID actually being processed. A test cited
-		// by R-A's verified_by whose hotamspec.NewScenario(t, "R-B", ...)
-		// call names a DIFFERENT requirement would otherwise have its
-		// narrative rendered into R-A's SPEC.md section undetected. Filter
-		// it out the same way Verdict != "pass" is filtered -- do not render
-		// an artifact that belongs to a different requirement.
-		if parsed.ReqID != reqID {
-			continue
-		}
-		artifacts = append(artifacts, parsed)
-	}
-	out.artifacts = artifacts
-	if len(artifacts) == 0 {
-		out.problem = "test passes but recorded no hotamspec scenario (plain go test, no narrative to render)"
-	}
-	return out
 }
 
 func scenarioRecordingOutcomeFromPackage(g *ontology.Graph, req ontology.Requirement, entry, test string, result RecordingResult) specTestOutcome {
@@ -781,6 +629,9 @@ func atomRecordingOutcome(sourceIndex *AtomSourceIndex, req ontology.Requirement
 		}
 		if !matches {
 			continue
+		}
+		for _, step := range art.Steps {
+			art.Observations = append(art.Observations, step.Observations...)
 		}
 		var atom AtomArtifact
 		if art.Mode != "" {
@@ -950,6 +801,13 @@ func mergeRecordedCase(declared, recorded ontology.CaseDefinition) (ontology.Cas
 	if len(out.AtomIDs) == 0 {
 		out.AtomIDs = append([]string(nil), declared.AtomIDs...)
 	}
+	if out.ClauseIDs != nil && declared.ClauseIDs != nil && !reflect.DeepEqual(out.ClauseIDs, declared.ClauseIDs) {
+		return ontology.CaseDefinition{}, fmt.Errorf("case %s recorded clause_ids conflicts with graph descriptor", declared.ID)
+	}
+	if out.ClauseIDs == nil && declared.ClauseIDs != nil {
+		out.ClauseIDs = make([]string, len(declared.ClauseIDs))
+		copy(out.ClauseIDs, declared.ClauseIDs)
+	}
 	if err := mergeSlice("fixtures", out.Fixtures, declared.Fixtures, len(out.Fixtures) == 0, len(declared.Fixtures) == 0); err != nil {
 		return ontology.CaseDefinition{}, err
 	}
@@ -972,15 +830,13 @@ func mergeRecordedCase(declared, recorded ontology.CaseDefinition) (ontology.Cas
 		return ontology.CaseDefinition{}, fmt.Errorf("case %s recorded input conflicts with graph descriptor", declared.ID)
 	}
 	if out.Input == nil && declared.Input != nil {
-		copy := *declared.Input
-		out.Input = &copy
+		out.Input = ontology.CloneObservedValue(declared.Input)
 	}
 	if out.Expected != nil && declared.Expected != nil && !ontology.EqualObservedValues(out.Expected, declared.Expected) {
 		return ontology.CaseDefinition{}, fmt.Errorf("case %s recorded expected value conflicts with graph descriptor", declared.ID)
 	}
 	if out.Expected == nil && declared.Expected != nil {
-		copy := *declared.Expected
-		out.Expected = &copy
+		out.Expected = ontology.CloneObservedValue(declared.Expected)
 	}
 	if out.Selection != nil && declared.Selection != nil && !reflect.DeepEqual(*out.Selection, *declared.Selection) {
 		return ontology.CaseDefinition{}, fmt.Errorf("case %s recorded selection conflicts with graph descriptor", declared.ID)

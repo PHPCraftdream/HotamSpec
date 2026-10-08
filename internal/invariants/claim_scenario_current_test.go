@@ -268,15 +268,6 @@ func TestCheckClaimMatchesScenario_MUTATION_StaleAfterTitleEditWithoutResync(t *
 	if err := os.WriteFile(testPath, []byte(claimScenarioFixtureTestSrc("example.com/claimscenario", reqID, newTitle)), 0o644); err != nil {
 		t.Fatalf("WriteFile test edit: %v", err)
 	}
-	// gate's in-memory compiled-binary cache is keyed by (moduleRoot,
-	// pkgPattern, coverPkgPattern) with NO content-hash for the compile step
-	// itself (see internal/gate/compile_cache.go) -- this test's two
-	// RunVerifiedByTestRecording-driven calls target the identical
-	// (moduleRoot, pkgPattern) pair, so without a reset the second call would
-	// silently reuse the PRE-edit compiled binary. gate.ResetRunCacheForTest
-	// clears both the verdict cache and the compile cache -- see its own doc
-	// comment ("exported so internal/invariants' tests... can call it").
-	gate.ResetRunCacheForTest()
 	vs := runCheck(t, "check_claim_matches_scenario", g)
 	if !hasViolationFor(vs, reqID) {
 		t.Fatalf("EDITED: expected a violation once the scenario title diverges from the stale Claim, got %v", vs)
@@ -285,7 +276,13 @@ func TestCheckClaimMatchesScenario_MUTATION_StaleAfterTitleEditWithoutResync(t *
 	// RE-DERIVE: mirror what `hotam sync-domain` would do -- re-derive Claim
 	// via the same selfspec machinery, feed it back into the graph -- clean
 	// again.
-	fresh, ok := freshDerivedClaim(root, false, r.VerifiedBy)
+	session := gate.NewExecutionSession()
+	defer func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
+	fresh, ok := freshDerivedClaim(session, root, false, r.VerifiedBy)
 	if !ok {
 		t.Fatalf("re-derivation: expected ok=true, got false")
 	}
@@ -312,7 +309,13 @@ func TestCheckClaimMatchesScenario_MatchesSelfspecDerivation(t *testing.T) {
 	root := writeClaimScenarioFixtureModule(t, reqID, title)
 	verifiedBy := []string{"model/impl_test.go:TestBrdPackage_SignOff_RejectsBlockers"}
 
-	viaCheck, ok := freshDerivedClaim(root, false, verifiedBy)
+	session := gate.NewExecutionSession()
+	defer func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
+	viaCheck, ok := freshDerivedClaim(session, root, false, verifiedBy)
 	if !ok {
 		t.Fatalf("freshDerivedClaim: expected ok=true")
 	}

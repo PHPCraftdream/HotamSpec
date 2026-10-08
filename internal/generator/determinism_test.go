@@ -25,7 +25,8 @@ func TestGenerator_DoubleRegenerateIsIdentical(t *testing.T) {
 		{"Pipeline", BuildPipeline(g, "hotam-spec-self", nil), BuildPipeline(g, "hotam-spec-self", nil)},
 		{"RepoMap", BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), fixtureFrameworkDocs(), false, false, true, true, true, false), BuildRepoMap(g, "hotam-spec-self", hotamSpecSelfFixtureGenDocs(), fixtureFrameworkDocs(), false, false, true, true, true, false)},
 		{"FrameworkInvariants", BuildFrameworkInvariants(g, "hotam-spec-self"), BuildFrameworkInvariants(g, "hotam-spec-self")},
-		{"LiveState", BuildLiveState(g, "hotam-spec-self", 1000, "2026-07-12"), BuildLiveState(g, "hotam-spec-self", 1000, "2026-07-12")},
+		// Live observations can change; renderer determinism requires one snapshot.
+		{"LiveState", BuildLiveStateWithViolations(g, "hotam-spec-self", 1000, "2026-07-12", nil), BuildLiveStateWithViolations(g, "hotam-spec-self", 1000, "2026-07-12", nil)},
 		{"AtomsOperator", BuildAtomsOperator(g), BuildAtomsOperator(g)},
 		{"AtomsSubstrate", BuildAtomsSubstrate(g), BuildAtomsSubstrate(g)},
 		{"AtomsDiscipline", BuildAtomsDiscipline(g), BuildAtomsDiscipline(g)},

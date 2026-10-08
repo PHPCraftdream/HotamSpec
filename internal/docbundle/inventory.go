@@ -189,6 +189,9 @@ func OwnedDomainPath(relative string) bool {
 		return false
 	}
 	sub := strings.TrimPrefix(relative, "docs/gen/")
+	if strings.HasPrefix(sub, "evidence/") {
+		return IsEvidenceShardPath(sub)
+	}
 	if strings.HasPrefix(sub, "spec/") {
 		return strings.HasSuffix(sub, ".md") && safeRelativePath(sub)
 	}
@@ -261,20 +264,26 @@ func DomainCandidates(genDir string) ([]string, error) {
 			candidates = append(candidates, filepath.Join(genDir, base+"."+locale+".md"))
 		}
 	}
-	for _, sub := range []string{"thinking", "tools", "spec"} {
+	for _, sub := range []string{"thinking", "tools", "spec", "evidence"} {
 		root := filepath.Join(genDir, sub)
-		if sub == "spec" {
+		if sub == "spec" || sub == "evidence" {
 			err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
 				if walkErr != nil {
 					return walkErr
 				}
 				if !entry.IsDir() && strings.EqualFold(filepath.Ext(path), ".md") {
-					candidates = append(candidates, path)
+					relative, err := filepath.Rel(genDir, path)
+					if err != nil {
+						return err
+					}
+					if sub == "spec" || IsEvidenceShardPath(filepath.ToSlash(relative)) {
+						candidates = append(candidates, path)
+					}
 				}
 				return nil
 			})
 			if err != nil && !os.IsNotExist(err) {
-				return nil, fmt.Errorf("walk generated SPEC shards: %w", err)
+				return nil, fmt.Errorf("walk generated %s shards: %w", sub, err)
 			}
 			continue
 		}
@@ -324,7 +333,7 @@ func CrystalCandidates(directory string) []string {
 // ReportCandidates enumerates the evidence/finding Markdown projections and
 // their one shared raw JSON store, which are written by hotam evidence rather
 // than gen-spec.
-func ReportCandidates(genDir string) []string {
+func ReportCandidates(genDir string) ([]string, error) {
 	candidates := []string{filepath.Join(genDir, "evidence.json")}
 	for _, stem := range []string{"EVIDENCE", "FINDINGS"} {
 		candidates = append(candidates, filepath.Join(genDir, stem+".md"))
@@ -332,7 +341,23 @@ func ReportCandidates(genDir string) []string {
 			candidates = append(candidates, filepath.Join(genDir, stem+"."+language+".md"))
 		}
 	}
-	return uniqueSorted(candidates)
+	err := filepath.WalkDir(filepath.Join(genDir, "evidence"), func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		relative, err := filepath.Rel(genDir, path)
+		if err == nil && IsEvidenceShardPath(filepath.ToSlash(relative)) {
+			candidates = append(candidates, path)
+		}
+		return nil
+	})
+	if err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("walk evidence detail pages: %w", err)
+	}
+	return uniqueSorted(candidates), nil
 }
 
 // ResolveOutputPath confines domain-relative docs/gen keys and project-relative
@@ -365,7 +390,7 @@ func ResolveOutputPath(repoRoot, domainDir, relative string) (string, error) {
 }
 
 func reservedSeparateOutput(domainPath string) bool {
-	if domainPath == "docs/gen/graph.json" || domainPath == "docs/gen/evidence.json" || strings.HasPrefix(domainPath, "docs/gen/spec/") {
+	if domainPath == "docs/gen/graph.json" || domainPath == "docs/gen/evidence.json" || strings.HasPrefix(domainPath, "docs/gen/spec/") || IsEvidenceShardPath(domainPath) {
 		return true
 	}
 	if !strings.HasPrefix(domainPath, "docs/gen/") {

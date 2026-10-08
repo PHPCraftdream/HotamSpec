@@ -308,14 +308,6 @@ func TestBrdPackage_SignOff_RejectsBlockers(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(modelDir, "impl_test.go"), []byte(claimDeriveFixtureSingleTestSrc("example.com/statemutation")), 0o644); err != nil {
 		t.Fatalf("WriteFile impl_test.go (scenario): %v", err)
 	}
-	// gate's in-memory compiled-binary cache is keyed by (moduleRoot,
-	// pkgPattern, coverPkgPattern) with no content-hash for the compile step
-	// itself (see internal/gate/compile_cache.go) -- this test recompiles the
-	// SAME (root, "./model") pattern repeatedly with different on-disk
-	// content, so without a reset a later call would silently reuse an
-	// earlier step's stale compiled binary (see claim_scenario_current_test.go's
-	// identical mutation-test precedent for this exact gotcha).
-	gate.ResetRunCacheForTest()
 	if got := RequirementState(r, root, false, nil); got != "STALE" {
 		t.Fatalf("step 4 (stale): got %q, want STALE", got)
 	}

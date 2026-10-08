@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -60,7 +61,7 @@ func cmdVersion(args []string) error {
 // Clearing it here, unconditionally, before cmd dispatch, means
 // internal/gate.RunVerifiedByTest can never observe an inherited value at the
 // top of a `hotam` process's own call graph -- inRecursionGuard only ever
-// sees a non-empty value for a REAL nested `go test` child that runGoTest
+// sees a non-empty value for a REAL nested `go test` child that the session runner
 // itself spawned and stamped with a fresh crypto/rand nonce AFTER this point,
 // never one inherited from outside. No corroborating secret (nonce, marker
 // file) is needed on the gate side any more: the untrusted input is
@@ -70,27 +71,25 @@ func clearInheritedVerifiedByGuard() {
 }
 
 func main() {
+	os.Exit(runCLI(os.Args[1:]))
+}
+
+func runCLI(argv []string) (code int) {
 	clearInheritedVerifiedByGuard()
-	// CleanupCompileCache ensures every compiled .test binary ANY subcommand
-	// produced (gate.compileTestBinary, task W7.3) is removed from disk
-	// before this process exits -- centralized here at the single top-level
-	// entry point rather than scattered per-command, since the compile
-	// cache is reachable from more than just `all-violations`/`gen-spec`:
-	// `land`/`land --batch` (via land.go's own genSpec/allViolations calls)
-	// and `init-project` (via genSpec with includeSpec=true) ALSO drive
-	// RunVerifiedByTest/RunVerifiedByTestRecording transitively, and a
-	// per-command defer would have to be re-added at every such call site,
-	// with the same risk of missing one that motivated moving it here. No
-	// persistent artifact survives past the run that created it, regardless
-	// of which subcommand was invoked. See internal/gate/compile_cache.go's
-	// CleanupCompileCache doc comment.
-	defer gate.CleanupCompileCache()
-	if len(os.Args) < 2 {
+	defer func() {
+		if err := gate.CloseExecutionSessions(); err != nil {
+			fmt.Fprintf(os.Stderr, "hotam: compile-cache cleanup: %v\n", err)
+			if code == 0 {
+				code = 1
+			}
+		}
+	}()
+	if len(argv) == 0 {
 		printUsage(os.Stderr)
-		os.Exit(2)
+		return 2
 	}
-	cmd := os.Args[1]
-	args := reorderFlagsFirst(os.Args[2:])
+	cmd := argv[0]
+	args := reorderFlagsFirst(argv[1:])
 	var err error
 	switch cmd {
 	case "version", "--version":
@@ -145,16 +144,21 @@ func main() {
 		err = cmdSyncDomain(args)
 	case "-h", "--help", "help":
 		printUsage(os.Stdout)
-		return
+		return 0
 	default:
 		fmt.Fprintf(os.Stderr, "hotam: unknown command %q\n", cmd)
 		printUsage(os.Stderr)
-		os.Exit(2)
+		return 2
 	}
 	if err != nil {
+		var exit *commandExit
+		if errors.As(err, &exit) {
+			return exit.code
+		}
 		fmt.Fprintf(os.Stderr, "hotam %s: %v\n", cmd, err)
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
 
 func printUsage(w *os.File) {
@@ -200,9 +204,10 @@ Commands:
         (thinking/*.md, Planned tool docs, empty atoms docs) for external
         business projects.
   evidence [--domain <path>] [--json] [--write]
-        Collect fresh specification-to-method-to-test evidence. --json emits
-        one report document; --write writes docs/gen/EVIDENCE.md, FINDINGS.md,
-        and evidence.json even when observed tests or source checks fail.
+        Collect fresh specification-to-method-to-test evidence. --write saves
+        compact EVIDENCE/FINDINGS views and per-requirement/per-case detail pages,
+        including failures. --json emits the full report; --json --write also
+        saves the optional docs/gen/evidence.json machine packet.
   findings <list|show|review> [args] [--domain <path>] [--json]
         Inspect findings in the latest generated evidence report. Review notes
         require explicit human classification, status, rationale, and
@@ -356,8 +361,8 @@ Commands:
 // "h" and "help" are a SPECIAL case: they are NOT registered via any
 // fs.Bool(...) call anywhere in this codebase — they are Go's stdlib flag
 // package's OWN built-in help recognition, valid on every FlagSet regardless
-// of what that FlagSet explicitly registers (flag.ExitOnError's Parse prints
-// usage and calls os.Exit(0) when it sees -h/-help). They are listed here
+// of what that FlagSet explicitly registers (Parse prints usage and returns
+// flag.ErrHelp for -h/-help; the CLI exits after cleanup). They are listed here
 // anyway because this map's OTHER consumer, reorderFlagsFirst below, and
 // cmdPropose's own kind-scanner (propose.go) both use it as a generic
 // "does this flag take a value" oracle over raw argv BEFORE any FlagSet

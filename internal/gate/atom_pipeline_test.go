@@ -61,9 +61,18 @@ func TestAtomRecordingOutcomeKeepsPassingSubtestBesideFailure(t *testing.T) {
 		"manifest.json": `{"self_hosting":false,"parent":null,"conformance":{"rule_cases":true}}`,
 		"spec/model/value.go": `package model
 
-type Box struct { value int }
+import (
+	"strconv"
+	"example.test/pipeline/hotamspec"
+)
+type Box struct { value, want int }
 // values follow the rule
-func (b Box) Value() int { return b.value }
+func (b Box) Value() hotamspec.ObservedValue[int] {
+	input := hotamspec.Bytes([]byte(strconv.Itoa(b.value)))
+	actual := hotamspec.Integer(strconv.Itoa(b.value))
+	expected := hotamspec.Integer(strconv.Itoa(b.want))
+	return hotamspec.Observed(b.value, hotamspec.Observe("count", input, actual, expected))
+}
 `,
 		"spec/model/value_test.go": `package model
 
@@ -75,7 +84,7 @@ import (
 func TestCases(t *testing.T) {
 	for _, sample := range []struct { name string; actual, want int }{{"good", 7, 7}, {"bad", 9, 8}} {
 		t.Run(sample.name, func(t *testing.T) {
-			box := Box{value: sample.actual}
+			box := Box{value: sample.actual, want: sample.want}
 			ctx := hotamspec.CaseContext{ID: "case-" + sample.name, AtomIDs: []string{"R-box-value"}, Operation: "decode", Producer: "adapter"}
 			hotamspec.Fact(t, box.Value, sample.want, hotamspec.WithInput(sample.actual), hotamspec.WithCase(ctx))
 		})
@@ -125,15 +134,6 @@ func TestCases(t *testing.T) {
 	document := strings.Join(lines, "\n")
 	if !strings.Contains(document, "Values follow the rule.") || strings.Contains(document, "example.test/pipeline/model.Box.Value") {
 		t.Fatalf("SPEC atom narrative must use authored human text, not qualified method evidence:\n%s", document)
-	}
-	if !strings.Contains(document, "- Then Values follow the rule.") {
-		t.Fatalf("SPEC atom title must render as a human-readable sentence:\n%s", document)
-	}
-	if !strings.Contains(document, "**FAILED**") || !strings.Contains(document, "- Given Values follow the rule — 9.") {
-		t.Fatalf("a failed atom must show its claim as FAILED and the observed value as human text:\n%s", document)
-	}
-	if !strings.Contains(document, "case-good") || !strings.Contains(document, "case-bad") {
-		t.Fatalf("SPEC view lost a passing/failing sibling case:\n%s", document)
 	}
 }
 

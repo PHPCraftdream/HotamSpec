@@ -80,6 +80,9 @@ func (index *AtomSourceIndex) DeriveClaims(a AtomArtifact) (ontology.LocalizedTe
 			if !ok || strings.TrimSpace(phrase) == "" {
 				return nil, atomPhraseError(source, language, "missing non-empty source phrase")
 			}
+			if a.Mode == "rule" {
+				phrase, _, _ = strings.Cut(phrase, "\n")
+			}
 			notPhrase := strings.TrimSpace(source.NotPhrases[language])
 			if boolMethod && step.Value == "false" && notPhrase == "" {
 				return nil, atomPhraseError(source, language, "bool atom evaluated to false without a `not:` negation phrase")

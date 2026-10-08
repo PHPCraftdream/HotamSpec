@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PHPCraftdream/HotamSpec/internal/ontology"
 	recordervendor "github.com/PHPCraftdream/HotamSpec/internal/recorder/vendor"
 )
 
@@ -93,23 +94,11 @@ func RequireComplete(fields int) error {
 // sequentially costs a little wall-clock time but removes that contention
 // entirely -- determinism matters far more here than shaving a few seconds
 // off a package that already finishes in ~15-25s total.
-// TestRunVerifiedByTest_RealPassingTest_Passes also covers the cache-hit
-// contract (folded in here, rather than a separate test, so the ONE real
-// `go test` subprocess this test needs to spawn is shared rather than
-// duplicated across two module fixtures -- see the package-level comment
-// above about sequential subprocess tests and package-default-timeout
-// contention): calling RunVerifiedByTest twice in a row with nothing
-// changed must return the byte-identical cached result on the second call
-// without a second real invocation -- verified by exact equality of both
-// results (Output included), which would not hold if the second call raced
-// a fresh `go test -v` run's non-deterministic elapsed-time text
-// (go test's summary embeds e.g. "(0.00s)") into Output on a cache MISS.
 func TestRunVerifiedByTest_RealPassingTest_Passes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/passmod", "model", passingImplSrc, passingTestSrc)
 	first := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
 	if first.Err != nil {
@@ -117,14 +106,6 @@ func TestRunVerifiedByTest_RealPassingTest_Passes(t *testing.T) {
 	}
 	if !first.Passed {
 		t.Fatalf("expected Passed=true for a genuinely passing test, got %+v", first)
-	}
-
-	second := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
-	if second.Err != nil {
-		t.Fatalf("unexpected infra error (cache hit): %v", second.Err)
-	}
-	if first != second {
-		t.Fatalf("expected the second call to return the byte-identical cached result (no re-run), got first=%+v second=%+v", first, second)
 	}
 }
 
@@ -148,7 +129,6 @@ func TestRunVerifiedByTest_MUTATION_CacheInvalidatesOnImplChange(t *testing.T) {
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/mutatemod", "model", passingImplSrc, passingTestSrc)
 
 	before := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
@@ -181,7 +161,6 @@ func TestRunVerifiedByTest_CompileFailure_ReportsCompileFailedNotPanic(t *testin
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
 	root := writeModuleFixture(t, "example.com/badsyntaxmod", "model", uncompilableImplSrc, passingTestSrc)
 	result := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_RejectsZeroFields")
 	if result.Err != nil {
@@ -197,7 +176,7 @@ func TestRunVerifiedByTest_CompileFailure_ReportsCompileFailedNotPanic(t *testin
 
 func TestRunVerifiedByTest_NoGoModFound_ReturnsInfraError(t *testing.T) {
 	t.Parallel()
-	ResetRunCacheForTest()
+
 	tmp := t.TempDir()
 	// No go.mod anywhere under tmp, and tmp is isolated from any real
 	// module (t.TempDir() never sits under this repo's own go.mod).
@@ -279,97 +258,8 @@ func TestHashPackageInputs_UnchangedContentSameHash(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Task #383: perFileHashCache (the in-process, (mtime,size)-keyed per-file
-// reuse cache hashPackageInputs now consults before re-reading a file's
-// bytes). The two tests directly above already prove the OBSERVABLE
-// contract (same content -> same hash, different content -> different hash)
-// continues to hold; the tests below prove the CACHE ITSELF -- that it
-// actually reuses cached reads when safe (a), that it is not fooled by
-// coarse mtime granularity when content genuinely changes (b, both the
-// size-changes and the size-preserved-but-mtime-forced-forward shapes), that
-// adding (c) or removing (d) a file is never masked by every SURVIVING
-// file's own state staying cache-valid, and that concurrent callers against
-// the same moduleRoot never race (e).
-// ---------------------------------------------------------------------------
-
-// TestHashPackageInputs_WarmCacheReusesUnchangedFiles is proof (a): calling
-// hashPackageInputs twice in a row with nothing on disk touched must not
-// only return the same digest (already covered by
-// TestHashPackageInputs_UnchangedContentSameHash above) but must actually
-// serve the SECOND call's per-file reads out of perFileHashCache rather than
-// re-reading every file from disk -- checked here by asserting the cache
-// entry populated by the first call is present and, for every file in it,
-// carries the exact bytes on disk (the reuse contract: a cache hit must
-// return byte-identical data to what a fresh read would have produced, or
-// the "byte-for-byte identical digest" invariant the doc comment on
-// moduleHashFileState promises would not hold).
-func TestHashPackageInputs_WarmCacheReusesUnchangedFiles(t *testing.T) {
-	ResetModuleHashCacheForTest()
-	root := writeModuleFixture(t, "example.com/warmcachemod", "model", passingImplSrc, passingTestSrc)
-	pkgDir := filepath.Join(root, "model")
-
-	h1, err := hashPackageInputs(root, pkgDir)
-	if err != nil {
-		t.Fatalf("hashPackageInputs (cold): %v", err)
-	}
-
-	perFileHashCacheMu.Lock()
-	coldEntry := perFileHashCache[root]
-	perFileHashCacheMu.Unlock()
-	if coldEntry == nil {
-		t.Fatalf("expected a populated perFileHashCache entry for %q after the cold call, got nil", root)
-	}
-	if coldEntry.digest != h1 {
-		t.Fatalf("expected the cached entry's digest to match the returned hash, got entry.digest=%q h1=%q", coldEntry.digest, h1)
-	}
-	if len(coldEntry.files) == 0 {
-		t.Fatalf("expected the cached entry to record at least one file's state, got zero")
-	}
-
-	h2, err := hashPackageInputs(root, pkgDir)
-	if err != nil {
-		t.Fatalf("hashPackageInputs (warm): %v", err)
-	}
-	if h1 != h2 {
-		t.Fatalf("expected the warm call to return the identical digest, got %q then %q", h1, h2)
-	}
-
-	perFileHashCacheMu.Lock()
-	warmEntry := perFileHashCache[root]
-	perFileHashCacheMu.Unlock()
-	if warmEntry == nil {
-		t.Fatalf("expected a populated perFileHashCache entry after the warm call, got nil")
-	}
-	if warmEntry.digest != h1 {
-		t.Fatalf("expected the warm entry's digest to still match, got %q want %q", warmEntry.digest, h1)
-	}
-	if len(warmEntry.files) != len(coldEntry.files) {
-		t.Fatalf("expected the warm entry to track the same file set as the cold entry, got %d files vs %d", len(warmEntry.files), len(coldEntry.files))
-	}
-	for rel, coldState := range coldEntry.files {
-		warmState, ok := warmEntry.files[rel]
-		if !ok {
-			t.Fatalf("file %q present in the cold entry is missing from the warm entry", rel)
-		}
-		if string(warmState.data) != string(coldState.data) {
-			t.Fatalf("file %q: warm entry's cached bytes do not match the cold entry's bytes -- reuse must be byte-identical", rel)
-		}
-		if warmState.size != coldState.size || !warmState.modTime.Equal(coldState.modTime) {
-			t.Fatalf("file %q: expected the warm entry to keep the SAME (mtime,size) as the cold entry when reusing (no real re-stat mismatch expected here), got warm=(%v,%d) cold=(%v,%d)", rel, warmState.modTime, warmState.size, coldState.modTime, coldState.size)
-		}
-	}
-}
-
-// TestHashPackageInputs_MUTATION_SizeChangeDetected is proof (b), size-change
-// shape: mutating impl.go to a DIFFERENT length must change the digest, even
-// though the write happens immediately after (no explicit delay), because
-// the cached (mtime,size) comparison catches a size mismatch regardless of
-// whether the filesystem's mtime clock ticked between the two writes -- this
-// is the size half of the two independent invalidation signals the cache
-// relies on (see moduleHashFileState's doc comment).
 func TestHashPackageInputs_MUTATION_SizeChangeDetected(t *testing.T) {
-	ResetModuleHashCacheForTest()
+
 	root := writeModuleFixture(t, "example.com/sizechangemod", "model", passingImplSrc, passingTestSrc)
 	pkgDir := filepath.Join(root, "model")
 
@@ -406,7 +296,7 @@ func TestHashPackageInputs_MUTATION_SizeChangeDetected(t *testing.T) {
 // of the size signal so this test would fail if a future edit accidentally
 // made the cache trust size alone.
 func TestHashPackageInputs_MUTATION_SameSizeForcedMtimeDetected(t *testing.T) {
-	ResetModuleHashCacheForTest()
+
 	const before = `package model
 
 func RequireComplete(fields int) error {
@@ -481,7 +371,7 @@ func (errStub) Error() string { return "BBBBBBBBBBBBBBB" }
 // doc comment) is not fooled into serving the OLD combined digest just
 // because none of the SURVIVING files individually changed.
 func TestHashPackageInputs_MUTATION_AddedFileDetected(t *testing.T) {
-	ResetModuleHashCacheForTest()
+
 	root := writeModuleFixture(t, "example.com/addedfilemod", "model", passingImplSrc, passingTestSrc)
 	pkgDir := filepath.Join(root, "model")
 
@@ -512,7 +402,7 @@ func TestHashPackageInputs_MUTATION_AddedFileDetected(t *testing.T) {
 // deleted path), so deletedSincePrev's separate cardinality check is what
 // actually catches this shape.
 func TestHashPackageInputs_MUTATION_RemovedFileDetected(t *testing.T) {
-	ResetModuleHashCacheForTest()
+
 	root := writeModuleFixture(t, "example.com/removedfilemod", "model", passingImplSrc, passingTestSrc)
 	pkgDir := filepath.Join(root, "model")
 	extraPath := filepath.Join(pkgDir, "extra.go")
@@ -538,42 +428,14 @@ func TestHashPackageInputs_MUTATION_RemovedFileDetected(t *testing.T) {
 	}
 }
 
-// TestHashPackageInputs_ConcurrentCallsSameModuleRoot_NoRace is proof (e):
-// many goroutines calling hashPackageInputs concurrently against the SAME
-// moduleRoot must never race on perFileHashCache, and must all observe a
-// digest consistent with the (unchanging, for this test) tree content --
-// intended to be run under `go test -race` (this file cannot invoke that
-// itself under this task's no-execution constraint; the reasoning below is
-// what actually establishes race-freedom, mirroring
-// TestParseTestFileCached_ConcurrentAccess_NoRace's own doc comment in
-// spec_resolver_test.go for the identical shape of claim).
-//
-// Race-freedom argument: perFileHashCacheMu (test_exec.go) is held for
-// every individual read of perFileHashCache[moduleRoot] and every individual
-// write of perFileHashCache[moduleRoot] -- both are short, uncontended-
-// duration critical sections (a single map index operation each), so the Go
-// race detector's happens-before tracking sees every such access as
-// properly synchronized regardless of how many goroutines interleave
-// between their own lock/unlock pairs. The walk, os.Stat, and os.ReadFile
-// calls in between happen WITHOUT holding the lock (by design -- see the
-// perFileHashCache doc comment's THREAD SAFETY section), but every goroutine
-// only ever reads moduleHashFileState values it either (a) obtained itself
-// from its own os.Stat/os.ReadFile calls (thread-local, no sharing) or (b)
-// read out of prevFiles under the lock and never mutates afterward
-// (moduleHashFileState and moduleHashCacheEntry are both treated as
-// immutable once constructed -- hashPackageInputs always builds a brand-new
-// value and Stores a brand-new pointer, never mutates a *moduleHashCacheEntry
-// or its files map in place after publish), so there is no shared mutable
-// state reachable outside the mutex for the race detector to ever flag.
+// Concurrent fingerprints must agree on an unchanged source tree without
+// shared mutable byte caches or dependence on filesystem timestamp precision.
 func TestHashPackageInputs_ConcurrentCallsSameModuleRoot_NoRace(t *testing.T) {
-	ResetModuleHashCacheForTest()
+
 	root := writeModuleFixture(t, "example.com/concurrenthashmod", "model", passingImplSrc, passingTestSrc)
 	pkgDir := filepath.Join(root, "model")
 
-	// Warm the cache once up front so most of the concurrent calls below
-	// exercise the warm (reuse) path, not just the cold path every goroutine
-	// would otherwise race to populate simultaneously -- both shapes matter,
-	// so a first sequential call plus a concurrent burst covers both.
+	// Establish the digest against which concurrent independent reads agree.
 	want, err := hashPackageInputs(root, pkgDir)
 	if err != nil {
 		t.Fatalf("hashPackageInputs (warm-up): %v", err)
@@ -695,7 +557,6 @@ func TestRunVerifiedByTest_MUTATION_NEW2_SiblingPackageChangeInvalidatesCache(t 
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
 	root, _, policyImplPath := writeModelPolicyFixture(t, "example.com/new2mod")
 
 	before := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_UsesPolicy")
@@ -784,7 +645,6 @@ func Validate(fields int) bool {
 // InfraWarning, so a caller can never mistake a skipped, unproven entry for a
 // quietly-passed one.
 func TestRunVerifiedByTest_MUTATION_NEW1_HonoredSkipAlwaysCarriesInfraWarning(t *testing.T) {
-	ResetRunCacheForTest()
 
 	root := writeModuleFixture(t, "example.com/new1mod", "model", guttedImplSrc, passingTestSrc)
 
@@ -954,7 +814,6 @@ func TestRunVerifiedByTest_MUTATION_NEW4_EmbeddedNonGoFileChangeInvalidatesCache
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
 	root, thresholdPath := writeEmbedThresholdFixture(t, "example.com/new4mod", "model", "3\n")
 
 	before := RunVerifiedByTest(root, "model/impl_test.go", "TestRequireComplete_MeetsEmbeddedThreshold")
@@ -1413,28 +1272,18 @@ func TestRunVerifiedByTestRecording_NoCoverPkg_SkipsCoverageCleanly(t *testing.T
 	}
 }
 
-// TestRunVerifiedByTestRecording_MUTATION_SourceChangeInvalidatesCompileCache
-// is the recording-path mirror of
-// TestRunVerifiedByTest_MUTATION_CacheInvalidatesOnImplChange: two
-// RunVerifiedByTestRecording calls in ONE process, with the implementation
-// file mutated in between and NO ResetRunCacheForTest in between. The
-// compile cache (compile_cache.go) keys binaries by (moduleRoot,
-// pkgPattern, coverPkgPattern) with no content hash, and
-// RunVerifiedByTestRecording has no verdict cache whose hash check could
-// invalidate it -- so without a module-hash sync on the recording path, the
-// second call is served the STALE pre-mutation binary and wrongly reports
-// Passed=true. The second recording must instead observe the mutated
-// source and report a real test failure (Passed=false, CompileFailed=false).
+// A source mutation in one owner must invalidate its compiled recording artifact
+// and report a real test failure rather than replaying the original PASS.
 func TestRunVerifiedByTestRecording_MUTATION_SourceChangeInvalidatesCompileCache(t *testing.T) {
 	if testing.Short() {
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
 	const modulePath = "example.com/recmutatemod"
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", scenarioTestSrc(modulePath))
+	session := sessionForTest(t)
 
-	before := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	before := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
 	if before.Err != nil {
 		t.Fatalf("first recording: unexpected infra error: %v\noutput:\n%s", before.Err, before.Output)
 	}
@@ -1447,9 +1296,7 @@ func TestRunVerifiedByTestRecording_MUTATION_SourceChangeInvalidatesCompileCache
 		t.Fatalf("WriteFile gutted impl.go: %v", err)
 	}
 
-	// Deliberately NO ResetRunCacheForTest here: the defect under test is
-	// that the recording path never invalidates the shared compile cache.
-	after := RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
+	after := session.RunVerifiedByTestRecording(root, "model/impl_test.go", "TestRequireComplete_ScenarioRecorded", "model/impl.go")
 	if after.Err != nil {
 		t.Fatalf("second recording: unexpected infra error: %v\noutput:\n%s", after.Err, after.Output)
 	}
@@ -1620,8 +1467,8 @@ func TestReadArtifacts_F6_RejectsOffShapeFiles(t *testing.T) {
 
 // scenarioTestWrongReqIDSrc is a fixture test whose NewScenario call names a
 // DIFFERENT requirement (R-different-req) than the requirement it will be
-// cited from (R-citing-req). F6's req_id cross-check in recordVerifiedByEntry
-// must filter this artifact out of R-citing-req's SPEC.md section.
+// cited from (R-citing-req). Snapshot projection must not publish another
+// requirement's narrative in R-citing-req's SPEC section.
 const scenarioTestWrongReqIDSrc = `package model
 
 import (
@@ -1640,52 +1487,83 @@ func TestRequireComplete_ScenarioRecorded(t *testing.T) {
 }
 `
 
-// TestRecordVerifiedByEntry_F6_FiltersMismatchedReqID proves the F6 req_id
-// cross-check: a verified_by test whose recorded artifact names a DIFFERENT
-// requirement than the one being rendered is filtered out, not silently
-// rendered into the wrong requirement's SPEC.md section.
-func TestRecordVerifiedByEntry_F6_FiltersMismatchedReqID(t *testing.T) {
+func TestSpecSnapshotDoesNotPublishAnotherRequirementsScenario(t *testing.T) {
 	if testing.Short() {
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
-
 	const modulePath = "example.com/f6reqidcheck"
-	// Use the same impl source as the recording fixture, but a test that
-	// records under "R-different-req" instead of "R-citing-req".
 	testSrc := strings.ReplaceAll(scenarioTestWrongReqIDSrc, "__MODULEPATH__", modulePath)
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", testSrc)
-
-	// Render for R-citing-req -- the test's artifact says R-different-req.
-	out := recordVerifiedByEntry(root, "R-citing-req", "model/impl_test.go:TestRequireComplete_ScenarioRecorded", "model/impl.go")
-	if !out.passed {
-		t.Fatalf("expected the test to pass (out.passed=true), got problem: %s", out.problem)
+	graph := &ontology.Graph{DomainDir: root, Requirements: []ontology.Requirement{{
+		ID: "R-citing-req", Claim: "Required fields must be complete.", Status: ontology.StatusSETTLED,
+		VerifiedBy:    []string{"model/impl_test.go:TestRequireComplete_ScenarioRecorded"},
+		ImplementedBy: []string{"model/impl.go:RequireComplete"},
+	}}}
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	snapshot, err := session.CollectAtomExecutionSnapshotForPackages(graph, nil)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if len(out.artifacts) != 0 {
-		t.Fatalf("F6: expected recordVerifiedByEntry to filter out artifacts whose req_id (R-different-req) does not "+
-			"match the requirement being rendered (R-citing-req), got %d artifacts: %+v", len(out.artifacts), out.artifacts)
+	rows := CollectSpecRowsFromSnapshot(graph, snapshot)
+	verdict := ScenarioVerdictsFromRows(rows)["R-citing-req"]
+	if !verdict.AllEntriesPass || verdict.Narrated {
+		t.Fatalf("another requirement's passing scenario was treated as this requirement's proof: %+v", verdict)
+	}
+	document, err := BuildSpecFromRowsForLanguage(graph, rows, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(document, "narrates a DIFFERENT requirement") {
+		t.Fatal("SPEC published an unrelated requirement's scenario as normative evidence")
 	}
 }
 
-// TestRecordVerifiedByEntry_F6_KeepsMatchingReqID proves the F6 req_id
-// cross-check does NOT break the legitimate case: a verified_by test whose
-// recorded artifact names the SAME requirement as the one being rendered
-// passes through normally.
-func TestRecordVerifiedByEntry_F6_KeepsMatchingReqID(t *testing.T) {
+func TestSpecSnapshotPublishesMatchingPassingScenario(t *testing.T) {
 	if testing.Short() {
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
-
 	const modulePath = "example.com/f6reqmatch"
 	testSrc := strings.ReplaceAll(scenarioTestSrc(modulePath), "R-example-recording", "R-citing-req")
 	root := writeRecordingFixture(t, modulePath, "model", scenarioImplSrc, "model", testSrc)
-
-	out := recordVerifiedByEntry(root, "R-citing-req", "model/impl_test.go:TestRequireComplete_ScenarioRecorded", "model/impl.go")
-	if !out.passed {
-		t.Fatalf("expected the test to pass, got problem: %s", out.problem)
+	graph := &ontology.Graph{DomainDir: root, Requirements: []ontology.Requirement{{
+		ID: "R-citing-req", Claim: "Required fields must be complete.", Status: ontology.StatusSETTLED,
+		VerifiedBy:    []string{"model/impl_test.go:TestRequireComplete_ScenarioRecorded"},
+		ImplementedBy: []string{"model/impl.go:RequireComplete"},
+	}}}
+	session := NewExecutionSession()
+	t.Cleanup(func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	snapshot, err := session.CollectAtomExecutionSnapshotForPackages(graph, nil)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if len(out.artifacts) != 1 {
-		t.Fatalf("F6: expected recordVerifiedByEntry to keep the artifact whose req_id matches the rendered requirement, "+
-			"got %d artifacts", len(out.artifacts))
+	implementation, found, err := ResolveSpecSymbolRange(root, "model/impl.go", "RequireComplete")
+	if err != nil || !found {
+		t.Fatalf("resolve recorded implementation: found=%v err=%v", found, err)
+	}
+	coverage := ParseCoverProfile(snapshot.PackageRuns["model"].CoverProfile)
+	if !SymbolRangeCoveredByProfile(coverage, modulePath+"/model/impl.go", implementation.StartLine, implementation.EndLine) {
+		t.Fatal("the passing snapshot no longer proves execution of its declared implementation")
+	}
+	rows := CollectSpecRowsFromSnapshot(graph, snapshot)
+	verdict := ScenarioVerdictsFromRows(rows)["R-citing-req"]
+	if !verdict.AllEntriesPass || !verdict.Narrated {
+		t.Fatalf("matching passing scenario lost its independent proof: %+v", verdict)
+	}
+	document, err := BuildSpecFromRowsForLanguage(graph, rows, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(document, "RequireComplete rejects zero fields") {
+		t.Fatal("SPEC omitted the matching scenario's independently recorded narrative")
 	}
 }
 
@@ -1798,7 +1676,6 @@ func TestRunVerifiedByTest_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t *testing.
 		t.Skip("compiles and runs a real `go test` subprocess; skipped in -short")
 	}
 
-	ResetRunCacheForTest()
 	t.Setenv(testExecTimeoutEnv, "300ms")
 
 	root := writeModuleFixture(t, "example.com/exectimeout", "model", passingImplSrc, slowPassingTestSrc)
@@ -1810,11 +1687,11 @@ func TestRunVerifiedByTest_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t *testing.
 	if res.Err == nil {
 		t.Fatalf("SILENT SPURIOUS TIMEOUT (#352): a run that exceeded its exec budget must surface Err (DeadlineExceeded), got a quiet pass: %+v", res)
 	}
-	if !strings.Contains(res.Err.Error(), "timed out") {
-		t.Fatalf("expected a 'timed out' error, got %v", res.Err)
-	}
 	if res.Passed {
 		t.Fatalf("a timed-out run must NOT report Passed=true: %+v", res)
+	}
+	if res.CompileFailed {
+		t.Fatalf("execution deadline must not become a compile failure: %+v", res)
 	}
 }
 
@@ -1838,8 +1715,8 @@ func TestRunVerifiedByTestRecording_ExecTimeoutEnv_SpuriousTimeoutIsHonestErr(t 
 	if res.Err == nil {
 		t.Fatalf("SILENT SPURIOUS TIMEOUT (#352 record-mode): exceeded exec budget must surface Err, got %+v", res.TestRunResult)
 	}
-	if !strings.Contains(res.Err.Error(), "timed out") {
-		t.Fatalf("expected 'timed out' error, got %v", res.Err)
+	if res.Passed || res.CompileFailed {
+		t.Fatalf("execution deadline must produce neither PASS nor compile failure: %+v", res.TestRunResult)
 	}
 }
 

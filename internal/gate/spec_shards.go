@@ -102,6 +102,9 @@ func caseTestCoveredByVerifiedBy(caseTest string, verifiedBy []string) bool {
 // already-collected execution snapshot. No output is returned on any catalog
 // or claim translation error.
 func BuildSpecDocumentsFromRows(g *ontology.Graph, rows map[string]SpecRow) (map[string]string, error) {
+	if hasSpecDocument(g) {
+		return buildNormativeSpecDocuments(g, rows)
+	}
 	layout, err := docbundle.NewLayout(g.Languages, g.DefaultLanguage)
 	if err != nil {
 		return nil, err
@@ -168,6 +171,16 @@ func BuildSpecDocumentsFromRows(g *ontology.Graph, rows map[string]SpecRow) (map
 			}
 			docs[shardKey] = document
 		}
+		if g.Conformance != nil && g.Conformance.RuleCases {
+			// Render every rule at the root; shards remain focused reading views.
+			view.SelfExecutingAtoms = false
+			document, err := BuildSpecFromRowsForLanguage(&view, rows, language)
+			if err != nil {
+				return nil, err
+			}
+			docs[indexKey] = document
+			continue
+		}
 		index, err := buildSpecPackageIndex(&view, language, indexPath, packages, shardPaths, groups)
 		if err != nil {
 			return nil, err
@@ -175,6 +188,84 @@ func BuildSpecDocumentsFromRows(g *ontology.Graph, rows map[string]SpecRow) (map
 		docs[indexKey] = index
 	}
 	return docs, nil
+}
+
+// Document-enabled domains publish a complete canonical root and package-focused
+// reading views. Shards are projections of authored blocks, not test journals.
+func buildNormativeSpecDocuments(g *ontology.Graph, rows map[string]SpecRow) (map[string]string, error) {
+	projection, err := prepareSpecDocument(g, rows)
+	if err != nil {
+		return nil, err
+	}
+	layout, err := docbundle.NewLayout(g.Languages, g.DefaultLanguage)
+	if err != nil {
+		return nil, err
+	}
+	blockIDsByClause := make(map[string][]string)
+	for _, section := range projection.sections {
+		for _, block := range section.Blocks {
+			for _, clauseID := range block.ClauseIDs {
+				blockIDsByClause[clauseID] = append(blockIDsByClause[clauseID], block.ID)
+			}
+		}
+	}
+	groups := make(map[string]map[string]bool)
+	for _, requirement := range g.Requirements {
+		if requirement.Status == ontology.StatusREJECTED {
+			continue
+		}
+		pkg := SpecPackage(requirement)
+		for _, link := range requirement.ClauseLinks {
+			for _, blockID := range blockIDsByClause[link.ClauseID] {
+				if groups[pkg] == nil {
+					groups[pkg] = make(map[string]bool)
+				}
+				groups[pkg][blockID] = true
+			}
+		}
+	}
+	packages := make([]string, 0, len(groups))
+	packagePaths := make([]string, 0, len(groups))
+	for pkg := range groups {
+		packages = append(packages, pkg)
+		packagePaths = append(packagePaths, pkg+".md")
+	}
+	sort.Strings(packages)
+	if _, err := docbundle.SpecShardNames(packagePaths); err != nil {
+		return nil, err
+	}
+	documents := make(map[string]string)
+	for _, language := range layout.LanguagesForViews() {
+		canonicalPath, err := layout.SpecIndexPath(language)
+		if err != nil {
+			return nil, err
+		}
+		root, err := renderSpecDocument(g, projection, language, canonicalPath, canonicalPath, nil)
+		if err != nil {
+			return nil, err
+		}
+		key, err := specDocGenKey(canonicalPath)
+		if err != nil {
+			return nil, err
+		}
+		documents[key] = root
+		for _, pkg := range packages {
+			shardPath, err := layout.SpecShardPath(language, pkg+".md")
+			if err != nil {
+				return nil, err
+			}
+			shard, err := renderSpecDocument(g, projection, language, shardPath, canonicalPath, groups[pkg])
+			if err != nil {
+				return nil, err
+			}
+			key, err := specDocGenKey(shardPath)
+			if err != nil {
+				return nil, err
+			}
+			documents[key] = shard
+		}
+	}
+	return documents, nil
 }
 
 func specDocGenKey(domainPath string) (string, error) {

@@ -26,7 +26,9 @@ func cmdConfront(args []string) error {
 	file := fs.String("file", "", "read candidate text from this file (use \"-\" for stdin)")
 	proposalPath := fs.String("proposal", "", "confront proposal metadata, formal Conflict carriers and shared-assumption/axis signals")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if *proposalPath != "" {
 		if *file != "" || fs.NArg() > 0 {

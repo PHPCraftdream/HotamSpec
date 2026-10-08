@@ -755,7 +755,7 @@ func TestStructuralFloorDoesNotCatchSemanticMismatch(t *testing.T) {
 	// check_verified_by_test_passes (pass/fail) and once for
 	// check_scenario_executes_impl (coverage-proof) -- both times with
 	// HOTAM_VERIFIED_BY_EXEC_GUARD set (the env var gate.RunVerifiedByTest's
-	// runGoTest mints for every nested child -- see test_exec.go). That
+	// execution session mints for every nested child -- see test_exec.go). That
 	// distinguishes the test's two nesting levels:
 	//
 	//   (1) TOP-LEVEL (`go test ./internal/invariants/`) -- no guard set --

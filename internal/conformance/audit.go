@@ -33,6 +33,9 @@ const (
 	IssueCaseMetadataConflict       = "case_metadata_conflict"
 	IssueCaseUnknownExecution       = "case_unknown_execution"
 	IssueCaseUnknownAtom            = "case_unknown_atom"
+	IssueCaseUnknownClause          = "case_unknown_clause"
+	IssueCaseUnlinkedClause         = "case_unlinked_clause"
+	IssueCaseInvalidClauseScope     = "case_invalid_clause_scope"
 	IssueSourceUnverified           = "source_unverified"
 	IssueProfileNotApplicable       = "profile_not_applicable"
 	IssueProfileUnsupported         = "profile_unsupported"
@@ -120,12 +123,14 @@ type Issue struct {
 }
 
 type ClauseAssessment struct {
-	ID           string                `json:"id"`
-	SourceLinks  []ontology.SourceLink `json:"source_links,omitempty"`
-	Strength     string                `json:"strength,omitempty"`
-	AtomIDs      []string              `json:"atom_ids,omitempty"`
-	MissingSides []string              `json:"missing_sides,omitempty"`
-	Status       string                `json:"status"`
+	ID             string                `json:"id"`
+	SourceLinks    []ontology.SourceLink `json:"source_links,omitempty"`
+	Strength       string                `json:"strength,omitempty"`
+	AtomIDs        []string              `json:"atom_ids,omitempty"`
+	MissingSides   []string              `json:"missing_sides,omitempty"`
+	WitnessCaseIDs []string              `json:"witness_case_ids,omitempty"`
+	Qualification  string                `json:"qualification,omitempty"`
+	Status         string                `json:"status"`
 }
 type CaseAssessment struct {
 	ID                  string                  `json:"id"`
@@ -144,6 +149,7 @@ type CaseAssessment struct {
 	Expected            *ontology.ObservedValue `json:"expected,omitempty"`
 	Fixtures            []ontology.FixtureRef   `json:"fixtures,omitempty"`
 	Sides               []string                `json:"sides,omitempty"`
+	ClauseIDs           []string                `json:"clause_ids,omitempty"`
 	Status              string                  `json:"status"`
 	Qualification       string                  `json:"qualification,omitempty"`
 	Executions          []Execution             `json:"executions,omitempty"`
@@ -299,6 +305,40 @@ func AuditFromSources(g *ontology.Graph, executions []Execution, sourceChecks []
 		}
 	}
 
+	// A case's proof scope is authored separately from the broad source links
+	// of each method. Invalid scope cannot contribute even its valid subset.
+	invalidCaseScopes := make(map[string]bool)
+	for _, caseID := range sortedKeys(caseDefinitions) {
+		definition := caseDefinitions[caseID]
+		seen := make(map[string]bool, len(definition.ClauseIDs))
+		for _, clauseID := range definition.ClauseIDs {
+			if strings.TrimSpace(clauseID) == "" || seen[clauseID] {
+				invalidCaseScopes[caseID] = true
+				out.add(Issue{Code: IssueCaseInvalidClauseScope, CaseID: caseID, ClauseID: clauseID, Message: "case clause scope contains an empty or duplicate identifier"})
+				continue
+			}
+			seen[clauseID] = true
+			if _, exists := clauseByID[clauseID]; !exists {
+				invalidCaseScopes[caseID] = true
+				out.add(Issue{Code: IssueCaseUnknownClause, CaseID: caseID, ClauseID: clauseID, Message: "case proof scope references an unknown source clause"})
+				continue
+			}
+			linked := false
+			for atomID := range caseAtoms[caseID] {
+				if clauseAtoms[clauseID][atomID] {
+					linked = true
+					break
+				}
+			}
+			if !linked {
+				invalidCaseScopes[caseID] = true
+				out.add(Issue{Code: IssueCaseUnlinkedClause, CaseID: caseID, ClauseID: clauseID, Message: "case proof scope has no clause link from a declared case atom"})
+			}
+		}
+	}
+	requireExplicitScope := config.DocumentSections != nil
+	witnesses := make(map[string]map[string]bool, len(config.Clauses))
+
 	for _, clause := range config.Clauses {
 		linked := clauseAtoms[clause.ID]
 		assessment := ClauseAssessment{
@@ -317,7 +357,8 @@ func AuditFromSources(g *ontology.Graph, executions []Execution, sourceChecks []
 					continue
 				}
 				for caseID, definition := range caseDefinitions {
-					if !caseAtoms[caseID][atomID] || !contains(definition.Sides, side) {
+					if !caseAtoms[caseID][atomID] || !contains(definition.Sides, side) ||
+						invalidCaseScopes[caseID] || !caseCoversClause(definition, clause.ID, requireExplicitScope) {
 						continue
 					}
 					covered = true
@@ -427,8 +468,9 @@ func AuditFromSources(g *ontology.Graph, executions []Execution, sourceChecks []
 				Input: cloneObserved(definition.Input), Expected: cloneObserved(definition.Expected),
 				Fixtures: append([]ontology.FixtureRef(nil), definition.Fixtures...),
 				Sides:    sortedStrings(definition.Sides), Status: "unverified",
+				ClauseIDs: slices.Clone(definition.ClauseIDs),
 			}
-			selectionConflict := caseMetadataConflicts[caseID]
+			selectionConflict := caseMetadataConflicts[caseID] || invalidCaseScopes[caseID]
 			profile, hasProfile := profiles[definition.Profile]
 			if definition.Profile != "" && !hasProfile {
 				assessment.Qualification = "profile_unverified"
@@ -453,11 +495,11 @@ func AuditFromSources(g *ontology.Graph, executions []Execution, sourceChecks []
 				applicable = false
 			}
 			if requirement := requirements[atomID]; requirement != nil {
-				if !applicabilityMatches(requirement.Applicability, definition.Profile, definition.Operation, profile, hasProfile) {
+				if !ApplicabilityMatches(requirement.Applicability, definition.Profile, definition.Operation, profile, hasProfile) {
 					applicable = false
 				}
 			}
-			if !clauseApplicabilityMatches(g, atomID, definition.Profile, definition.Operation, profile, hasProfile) {
+			if !clauseApplicabilityMatches(g, atomID, definition, profile, hasProfile) {
 				applicable = false
 			}
 			if !applicable {
@@ -569,7 +611,25 @@ func AuditFromSources(g *ontology.Graph, executions []Execution, sourceChecks []
 			assessment.ObservedTargets = sortedStrings(assessment.ObservedTargets)
 			assessment.CaseFingerprint = caseReviewFingerprint(definition, assessment.Executions)
 			assessment.ProducerFingerprint = producerFingerprint(definition.Producer, definition.Target, assessment.Executions)
+			if assessment.Status == "verified_case" && assessment.Qualification == "" {
+				for _, link := range requirements[atomID].ClauseLinks {
+					if !caseCoversClause(definition, link.ClauseID, requireExplicitScope) {
+						continue
+					}
+					if witnesses[link.ClauseID] == nil {
+						witnesses[link.ClauseID] = make(map[string]bool)
+					}
+					witnesses[link.ClauseID][caseID] = true
+				}
+			}
 			out.Cases = append(out.Cases, assessment)
+		}
+	}
+	for i := range out.Clauses {
+		assessment := &out.Clauses[i]
+		assessment.WitnessCaseIDs = mapKeys(witnesses[assessment.ID])
+		if len(assessment.WitnessCaseIDs) == 0 {
+			assessment.Qualification = "unproved"
 		}
 	}
 	for _, profile := range config.Profiles {
@@ -700,7 +760,7 @@ func (r *Report) auditPrecedence(g *ontology.Graph, profiles map[string]ontology
 				adjacent := make(map[string][]string)
 				var active []edge
 				for _, item := range byScope[scope] {
-					if !applicabilityMatches(item.link.Applicability, profileID, operation, profile, hasProfile) {
+					if !ApplicabilityMatches(item.link.Applicability, profileID, operation, profile, hasProfile) {
 						continue
 					}
 					adjacent[item.from] = append(adjacent[item.from], item.link.Target)
@@ -792,7 +852,7 @@ func (r *Report) auditCompositions(declarations []ontology.Composition, cases ma
 		r.Compositions = append(r.Compositions, assessment)
 	}
 }
-func clauseApplicabilityMatches(g *ontology.Graph, atomID, profileID, operation string, profile ontology.Profile, hasProfile bool) bool {
+func clauseApplicabilityMatches(g *ontology.Graph, atomID string, definition ontology.CaseDefinition, profile ontology.Profile, hasProfile bool) bool {
 	if g.Conformance == nil {
 		return true
 	}
@@ -801,8 +861,11 @@ func clauseApplicabilityMatches(g *ontology.Graph, atomID, profileID, operation 
 			continue
 		}
 		for _, link := range requirement.ClauseLinks {
+			if !caseCoversClause(definition, link.ClauseID, g.Conformance.DocumentSections != nil) {
+				continue
+			}
 			for _, clause := range g.Conformance.Clauses {
-				if clause.ID == link.ClauseID && !applicabilityMatches(clause.Applicability, profileID, operation, profile, hasProfile) {
+				if clause.ID == link.ClauseID && !ApplicabilityMatches(clause.Applicability, definition.Profile, definition.Operation, profile, hasProfile) {
 					return false
 				}
 			}
@@ -811,7 +874,15 @@ func clauseApplicabilityMatches(g *ontology.Graph, atomID, profileID, operation 
 	return true
 }
 
-func applicabilityMatches(app *ontology.Applicability, profileID, operation string, profile ontology.Profile, hasProfile bool) bool {
+func caseCoversClause(definition ontology.CaseDefinition, clauseID string, requireExplicitScope bool) bool {
+	if definition.ClauseIDs == nil {
+		return !requireExplicitScope
+	}
+	return contains(definition.ClauseIDs, clauseID)
+}
+
+// ApplicabilityMatches applies declared profile, operation and feature conditions.
+func ApplicabilityMatches(app *ontology.Applicability, profileID, operation string, profile ontology.Profile, hasProfile bool) bool {
 	if app == nil {
 		return true
 	}
@@ -895,6 +966,13 @@ func hasFailedComparison(comparisons []Comparison) bool {
 	for _, comparison := range comparisons {
 		if !comparison.Passed {
 			return true
+		}
+		if comparison.Actual != nil || comparison.Expected != nil {
+			if comparison.Actual == nil || comparison.Expected == nil ||
+				comparison.Actual.Validate() != nil || comparison.Expected.Validate() != nil ||
+				!ontology.EqualObservedValues(comparison.Actual, comparison.Expected) {
+				return true
+			}
 		}
 	}
 	return false

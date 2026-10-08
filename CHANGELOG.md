@@ -17,6 +17,72 @@ History predating this file is not backfilled — see `git log` and
 ## [Unreleased]
 
 ### Fixed
+- Typed collections now use explicit object Fields and ordered array Items in
+  recorder/schema/evidence transports. Literal `kind`, `entries`, `items` and
+  `length` object keys cannot select or lose a domain value; empty collections,
+  exact integers, binary64 bits and optional diagnostic fields survive round-trips.
+- Normative includes respect backtick/tilde fence markers and delimiter lengths.
+  Fenced `include:` examples remain literal across all locales; active nested
+  includes and missing source references/translations still fail closed.
+- Authored document sections/blocks now separate canonical SPEC structure from
+  execution evidence, with stable semantic text references and explicitly
+  selected examples. Missing or ambiguous bindings fail before publication.
+- Reader examples select explicit unique comparison names, not every observation
+  in a passing case. Technical span/source assertions remain exact in evidence;
+  missing, ambiguous, inapplicable or failed selections reject the full bundle.
+  CR/CRLF/control-character source uses explained escaped notation without
+  changing bytes, with direct case-evidence links.
+- Concrete `ClauseIDs` scopes cannot acquire proof from broad method links.
+  Evidence distinguishes structural decomposition, applicable passing witnesses
+  and unproved or qualified obligations; exact data remains available by case.
+- Execution sessions replace process-global source/compile/verdict ownership.
+  Exact-content/profile keys observe same-stat edits; admitted references and
+  discovered atom tests share one fresh covered package run, without running
+  unrelated tests or replaying native Go PASS. Closed owners reject new captures.
+  Cleanup joins users, retains failed-close paths and reports errors.
+- Logical localized freshness uses a locale-independent publication-date marker;
+  calendar rollover does not stale unchanged outputs, while overdue review
+  signals still advance with the live date. Generated outputs and unrelated
+  nested checkouts cannot invalidate the source snapshot; authored fixtures can.
+- Case journals bind stable source/profile/producer/terminal-proof identities
+  separately from exact-body checksums. Independent temporary paths no longer
+  make captured evidence falsely stale; changed proof or damaged bytes still
+  fail closed. Marker-looking literal user data remains journal data.
+- Generated evidence ownership recognizes a valid first-line case-journal
+  checksum marker before checking the localized provenance banner. Refreshing
+  captured case pages no longer collides with its own output; damaged markers,
+  modified bodies and authored reports keep overwrite protection.
+- `project://` pinned source paths resolve from the explicit domain's project
+  markers, independent of CWD/environment, without permitting root escapes.
+- Compile-cache directories are cleaned before every CLI exit, including
+  invariant failures, invalid flags and help. Command handlers return exit
+  status instead of calling `os.Exit`; flag parsing no longer terminates the
+  process beneath deferred cleanup.
+- Compile-cache deletion failures retain ownership and return the directory
+  and underlying error. CLI/test-process teardown reports those errors and
+  fails an otherwise successful run; a later cleanup can remove the same path.
+- Test suites that can execute gate compilation now clean their process cache
+  after `m.Run`. Regressions exercise real passing/failing CLI and test
+  subprocesses, usage/help paths and Windows sharing-lock deletion failures.
+- SPEC values use indented JSON5 instead of custom `Object(...)` / `Array(...)`
+  notation, with literal Ktav source in separate `ktav` blocks. IdentifierName
+  keys remain unquoted; other keys are escaped. Exact Integers outside JSON5's
+  safe range retain their decimal annotation. Reader document examples omit
+  byte offsets, bit dumps and execution journals; exact technical data stays
+  in evidence. Malformed selected values fail publication, and non-UTF-8 input
+  receives a typed opaque explanation linked to its exact evidence.
+- Evidence publication now writes compact locale overviews and identity-addressed
+  requirement/case pages. The full `evidence.json` packet is opt-in through
+  `evidence --json --write`; default publication removes recognized legacy
+  automatic packets, preserving authored and unknown-schema files.
+- Rule SPEC views render authored multilingual normative paragraphs, grammar,
+  exact typed examples and discrepancies rather than case JSON or corpus journals.
+  The root includes all rules; repeated normative text links to its first definition.
+  Method language blocks can include shared documented constants from the same
+  parsed source snapshot without enlarging graph claims or rerunning checks.
+- Compressed consumer crystals now link to language-directory SPEC shards
+  (`spec/ru/model/package.md`), using the bundle's canonical `SpecShardPath`
+  instead of filename-localizing nested package paths.
 - Atom proof state no longer reports a false STALE: `req show` derives an
   atom's fresh text from its method phrase and executed value (as sync does),
   so only a real drift between code and committed Claim is STALE. Atom SPEC

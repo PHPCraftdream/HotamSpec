@@ -15,6 +15,14 @@ func EqualObservedValues(a, b *ObservedValue) bool {
 	if bytesA != bytesB || (a.Fields == nil) != (b.Fields == nil) || len(a.Fields) != len(b.Fields) {
 		return false
 	}
+	if (a.Items == nil) != (b.Items == nil) || len(a.Items) != len(b.Items) {
+		return false
+	}
+	for i := range a.Items {
+		if !EqualObservedValues(&a.Items[i], &b.Items[i]) {
+			return false
+		}
+	}
 	for key, av := range a.Fields {
 		bv, ok := b.Fields[key]
 		if !ok || !EqualObservedValues(&av, &bv) {

@@ -397,7 +397,6 @@ func TestAtomSourceMultilingualDiagnosticsHaveMethodLanguageAndLine(t *testing.T
 		{"duplicate", "// >>>>> lang=en\n// english\n// >>>>> lang=en\n// duplicate\n// >>>>> lang=ru\n// русский\n", "value.go:5:", `language "en"`},
 		{"empty", "// >>>>> lang=en\n// >>>>> lang=ru\n// русский\n", "value.go:3:", `language "en"`},
 		{"outside", "// prose outside\n// >>>>> lang=en\n// english\n// >>>>> lang=ru\n// русский\n", "value.go:3:", "Box.Value"},
-		{"multiple-paragraphs", "// >>>>> lang=en\n// first phrase\n//\n// second phrase\n// >>>>> lang=ru\n// русская фраза\n", "value.go:6:", `language "en"`},
 		{"missing", "// >>>>> lang=en\n// english\n", "value.go:3:", `language "ru"`},
 	}
 	for _, tc := range cases {

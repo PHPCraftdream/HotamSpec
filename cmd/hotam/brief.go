@@ -19,7 +19,9 @@ func cmdBrief(args []string) error {
 	domain := fs.String("domain", "", "domain directory (default: "+defaultDomainRel+")")
 	todayFlag := fs.String("today", "", "date in YYYY-MM-DD format (default: system date)")
 	asJSON := fs.Bool("json", false, "emit machine-readable JSON")
-	fs.Parse(args)
+	if err := parseCommandFlags(fs, args); err != nil {
+		return err
+	}
 
 	if fs.NArg() < 1 {
 		return fmt.Errorf("usage: hotam brief <anchor-id> [--domain <path>] [--today YYYY-MM-DD] [--json]")
